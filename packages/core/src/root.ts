@@ -1,3 +1,4 @@
+import {RemoteChild} from '@remote-ui/types';
 import {
   Action,
   Dispatch,
@@ -12,7 +13,7 @@ import {
 
 export function createRemoteRoot<
   AllowedComponents extends string = string,
-  AllowedChildrenTypes extends AllowedComponents = AllowedComponents
+  AllowedChildrenTypes extends AllowedComponents | RemoteChild = RemoteChild
 >(
   dispatch: Dispatch,
   _config: any,

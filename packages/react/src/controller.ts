@@ -3,6 +3,8 @@ import {RemoteRoot} from '@remote-ui/core';
 import {ReactComponentFromRemoteComponent} from './types';
 
 export class Controller {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+  // @ts-ignore
   constructor(private readonly root: RemoteRoot) {}
 
   getNativeComponent<Type extends string>(

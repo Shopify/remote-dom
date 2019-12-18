@@ -4,7 +4,7 @@ import {RemoteRoot, RemoteText, RemoteComponent} from '@remote-ui/core';
 
 const reconciler = reactReconciler<
   // type
-  'View' | 'Touchable',
+  string,
   // props
   Record<string, unknown>,
   // root container

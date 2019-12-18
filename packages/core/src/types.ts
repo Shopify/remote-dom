@@ -1,4 +1,4 @@
-import {RemoteComponentMap} from '@remote-ui/types';
+import {RemoteComponentMap, RemoteChild} from '@remote-ui/types';
 
 type NonOptionalKeys<T> = {
   [K in keyof T]-?: undefined extends T[K] ? never : K;
@@ -48,25 +48,21 @@ export enum RemoteKind {
   Component,
 }
 
-const ANY_COMPONENT = Symbol('AnyComponent');
-
 type AllowedRemoteChildren<
   Children,
   Root extends RemoteRoot<any, any>
 > = Children extends string ? RemoteComponent<Children, Root> : never;
 
 type AllowedChildren<
-  Children extends string | typeof ANY_COMPONENT,
+  Children extends string | RemoteChild,
   Root extends RemoteRoot<any, any>
-> = Children extends typeof ANY_COMPONENT
+> = Children extends RemoteChild
   ? RemoteComponent<any, Root> | RemoteText<Root>
   : AllowedRemoteChildren<Children, Root>;
 
 export interface RemoteRoot<
-  AllowedComponents extends
-    | string
-    | typeof ANY_COMPONENT = typeof ANY_COMPONENT,
-  AllowedChildrenTypes extends AllowedComponents = AllowedComponents
+  AllowedComponents extends string = string,
+  AllowedChildrenTypes extends AllowedComponents | RemoteChild = RemoteChild
 > {
   readonly children: readonly AllowedChildren<
     AllowedChildrenTypes,
@@ -94,7 +90,7 @@ export interface RemoteRoot<
       RemoteRoot<AllowedComponents, AllowedChildrenTypes>
     >,
   ): void | Promise<void>;
-  createComponent<Type extends AllowedComponents & string>(
+  createComponent<Type extends AllowedComponents>(
     type: Type,
     ...propsPart: IfAllOptionalKeys<
       PropsForRemoteComponent<Type>,
@@ -167,7 +163,9 @@ export type ChildrenForRemoteComponent<
   T extends string
 > = T extends keyof RemoteComponentMap
   ? RemoteComponentMap[T] extends [any, infer U]
-    ? U
+    ? U extends RemoteChild
+      ? RemoteComponent<any, any> | RemoteText<any>
+      : U
     : never
   : never;
 
