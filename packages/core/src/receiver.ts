@@ -9,7 +9,7 @@ import {
 
 const ROOT_ID = Symbol('RootId');
 
-type Child = RemoteTextSerialization | RemoteComponentSerialization<string>;
+type Child = RemoteTextSerialization | RemoteComponentSerialization<any>;
 
 interface Root {
   id: typeof ROOT_ID;

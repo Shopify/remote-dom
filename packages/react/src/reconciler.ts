@@ -45,7 +45,7 @@ const reconciler = reactReconciler<
   },
   createInstance(type, allProps, fragment) {
     const {children: _children, ...props} = allProps;
-    return fragment.createComponent(type, props);
+    return fragment.createComponent(type, props as any);
   },
 
   // Updates
