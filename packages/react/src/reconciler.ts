@@ -112,16 +112,16 @@ const reconciler = reactReconciler<
 
   // Update children
   appendInitialChild(parent, child) {
-    parent.appendChild(child as any);
+    (parent as any).appendChild(child);
   },
   appendChild(parent, child) {
-    parent.appendChild(child as any);
+    (parent as any).appendChild(child);
   },
   insertBefore(parent, newChild, beforeChild) {
-    parent.insertChildBefore(newChild as any, beforeChild as any);
+    (parent as any).insertChildBefore(newChild, beforeChild);
   },
   removeChild(parent, child) {
-    parent.removeChild(child as any);
+    (parent as any).removeChild(child);
   },
 
   // Deferred callbacks
