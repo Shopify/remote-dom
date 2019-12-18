@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    {"path": "./packages/core"},
+    {"path": "./packages/remote-call"}
+  ]
+}

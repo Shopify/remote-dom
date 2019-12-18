@@ -1,0 +1,12 @@
+{
+  "name": "remote-call",
+  "version": "0.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/uuid": "^3.4.6",
+    "uuid": "^3.3.3"
+  }
+}
