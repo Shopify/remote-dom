@@ -50,15 +50,15 @@ const reconciler = reactReconciler<
 
   // Updates
   commitTextUpdate(text, _oldText, newText) {
-    text.update(newText);
+    text.updateText(newText);
   },
-  prepareUpdate(_instance, _type, oldProps, newProps, fragment) {
+  prepareUpdate(_instance, _type, oldProps, newProps) {
     const updateProps: Record<string, unknown> = {};
 
     let needsUpdate = false;
 
     for (const key in oldProps) {
-      if (!oldProps.hasOwnProperty(key) || key === 'children') {
+      if (!Reflect.has(oldProps, key) || key === 'children') {
         continue;
       }
 
@@ -83,7 +83,7 @@ const reconciler = reactReconciler<
     }
 
     for (const key in newProps) {
-      if (!newProps.hasOwnProperty(key) || key === 'children') {
+      if (!Reflect.has(newProps, key) || key === 'children') {
         continue;
       }
 

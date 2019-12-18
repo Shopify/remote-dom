@@ -2,7 +2,6 @@ export {createRemoteComponent} from './component';
 export {
   Action,
   Dispatch,
-  RemoteChild,
   RemoteRoot,
   RemoteComponent,
   RemoteText,

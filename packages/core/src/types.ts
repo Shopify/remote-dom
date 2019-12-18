@@ -1,6 +1,4 @@
-import {RemoteChild, RemoteComponentMap} from '@remote-ui/types';
-
-export {RemoteChild};
+import {RemoteComponentMap} from '@remote-ui/types';
 
 type NonOptionalKeys<T> = {
   [K in keyof T]-?: undefined extends T[K] ? never : K;
@@ -50,21 +48,25 @@ export enum RemoteKind {
   Component,
 }
 
+const ANY_COMPONENT = Symbol('AnyComponent');
+
 type AllowedRemoteChildren<
   Children,
   Root extends RemoteRoot<any, any>
 > = Children extends string ? RemoteComponent<Children, Root> : never;
 
 type AllowedChildren<
-  Children,
+  Children extends string | typeof ANY_COMPONENT,
   Root extends RemoteRoot<any, any>
-> = Children extends RemoteChild
+> = Children extends typeof ANY_COMPONENT
   ? RemoteComponent<any, Root> | RemoteText<Root>
   : AllowedRemoteChildren<Children, Root>;
 
 export interface RemoteRoot<
-  AllowedComponents extends string = string,
-  AllowedChildrenTypes extends AllowedComponents | RemoteChild = RemoteChild
+  AllowedComponents extends
+    | string
+    | typeof ANY_COMPONENT = typeof ANY_COMPONENT,
+  AllowedChildrenTypes extends AllowedComponents = AllowedComponents
 > {
   readonly children: readonly AllowedChildren<
     AllowedChildrenTypes,
@@ -92,7 +94,7 @@ export interface RemoteRoot<
       RemoteRoot<AllowedComponents, AllowedChildrenTypes>
     >,
   ): void | Promise<void>;
-  createComponent<Type extends AllowedComponents>(
+  createComponent<Type extends AllowedComponents & string>(
     type: Type,
     ...propsPart: IfAllOptionalKeys<
       PropsForRemoteComponent<Type>,
@@ -155,11 +157,19 @@ export type Serialized<T> = T extends RemoteComponent<infer Type, any>
 
 export type PropsForRemoteComponent<
   T extends string
-> = RemoteComponentMap[T][0];
+> = T extends keyof RemoteComponentMap
+  ? RemoteComponentMap[T] extends [infer U, any]
+    ? U
+    : never
+  : never;
 
 export type ChildrenForRemoteComponent<
   T extends string
-> = RemoteComponentMap[T][1];
+> = T extends keyof RemoteComponentMap
+  ? RemoteComponentMap[T] extends [any, infer U]
+    ? U
+    : never
+  : never;
 
 export enum RemoteComponentViolationType {
   InsertChild,

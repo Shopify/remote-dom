@@ -2,7 +2,6 @@ import {
   Action,
   Dispatch,
   Serialized,
-  RemoteChild,
   RemoteRoot,
   RemoteText,
   RemoteComponent,
@@ -13,7 +12,7 @@ import {
 
 export function createRemoteRoot<
   AllowedComponents extends string = string,
-  AllowedChildrenTypes extends AllowedComponents | RemoteChild = RemoteChild
+  AllowedChildrenTypes extends AllowedComponents = AllowedComponents
 >(
   dispatch: Dispatch,
   _config: any,
@@ -136,8 +135,7 @@ export function createRemoteRoot<
     },
   ) {
     if (mounted && (element === remoteRoot || connected(element as any))) {
-      // eslint-disable-next-line no-warning-comments
-      // TODO: only create context once async queue is cleared
+      // should only create context once async queue is cleared
       const remoteResult = remote(dispatch);
 
       if (remoteResult == null || !('then' in remoteResult)) {
