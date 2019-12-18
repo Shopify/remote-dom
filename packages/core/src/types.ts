@@ -154,7 +154,7 @@ export type Serialized<T> = T extends RemoteComponent<infer Type, any>
 export type PropsForRemoteComponent<
   T extends string
 > = T extends keyof RemoteComponentMap
-  ? RemoteComponentMap[T] extends [infer U, any]
+  ? RemoteComponentMap[T] extends [infer U, ...any[]]
     ? U
     : never
   : never;
