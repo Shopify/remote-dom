@@ -1,18 +1,10 @@
 import {createWorkspace} from '@sewing-kit/config';
-import {createComposedWorkspacePlugin} from '@sewing-kit/plugins';
 
-import {eslintWorkspacePlugin} from '@sewing-kit/plugin-eslint';
-import {javascriptWorkspacePlugin} from '@sewing-kit/plugin-javascript';
-import {typeScriptWorkspacePlugin} from '@sewing-kit/plugin-typescript';
-import {jestWorkspacePlugin} from '@sewing-kit/plugin-jest';
-
-const plugin = createComposedWorkspacePlugin('RemoteUi.Workspace', [
-  eslintWorkspacePlugin,
-  javascriptWorkspacePlugin,
-  typeScriptWorkspacePlugin,
-  jestWorkspacePlugin,
-]);
+import {eslint} from '@sewing-kit/plugin-eslint';
+import {workspaceJavaScript} from '@sewing-kit/plugin-javascript';
+import {workspaceTypeScript} from '@sewing-kit/plugin-typescript';
+import {jest} from '@sewing-kit/plugin-jest';
 
 export default createWorkspace((workspace) => {
-  workspace.plugin(plugin);
+  workspace.use(eslint(), workspaceJavaScript(), workspaceTypeScript(), jest());
 });
