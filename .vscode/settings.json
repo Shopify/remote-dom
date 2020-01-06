@@ -6,5 +6,11 @@
     "typescriptreact"
   ],
   "editor.formatOnSave": true,
-  "eslint.enable": true
+  "eslint.enable": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  }
 }

@@ -4,3 +4,9 @@ export {
   ReactComponentFromRemoteComponent,
   ReactPropsFromRemoteComponent,
 } from '../types';
+export {
+  useReceiver,
+  useController,
+  ReceiverContext,
+  ControllerContext,
+} from './context';
