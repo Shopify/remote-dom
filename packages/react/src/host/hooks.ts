@@ -1,4 +1,32 @@
-import {useState, useRef, useCallback, MutableRefObject} from 'react';
+import {
+  useState,
+  useRef,
+  useCallback,
+  MutableRefObject,
+  useContext,
+} from 'react';
+
+import {ControllerContext, ReceiverContext} from './context';
+
+export function useController() {
+  const controller = useContext(ControllerContext);
+
+  if (controller == null) {
+    throw new Error('No remote-ui Controller instance found in context');
+  }
+
+  return controller;
+}
+
+export function useReceiver() {
+  const receiver = useContext(ReceiverContext);
+
+  if (receiver == null) {
+    throw new Error('No remote-ui Receiver instance found in context');
+  }
+
+  return receiver;
+}
 
 export function useForceUpdate() {
   const [, setState] = useState(Symbol(''));

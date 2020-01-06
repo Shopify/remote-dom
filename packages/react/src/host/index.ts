@@ -1,12 +1,10 @@
+export {Receiver} from '@remote-ui/core';
+
 export {Controller} from './controller';
 export {Renderer} from './Renderer';
 export {
   ReactComponentFromRemoteComponent,
   ReactPropsFromRemoteComponent,
 } from '../types';
-export {
-  useReceiver,
-  useController,
-  ReceiverContext,
-  ControllerContext,
-} from './context';
+export {ReceiverContext, ControllerContext} from './context';
+export {useReceiver, useController} from './hooks';
