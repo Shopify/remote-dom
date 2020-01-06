@@ -6,5 +6,5 @@ import {workspaceTypeScript} from '@sewing-kit/plugin-typescript';
 import {jest} from '@sewing-kit/plugin-jest';
 
 export default createWorkspace((workspace) => {
-  workspace.use(eslint(), workspaceJavaScript(), workspaceTypeScript(), jest());
+  workspace.use(workspaceJavaScript(), workspaceTypeScript(), jest(), eslint());
 });

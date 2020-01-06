@@ -8,7 +8,7 @@ import {typescript} from '@sewing-kit/plugin-typescript';
 import {jestConfigurationHooks} from '@sewing-kit/plugin-jest';
 import {react} from '@sewing-kit/plugin-react';
 import {babelConfigurationHooks} from '@sewing-kit/plugin-babel';
-import {flexibleOutputs} from '@sewing-kit/plugin-package-flexible-outputs';
+import {buildFlexibleOutputs} from '@sewing-kit/plugin-package-flexible-outputs';
 
 const PLUGIN = 'RemoteUi.DefaultProject';
 
@@ -19,7 +19,7 @@ export function defaultProjectPlugin() {
     javascript(),
     typescript(),
     react(),
-    flexibleOutputs({
+    buildFlexibleOutputs({
       esmodules: false,
     }),
     createProjectTestPlugin(PLUGIN, ({hooks}) => {
