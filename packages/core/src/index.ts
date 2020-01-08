@@ -1,3 +1,4 @@
+export {RemoteChild} from '@remote-ui/types';
 export {createRemoteComponent} from './component';
 export {
   Action,
