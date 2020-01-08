@@ -137,16 +137,19 @@ export function createRemoteRoot<
   ) {
     if (mounted && (element === remoteRoot || connected(element as any))) {
       // should only create context once async queue is cleared
-      const remoteResult = remote(dispatch);
+      remote(dispatch);
 
-      if (remoteResult == null || !('then' in remoteResult)) {
-        local();
-        return;
-      } else {
-        return remoteResult.then(() => {
-          local();
-        });
-      }
+      // technically, we should be waiting for the remote update to apply,
+      // then apply it locally. The implementation below is too naive because
+      // it allows local updates to get out of sync with remote ones.
+      // if (remoteResult == null || !('then' in remoteResult)) {
+      //   local();
+      //   return;
+      // } else {
+      //   return remoteResult.then(() => {
+      //     local();
+      //   });
+      // }
     }
 
     local();
@@ -197,6 +200,15 @@ export function createRemoteRoot<
     });
   }
 
+  // there is a problem with this, because when multiple children
+  // are removed, there is no guarantee the messages will arrive in the
+  // order we need them to on the host side (it depends how React
+  // calls our reconciler). If it calls with, for example, the removal of
+  // the second last item, then the removal of the last item, it will fail
+  // because the indexes moved around.
+  //
+  // Might need to send the removed child ID, or find out if we
+  // can collect removals into a single update.
   function removeChild(container: HasChildren, child: CanBeChild) {
     return perform(container, {
       remote: (dispatch) =>
@@ -211,7 +223,7 @@ export function createRemoteRoot<
           tops.set(descendant, child as any),
         );
 
-        const newChildren = [...(children.get(container) || [])];
+        const newChildren = [...(children.get(container) ?? [])];
         newChildren.splice(newChildren.indexOf(child as any), 1);
         children.set(container, Object.freeze(newChildren));
       },
