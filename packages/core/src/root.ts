@@ -1,4 +1,4 @@
-import {RemoteChild} from '@remote-ui/types';
+import {RemoteChild, RemoteComponentType} from '@remote-ui/types';
 import {
   Action,
   Dispatch,
@@ -11,12 +11,21 @@ import {
   // RemoteComponentUpdatePropsViolation,
 } from './types';
 
+export interface Options<
+  AllowedComponents extends RemoteComponentType<any, any>
+> {
+  readonly components: readonly AllowedComponents[];
+}
+
 export function createRemoteRoot<
-  AllowedComponents extends string = string,
+  AllowedComponents extends RemoteComponentType<any, any> = RemoteComponentType<
+    any,
+    any
+  >,
   AllowedChildrenTypes extends AllowedComponents | RemoteChild = RemoteChild
 >(
   dispatch: Dispatch,
-  _config: any,
+  _options: Options<AllowedComponents>,
 ): RemoteRoot<AllowedComponents, AllowedChildrenTypes> {
   type Root = RemoteRoot<AllowedComponents, AllowedChildrenTypes>;
   type Component = RemoteComponent<AllowedComponents, Root>;

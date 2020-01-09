@@ -1,6 +1,6 @@
 export {render} from './render';
 export {createRemoteComponent} from './components';
 export {
-  ReactComponentFromRemoteComponent,
-  ReactPropsFromRemoteComponent,
+  ReactPropsFromRemoteComponentType,
+  ReactComponentTypeFromRemoteComponentType,
 } from './types';

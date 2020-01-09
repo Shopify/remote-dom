@@ -1,10 +1,10 @@
 import {ReactNode, ComponentType} from 'react';
-import {PropsForRemoteComponent} from '@remote-ui/core';
+import {RemoteComponentType, PropsForRemoteComponent} from '@remote-ui/core';
 
-export type ReactPropsFromRemoteComponent<
-  Type extends string
+export type ReactPropsFromRemoteComponentType<
+  Type extends RemoteComponentType<any, any, any>
 > = PropsForRemoteComponent<Type> & {children?: ReactNode};
 
-export type ReactComponentFromRemoteComponent<
-  Type extends string
-> = ComponentType<ReactPropsFromRemoteComponent<Type>>;
+export type ReactComponentTypeFromRemoteComponentType<
+  Type extends RemoteComponentType<any, any, any>
+> = ComponentType<ReactPropsFromRemoteComponentType<Type>>;

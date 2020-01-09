@@ -5,7 +5,11 @@ import {act as domAct} from 'react-dom/test-utils';
 import {createRemoteRoot, Receiver} from '@remote-ui/core';
 
 import {Renderer, Controller} from '../host';
-import {render, createRemoteComponent, ReactPropsFromRemoteComponent} from '..';
+import {
+  render,
+  createRemoteComponent,
+  ReactPropsFromRemoteComponentType,
+} from '..';
 
 declare module '@remote-ui/types' {
   export interface RemoteComponentMap {
@@ -14,15 +18,26 @@ declare module '@remote-ui/types' {
   }
 }
 
-const RemoteHelloWorld = createRemoteComponent('HelloWorld');
-const RemoteWithPerson = createRemoteComponent('WithPerson');
+const RemoteHelloWorld = createRemoteComponent<'HelloWorld', {name: string}>(
+  'HelloWorld',
+);
+
+const RemoteWithPerson = createRemoteComponent<
+  'WithPerson',
+  {run(person: {name: string}): void | Promise<void>}
+>('WithPerson');
+
 const PersonContext = createContext({name: 'Mollie'});
 
-function HostHelloWorld({name}: ReactPropsFromRemoteComponent<'HelloWorld'>) {
+function HostHelloWorld({
+  name,
+}: ReactPropsFromRemoteComponentType<typeof RemoteHelloWorld>) {
   return <div>Hello, {name}</div>;
 }
 
-function HostWithPerson({run}: ReactPropsFromRemoteComponent<'WithPerson'>) {
+function HostWithPerson({
+  run,
+}: ReactPropsFromRemoteComponentType<typeof RemoteWithPerson>) {
   const person = useContext(PersonContext);
 
   useEffect(() => {
@@ -53,7 +68,7 @@ describe('@remote-ui/react', () => {
     });
 
     const remoteRoot = createRemoteRoot(receiver.dispatch, {
-      HelloWorld: {},
+      components: [RemoteHelloWorld],
     });
 
     function RemoteApp() {
@@ -82,7 +97,7 @@ describe('@remote-ui/react', () => {
     });
 
     const remoteRoot = createRemoteRoot(receiver.dispatch, {
-      WithPerson: {},
+      components: [RemoteWithPerson],
     });
 
     function RemoteApp() {

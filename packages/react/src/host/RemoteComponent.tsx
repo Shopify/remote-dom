@@ -31,7 +31,7 @@ export const RemoteComponent = memo(
       };
     }, [unlisten]);
 
-    const Implementation = controller.get(component.type);
+    const Implementation = controller.get(component.type)!;
 
     return createElement(
       Implementation,

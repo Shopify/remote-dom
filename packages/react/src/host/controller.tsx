@@ -1,4 +1,5 @@
 import {ComponentType} from 'react';
+import {RemoteComponentType} from '@remote-ui/core';
 
 export class Controller<
   ComponentConfig extends {[key: string]: ComponentType<any>} = {}
@@ -9,7 +10,7 @@ export class Controller<
     this.registry = new Map(Object.entries(components));
   }
 
-  get(name: string) {
-    return this.registry.get(name)!;
+  get(type: string | RemoteComponentType<any, any, any>) {
+    return this.registry.get(type as any);
   }
 }

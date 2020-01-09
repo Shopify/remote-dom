@@ -1,3 +1,11 @@
-export function createRemoteComponent<T extends string>(name: T): T {
-  return name as any;
+import {RemoteComponentType, RemoteChild} from '@remote-ui/types';
+
+export function createRemoteComponent<
+  Type extends string,
+  Props = {},
+  AllowedChildren extends
+    | RemoteComponentType<any, any>
+    | RemoteChild = RemoteChild
+>(componentType: Type): RemoteComponentType<Type, Props, AllowedChildren> {
+  return componentType as any;
 }

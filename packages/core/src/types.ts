@@ -1,4 +1,9 @@
-import {RemoteComponentMap, RemoteChild} from '@remote-ui/types';
+import {
+  RemoteComponentType,
+  RemoteChild,
+  PropsForRemoteComponent,
+  AllowedChildrenForRemoteComponent,
+} from '@remote-ui/types';
 
 type NonOptionalKeys<T> = {
   [K in keyof T]-?: undefined extends T[K] ? never : K;
@@ -31,12 +36,10 @@ export interface MessageMap {
   [Action.InsertChild]: [
     Id | undefined,
     number,
-    RemoteTextSerialization | RemoteComponentSerialization<string>,
+    RemoteTextSerialization | RemoteComponentSerialization,
   ];
   [Action.RemoveChild]: [Id | undefined, number];
-  [Action.Mount]: [
-    (RemoteTextSerialization | RemoteComponentSerialization<string>)[],
-  ];
+  [Action.Mount]: [(RemoteTextSerialization | RemoteComponentSerialization)[]];
 }
 
 export interface Dispatch {
@@ -51,17 +54,22 @@ export enum RemoteKind {
 type AllowedRemoteChildren<
   Children,
   Root extends RemoteRoot<any, any>
-> = Children extends string ? RemoteComponent<Children, Root> : never;
+> = Children extends RemoteComponentType<any, any>
+  ? RemoteComponent<Children, Root>
+  : never;
 
 type AllowedChildren<
-  Children extends string | RemoteChild,
+  Children extends RemoteComponentType<any, any> | RemoteChild,
   Root extends RemoteRoot<any, any>
 > = Children extends RemoteChild
   ? RemoteComponent<any, Root> | RemoteText<Root>
   : AllowedRemoteChildren<Children, Root>;
 
 export interface RemoteRoot<
-  AllowedComponents extends string = string,
+  AllowedComponents extends RemoteComponentType<any, any> = RemoteComponentType<
+    any,
+    any
+  >,
   AllowedChildrenTypes extends AllowedComponents | RemoteChild = RemoteChild
 > {
   readonly children: readonly AllowedChildren<
@@ -105,24 +113,28 @@ export interface RemoteRoot<
 }
 
 export interface RemoteComponent<
-  Type extends string,
+  Type extends RemoteComponentType<any, any>,
   Root extends RemoteRoot<any, any>
 > {
   readonly id: string;
-  readonly type: Type;
+  readonly type: Type['type'];
   readonly props: PropsForRemoteComponent<Type>;
-  readonly children: readonly ChildrenForRemoteComponent<Type>[];
+  readonly children: readonly AllowedChildrenForRemoteComponent<Type>[];
   readonly root: Root;
-  readonly top: RemoteComponent<string, Root> | Root | null;
-  readonly parent: RemoteComponent<string, Root> | Root | null;
+  readonly top: RemoteComponent<any, Root> | Root | null;
+  readonly parent: RemoteComponent<any, Root> | Root | null;
   updateProps(
     props: Partial<PropsForRemoteComponent<Type>>,
   ): void | Promise<void>;
-  appendChild(child: ChildrenForRemoteComponent<Type>): void | Promise<void>;
-  removeChild(child: ChildrenForRemoteComponent<Type>): void | Promise<void>;
+  appendChild(
+    child: AllowedChildrenForRemoteComponent<Type>,
+  ): void | Promise<void>;
+  removeChild(
+    child: AllowedChildrenForRemoteComponent<Type>,
+  ): void | Promise<void>;
   insertChildBefore(
-    child: ChildrenForRemoteComponent<Type>,
-    before: ChildrenForRemoteComponent<Type>,
+    child: AllowedChildrenForRemoteComponent<Type>,
+    before: AllowedChildrenForRemoteComponent<Type>,
   ): void | Promise<void>;
 }
 
@@ -130,15 +142,17 @@ export interface RemoteText<Root extends RemoteRoot<any, any>> {
   readonly id: string;
   readonly text: string;
   readonly root: Root;
-  readonly top: RemoteComponent<string, Root> | Root | null;
-  readonly parent: RemoteComponent<string, Root> | Root | null;
+  readonly top: RemoteComponent<any, Root> | Root | null;
+  readonly parent: RemoteComponent<any, Root> | Root | null;
   updateText(text: string): void | Promise<void>;
 }
 
-export type RemoteComponentSerialization<Type extends string = string> = {
+export type RemoteComponentSerialization<
+  Type extends RemoteComponentType<any, any> = RemoteComponentType<any, any>
+> = {
   -readonly [K in 'id' | 'type' | 'props']: RemoteComponent<Type, any>[K];
 } & {
-  children: (RemoteComponentSerialization<string> | RemoteTextSerialization)[];
+  children: (RemoteComponentSerialization | RemoteTextSerialization)[];
 };
 
 export type RemoteTextSerialization = {
@@ -149,24 +163,6 @@ export type Serialized<T> = T extends RemoteComponent<infer Type, any>
   ? RemoteComponentSerialization<Type>
   : T extends RemoteText<any>
   ? RemoteTextSerialization
-  : never;
-
-export type PropsForRemoteComponent<
-  T extends string
-> = T extends keyof RemoteComponentMap
-  ? RemoteComponentMap[T] extends [infer U, ...any[]]
-    ? U
-    : never
-  : never;
-
-export type ChildrenForRemoteComponent<
-  T extends string
-> = T extends keyof RemoteComponentMap
-  ? RemoteComponentMap[T] extends [any, infer U]
-    ? U extends RemoteChild
-      ? RemoteComponent<any, any> | RemoteText<any>
-      : U
-    : never
   : never;
 
 export enum RemoteComponentViolationType {

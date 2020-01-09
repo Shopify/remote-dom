@@ -1,10 +1,15 @@
 import reactReconciler from 'react-reconciler';
 
-import {RemoteRoot, RemoteText, RemoteComponent} from '@remote-ui/core';
+import {
+  RemoteRoot,
+  RemoteText,
+  RemoteComponent,
+  RemoteComponentType,
+} from '@remote-ui/core';
 
 const reconciler = reactReconciler<
   // type
-  string,
+  RemoteComponentType<any, any>,
   // props
   Record<string, unknown>,
   // root container

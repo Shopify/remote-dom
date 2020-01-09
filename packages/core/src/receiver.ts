@@ -101,9 +101,7 @@ export class Receiver {
       case Action.UpdateProps: {
         const [id, newProps] = args as MessageMap[Action.UpdateProps];
 
-        const component = this.attached.get(id) as RemoteComponentSerialization<
-          string
-        >;
+        const component = this.attached.get(id) as RemoteComponentSerialization;
         const {props: oldProps} = component;
 
         retain(newProps);
