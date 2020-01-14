@@ -11,4 +11,16 @@ export function render(
   reconciler.updateContainer(element, container, null, () => {
     root.mount();
   });
+
+  // Did not work for me because (I think?) there can only be
+  // one active renderer at a time.
+  // @see https://github.com/facebook/react/issues/16666
+  // @see https://github.com/michalochman/react-pixi-fiber/pull/148
+  //
+  // reconciler.injectIntoDevTools({
+  //   bundleType: 1,
+  //   findFiberByHostInstance: reconciler.findFiberByHostInstance,
+  //   rendererPackageName: '@remote-ui/react',
+  //   version: '16.9.0',
+  // });
 }
