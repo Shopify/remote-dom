@@ -12,8 +12,10 @@ export function render(
     root.mount();
   });
 
-  // Did not work for me because (I think?) there can only be
-  // one active renderer at a time.
+  // Did not work for me because (I think?) it is done by the worker
+  // and therefore has an entirely different React.
+  //
+  // Original code was from:
   // @see https://github.com/facebook/react/issues/16666
   // @see https://github.com/michalochman/react-pixi-fiber/pull/148
   //
