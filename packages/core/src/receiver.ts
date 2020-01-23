@@ -26,6 +26,9 @@ export class Receiver {
     [ROOT_ID, this.root],
   ]);
 
+  private timeout: any;
+  private queuedUpdates = new Set<Attachable>();
+
   private readonly listeners = new Map<
     string | typeof ROOT_ID,
     UpdateListener<any>
@@ -43,11 +46,7 @@ export class Receiver {
           this.attach(child);
         }
 
-        const listener = this.listeners.get(ROOT_ID);
-
-        if (listener) {
-          listener(this.root);
-        }
+        this.enqueueUpdate(this.root);
 
         break;
       }
@@ -62,11 +61,7 @@ export class Receiver {
         this.detach(removed);
         attached.children = children;
 
-        const listener = this.listeners.get(id);
-
-        if (listener) {
-          listener(attached);
-        }
+        this.enqueueUpdate(this.root);
 
         break;
       }
@@ -90,11 +85,7 @@ export class Receiver {
 
         attached.children = children;
 
-        const listener = this.listeners.get(id);
-
-        if (listener) {
-          listener(attached);
-        }
+        this.enqueueUpdate(attached);
 
         break;
       }
@@ -114,11 +105,7 @@ export class Receiver {
 
         component.props = props;
 
-        const listener = this.listeners.get(id);
-
-        if (listener) {
-          listener(component);
-        }
+        this.enqueueUpdate(component);
 
         break;
       }
@@ -147,6 +134,27 @@ export class Receiver {
         this.listeners.delete(id);
       }
     };
+  }
+
+  private enqueueUpdate(attached: Attachable) {
+    if (this.timeout == null) {
+      this.timeout = setTimeout(() => {
+        const queuedUpdates = [...this.queuedUpdates];
+
+        this.timeout = null;
+        this.queuedUpdates.clear();
+
+        for (const attached of queuedUpdates) {
+          const listener = this.listeners.get(
+            attached === this.root ? ROOT_ID : attached.id,
+          );
+
+          listener?.(attached);
+        }
+      }, 0);
+    }
+
+    this.queuedUpdates.add(attached);
   }
 
   private attach(child: Child) {
