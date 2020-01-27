@@ -6,7 +6,7 @@ import {
   useContext,
 } from 'react';
 
-import {ControllerContext, ReceiverContext} from './context';
+import {ControllerContext, RemoteReceiverContext} from './context';
 
 export function useController() {
   const controller = useContext(ControllerContext);
@@ -18,8 +18,8 @@ export function useController() {
   return controller;
 }
 
-export function useReceiver() {
-  const receiver = useContext(ReceiverContext);
+export function useRemoteReceiver() {
+  const receiver = useContext(RemoteReceiverContext);
 
   if (receiver == null) {
     throw new Error('No remote-ui Receiver instance found in context');

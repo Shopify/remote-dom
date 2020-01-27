@@ -1,8 +1,8 @@
 import {retain, release} from 'remote-call';
 import {
   Action,
-  Dispatch,
   MessageMap,
+  RemoteChannel,
   RemoteTextSerialization,
   RemoteComponentSerialization,
 } from './types';
@@ -20,7 +20,7 @@ type Attachable = Child | Root;
 
 type UpdateListener<T extends Attachable> = (updated: T) => void;
 
-export class Receiver {
+export class RemoteReceiver {
   readonly root: Root = {id: ROOT_ID, children: []};
   private attached = new Map<string | typeof ROOT_ID, Attachable>([
     [ROOT_ID, this.root],
@@ -34,7 +34,7 @@ export class Receiver {
     UpdateListener<any>
   >();
 
-  readonly dispatch: Dispatch = (type, ...args) => {
+  readonly receive: RemoteChannel = (type, ...args) => {
     switch (type) {
       case Action.Mount: {
         const children = (args as MessageMap[Action.Mount])[0];

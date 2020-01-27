@@ -5,6 +5,6 @@
     {"path": "./packages/types"},
     {"path": "./packages/core"},
     {"path": "./packages/react"},
-    {"path": "./packages/remote-call"}
+    {"path": "./packages/rpc"}
   ]
 }

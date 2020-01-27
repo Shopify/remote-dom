@@ -1,7 +1,7 @@
 import React, {memo, useState, useEffect} from 'react';
 import {
-  Receiver,
   Serialized,
+  RemoteReceiver,
   RemoteText as RemoteTextDescription,
 } from '@remote-ui/core';
 
@@ -9,7 +9,7 @@ import {useLazyRef, useOnValueChange} from './hooks';
 
 interface Props {
   text: Serialized<RemoteTextDescription<any>>;
-  receiver: Receiver;
+  receiver: RemoteReceiver;
 }
 
 export const RemoteText = memo(({text, receiver}: Props) => {

@@ -1,9 +1,11 @@
 import {ComponentType} from 'react';
 import {RemoteComponentType} from '@remote-ui/core';
 
-export class Controller<
-  ComponentConfig extends {[key: string]: ComponentType<any>} = {}
-> {
+export interface ComponentMapping {
+  [key: string]: ComponentType<any>;
+}
+
+export class Controller<ComponentConfig extends ComponentMapping = {}> {
   private readonly registry: Map<string, ComponentType<any>>;
 
   constructor(public readonly components: ComponentConfig = {} as any) {

@@ -1,7 +1,7 @@
 import React, {memo, useEffect, createElement} from 'react';
 import {
-  Receiver,
   Serialized,
+  RemoteReceiver,
   RemoteComponent as RemoteComponentDescription,
 } from '@remote-ui/core';
 
@@ -10,7 +10,7 @@ import {RemoteText} from './RemoteText';
 import {useForceUpdate, useLazyRef, useOnValueChange} from './hooks';
 
 interface Props {
-  receiver: Receiver;
+  receiver: RemoteReceiver;
   component: Serialized<RemoteComponentDescription<any, any>>;
   controller: Controller;
 }

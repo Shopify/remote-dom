@@ -1,10 +1,10 @@
 import {RemoteChild, RemoteComponentType} from '@remote-ui/types';
 import {
   Action,
-  Dispatch,
   Serialized,
   RemoteRoot,
   RemoteText,
+  RemoteChannel,
   RemoteComponent,
   // RemoteComponentInsertChildViolation,
   // RemoteComponentInsertRootViolation,
@@ -24,7 +24,7 @@ export function createRemoteRoot<
   >,
   AllowedChildrenTypes extends AllowedComponents | RemoteChild = RemoteChild
 >(
-  dispatch: Dispatch,
+  channel: RemoteChannel,
   _options: Options<AllowedComponents>,
 ): RemoteRoot<AllowedComponents, AllowedChildrenTypes> {
   type Root = RemoteRoot<AllowedComponents, AllowedChildrenTypes>;
@@ -105,7 +105,7 @@ export function createRemoteRoot<
     insertChildBefore: (child, before) =>
       insertChildBefore(remoteRoot, child, before),
     async mount() {
-      await dispatch(Action.Mount, children.get(remoteRoot)!.map(serialize));
+      await channel(Action.Mount, children.get(remoteRoot)!.map(serialize));
       mounted = true;
     },
   };
@@ -140,13 +140,13 @@ export function createRemoteRoot<
       remote,
       local,
     }: {
-      remote(dispatch: Dispatch): void | Promise<void>;
+      remote(channel: RemoteChannel): void | Promise<void>;
       local(): void;
     },
   ) {
     if (mounted && (element === remoteRoot || connected(element as any))) {
       // should only create context once async queue is cleared
-      remote(dispatch);
+      remote(channel);
 
       // technically, we should be waiting for the remote update to apply,
       // then apply it locally. The implementation below is too naive because
@@ -166,15 +166,14 @@ export function createRemoteRoot<
 
   function updateText(text: Text, newText: string) {
     return perform(text, {
-      remote: (dispatch) => dispatch(Action.UpdateText, text.id, newText),
+      remote: (channel) => channel(Action.UpdateText, text.id, newText),
       local: () => texts.set(text, newText),
     });
   }
 
   function updateProps(component: Component, newProps: any) {
     return perform(component, {
-      remote: (dispatch) =>
-        dispatch(Action.UpdateProps, component.id, newProps),
+      remote: (channel) => channel(Action.UpdateProps, component.id, newProps),
       local: () => {
         props.set(
           component,
@@ -186,8 +185,8 @@ export function createRemoteRoot<
 
   function appendChild(container: HasChildren, child: CanBeChild) {
     return perform(container, {
-      remote: (dispatch) =>
-        dispatch(
+      remote: (channel) =>
+        channel(
           Action.InsertChild,
           (container as any).id,
           container.children.length,
@@ -220,8 +219,8 @@ export function createRemoteRoot<
   // can collect removals into a single update.
   function removeChild(container: HasChildren, child: CanBeChild) {
     return perform(container, {
-      remote: (dispatch) =>
-        dispatch(
+      remote: (channel) =>
+        channel(
           Action.RemoveChild,
           (container as any).id,
           container.children.indexOf(child as any),
@@ -245,8 +244,8 @@ export function createRemoteRoot<
     before: CanBeChild,
   ) {
     return perform(container, {
-      remote: (dispatch) =>
-        dispatch(
+      remote: (channel) =>
+        channel(
           Action.InsertChild,
           (container as any).id,
           container.children.indexOf(before as any),

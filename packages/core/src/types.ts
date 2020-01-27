@@ -42,7 +42,7 @@ export interface MessageMap {
   [Action.Mount]: [(RemoteTextSerialization | RemoteComponentSerialization)[]];
 }
 
-export interface Dispatch {
+export interface RemoteChannel {
   <T extends Action>(type: T, ...payload: MessageMap[T]): void | Promise<void>;
 }
 

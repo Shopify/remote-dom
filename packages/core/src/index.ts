@@ -8,12 +8,12 @@ export {
 export {createRemoteComponent} from './component';
 export {
   Action,
-  Dispatch,
   RemoteRoot,
+  RemoteChannel,
   RemoteComponent,
   RemoteText,
   Serialized,
 } from './types';
 export {createRemoteRoot} from './root';
-export {Receiver} from './receiver';
+export {RemoteReceiver} from './receiver';
 // export * from './validators';

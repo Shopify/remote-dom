@@ -1,21 +1,30 @@
-import React, {memo, Fragment, useState, useEffect, createElement} from 'react';
-import {Receiver} from '@remote-ui/core';
+import React, {
+  memo,
+  useMemo,
+  Fragment,
+  useState,
+  useEffect,
+  createElement,
+} from 'react';
+import {RemoteReceiver} from '@remote-ui/core';
 
-import {Controller} from './controller';
+import {Controller, ComponentMapping} from './controller';
 import {useLazyRef} from './hooks';
 import {RemoteText} from './RemoteText';
 import {RemoteComponent} from './RemoteComponent';
 
 interface Props {
-  receiver: Receiver;
-  controller: Controller;
+  receiver: RemoteReceiver;
+  components: ComponentMapping;
 }
 
-export const Renderer = memo(({controller, receiver}: Props) => {
+export const RemoteRenderer = memo(({components, receiver}: Props) => {
   const [children, setChildren] = useState(() => receiver.root.children);
   const unlisten = useLazyRef(() =>
     receiver.on(receiver.root, ({children}) => setChildren(children)),
   );
+
+  const controller = useMemo(() => new Controller(components), [components]);
 
   useEffect(() => {
     return () => {
