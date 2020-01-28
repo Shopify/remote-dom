@@ -21,7 +21,7 @@ interface Props {
 export const RemoteRenderer = memo(({components, receiver}: Props) => {
   const [children, setChildren] = useState(() => receiver.root.children);
   const unlisten = useLazyRef(() =>
-    receiver.on(receiver.root, ({children}) => setChildren(children)),
+    receiver.listen(receiver.root, ({children}) => setChildren(children)),
   );
 
   const controller = useMemo(() => new Controller(components), [components]);

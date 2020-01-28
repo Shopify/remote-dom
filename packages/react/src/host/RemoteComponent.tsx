@@ -18,11 +18,11 @@ interface Props {
 export const RemoteComponent = memo(
   ({receiver, component, controller}: Props) => {
     const forceUpdate = useForceUpdate();
-    const unlisten = useLazyRef(() => receiver.on(component, forceUpdate));
+    const unlisten = useLazyRef(() => receiver.listen(component, forceUpdate));
 
     useOnValueChange(component, (newValue) => {
       unlisten.current();
-      unlisten.current = receiver.on(newValue, forceUpdate);
+      unlisten.current = receiver.listen(newValue, forceUpdate);
     });
 
     useEffect(() => {

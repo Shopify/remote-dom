@@ -15,12 +15,14 @@ interface Props {
 export const RemoteText = memo(({text, receiver}: Props) => {
   const [textContent, setTextContent] = useState(() => text.text);
   const unlisten = useLazyRef(() =>
-    receiver.on(text, ({text}) => setTextContent(text)),
+    receiver.listen(text, ({text}) => setTextContent(text)),
   );
 
   useOnValueChange(text, (newValue) => {
     unlisten.current();
-    unlisten.current = receiver.on(newValue, ({text}) => setTextContent(text));
+    unlisten.current = receiver.listen(newValue, ({text}) =>
+      setTextContent(text),
+    );
   });
 
   useEffect(() => {

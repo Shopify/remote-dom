@@ -126,7 +126,7 @@ export class RemoteReceiver {
     }
   };
 
-  on<T extends Attachable>({id}: T, listener: UpdateListener<T>) {
+  listen<T extends Attachable>({id}: T, listener: UpdateListener<T>) {
     this.listeners.set(id, listener);
 
     return () => {

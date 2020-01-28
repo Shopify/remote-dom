@@ -194,6 +194,131 @@ if (LOCALE === 'fr') {
 
 ### `RemoteReceiver`
 
+The opposite side of a `RemoteRoot` is a `RemoteReceiver`. This object can accept the UI updates from the remote context and reconstruct them into an observable tree on the host. This tree can then be used to render the host components.
+
+```ts
+import {RemoteReceiver} from '@remote-ui/core';
+
+const receiver = new RemoteReceiver();
+```
+
+The `RemoteReceiver` instance has a number of properties and methods to connect it to a remote root, and to allow other objects to subscribe to updates. The full API is documented below.
+
+#### `RemoteReceiver#root`
+
+The `root` property is a readonly representation of the state of the remote root. You can use this property to get the initial set of components that are children of the root.
+
+```ts
+import {RemoteReceiver} from '@remote-ui/core';
+
+const receiver = new RemoteReceiver();
+
+for (const child of receiver.root.children) {
+  console.log(child);
+}
+```
+
+#### `RemoteReceiver#receive()`
+
+The `receive` method is a function that can be used as the first argument to the `createRemoteRoot` function. Passing this function to the remote root will cause all updates from that root to be reflected in the `RemoteReceiver`.
+
+```ts
+import {RemoteReceiver, createRemoteRoot} from '@remote-ui/core';
+
+const receiver = new RemoteReceiver();
+const root = createRemoteRoot(receiver.receive);
+```
+
+#### `RemoteReceiver#listen()`
+
+The `listen` method registers a listener to run whenever a component in the tree changes, including the addition or removal of children, the changing of component properties, and the changing of remote text values. The first argument is the element to listen for, and the second is a function that will be invoked every time that element changes for any reason. This method returns a function that can be called to stop listening for updates.
+
+```ts
+import {RemoteReceiver} from '@remote-ui/core';
+
+const receiver = new RemoteReceiver();
+const seen = new WeakMap();
+
+receiver.listen(receiver.root, (root) => {
+  console.log('Root changed!');
+
+  for (const child of root.children) {
+    if (seen.has(child)) continue;
+
+    receiver.listen(child, (child) => {
+      console.log('A root child changed!');
+    });
+  }
+});
+```
+
+Host implementations can use this method to update their representation of the UI in response to changes from the remote context. A simple implementation would listen for changes to the root and, when it changes, listen for changes in any new children. It would then update its tree to match the remote root (remove components no longer present in the `children` property, for example), and schedule the update to be rendered. The [`@remote-ui/react` package](../react) is implemented by using this object and mapping it to React state.
+
 ### `createRemoteComponent`
 
+By default, "native" components are referenced by their string name, like `'Button'` or `'Card'`. However, this library provides a way of attaching validations to components, and to specify the TypeScript type for the available component properties. This more formal creation of a "remote component" is accomplished with the `createRemoteComponent`.
+
+This function accepts two arguments. The first is the string name of the component, and the second is an optional options object.
+
+> Note: validation API still TODO
+
+The function also accepts a set of generic type arguments that let you enforce some metadata about the component in TypeScript. The first type argument is the friendly name of the component, the second is the type of the props available for the component, and the third is the components that are allowed to be direct children of this one (by default, all component types are allowed).
+
+```ts
+import {createRemoteComponent} from '@remote-ui/core';
+
+const Button = createRemoteComponent<
+  'Button',
+  {onPress?(): void | Promise<void>}
+>('Button');
+
+const CardSection = createRemoteComponent<'CardSection'>('CardSection');
+const Card = createRemoteComponent<'Card', {title: string}, typeof CardSection>(
+  'Card',
+);
+```
+
+These types are used to validate the passed arguments in `RemoteRoot#createComponent`, `RemoteRoot#appendChild`, and the other mutation APIs. With the example above, TypeScript would complain about the following calls, because we are not providing the mandatory `title` prop to `createComponent`, and we are appending a component other than `CardSection` to `Card`.
+
+```ts
+import {createRemoteRoot} from '@remote-ui/core';
+
+const root = createRemoteRoot(/* ... */);
+const button = root.createComponent(Button, {
+  onPress: () => console.log('Clicked!'),
+});
+const card = root.createComponent(Card);
+card.appendChild(button);
+```
+
 ### Other exports
+
+This package exports a variety of helper types for easy access in more complex use cases, including some types representing the wire format Remote UI uses to communicate component tree updates. It also re-exports the `retain` and `release` methods from `@remote-ui/rpc` for easy access. Finally, it provides some types that may be useful for you to describe the different objects in Remote UI in your application:
+
+- `RemoteComponentType` represents the components created by `createRemoteComponent`. This type has the prop types and allowed children embedded in its type.
+- `PropsForRemoteComponent` accepts a `RemoteComponentType` as a type argument, and returns the type of the props for that component.
+
+  ```ts
+  import {
+    createRemoteComponent,
+    PropsForRemoteComponent,
+  } from '@remote-ui/core';
+
+  const Button = createRemoteComponent<'Button', {onPress?(): void}>('Button');
+  type ButtonProps = PropsForRemoteComponent<typeof Button>; // {onPress?(): void}
+  ```
+
+- `AllowedChildrenForRemoteComponent` accepts a `RemoteComponentType` as a type argument, and returns the types of the components allowed to be direct children of that component.
+
+  ```ts
+  import {
+    createRemoteComponent,
+    AllowedChildrenForRemoteComponent,
+  } from '@remote-ui/core';
+
+  const Button = createRemoteComponent<'Button', {onPress?(): void}>('Button');
+  const ButtonGroup = createRemoteComponent<'ButtonGroup', {}, typeof Button>(
+    'ButtonGroup',
+  );
+  type ButtonChildren = AllowedChildrenForRemoteComponent<typeof ButtonGroup>; // Button
+  ```

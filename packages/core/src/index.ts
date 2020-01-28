@@ -5,6 +5,8 @@ export {
   AllowedChildrenForRemoteComponent,
 } from '@remote-ui/types';
 
+export {retain, release} from 'remote-call';
+
 export {createRemoteComponent} from './component';
 export {
   Action,
