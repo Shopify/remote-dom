@@ -8072,11 +8072,6 @@ regjsparser@^0.6.0:
   dependencies:
     jsesc "~0.5.0"
 
-remote-call@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/remote-call/-/remote-call-0.0.2.tgz#8110fc1d27512c48e524000a71183e9b45f34c30"
-  integrity sha512-bpowhJ03DWSjmcrqdXJL7sYOm3RdhuBlr/UaH31a1AWl/pTeMajASkIUorz0Z6XoCmLDzYP3+vzm21OMFvx+Lg==
-
 remove-trailing-separator@^1.0.1:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/remove-trailing-separator/-/remove-trailing-separator-1.1.0.tgz#c24bce2a283adad5bc3f58e0d48249b92379d8ef"

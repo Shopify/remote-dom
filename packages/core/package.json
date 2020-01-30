@@ -8,6 +8,6 @@
   "license": "MIT",
   "dependencies": {
     "@remote-ui/types": "^0.0.4",
-    "remote-call": "^0.0.2"
+    "@remote-ui/rpc": "^0.0.1"
   }
 }
