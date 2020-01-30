@@ -1,7 +1,7 @@
 import {RemoteChild, RemoteComponentType} from '@remote-ui/core';
 import {ReactComponentTypeFromRemoteComponentType} from './types';
 
-export function createRemoteComponent<
+export function createRemoteReactComponent<
   Type extends string,
   Props = {},
   AllowedChildren extends

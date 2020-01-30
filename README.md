@@ -245,28 +245,28 @@ By separating out worker creation, we allow you to define whatever API you want 
 
 With the code above in place, we now have a fully functional environment. Running this application should cause the worker to run its code when the `WorkerRenderer` component mounts. When the third-party code calls `root.mount()`, the initial representation of their UI will be sent to the UI thread and rendered using the host `Card` and `Button` implementations. However, the authorizing experience for the third-party code isn’t quite as nice as we’d like it to be. There is no type-checking to ensure that only valid components/ properties are supplied or that the code is using the available global API correctly, and if we need to add any stateful logic to our UI (for example, changing the content of the card on click), we’ll have to handle that all manually. These limitations are probably fine for simpler use cases, but as the API you expose this way expands, you will probably want to provide the third-party code with some additional developer niceties.
 
-In this example, we’ll start by splitting out the definitions of the available components into an external library, like a public NPM package that could be used both by the application and the third-party. This code will use the `createRemoteComponent` helper from `@remote-ui/react` to expose the available "native" components as strongly typed React components. We’ll also export a function that will offer a strongly-typed alternative to calling your global `onRender` API directly:
+In this example, we’ll start by splitting out the definitions of the available components into an external library, like a public NPM package that could be used both by the application and the third-party. This code will use the `createRemoteReactComponent` helper from `@remote-ui/react` to expose the available "native" components as strongly typed React components. We’ll also export a function that will offer a strongly-typed alternative to calling your global `onRender` API directly:
 
 ```ts
 // in @company/ui-api
 
 import {
   RemoteRoot,
-  createRemoteComponent,
-  PropsForRemoteComponent,
+  createRemoteReactComponent,
+  ReactPropsFromRemoteComponentType,
 } from '@remote-ui/react';
 
 // First type argument is a friendly name, second is the available
-// props. We use the PropsForRemoteComponent because it will take
+// props. We use the ReactPropsFromRemoteComponentType because it will take
 // care of the `children` prop for us in a smart way.
-export const Card = createRemoteComponent<'Card', {}>('Card');
-export type CardProps = PropsForRemoteComponent<typeof Card>;
+export const Card = createRemoteReactComponent<'Card', {}>('Card');
+export type CardProps = ReactPropsFromRemoteComponentType<typeof Card>;
 
-export const Button = createRemoteComponent<
+export const Button = createRemoteReactComponent<
   'Button',
   {onPress(): void | Promise<void>}
 >('Button');
-export type ButtonProps = PropsForRemoteComponent<typeof Button>;
+export type ButtonProps = ReactPropsFromRemoteComponentType<typeof Button>;
 
 export function onRender(
   renderer: (root: RemoteRoot<typeof Card | typeof Button>) => void,

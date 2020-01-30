@@ -1,4 +1,4 @@
-import {retain, release} from 'remote-call';
+import {retain, release} from '@remote-ui/rpc';
 import {
   Action,
   MessageMap,

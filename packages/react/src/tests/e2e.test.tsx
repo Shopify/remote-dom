@@ -2,12 +2,12 @@ import React, {useEffect, useContext, createContext} from 'react';
 import {render as domRender} from 'react-dom';
 import {act as domAct} from 'react-dom/test-utils';
 
-import {createRemoteRoot, Receiver} from '@remote-ui/core';
+import {createRemoteRoot, RemoteReceiver} from '@remote-ui/core';
 
-import {Renderer, Controller} from '../host';
+import {RemoteRenderer} from '../host';
 import {
   render,
-  createRemoteComponent,
+  createRemoteReactComponent,
   ReactPropsFromRemoteComponentType,
 } from '..';
 
@@ -18,11 +18,12 @@ declare module '@remote-ui/types' {
   }
 }
 
-const RemoteHelloWorld = createRemoteComponent<'HelloWorld', {name: string}>(
+const RemoteHelloWorld = createRemoteReactComponent<
   'HelloWorld',
-);
+  {name: string}
+>('HelloWorld');
 
-const RemoteWithPerson = createRemoteComponent<
+const RemoteWithPerson = createRemoteReactComponent<
   'WithPerson',
   {run(person: {name: string}): void | Promise<void>}
 >('WithPerson');
@@ -53,21 +54,19 @@ describe('@remote-ui/react', () => {
   beforeEach(() => {
     appElement = document.createElement('div');
     document.body.appendChild(appElement);
+    jest.useFakeTimers();
   });
 
   afterEach(() => {
     appElement.remove();
+    jest.useRealTimers();
   });
 
   it('renders a simple component across a remote bridge', () => {
     const name = 'Winston';
 
-    const receiver = new Receiver();
-    const controller = new Controller({
-      HelloWorld: HostHelloWorld,
-    });
-
-    const remoteRoot = createRemoteRoot(receiver.dispatch, {
+    const receiver = new RemoteReceiver();
+    const remoteRoot = createRemoteRoot(receiver.receive, {
       components: [RemoteHelloWorld],
     });
 
@@ -76,12 +75,18 @@ describe('@remote-ui/react', () => {
     }
 
     function HostApp() {
-      return <Renderer controller={controller} receiver={receiver} />;
+      return (
+        <RemoteRenderer
+          components={{HelloWorld: HostHelloWorld}}
+          receiver={receiver}
+        />
+      );
     }
 
     domAct(() => {
       domRender(<HostApp />, appElement);
       render(<RemoteApp />, remoteRoot);
+      jest.runAllTimers();
     });
 
     expect(appElement.innerHTML).toBe(`<div>Hello, ${name}</div>`);
@@ -91,12 +96,8 @@ describe('@remote-ui/react', () => {
     const person = {name: 'Luna'};
     const spy = jest.fn();
 
-    const receiver = new Receiver();
-    const controller = new Controller({
-      WithPerson: HostWithPerson,
-    });
-
-    const remoteRoot = createRemoteRoot(receiver.dispatch, {
+    const receiver = new RemoteReceiver();
+    const remoteRoot = createRemoteRoot(receiver.receive, {
       components: [RemoteWithPerson],
     });
 
@@ -105,7 +106,14 @@ describe('@remote-ui/react', () => {
     }
 
     function HostApp() {
-      return <Renderer controller={controller} receiver={receiver} />;
+      return (
+        <RemoteRenderer
+          components={{
+            WithPerson: HostWithPerson,
+          }}
+          receiver={receiver}
+        />
+      );
     }
 
     domAct(() => {
@@ -116,6 +124,7 @@ describe('@remote-ui/react', () => {
         appElement,
       );
       render(<RemoteApp />, remoteRoot);
+      jest.runAllTimers();
     });
 
     expect(spy).toHaveBeenCalledWith(person);
