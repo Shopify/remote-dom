@@ -27,7 +27,7 @@
     "@sewing-kit/plugin-package-flexible-outputs": "^0.0.31",
     "@sewing-kit/plugin-react": "^0.0.31",
     "@sewing-kit/plugin-typescript": "^0.0.40",
-    "lerna": "^3.20.2"
+    "lerna": "^3.16.4"
   },
   "dependencies": {}
 }
