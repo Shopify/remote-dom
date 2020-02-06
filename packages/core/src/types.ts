@@ -3,7 +3,7 @@ import {
   RemoteChild,
   PropsForRemoteComponent,
   AllowedChildrenForRemoteComponent,
-} from '@remote-ui/types';
+} from '@shopify/remote-ui-types';
 
 type NonOptionalKeys<T> = {
   [K in keyof T]-?: undefined extends T[K] ? never : K;

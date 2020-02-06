@@ -6,13 +6,13 @@ Remote UI allows you to create custom component APIs in JavaScript that can be u
 
 Remote UI is made up of a few different modules that allow development teams to expose these “UI APIs” in a way that makes sense for them:
 
-- `@remote-ui/core` gives you the tools to create a “remote root”: a root for a tree of component nodes that can communicate operations (adding or removing children, changing properties of components) through a tiny wire format suitable for `postMessage` communication. This remote root can enforce validations, like restricting the available components, their children, and their allowed properties. Finally, this library offers some helpful utilities for implementing “hosts” of a remote root; that is, code running on the UI thread that can transform the communication format of a remote root into platform-native components.
-- `@remote-ui/rpc` is a small wrapper for `postMessage`-like interfaces. Its key feature is flexible support for serializing functions (implemented via message passing), with additional helper functions to help with the memory management concerns of serializing functions. While not strictly necessary, passing functions as component properties (e.g., `onPress` of a `Button` component) is often very useful, and so all libraries in this project assume the use of this `rpc` library in order to provide seamless handling of function component properties.
+- `@shopify/remote-ui-core` gives you the tools to create a “remote root”: a root for a tree of component nodes that can communicate operations (adding or removing children, changing properties of components) through a tiny wire format suitable for `postMessage` communication. This remote root can enforce validations, like restricting the available components, their children, and their allowed properties. Finally, this library offers some helpful utilities for implementing “hosts” of a remote root; that is, code running on the UI thread that can transform the communication format of a remote root into platform-native components.
+- `@shopify/remote-ui-rpc` is a small wrapper for `postMessage`-like interfaces. Its key feature is flexible support for serializing functions (implemented via message passing), with additional helper functions to help with the memory management concerns of serializing functions. While not strictly necessary, passing functions as component properties (e.g., `onPress` of a `Button` component) is often very useful, and so all libraries in this project assume the use of this `rpc` library in order to provide seamless handling of function component properties.
 - `@remote-ui/web-worker` makes it easy to use Remote UI to offload application code to a web worker. It does so through small runtime utilities and a collection of build tool integrations that allow you to author web workers with all the comfort of your existing tools and libraries.
 
   > Note: this will be `@remote-ui/web-worker` eventually, for now it's under our `@shopify` org: https://github.com/Shopify/quilt/tree/master/packages/web-worker
 
-- `@remote-ui/react` adds some friendly React bindings on top of `@remote-ui/core`. It provides a custom React renderer that lets you use all the React features you’re used to from React DOM or React Native, but which outputs updates as operations on the core library’s component types. It also provides a React component that handles the UI thread by mapping custom components from the remote root to React components on the host.
+- `@remote-ui/react` adds some friendly React bindings on top of `@shopify/remote-ui-core`. It provides a custom React renderer that lets you use all the React features you’re used to from React DOM or React Native, but which outputs updates as operations on the core library’s component types. It also provides a React component that handles the UI thread by mapping custom components from the remote root to React components on the host.
 
 The rest of this document will show a complete, end-to-end working example that uses Remote UI in a web application, but deeper explanation of the available APIs and options is left to the individual library's documentation.
 
@@ -94,7 +94,7 @@ We now have a remote environment, but we need to plan exactly how this remote en
    ```ts
    // in worker.ts
 
-   import {RemoteRoot} from '@remote-ui/core';
+   import {RemoteRoot} from '@shopify/remote-ui-core';
 
    type RenderCallback = (root: RemoteRoot) => void;
 
@@ -113,7 +113,7 @@ We now have a remote environment, but we need to plan exactly how this remote en
    ```ts
    // in worker.ts
 
-   import {createRemoteRoot, RemoteRoot, RemoteReceiver} from '@remote-ui/core';
+   import {createRemoteRoot, RemoteRoot, RemoteReceiver} from '@shopify/remote-ui-core';
 
    type RenderCallback = (root: RemoteRoot) => void;
 
@@ -147,12 +147,12 @@ We now have a remote environment, but we need to plan exactly how this remote en
    The code above works, but we haven’t defined any components that can be rendered. By default, a remote root only allows you to render host components you explicitly list as available. You can list available components in different ways depending on the strictness and dynamism you need from the environment. For now, we will provide a list of available types manually to `createRemoteRoot`:
 
    ```ts
-   import {retain} from '@remote-ui/core';
+   import {retain} from '@shopify/remote-ui-core';
 
    export function run(script: string, receiver: RemoteReceiver) {
      // Functions you get from the UI thread that you want to "keep alive"
      // outside the scope of the function in which they were received need
-     // to be manually retained. See @remote-ui/rpc documentation for details.
+     // to be manually retained. See @shopify/remote-ui-rpc documentation for details.
 
      retain(receiver);
 
@@ -230,7 +230,7 @@ function Button({
   onPress,
 }: {
   children: ReactNode;
-  // Functions passed over @remote-ui/rpc always return promises,
+  // Functions passed over @shopify/remote-ui-rpc always return promises,
   // so make sure it’s a considered return type.
   onPress(): void | Promise<void>;
 }) {
@@ -352,4 +352,4 @@ With these small changes, the third-party developer will get great feedback on t
 
 The core behavior of Remote UI is very simple. `createRemoteRoot` constructs an object that has a very small, DOM-like API for constructing, adding, removing, and updating components in the tree. `createRemoteRoot` is passed a function on initialization. When changes happen anywhere in the tree from a remote root, it sends a serialized copy of those changes to the function that it was initialized with. The `RemoteReceiver`, which has a `receive` method that can be used as the argument for `createRemoteRoot`, can take those messages and construct a matching representation of the tree on the host side. From there, host implementations (like the `RemoteRenderer` from `@remote-ui/react`) can take the state of the tree and render it to platform-native components.
 
-Though you rarely saw it mentioned in the example above, `@remote-ui/rpc` plays the most critical role in making this system work. It augments two ends of a `postMessage`-like interface (e.g., the worker side and parent side of the `Worker` object) to allow passing objects even if they have function properties. Function properties are turned into proxies that implement function calling via message passing, all of which happens transparently for the rest of the `@remote-ui` libraries. The other libraries only need to do a bit of memory management housekeeping to dispose of proxied functions when they are no longer needed. The domain of Remote UI makes this fairly easy to do in the common case: the only thing that ever gets passed from the worker to the parent are component descriptions, which contain the type and properties of the components in the tree. We can hook in to when the properties are updated, or nodes are added or removed from the remote tree, to automatically release any references to functions that are no longer "live".
+Though you rarely saw it mentioned in the example above, `@shopify/remote-ui-rpc` plays the most critical role in making this system work. It augments two ends of a `postMessage`-like interface (e.g., the worker side and parent side of the `Worker` object) to allow passing objects even if they have function properties. Function properties are turned into proxies that implement function calling via message passing, all of which happens transparently for the rest of the `@remote-ui` libraries. The other libraries only need to do a bit of memory management housekeeping to dispose of proxied functions when they are no longer needed. The domain of Remote UI makes this fairly easy to do in the common case: the only thing that ever gets passed from the worker to the parent are component descriptions, which contain the type and properties of the components in the tree. We can hook in to when the properties are updated, or nodes are added or removed from the remote tree, to automatically release any references to functions that are no longer "live".

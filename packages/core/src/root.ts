@@ -1,4 +1,4 @@
-import {RemoteChild, RemoteComponentType} from '@remote-ui/types';
+import {RemoteChild, RemoteComponentType} from '@shopify/remote-ui-types';
 import {
   Action,
   Serialized,

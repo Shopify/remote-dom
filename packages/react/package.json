@@ -1,9 +1,9 @@
 {
-  "name": "@remote-ui/react",
+  "name": "@shopify/remote-ui-react",
   "version": "0.0.11",
   "publishConfig": {
-    "access": "public",
-    "@remote-ui:registry": "https://registry.npmjs.org"
+    "access": "restricted",
+    "registry": "https://packages.shopify.io/shopify/node/npm/"
   },
   "license": "MIT",
   "devDependencies": {
@@ -13,7 +13,7 @@
     "react-dom": "^16.12.0"
   },
   "dependencies": {
-    "@remote-ui/core": "^0.0.9",
+    "@shopify/remote-ui-core": "^0.0.9",
     "@types/react": ">=16.8.0 <17.0.0",
     "react-reconciler": "*"
   }

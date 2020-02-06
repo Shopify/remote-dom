@@ -1,0 +1,13 @@
+name: remote-ui
+type: node
+up:
+  - node:
+      version: v13.1.0
+      yarn: 1.17.3
+commands:
+  __default__: start
+  build: yarnpkg build
+  check: yarnpkg type-check
+  lint: yarnpkg lint
+  start: echo "No playground setup yet."
+  test: yarnpkg test

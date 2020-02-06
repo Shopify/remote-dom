@@ -1,5 +1,5 @@
 import {ComponentType} from 'react';
-import {RemoteComponentType} from '@remote-ui/core';
+import {RemoteComponentType} from '@shopify/remote-ui-core';
 
 export interface ComponentMapping {
   [key: string]: ComponentType<any>;

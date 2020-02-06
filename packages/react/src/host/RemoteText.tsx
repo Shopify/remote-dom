@@ -3,7 +3,7 @@ import {
   Serialized,
   RemoteReceiver,
   RemoteText as RemoteTextDescription,
-} from '@remote-ui/core';
+} from '@shopify/remote-ui-core';
 
 import {useLazyRef, useOnValueChange} from './hooks';
 

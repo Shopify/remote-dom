@@ -6,7 +6,7 @@ import React, {
   useEffect,
   createElement,
 } from 'react';
-import {RemoteReceiver} from '@remote-ui/core';
+import {RemoteReceiver} from '@shopify/remote-ui-core';
 
 import {Controller, ComponentMapping} from './controller';
 import {useLazyRef} from './hooks';

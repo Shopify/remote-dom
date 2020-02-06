@@ -1,8 +1,9 @@
 {
-  "name": "@remote-ui/rpc",
+  "name": "@shopify/remote-ui-rpc",
   "version": "0.0.1",
   "publishConfig": {
-    "access": "public"
+    "access": "restricted",
+    "registry": "https://packages.shopify.io/shopify/node/npm/"
   },
   "license": "MIT",
   "devDependencies": {

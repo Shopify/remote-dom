@@ -1,0 +1,6 @@
+ci:
+  require:
+    - ci/test
+dependencies:
+  post:
+    - yarn run build: {timeout: 1800}

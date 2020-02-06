@@ -1,4 +1,4 @@
-import {RemoteChild, RemoteComponentType} from '@remote-ui/core';
+import {RemoteChild, RemoteComponentType} from '@shopify/remote-ui-core';
 import {ReactComponentTypeFromRemoteComponentType} from './types';
 
 export function createRemoteReactComponent<

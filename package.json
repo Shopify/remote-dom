@@ -2,7 +2,7 @@
   "name": "remote-ui",
   "version": "0.0.0",
   "private": true,
-  "repository": "https://github.com/lemonmade/remote-ui.git",
+  "repository": "https://github.com/Shopify/remote-ui.git",
   "workspaces": [
     "./packages/*"
   ],

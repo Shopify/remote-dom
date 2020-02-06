@@ -1,4 +1,4 @@
-import {retain, release} from '@remote-ui/rpc';
+import {retain, release} from '@shopify/remote-ui-rpc';
 import {
   Action,
   MessageMap,

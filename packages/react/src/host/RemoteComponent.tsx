@@ -3,7 +3,7 @@ import {
   Serialized,
   RemoteReceiver,
   RemoteComponent as RemoteComponentDescription,
-} from '@remote-ui/core';
+} from '@shopify/remote-ui-core';
 
 import {Controller} from './controller';
 import {RemoteText} from './RemoteText';

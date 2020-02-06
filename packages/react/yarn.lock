@@ -2,9 +2,9 @@
 # yarn lockfile v1
 
 
-"@remote-ui/core@^0.0.1":
+"@shopify/remote-ui-core@^0.0.1":
   version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@remote-ui/core/-/core-0.0.1.tgz#22e8f4d4c2f0755d49685bef9240c54520494e7d"
+  resolved "https://registry.yarnpkg.com/@shopify/remote-ui-core/-/core-0.0.1.tgz#22e8f4d4c2f0755d49685bef9240c54520494e7d"
   integrity sha512-K5Ix7Tcv90g6EN5If5CEYbn41ezeFb2SlC6G0P8pRflV5nsf2yVgSajIlc3DTE7HOFMS2NxSqjFRcpQNiJMG7A==
 
 "@types/prop-types@*":
