@@ -1,6 +1,8 @@
 ci:
   require:
-    - ci/test
+    - test
+    - type-check
+    - lint
 dependencies:
   post:
     - yarn run build: {timeout: 1800}
