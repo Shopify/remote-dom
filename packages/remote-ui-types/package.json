@@ -1,6 +1,6 @@
 {
   "name": "@shopify/remote-ui-types",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "publishConfig": {
     "access": "restricted",
     "registry": "https://packages.shopify.io/shopify/node/npm/"

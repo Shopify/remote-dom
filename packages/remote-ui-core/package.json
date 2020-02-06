@@ -1,13 +1,13 @@
 {
   "name": "@shopify/remote-ui-core",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "publishConfig": {
     "access": "restricted",
     "registry": "https://packages.shopify.io/shopify/node/npm/"
   },
   "license": "MIT",
   "dependencies": {
-    "@shopify/remote-ui-rpc": "^0.0.5",
-    "@shopify/remote-ui-types": "^0.0.8"
+    "@shopify/remote-ui-rpc": "^0.0.6",
+    "@shopify/remote-ui-types": "^0.0.9"
   }
 }
