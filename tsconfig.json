@@ -2,9 +2,9 @@
   "files": [],
   "include": [],
   "references": [
-    {"path": "./packages/types"},
-    {"path": "./packages/core"},
-    {"path": "./packages/react"},
-    {"path": "./packages/rpc"}
+    {"path": "./packages/remote-ui-types"},
+    {"path": "./packages/remote-ui-core"},
+    {"path": "./packages/remote-ui-react"},
+    {"path": "./packages/remote-ui-rpc"}
   ]
 }
