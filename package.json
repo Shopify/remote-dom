@@ -7,7 +7,7 @@
     "./packages/*"
   ],
   "scripts": {
-    "postinstall": "lerna bootstrap",
+    "bootstrap": "lerna bootstrap",
     "test": "sk test",
     "lint": "sk lint",
     "type-check": "sk type-check",
