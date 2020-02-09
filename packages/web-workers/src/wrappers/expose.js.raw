@@ -1,0 +1,4 @@
+import {expose} from '@remote-ui/web-workers/worker';
+import * as api from {{WORKER_MODULE}};
+
+expose(api);
