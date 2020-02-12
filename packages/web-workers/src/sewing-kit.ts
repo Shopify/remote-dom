@@ -14,7 +14,12 @@ import {
 
 const PLUGIN = 'Quilt.WebWorkers';
 
-export interface Options {}
+export interface Options {
+  noop?: boolean;
+  webpackGlobalObject?: string;
+  webpackPlugins?: readonly import('webpack').Plugin[];
+  applyBabelToPackages?: NonNullable<BabelOptions['packages']>;
+}
 
 interface Hooks {
   readonly remoteUiWorkerWebpackPlugins: WaterfallHook<
@@ -34,21 +39,23 @@ declare module '@sewing-kit/hooks' {
 
 const addHooks = (hooks: any) => ({
   ...hooks,
+  remoteUiWorkerNoop: new WaterfallHook(),
   remoteUiWorkerWebpackPlugins: new WaterfallHook(),
   remoteUiWorkerWebpackGlobalObject: new WaterfallHook(),
-  remoteUiWorkerNoop: new WaterfallHook(),
   remoteUiWorkerApplyBabelToPackages: new WaterfallHook(),
 });
 
-export function webWorkers(_options?: Options) {
+export function webWorkers(options: Options = {}) {
   return createProjectPlugin(PLUGIN, ({tasks: {dev, build}, project}) => {
     dev.hook(({hooks}) => {
       hooks.configureHooks.hook(addHooks);
       hooks.configure.hook((configure) => {
         configure.babelConfig?.hook(
-          createBabelConfigUpdater(project, configure),
+          createBabelConfigUpdater(project, configure, options),
         );
-        configure.webpackPlugins?.hook(createWebpackPluginAdder(configure));
+        configure.webpackPlugins?.hook(
+          createWebpackPluginAdder(configure, options),
+        );
       });
     });
 
@@ -56,23 +63,33 @@ export function webWorkers(_options?: Options) {
       hooks.configureHooks.hook(addHooks);
       hooks.configure.hook((configure) => {
         configure.babelConfig?.hook(
-          createBabelConfigUpdater(project, configure),
+          createBabelConfigUpdater(project, configure, options),
         );
-        configure.webpackPlugins?.hook(createWebpackPluginAdder(configure));
+        configure.webpackPlugins?.hook(
+          createWebpackPluginAdder(configure, options),
+        );
       });
     });
   });
 }
 
-function createBabelConfigUpdater(project: Project, configure: Partial<Hooks>) {
+function createBabelConfigUpdater(
+  project: Project,
+  configure: Partial<Hooks>,
+  {
+    noop: defaultNoop = project instanceof Service,
+    applyBabelToPackages = {},
+  }: Options,
+) {
   return async (
     babelConfig: import('@sewing-kit/plugin-babel').BabelConfig,
   ): Promise<typeof babelConfig> => {
     const [noop, packages] = await Promise.all([
-      configure.remoteUiWorkerNoop!.run(project instanceof Service),
-      configure.remoteUiWorkerApplyBabelToPackages!.run(
-        DEFAULT_PACKAGES_TO_PROCESS,
-      ),
+      configure.remoteUiWorkerNoop!.run(defaultNoop),
+      configure.remoteUiWorkerApplyBabelToPackages!.run({
+        ...DEFAULT_PACKAGES_TO_PROCESS,
+        ...applyBabelToPackages,
+      }),
     ] as const);
 
     return {
@@ -85,12 +102,15 @@ function createBabelConfigUpdater(project: Project, configure: Partial<Hooks>) {
   };
 }
 
-function createWebpackPluginAdder(configure: Partial<Hooks>) {
+function createWebpackPluginAdder(
+  configure: Partial<Hooks>,
+  {webpackPlugins = [], webpackGlobalObject = 'self'}: Options,
+) {
   return async (plugins: readonly import('webpack').Plugin[]) => {
     const [{WebWorkerPlugin}, globalObject, workerPlugins] = await Promise.all([
       import('./webpack-parts'),
-      configure.remoteUiWorkerWebpackGlobalObject!.run('self'),
-      configure.remoteUiWorkerWebpackPlugins!.run([]),
+      configure.remoteUiWorkerWebpackGlobalObject!.run(webpackGlobalObject),
+      configure.remoteUiWorkerWebpackPlugins!.run(webpackPlugins),
     ] as const);
 
     return [
