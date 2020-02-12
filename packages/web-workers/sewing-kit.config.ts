@@ -29,9 +29,14 @@ const copyWrappersPlugin = createProjectBuildPlugin(
         {id: 'RemoteUi.CopyWrappers', label: 'Copying wrapper files'},
         async () => {
           const {copy} = await import('fs-extra');
+          const variantName = Object.keys(variant)[0];
+
           await copy(
             project.fs.resolvePath('src/wrappers'),
-            project.fs.buildPath(Object.keys(variant)[0], 'wrappers'),
+            project.fs.buildPath(
+              variantName === 'commonjs' ? 'cjs' : variantName,
+              'wrappers',
+            ),
             {
               overwrite: true,
               recursive: true,
