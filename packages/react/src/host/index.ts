@@ -7,3 +7,4 @@ export {
 } from '../types';
 export {RemoteReceiverContext, ControllerContext} from './context';
 export {useRemoteReceiver} from './hooks';
+export {useWorker} from './workers';

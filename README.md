@@ -197,8 +197,8 @@ The `@remote-ui/react` library has a couple of utilities we can use to implement
 // back in WorkerRenderer.tsx
 
 import React, {useMemo, useEffect, ReactNode} from 'react';
-import {createWorkerFactory, useWorker} from '@remote-ui/web-workers/react';
-import {RemoteReceiver, RemoteRenderer} from '@remote-ui/react/host';
+import {RemoteReceiver, RemoteRenderer, useWorker} from '@remote-ui/react/host';
+import {createWorkerFactory} from '@remote-ui/web-workers';
 
 const createWorker = createWorkerFactory(() => import('./worker'));
 

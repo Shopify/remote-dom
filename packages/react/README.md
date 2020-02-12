@@ -79,6 +79,10 @@ const ReactButton = createRemoteReactComponent(Button);
 const button = <Button>Save</Button>;
 ```
 
+### Host environment
+
+TODO: explain exports of `@remote-ui/react/host`.
+
 ### Other exports
 
 This package exports a helper type for extracting information from components created by `createRemoteComponent`:
