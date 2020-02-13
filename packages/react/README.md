@@ -1,6 +1,6 @@
 # `@remote-ui/react`
 
-This library provides a custom React renderer that gives you the full power of React for your remote application, and provides an optional host layer that makes it easy for existing React apps to integrate a remote root. For a full overview of how `@remote-ui/react` can fit in with the different pieces of Remote UI, you can refer to our [comprehensive example](../../#example).
+This library provides a custom React renderer that gives you the full power of React for your remote application, and provides an optional host layer that makes it easy for existing React apps to integrate a remote root. For a full overview of how `@remote-ui/react` can fit in with the different pieces of Remote UI, you can refer to our [comprehensive example](../../README.md#example).
 
 ## Installation
 

@@ -1,6 +1,6 @@
 # `@remote-ui/core`
 
-This library provides the core model for implementing a remote representation of a UI, and for signalling operations on that representation to another context via a small message channel. For a full overview of how `@remote-ui/core` fits in to the different pieces of Remote UI, you can refer to our [comprehensive example](../../#example).
+This library provides the core model for implementing a remote representation of a UI, and for signalling operations on that representation to another context via a small message channel. For a full overview of how `@remote-ui/core` fits in to the different pieces of Remote UI, you can refer to our [comprehensive example](../../README.md#example).
 
 ## Installation
 
