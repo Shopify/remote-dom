@@ -13,7 +13,7 @@
     "type-check": "sk type-check",
     "build": "sk build",
     "prerelease": "yarn build",
-    "release": "lerna publish && git push --tags"
+    "release": "lerna publish --skip-npm && git add -A && git push --follow-tags"
   },
   "devDependencies": {
     "@sewing-kit/cli": "^0.0.41",
