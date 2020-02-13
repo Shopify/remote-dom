@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "build/ts",
     "baseUrl": "src",
-    "rootDir": "src"
+    "rootDir": "src",
+    "jsx": "react"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "references": [{"path": "../remote-ui-core"}]
