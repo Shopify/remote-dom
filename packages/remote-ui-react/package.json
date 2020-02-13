@@ -1,6 +1,6 @@
 {
   "name": "@shopify/remote-ui-react",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "publishConfig": {
     "access": "restricted",
     "registry": "https://packages.shopify.io/shopify/node/npm/"
