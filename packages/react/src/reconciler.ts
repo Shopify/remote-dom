@@ -18,13 +18,19 @@ const reconciler = reactReconciler<
   RemoteComponent<any, any>,
   // text instance
   RemoteText<any>,
+  // hydratable instance
   unknown,
+  // public instance
   unknown,
+  // host context
   {},
   // update payload
   object,
+  // child set
   unknown,
+  // timeout handle
   unknown,
+  // notimeout
   unknown
 >({
   now: Date.now,
@@ -132,6 +138,12 @@ const reconciler = reactReconciler<
   // Deferred callbacks
   scheduleDeferredCallback() {},
   cancelDeferredCallback() {},
+
+  // @ts-ignore -- @types/react-reconciler is several versions out of date
+  schedulePassiveEffects(fn:Function) {
+    setTimeout(fn);
+  },
+  cancelPassiveEffects() {},
 
   // Unknown
   finalizeInitialChildren() {
