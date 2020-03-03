@@ -1,6 +1,6 @@
 #!/bin/sh
 
-AVAILABLE_PACKAGES=('remote-ui-core' 'remote-ui-react' 'remote-ui-rpc', 'remote-ui-types')
+AVAILABLE_PACKAGES=('remote-ui-core' 'remote-ui-react' 'remote-ui-rpc' 'remote-ui-types')
 ROOT=$(pwd)
 
 # Font color

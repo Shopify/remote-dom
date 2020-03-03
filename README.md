@@ -113,7 +113,11 @@ We now have a remote environment, but we need to plan exactly how this remote en
    ```ts
    // in worker.ts
 
-   import {createRemoteRoot, RemoteRoot, RemoteReceiver} from '@shopify/remote-ui-core';
+   import {
+     createRemoteRoot,
+     RemoteRoot,
+     RemoteReceiver,
+   } from '@shopify/remote-ui-core';
 
    type RenderCallback = (root: RemoteRoot) => void;
 
@@ -353,3 +357,23 @@ With these small changes, the third-party developer will get great feedback on t
 The core behavior of Remote UI is very simple. `createRemoteRoot` constructs an object that has a very small, DOM-like API for constructing, adding, removing, and updating components in the tree. `createRemoteRoot` is passed a function on initialization. When changes happen anywhere in the tree from a remote root, it sends a serialized copy of those changes to the function that it was initialized with. The `RemoteReceiver`, which has a `receive` method that can be used as the argument for `createRemoteRoot`, can take those messages and construct a matching representation of the tree on the host side. From there, host implementations (like the `RemoteRenderer` from `@remote-ui/react`) can take the state of the tree and render it to platform-native components.
 
 Though you rarely saw it mentioned in the example above, `@shopify/remote-ui-rpc` plays the most critical role in making this system work. It augments two ends of a `postMessage`-like interface (e.g., the worker side and parent side of the `Worker` object) to allow passing objects even if they have function properties. Function properties are turned into proxies that implement function calling via message passing, all of which happens transparently for the rest of the `@remote-ui` libraries. The other libraries only need to do a bit of memory management housekeeping to dispose of proxied functions when they are no longer needed. The domain of Remote UI makes this fairly easy to do in the common case: the only thing that ever gets passed from the worker to the parent are component descriptions, which contain the type and properties of the components in the tree. We can hook in to when the properties are updated, or nodes are added or removed from the remote tree, to automatically release any references to functions that are no longer "live".
+
+## Consuming it locally for development
+
+- Consume in `app-extensions-lib` locally
+
+```
+dev build-consumer app-extensions-lib
+```
+
+- Consume only `remote-ui-core` package in `app-extensions-lib` locally
+
+```
+dev build-consumer app-extensions-lib remote-ui-core
+```
+
+- Restore version in package.json
+
+```
+dev restore-consumer app-extensions-lib
+```
