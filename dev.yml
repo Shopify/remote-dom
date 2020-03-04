@@ -7,6 +7,8 @@ up:
 commands:
   __default__: start
   build: yarnpkg build
+  build-consumer: yarnpkg build && ./scripts/build-consumer.sh
+  restore-consumer: ./scripts/restore-consumer.sh
   check: yarnpkg type-check
   lint: yarnpkg lint
   start: echo "No playground setup yet."
