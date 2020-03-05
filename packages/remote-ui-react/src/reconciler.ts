@@ -139,7 +139,7 @@ const reconciler = reactReconciler<
   scheduleDeferredCallback() {},
   cancelDeferredCallback() {},
 
-  // FIXME: must ignore the addition of schedulePassiveEffects because
+  // NOTE: must ignore the addition of schedulePassiveEffects because
   // @types/react-reconciler is several versions out of date (0.18 vs 0.25) and
   // doesn't know about schedulePassiveEffects (which was added in 0.20)
   //
