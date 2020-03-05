@@ -141,7 +141,7 @@ const reconciler = reactReconciler<
 
   // @ts-ignore -- @types/react-reconciler is several versions out of date
   schedulePassiveEffects(fn: Function) {
-    setTimeout(fn);
+    return setTimeout(fn);
   },
   cancelPassiveEffects(handle: number) {
     clearTimeout(handle);
