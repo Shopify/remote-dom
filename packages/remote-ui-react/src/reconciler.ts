@@ -139,7 +139,16 @@ const reconciler = reactReconciler<
   scheduleDeferredCallback() {},
   cancelDeferredCallback() {},
 
-  // @ts-ignore -- @types/react-reconciler is several versions out of date
+  // FIXME: must ignore the addition of schedulePassiveEffects because
+  // @types/react-reconciler is several versions out of date (0.18 vs 0.25) and
+  // doesn't know about schedulePassiveEffects (which was added in 0.20)
+  //
+  // TS Lint we're ignoring:
+  // Object literal may only specify known properties, and 'schedulePassiveEffects'
+  // does not exist in type 'HostConfig<...>'
+  //
+  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+  // @ts-ignore
   schedulePassiveEffects(fn: Function) {
     return setTimeout(fn);
   },
