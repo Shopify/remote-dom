@@ -5,7 +5,7 @@ export {
   AllowedChildrenForRemoteComponent,
 } from '@shopify/remote-ui-types';
 
-export {retain, release} from '@shopify/remote-ui-rpc';
+export {retain, release} from '@shopify/rpc';
 
 export {createRemoteComponent} from './component';
 export {

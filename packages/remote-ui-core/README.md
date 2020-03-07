@@ -293,7 +293,7 @@ card.appendChild(button);
 
 ### Other exports
 
-This package exports a variety of helper types for easy access in more complex use cases, including some types representing the wire format Remote UI uses to communicate component tree updates. It also re-exports the `retain` and `release` methods from `@shopify/remote-ui-rpc` for easy access. Finally, it provides some types that may be useful for you to describe the different objects in Remote UI in your application:
+This package exports a variety of helper types for easy access in more complex use cases, including some types representing the wire format Remote UI uses to communicate component tree updates. It also re-exports the `retain` and `release` methods from `@shopify/rpc` for easy access. Finally, it provides some types that may be useful for you to describe the different objects in Remote UI in your application:
 
 - `RemoteComponentType` represents the components created by `createRemoteComponent`. This type has the prop types and allowed children embedded in its type.
 - `PropsForRemoteComponent` accepts a `RemoteComponentType` as a type argument, and returns the type of the props for that component.

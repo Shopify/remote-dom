@@ -1,6 +1,6 @@
 #!/bin/sh
 
-AVAILABLE_PACKAGES=('remote-ui-core' 'remote-ui-react' 'remote-ui-rpc' 'remote-ui-types')
+AVAILABLE_PACKAGES=('remote-ui-core' 'remote-ui-react' 'remote-ui-types')
 ROOT=$(pwd)
 
 # Font color
@@ -91,7 +91,7 @@ function resolve() {
   bkpIFS="$IFS"
   IFS='/' read -r -a segments <<< "$path"
   IFS="$bkpIFS"
-  
+
   for segment in "${segments[@]}"; do
     if [[ ( "$segment" = "" && ${#resolvedSegments[@]} > 0 ) || "$segment" = "." ]]; then continue; fi
     if [[ "$segment" = ".." ]]; then
@@ -103,6 +103,6 @@ function resolve() {
 
   # output the absolute path
   echo $(IFS='/'; echo "${resolvedSegments[*]}")
-	
+
   return 1
 }
