@@ -1,6 +1,12 @@
 {
   "name": "@shopify/remote-ui-types",
   "version": "0.0.9",
+  "author": "Shopify Inc.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shopify/remote-ui.git",
+    "directory": "packages/remote-ui-types"
+  },
   "publishConfig": {
     "access": "restricted",
     "registry": "https://packages.shopify.io/shopify/node/npm/"
