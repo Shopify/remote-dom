@@ -2,7 +2,11 @@
   "name": "remote-ui",
   "version": "0.0.0",
   "private": true,
-  "repository": "https://github.com/Shopify/remote-ui.git",
+  "author": "Shopify Inc.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shopify/remote-ui.git"
+  },
   "workspaces": [
     "./packages/*"
   ],
