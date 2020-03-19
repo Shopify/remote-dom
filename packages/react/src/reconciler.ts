@@ -138,12 +138,17 @@ const reconciler = reactReconciler<
   // Deferred callbacks
   scheduleDeferredCallback() {},
   cancelDeferredCallback() {},
-  schedulePassiveEffects(fn: Function) {
-    return setTimeout(fn);
-  },
-  cancelPassiveEffects(handle: number) {
-    clearTimeout(handle);
-  },
+
+  // The react-reconciler types have not been updated to include
+  // these, but we *do* need them!
+  ...({
+    schedulePassiveEffects(fn: Function) {
+      return setTimeout(fn);
+    },
+    cancelPassiveEffects(handle: number) {
+      clearTimeout(handle);
+    },
+  } as {}),
 
   // Unknown
   finalizeInitialChildren() {
