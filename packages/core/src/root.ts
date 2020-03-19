@@ -40,7 +40,6 @@ export function createRemoteRoot<
   const tops = new WeakMap<CanBeChild, HasChildren>();
 
   let currentId = 0;
-  let mounted = false;
 
   const remoteRoot: Root = {
     get children() {
@@ -106,7 +105,6 @@ export function createRemoteRoot<
       insertChildBefore(remoteRoot, child, before),
     async mount() {
       await channel(Action.Mount, children.get(remoteRoot)!.map(serialize));
-      mounted = true;
     },
   };
 
@@ -144,7 +142,7 @@ export function createRemoteRoot<
       local(): void;
     },
   ) {
-    if (mounted && (element === remoteRoot || connected(element as any))) {
+    if (element === remoteRoot || connected(element as any)) {
       // should only create context once async queue is cleared
       remote(channel);
 
