@@ -138,8 +138,6 @@ const reconciler = reactReconciler<
   // Deferred callbacks
   scheduleDeferredCallback() {},
   cancelDeferredCallback() {},
-
-  // @ts-ignore -- @types/react-reconciler is several versions out of date
   schedulePassiveEffects(fn: Function) {
     return setTimeout(fn);
   },
