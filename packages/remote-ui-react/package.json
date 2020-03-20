@@ -1,6 +1,6 @@
 {
   "name": "@shopify/remote-ui-react",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "author": "Shopify Inc.",
   "repository": {
     "type": "git",
@@ -19,7 +19,7 @@
     "react-dom": "^16.12.0"
   },
   "dependencies": {
-    "@shopify/remote-ui-core": "^0.0.15",
+    "@shopify/remote-ui-core": "^0.0.16",
     "@types/react": ">=16.8.0 <17.0.0",
     "react-reconciler": "*"
   }

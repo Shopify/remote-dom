@@ -1,6 +1,6 @@
 {
   "name": "@shopify/remote-ui-core",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "author": "Shopify Inc.",
   "repository": {
     "type": "git",
@@ -13,7 +13,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@shopify/remote-ui-types": "^0.0.9",
+    "@shopify/remote-ui-types": "^0.0.10",
     "@shopify/rpc": "^1.0.5"
   }
 }
