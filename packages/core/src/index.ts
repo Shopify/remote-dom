@@ -1,4 +1,4 @@
-export {
+export type {
   RemoteChild,
   RemoteComponentType,
   PropsForRemoteComponent,
@@ -8,8 +8,8 @@ export {
 export {retain, release} from '@remote-ui/rpc';
 
 export {createRemoteComponent} from './component';
-export {
-  Action,
+export {Action} from './types';
+export type {
   RemoteRoot,
   RemoteChannel,
   RemoteComponent,
@@ -18,4 +18,3 @@ export {
 } from './types';
 export {createRemoteRoot} from './root';
 export {RemoteReceiver} from './receiver';
-// export * from './validators';

@@ -25,7 +25,7 @@ export function runWebpack(
         },
         resolve: {
           // Need to include .esnext to get the non-polyfill-assuming version of
-          // remote-call.
+          // @remote-ui/rpc.
           extensions: ['.esnext', '.js', '.ts', '.tsx', '.json'],
           alias: {
             '@remote-ui/rpc': rpcSrcRoot,
