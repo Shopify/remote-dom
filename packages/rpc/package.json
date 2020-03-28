@@ -6,7 +6,7 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@types/uuid": "^3.4.7",
-    "uuid": "^3.4.0"
+    "@types/uuid": "^7.0.2",
+    "uuid": "^7.0.2"
   }
 }

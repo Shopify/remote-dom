@@ -9,14 +9,14 @@
   "devDependencies": {
     "@types/react-dom": "^16.9.5",
     "@types/react-reconciler": "*",
-    "react": ">=16.8.0 <17.0.0",
-    "react-dom": "^16.12.0"
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
   },
   "dependencies": {
     "@remote-ui/core": "^0.0.12",
     "@remote-ui/rpc": "^0.0.2",
     "@remote-ui/web-workers": "^0.0.4",
-    "@types/react": "^16.9.19",
-    "react-reconciler": "*"
+    "@types/react": "^16.9.27",
+    "react-reconciler": "0.25.1"
   }
 }
