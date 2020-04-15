@@ -1,5 +1,10 @@
 module.exports = {
-  extends: ['plugin:@sewing-kit/typescript', 'plugin:@sewing-kit/prettier'],
+  extends: [
+    'plugin:shopify/typescript',
+    'plugin:shopify/prettier',
+    'plugin:shopify/webpack',
+    'plugin:shopify/jest',
+  ],
   ignorePatterns: [
     'node_modules/',
     'packages/*/build/',
@@ -9,13 +14,5 @@ module.exports = {
     'packages/*/*.mjs',
     'packages/*/*.node',
     'packages/*/*.esnext',
-  ],
-  overrides: [
-    {
-      files: ['sewing-kit.config.ts', 'config/sewing-kit/**/*'],
-      rules: {
-        'import/no-extraneous-dependencies': 'off',
-      },
-    },
   ],
 };

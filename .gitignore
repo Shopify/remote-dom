@@ -10,3 +10,4 @@ packages/*/*.js
 !packages/*/.eslintrc.js
 *.log
 .dev
+build

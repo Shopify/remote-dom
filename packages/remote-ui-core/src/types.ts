@@ -72,10 +72,12 @@ export interface RemoteRoot<
   >,
   AllowedChildrenTypes extends AllowedComponents | RemoteChild = RemoteChild
 > {
-  readonly children: readonly AllowedChildren<
-    AllowedChildrenTypes,
-    RemoteRoot<AllowedComponents, AllowedChildrenTypes>
-  >[];
+  readonly children: ReadonlyArray<
+    AllowedChildren<
+      AllowedChildrenTypes,
+      RemoteRoot<AllowedComponents, AllowedChildrenTypes>
+    >
+  >;
   appendChild(
     child: AllowedChildren<
       AllowedChildrenTypes,
@@ -119,7 +121,7 @@ export interface RemoteComponent<
   readonly id: string;
   readonly type: Type['type'];
   readonly props: PropsForRemoteComponent<Type>;
-  readonly children: readonly AllowedChildrenForRemoteComponent<Type>[];
+  readonly children: ReadonlyArray<AllowedChildrenForRemoteComponent<Type>>;
   readonly root: Root;
   readonly top: RemoteComponent<any, Root> | Root | null;
   readonly parent: RemoteComponent<any, Root> | Root | null;

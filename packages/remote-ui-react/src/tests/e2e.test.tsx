@@ -1,10 +1,10 @@
 import React, {useEffect, useContext, createContext} from 'react';
 import {render as domRender} from 'react-dom';
 import {act as domAct} from 'react-dom/test-utils';
-
 import {createRemoteRoot, RemoteReceiver} from '@shopify/remote-ui-core';
 
 import {RemoteRenderer} from '../host';
+
 import {
   render,
   createRemoteReactComponent,
@@ -12,7 +12,7 @@ import {
 } from '..';
 
 declare module '@shopify/remote-ui-types' {
-  export interface RemoteComponentMap {
+  interface RemoteComponentMap {
     HelloWorld: [{name: string}];
     WithPerson: [{run(person: {name: string}): void | Promise<void>}];
   }
@@ -43,7 +43,7 @@ function HostWithPerson({
 
   useEffect(() => {
     run(person);
-  }, [run]);
+  }, [person, run]);
 
   return null;
 }

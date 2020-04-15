@@ -1,5 +1,4 @@
 import reactReconciler from 'react-reconciler';
-
 import {
   RemoteRoot,
   RemoteText,
