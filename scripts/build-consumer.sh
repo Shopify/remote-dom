@@ -84,6 +84,7 @@ for package in "${packages[@]}"; do
     debug $debug "tar xzf $packageFile --strip-components=1 -C $targetDir$targetDir"
 
     tar xzf $packageFile --strip-components=1 -C $targetDir
+    rm -rf "$targetDir/src"
   fi
   
   if [[ -f "$packageFile" ]]; then

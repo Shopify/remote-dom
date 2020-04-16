@@ -2,10 +2,8 @@
   "extends": "../../config/typescript/tsconfig.base.json",
   "compilerOptions": {
     "outDir": "",
-    "baseUrl": "src",
     "rootDir": "src",
     "jsx": "react"
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "references": [{"path": "../remote-ui-core"}]
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
 }
