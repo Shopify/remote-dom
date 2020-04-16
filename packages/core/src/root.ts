@@ -1,4 +1,4 @@
-import {RemoteChild, RemoteComponentType} from '@remote-ui/types';
+import {RemoteComponentType} from '@remote-ui/types';
 import {
   Action,
   Serialized,
@@ -22,7 +22,7 @@ export function createRemoteRoot<
     any,
     any
   >,
-  AllowedChildrenTypes extends AllowedComponents | RemoteChild = RemoteChild
+  AllowedChildrenTypes extends AllowedComponents | boolean = true
 >(
   channel: RemoteChannel,
   _options: Options<AllowedComponents>,
@@ -49,9 +49,9 @@ export function createRemoteRoot<
       const [initialProps = {} as any] = propsPart;
       const id = `${currentId++}`;
 
-      const component: RemoteComponent<typeof type, Root> = {
+      const component: RemoteComponent<AllowedComponents, Root> = {
         get children() {
-          return children.get(component) as any;
+          return children.get(component as any) as any;
         },
         get props() {
           return props.get(component)!;
@@ -78,7 +78,7 @@ export function createRemoteRoot<
       props.set(component, initialProps || ({} as any));
       children.set(component, []);
 
-      return component;
+      return (component as unknown) as RemoteComponent<typeof type, Root>;
     },
     createText(content = '') {
       const id = `${currentId++}`;

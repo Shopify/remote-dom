@@ -1,5 +1,4 @@
 export type {
-  RemoteChild,
   RemoteComponentType,
   PropsForRemoteComponent,
   AllowedChildrenForRemoteComponent,

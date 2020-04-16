@@ -101,7 +101,7 @@ export class RemoteReceiver {
           release((oldProps as any)[key]);
         }
 
-        const props = {...component.props, ...newProps};
+        const props = {...(component.props as any), ...newProps};
 
         component.props = props;
 

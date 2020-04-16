@@ -11,13 +11,6 @@ import {
   ReactPropsFromRemoteComponentType,
 } from '..';
 
-declare module '@remote-ui/types' {
-  export interface RemoteComponentMap {
-    HelloWorld: [{name: string}];
-    WithPerson: [{run(person: {name: string}): void | Promise<void>}];
-  }
-}
-
 const RemoteHelloWorld = createRemoteReactComponent<
   'HelloWorld',
   {name: string}

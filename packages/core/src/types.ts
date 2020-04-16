@@ -1,6 +1,5 @@
 import {
   RemoteComponentType,
-  RemoteChild,
   PropsForRemoteComponent,
   AllowedChildrenForRemoteComponent,
 } from '@remote-ui/types';
@@ -59,10 +58,12 @@ type AllowedRemoteChildren<
   : never;
 
 type AllowedChildren<
-  Children extends RemoteComponentType<any, any> | RemoteChild,
+  Children extends RemoteComponentType<any, any> | boolean,
   Root extends RemoteRoot<any, any>
-> = Children extends RemoteChild
+> = Children extends true
   ? RemoteComponent<any, Root> | RemoteText<Root>
+  : Children extends false
+  ? never
   : AllowedRemoteChildren<Children, Root>;
 
 export interface RemoteRoot<
@@ -70,7 +71,7 @@ export interface RemoteRoot<
     any,
     any
   >,
-  AllowedChildrenTypes extends AllowedComponents | RemoteChild = RemoteChild
+  AllowedChildrenTypes extends RemoteComponentType<any, any> | boolean = true
 > {
   readonly children: readonly AllowedChildren<
     AllowedChildrenTypes,
@@ -127,14 +128,14 @@ export interface RemoteComponent<
     props: Partial<PropsForRemoteComponent<Type>>,
   ): void | Promise<void>;
   appendChild(
-    child: AllowedChildrenForRemoteComponent<Type>,
+    child: AllowedChildren<AllowedChildrenForRemoteComponent<Type>, Root>,
   ): void | Promise<void>;
   removeChild(
-    child: AllowedChildrenForRemoteComponent<Type>,
+    child: AllowedChildren<AllowedChildrenForRemoteComponent<Type>, Root>,
   ): void | Promise<void>;
   insertChildBefore(
-    child: AllowedChildrenForRemoteComponent<Type>,
-    before: AllowedChildrenForRemoteComponent<Type>,
+    child: AllowedChildren<AllowedChildrenForRemoteComponent<Type>, Root>,
+    before: AllowedChildren<AllowedChildrenForRemoteComponent<Type>, Root>,
   ): void | Promise<void>;
 }
 
