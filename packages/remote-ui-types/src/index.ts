@@ -1,6 +1,4 @@
-export const ANY_CHILD = Symbol('RemoteUi.AnyChild');
-
-export type RemoteChild = typeof ANY_CHILD;
+export type RemoteChild = boolean;
 
 export interface RemoteComponentType<
   Type extends string,
