@@ -2,14 +2,13 @@
   "name": "@shopify/remote-ui-react",
   "version": "0.0.20",
   "author": "Shopify Inc.",
-  "main": "build/ts/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Shopify/remote-ui.git",
     "directory": "packages/remote-ui-react"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc --tsBuildInfoFile .react.tsbuildinfo"
   },
   "publishConfig": {
     "access": "restricted",
