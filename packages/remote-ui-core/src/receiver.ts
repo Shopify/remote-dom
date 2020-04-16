@@ -1,4 +1,5 @@
 import {retain, release} from '@shopify/rpc';
+
 import {
   Action,
   MessageMap,

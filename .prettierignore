@@ -1,0 +1,9 @@
+.*
+build
+playground
+coverage
+tmp
+public
+package.json
+*.svg
+*.yml

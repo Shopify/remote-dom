@@ -12,26 +12,20 @@
   ],
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "test": "sk test",
-    "lint": "sk lint",
-    "type-check": "sk type-check",
-    "build": "sk build",
+    "test": "yarn build && sewing-kit test",
+    "lint": "sewing-kit lint",
+    "format": "sewing-kit format",
+    "type-check": "sewing-kit type-check",
+    "build": "lerna run build",
     "prerelease": "yarn build",
     "release": "lerna publish --skip-npm && git add -A && git push --follow-tags"
   },
   "devDependencies": {
-    "@sewing-kit/cli": "^0.0.41",
-    "@sewing-kit/config": "^0.0.31",
-    "@sewing-kit/eslint-plugin": "^0.0.9",
-    "@sewing-kit/plugin-babel": "^0.0.35",
-    "@sewing-kit/plugin-eslint": "^0.0.30",
-    "@sewing-kit/plugin-javascript": "^0.0.39",
-    "@sewing-kit/plugin-jest": "^0.0.33",
-    "@sewing-kit/plugin-json": "^0.0.37",
-    "@sewing-kit/plugin-package-flexible-outputs": "^0.0.31",
-    "@sewing-kit/plugin-react": "^0.0.31",
-    "@sewing-kit/plugin-typescript": "^0.0.40",
-    "lerna": "^2.9.0"
+    "@shopify/eslint-plugin": "^36.0.2",
+    "@shopify/sewing-kit": "^0.122.0",
+    "lerna": "^2.9.0",
+    "eslint-plugin-shopify": "^35.1.0",
+    "typescript": "^3.8.3"
   },
   "dependencies": {}
 }

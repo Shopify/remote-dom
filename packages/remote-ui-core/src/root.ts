@@ -1,4 +1,5 @@
 import {RemoteChild, RemoteComponentType} from '@shopify/remote-ui-types';
+
 import {
   Action,
   Serialized,
@@ -14,7 +15,7 @@ import {
 export interface Options<
   AllowedComponents extends RemoteComponentType<any, any>
 > {
-  readonly components: readonly AllowedComponents[];
+  readonly components: ReadonlyArray<AllowedComponents>;
 }
 
 export function createRemoteRoot<
@@ -34,7 +35,7 @@ export function createRemoteRoot<
   type CanBeChild = Component | Text;
 
   const parents = new WeakMap<CanBeChild, HasChildren>();
-  const children = new WeakMap<HasChildren, readonly CanBeChild[]>();
+  const children = new WeakMap<HasChildren, ReadonlyArray<CanBeChild>>();
   const props = new WeakMap<Component, any>();
   const texts = new WeakMap<Text, string>();
   const tops = new WeakMap<CanBeChild, HasChildren>();
