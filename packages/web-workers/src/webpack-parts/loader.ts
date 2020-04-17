@@ -166,10 +166,7 @@ export function pitch(
 function addWorkerSubExtension(file: string) {
   return file.includes('[name]')
     ? file.replace(/\.([a-z]+)$/i, '.worker.$1')
-    : `${file
-        .split('/')
-        .slice(0, -1)
-        .join('/')}/[name].worker.js`;
+    : `${file.split('/').slice(0, -1).join('/')}/[name].worker.js`;
 }
 
 const loader = {
