@@ -1,10 +1,5 @@
-import {
-  useState,
-  useRef,
-  useCallback,
-  MutableRefObject,
-  useContext,
-} from 'react';
+import {useState, useRef, useContext, useEffect} from 'react';
+import type {RemoteReceiver} from '@remote-ui/core';
 
 import {ControllerContext, RemoteReceiverContext} from './context';
 
@@ -28,34 +23,34 @@ export function useRemoteReceiver() {
   return receiver;
 }
 
-export function useForceUpdate() {
-  const [, setState] = useState(Symbol(''));
-  return useCallback(() => {
-    setState(Symbol(''));
-  }, []);
-}
+type Attachable = Parameters<RemoteReceiver['listen']>[0];
 
-export function useOnValueChange<T>(
-  value: T,
-  onChange: (value: T, oldValue: T) => void,
+export function useAttached<T extends Attachable>(
+  receiver: RemoteReceiver,
+  initial: T,
 ) {
-  const tracked = useRef(value);
-  const oldValue = tracked.current;
+  const [attached, setAttached] = useState(initial);
 
-  if (value !== oldValue) {
-    tracked.current = value;
-    onChange(value, oldValue);
-  }
+  const lastAttached = useRef(attached);
+  lastAttached.current = attached;
+
+  useEffect(() => {
+    const resolved = receiver.get(initial) as T | undefined;
+
+    if (resolved && !deepEqual(resolved, lastAttached.current)) {
+      setAttached({...resolved});
+    }
+
+    return receiver.listen(initial, (attached) => {
+      setAttached({...attached});
+    });
+  }, [receiver, initial]);
+
+  return attached;
 }
 
-const UNSET = Symbol('unset');
-
-export function useLazyRef<T>(getValue: () => T): MutableRefObject<T> {
-  const ref = useRef<T | typeof UNSET>(UNSET);
-
-  if (ref.current === UNSET) {
-    ref.current = getValue();
-  }
-
-  return ref as MutableRefObject<T>;
+function deepEqual<T>(one: T, two: T) {
+  return Object.keys(two).every(
+    (key) => (one as any)[key] === (two as any)[key],
+  );
 }

@@ -1,4 +1,4 @@
-import React, {memo, useEffect, createElement} from 'react';
+import React, {memo, createElement} from 'react';
 import {
   Serialized,
   RemoteReceiver,
@@ -7,7 +7,7 @@ import {
 
 import {Controller} from './controller';
 import {RemoteText} from './RemoteText';
-import {useForceUpdate, useLazyRef, useOnValueChange} from './hooks';
+import {useAttached} from './hooks';
 
 interface Props {
   receiver: RemoteReceiver;
@@ -17,26 +17,13 @@ interface Props {
 
 export const RemoteComponent = memo(
   ({receiver, component, controller}: Props) => {
-    const forceUpdate = useForceUpdate();
-    const unlisten = useLazyRef(() => receiver.listen(component, forceUpdate));
-
-    useOnValueChange(component, (newValue) => {
-      unlisten.current();
-      unlisten.current = receiver.listen(newValue, forceUpdate);
-    });
-
-    useEffect(() => {
-      return () => {
-        unlisten.current();
-      };
-    }, [unlisten]);
-
+    const {props, children} = useAttached(receiver, component);
     const Implementation = controller.get(component.type)!;
 
     return createElement(
       Implementation,
-      component.props,
-      ...[...component.children].map((child) => {
+      props,
+      ...[...children].map((child) => {
         if ('children' in child) {
           return (
             <RemoteComponent
