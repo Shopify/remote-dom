@@ -62,7 +62,7 @@ export class RemoteReceiver {
         this.detach(removed);
         attached.children = children;
 
-        this.enqueueUpdate(this.root);
+        this.enqueueUpdate(attached);
 
         break;
       }
@@ -126,6 +126,10 @@ export class RemoteReceiver {
       }
     }
   };
+
+  get<T extends Attachable>({id}: T) {
+    return this.attached.get(id) as T;
+  }
 
   listen<T extends Attachable>({id}: T, listener: UpdateListener<T>) {
     this.listeners.set(id, listener);
