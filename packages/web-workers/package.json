@@ -9,10 +9,10 @@
   "license": "MIT",
   "dependencies": {
     "@remote-ui/rpc": "^0.0.5",
-    "@sewing-kit/plugins": "0.0.21",
-    "@types/webpack": "^4.41.8",
-    "loader-utils": "^1.0.0",
-    "webpack-virtual-modules": "^0.2.1"
+    "@sewing-kit/plugins": "0.0.22",
+    "@types/webpack": "^4.41.12",
+    "loader-utils": "^2.0.0",
+    "webpack-virtual-modules": "^0.2.2"
   },
   "devDependencies": {
     "@types/fs-extra": "^8.0.1",
@@ -28,12 +28,12 @@
     "koa": "^2.11.0",
     "koa-mount": "^4.0.0",
     "koa-static": "^5.0.0",
-    "puppeteer": "^2.0.0"
+    "puppeteer": "^3.0.1"
   },
   "optionalDependencies": {
     "@babel/core": "^7.9.0",
     "@sewing-kit/plugin-babel": "0.0.38",
-    "@sewing-kit/plugin-webpack": "0.0.36",
-    "webpack": "^4.42.1"
+    "@sewing-kit/plugin-webpack": "0.0.37",
+    "webpack": "^4.43.0"
   }
 }
