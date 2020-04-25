@@ -1,6 +1,6 @@
 {
   "name": "@remote-ui/web-workers",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "",
   "publishConfig": {
     "access": "public",
@@ -8,7 +8,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@remote-ui/rpc": "^0.0.5",
+    "@remote-ui/rpc": "^0.0.6",
     "@sewing-kit/plugins": "^0.0.23",
     "@types/webpack": "^4.41.12",
     "loader-utils": "^2.0.0",
