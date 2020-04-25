@@ -4,8 +4,8 @@ import {
   createProjectPlugin,
   WaterfallHook,
 } from '@sewing-kit/plugins';
-import {} from '@sewing-kit/plugin-webpack';
-import {} from '@sewing-kit/plugin-babel';
+import type {} from '@sewing-kit/plugin-webpack';
+import type {BabelConfig} from '@sewing-kit/plugin-javascript';
 
 import {
   Options as BabelOptions,
@@ -81,9 +81,7 @@ function createBabelConfigUpdater(
     applyBabelToPackages = {},
   }: Options,
 ) {
-  return async (
-    babelConfig: import('@sewing-kit/plugin-babel').BabelConfig,
-  ): Promise<typeof babelConfig> => {
+  return async (babelConfig: BabelConfig): Promise<typeof babelConfig> => {
     const [noop, packages] = await Promise.all([
       configure.remoteUiWorkerNoop!.run(defaultNoop),
       configure.remoteUiWorkerApplyBabelToPackages!.run({

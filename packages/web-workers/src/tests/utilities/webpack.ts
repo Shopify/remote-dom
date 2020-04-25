@@ -1,9 +1,6 @@
 import * as path from 'path';
 import webpack from 'webpack';
 
-// eslint-disable-next-line import/no-extraneous-dependencies
-import {Target, Module} from '@sewing-kit/babel-preset';
-
 import {Context} from './context';
 
 export function runWebpack(
@@ -45,14 +42,19 @@ export function runWebpack(
                 {
                   loader: 'babel-loader',
                   options: {
-                    babelrc: false,
+                    configFile: false,
                     presets: [
                       [
-                        '@sewing-kit/babel-preset',
-                        {target: Target.Node, modules: Module.Preserve},
+                        '@babel/preset-env',
+                        {targets: {node: true}, modules: false},
                       ],
-                      // ['@babel/preset-env', {targets: 'node', modules: false}],
                       '@babel/preset-typescript',
+                    ],
+                    plugins: [
+                      [
+                        '@babel/plugin-proposal-class-properties',
+                        {loose: true},
+                      ],
                     ],
                   },
                 },
