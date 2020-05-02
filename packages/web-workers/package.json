@@ -32,8 +32,8 @@
   },
   "optionalDependencies": {
     "@babel/core": "^7.9.0",
-    "@sewing-kit/plugin-javascript": "^0.0.52",
-    "@sewing-kit/plugin-webpack": "^0.0.41",
+    "@sewing-kit/plugin-javascript": "^0.0.53",
+    "@sewing-kit/plugin-webpack": "^0.0.42",
     "webpack": "^4.43.0"
   }
 }
