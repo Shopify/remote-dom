@@ -28,12 +28,12 @@
     "koa": "^2.11.0",
     "koa-mount": "^4.0.0",
     "koa-static": "^5.0.0",
-    "puppeteer": "^3.0.1"
+    "puppeteer": "^3.0.2"
   },
   "optionalDependencies": {
     "@babel/core": "^7.9.0",
-    "@sewing-kit/plugin-javascript": "^0.0.50",
-    "@sewing-kit/plugin-webpack": "^0.0.39",
+    "@sewing-kit/plugin-javascript": "^0.0.52",
+    "@sewing-kit/plugin-webpack": "^0.0.41",
     "webpack": "^4.43.0"
   }
 }
