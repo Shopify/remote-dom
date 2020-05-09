@@ -1,8 +1,4 @@
-import {
-  RemoteComponentType,
-  PropsForRemoteComponent,
-  AllowedChildrenForRemoteComponent,
-} from '@remote-ui/types';
+import {RemoteComponentType, PropsForRemoteComponent} from '@remote-ui/types';
 
 type NonOptionalKeys<T> = {
   [K in keyof T]-?: undefined extends T[K] ? never : K;
@@ -57,6 +53,13 @@ type AllowedRemoteChildren<
   ? RemoteComponent<Children, Root>
   : never;
 
+type ExtractChildren<Type> = Type extends RemoteComponentType<
+  infer Children,
+  any
+>
+  ? Children
+  : never;
+
 type AllowedChildren<
   Children extends RemoteComponentType<any, any> | boolean,
   Root extends RemoteRoot<any, any>
@@ -64,7 +67,7 @@ type AllowedChildren<
   ? RemoteComponent<any, Root> | RemoteText<Root>
   : Children extends false
   ? never
-  : AllowedRemoteChildren<Children, Root>;
+  : AllowedRemoteChildren<Children, Root> | RemoteText<Root>;
 
 export interface RemoteRoot<
   AllowedComponents extends RemoteComponentType<any, any> = RemoteComponentType<
@@ -120,7 +123,7 @@ export interface RemoteComponent<
   readonly id: string;
   readonly type: Type['type'];
   readonly props: PropsForRemoteComponent<Type>;
-  readonly children: readonly AllowedChildrenForRemoteComponent<Type>[];
+  readonly children: readonly AllowedChildren<ExtractChildren<Type>, Root>[];
   readonly root: Root;
   readonly top: RemoteComponent<any, Root> | Root | null;
   readonly parent: RemoteComponent<any, Root> | Root | null;
@@ -128,14 +131,14 @@ export interface RemoteComponent<
     props: Partial<PropsForRemoteComponent<Type>>,
   ): void | Promise<void>;
   appendChild(
-    child: AllowedChildren<AllowedChildrenForRemoteComponent<Type>, Root>,
+    child: AllowedChildren<ExtractChildren<Type>, Root>,
   ): void | Promise<void>;
   removeChild(
-    child: AllowedChildren<AllowedChildrenForRemoteComponent<Type>, Root>,
+    child: AllowedChildren<ExtractChildren<Type>, Root>,
   ): void | Promise<void>;
   insertChildBefore(
-    child: AllowedChildren<AllowedChildrenForRemoteComponent<Type>, Root>,
-    before: AllowedChildren<AllowedChildrenForRemoteComponent<Type>, Root>,
+    child: AllowedChildren<ExtractChildren<Type>, Root>,
+    before: AllowedChildren<ExtractChildren<Type>, Root>,
   ): void | Promise<void>;
 }
 
