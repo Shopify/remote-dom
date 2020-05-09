@@ -135,61 +135,46 @@ export function createMessengerFunctionStrategy({
 
       const retainers = new Set(retainedBy);
 
-      const proxy = new Proxy(function () {}, {
-        get(target, prop, receiver) {
-          if (prop === 'apply' || prop === 'bind') {
-            return receiver;
-          }
-
-          if (prop === RELEASE_METHOD) {
-            return release;
-          }
-
-          if (prop === RETAIN_METHOD) {
-            return retain;
-          }
-
-          if (prop === RETAINED_BY) {
-            return retainers;
-          }
-
-          return Reflect.get(target, prop, receiver);
-        },
-        apply(_target, _this, args) {
-          if (released) {
-            throw new Error(
-              'You attempted to call a function that was already released.',
-            );
-          }
-
-          if (!idsToProxy.has(id)) {
-            throw new Error(
-              'You attempted to call a function that was already revoked.',
-            );
-          }
-
-          const callId = uuid();
-
-          const done = new Promise<any>((resolve, reject) => {
-            callIdsToResolver.set(callId, (errorResult, value) => {
-              if (errorResult == null) {
-                resolve(fromWire(value, retainedBy));
-              } else {
-                const error = new Error();
-                Object.assign(error, errorResult);
-                reject(errorResult);
-              }
-            });
-          });
-
-          const [serializedArgs, transferables] = toWire(args);
-          messenger.postMessage(
-            [APPLY, callId, id, serializedArgs],
-            transferables,
+      function proxy(...args: any[]) {
+        if (released) {
+          throw new Error(
+            'You attempted to call a function that was already released.',
           );
+        }
 
-          return done;
-        },
+        if (!idsToProxy.has(id)) {
+          throw new Error(
+            'You attempted to call a function that was already revoked.',
+          );
+        }
+
+        const callId = uuid();
+
+        const done = new Promise<any>((resolve, reject) => {
+          callIdsToResolver.set(callId, (errorResult, value) => {
+            if (errorResult == null) {
+              resolve(fromWire(value, retainedBy));
+            } else {
+              const error = new Error();
+              Object.assign(error, errorResult);
+              reject(errorResult);
+            }
+          });
+        });
+
+        const [serializedArgs, transferables] = toWire(args);
+        messenger.postMessage(
+          [APPLY, callId, id, serializedArgs],
+          transferables,
+        );
+
+        return done;
+      }
+
+      Object.defineProperties(proxy, {
+        [RELEASE_METHOD]: {value: release, writable: false},
+        [RETAIN_METHOD]: {value: retain, writable: false},
+        [RETAINED_BY]: {value: retainers, writable: false},
       });
 
       for (const retainer of retainers) {

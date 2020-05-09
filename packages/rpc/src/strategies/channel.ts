@@ -127,68 +127,53 @@ export function createChannelFunctionStrategy({
 
       const retainers = new Set(retainedBy);
 
-      const proxy = new Proxy(function () {}, {
-        get(target, prop, receiver) {
-          if (prop === 'apply' || prop === 'bind') {
-            return receiver;
-          }
-
-          if (prop === RELEASE_METHOD) {
-            return release;
-          }
-
-          if (prop === RETAIN_METHOD) {
-            return retain;
-          }
-
-          if (prop === RETAINED_BY) {
-            return retainers;
-          }
-
-          return Reflect.get(target, prop, receiver);
-        },
-        apply(_target, _this, args) {
-          if (released) {
-            throw new Error(
-              'You attempted to call a function that was already released.',
-            );
-          }
-
-          if (revoked) {
-            throw new Error(
-              'You attempted to call a function that was already revoked.',
-            );
-          }
-
-          const id = uuid();
-          const done = new Promise<any>((resolve, reject) => {
-            port.addEventListener('message', function listener({data}) {
-              if (data == null || data[0] !== RESULT || data[1] !== id) {
-                return;
-              }
-
-              const [, , errorResult, value] = data;
-
-              port.removeEventListener('message', listener);
-
-              if (errorResult == null) {
-                resolve(fromWire(value, retainedBy));
-              } else {
-                const error = new Error();
-                Object.assign(error, errorResult);
-                reject(errorResult);
-              }
-            });
-          });
-
-          const [serializedArgs, transferables] = toWire(args);
-          port.postMessage(
-            [APPLY, id, serializedArgs],
-            transferables as Transferable[],
+      function proxy(...args: any[]) {
+        if (released) {
+          throw new Error(
+            'You attempted to call a function that was already released.',
           );
+        }
 
-          return done;
-        },
+        if (revoked) {
+          throw new Error(
+            'You attempted to call a function that was already revoked.',
+          );
+        }
+
+        const id = uuid();
+        const done = new Promise<any>((resolve, reject) => {
+          port!.addEventListener('message', function listener({data}) {
+            if (data == null || data[0] !== RESULT || data[1] !== id) {
+              return;
+            }
+
+            const [, , errorResult, value] = data;
+
+            port!.removeEventListener('message', listener);
+
+            if (errorResult == null) {
+              resolve(fromWire(value, retainedBy));
+            } else {
+              const error = new Error();
+              Object.assign(error, errorResult);
+              reject(errorResult);
+            }
+          });
+        });
+
+        const [serializedArgs, transferables] = toWire(args);
+        port!.postMessage(
+          [APPLY, id, serializedArgs],
+          transferables as Transferable[],
+        );
+
+        return done;
+      }
+
+      Object.defineProperties(proxy, {
+        [RELEASE_METHOD]: {value: release, writable: false},
+        [RETAIN_METHOD]: {value: retain, writable: false},
+        [RETAINED_BY]: {value: retainers, writable: false},
       });
 
       for (const retainer of retainers) {

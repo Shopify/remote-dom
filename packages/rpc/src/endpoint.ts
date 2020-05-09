@@ -13,11 +13,12 @@ const TERMINATE = 2;
 
 const FUNCTION = '_@f';
 
-interface Options {
+interface Options<T = unknown> {
   uuid?(): string;
   createFunctionStrategy?(
     options: FunctionStrategyOptions,
   ): FunctionStrategy<unknown>;
+  callable?: (keyof T)[];
 }
 
 export interface Endpoint<T> {
@@ -33,7 +34,8 @@ export function createEndpoint<T>(
   {
     uuid = defaultUuid,
     createFunctionStrategy = createMessengerFunctionStrategy,
-  }: Options = {},
+    callable,
+  }: Options<T> = {},
 ): Endpoint<T> {
   let terminated = false;
   let messenger = initialMessenger;
@@ -114,50 +116,37 @@ export function createEndpoint<T>(
 
   messenger.addEventListener('message', listener);
 
-  return {
-    call: new Proxy(
+  let call: any;
+
+  if (callable == null) {
+    if (typeof Proxy !== 'function') {
+      throw new Error(
+        `You must pass an array of callable methods in environments without Proxies.`,
+      );
+    }
+
+    call = new Proxy(
       {},
       {
         get(_target, property) {
-          return (...args: any[]) => {
-            if (terminated) {
-              throw new Error(
-                'You attempted to call a function on a terminated web worker.',
-              );
-            }
-
-            const id = uuid();
-            const done = new Promise<any>((resolve, reject) => {
-              messenger.addEventListener('message', function listener({data}) {
-                if (data == null || data[0] !== RESULT || data[1] !== id) {
-                  return;
-                }
-
-                messenger.removeEventListener('message', listener);
-
-                const [, , errorResult, value] = data;
-
-                if (errorResult == null) {
-                  resolve(fromWire(value));
-                } else {
-                  const error = new Error();
-                  Object.assign(error, errorResult);
-                  reject(error);
-                }
-              });
-            });
-
-            const [serializedArgs, transferables] = toWire(args);
-            messenger.postMessage(
-              [APPLY, id, property, serializedArgs],
-              transferables,
-            );
-
-            return done;
-          };
+          return handlerForCall(property);
         },
       },
-    ) as any,
+    );
+  } else {
+    call = {};
+
+    for (const method of callable) {
+      Object.defineProperty(call, method, {
+        value: handlerForCall(method),
+        writable: false,
+        enumerable: true,
+      });
+    }
+  }
+
+  return {
+    call,
     functions,
     replace(newMessenger) {
       const oldMessenger = messenger;
@@ -187,6 +176,45 @@ export function createEndpoint<T>(
       }
     },
   };
+
+  function handlerForCall(property: string | number | symbol) {
+    return (...args: any[]) => {
+      if (terminated) {
+        throw new Error(
+          'You attempted to call a function on a terminated web worker.',
+        );
+      }
+
+      const id = uuid();
+      const done = new Promise<any>((resolve, reject) => {
+        messenger.addEventListener('message', function listener({data}) {
+          if (data == null || data[0] !== RESULT || data[1] !== id) {
+            return;
+          }
+
+          messenger.removeEventListener('message', listener);
+
+          const [, , errorResult, value] = data;
+
+          if (errorResult == null) {
+            resolve(fromWire(value));
+          } else {
+            const error = new Error();
+            Object.assign(error, errorResult);
+            reject(error);
+          }
+        });
+      });
+
+      const [serializedArgs, transferables] = toWire(args);
+      messenger.postMessage(
+        [APPLY, id, property, serializedArgs],
+        transferables,
+      );
+
+      return done;
+    };
+  }
 
   function toWire(value: unknown): [any, Transferable[]?] {
     if (typeof value === 'object') {
