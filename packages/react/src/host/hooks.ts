@@ -29,7 +29,7 @@ export function useAttached<T extends Attachable>(
   receiver: RemoteReceiver,
   attached: T,
 ) {
-  const [state, setState] = useState({receiver, value: attached});
+  const [state, setState] = useState({receiver, value: {...attached}});
 
   let returnValue = state.value;
 
@@ -56,10 +56,6 @@ export function useAttached<T extends Attachable>(
         return;
       }
 
-      // We use a state updater function to avoid scheduling work for a stale source.
-      // However it's important to eagerly read the currently value,
-      // so that all scheduled work shares the same value (in the event of multiple subscriptions).
-      // This avoids visual "tearing" when a mutation happens during a (concurrent) render.
       const value = receiver.get(attached);
 
       setState((previousState) => {
@@ -75,11 +71,11 @@ export function useAttached<T extends Attachable>(
 
         // If the value hasn't changed, no update is needed.
         // Return state as-is so React can bail out and avoid an unnecessary render.
-        if (previousValue === value) {
+        if (deepEqual(previousValue, value)) {
           return previousState;
         }
 
-        return {...previousState, value};
+        return {...previousState, value: {...value}};
       });
     };
 
@@ -95,4 +91,10 @@ export function useAttached<T extends Attachable>(
   }, [receiver, attached]);
 
   return returnValue;
+}
+
+function deepEqual<T>(one: T, two: T) {
+  return Object.keys(two).every(
+    (key) => (one as any)[key] === (two as any)[key],
+  );
 }

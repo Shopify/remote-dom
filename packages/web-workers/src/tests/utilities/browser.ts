@@ -34,7 +34,8 @@ export class AppBrowser {
 
 export async function createBrowser({url}: {url: URL}) {
   const browser = await puppeteer.launch({
-    executablePath: 'google-chrome-stable',
+    headless: true,
+    executablePath: process.env.CI ? 'google-chrome-stable' : undefined,
     args: ['--no-sandbox'],
   });
   return new AppBrowser(browser, url);

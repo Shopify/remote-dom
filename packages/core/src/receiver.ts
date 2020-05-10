@@ -117,13 +117,7 @@ export class RemoteReceiver {
         const text = this.attached.get(id) as RemoteTextSerialization;
         text.text = newText;
 
-        const listeners = this.listeners.get(id);
-
-        if (listeners) {
-          for (const listener of listeners) {
-            listener(text);
-          }
-        }
+        this.enqueueUpdate(text);
 
         break;
       }
