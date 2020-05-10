@@ -26,7 +26,7 @@ export class RemoteReceiver {
     [ROOT_ID, this.root],
   ]);
 
-  private timeout: any;
+  private timeout: Promise<void> | null = null;
   private queuedUpdates = new Set<Attachable>();
 
   private readonly listeners = new Map<
@@ -57,11 +57,13 @@ export class RemoteReceiver {
         const children = [...attached.children];
         const [removed] = children.splice(index, 1);
 
-        release(removed);
         this.detach(removed);
         attached.children = children;
 
-        this.enqueueUpdate(attached);
+        // eslint-disable-next-line promise/catch-or-return
+        this.enqueueUpdate(attached).then(() => {
+          release(removed);
+        });
 
         break;
       }
@@ -97,15 +99,15 @@ export class RemoteReceiver {
 
         retain(newProps);
 
-        for (const key of Object.keys(newProps)) {
-          release((oldProps as any)[key]);
-        }
-
         const props = {...(component.props as any), ...newProps};
-
         component.props = props;
 
-        this.enqueueUpdate(component);
+        // eslint-disable-next-line promise/catch-or-return
+        this.enqueueUpdate(component).then(() => {
+          for (const key of Object.keys(newProps)) {
+            release((oldProps as any)[key]);
+          }
+        });
 
         break;
       }
@@ -156,28 +158,34 @@ export class RemoteReceiver {
   }
 
   private enqueueUpdate(attached: Attachable) {
-    if (this.timeout == null) {
-      this.timeout = setTimeout(() => {
-        const queuedUpdates = [...this.queuedUpdates];
+    this.timeout =
+      this.timeout ??
+      new Promise((resolve) => {
+        setTimeout(() => {
+          const queuedUpdates = [...this.queuedUpdates];
 
-        this.timeout = null;
-        this.queuedUpdates.clear();
+          this.timeout = null;
+          this.queuedUpdates.clear();
 
-        for (const attached of queuedUpdates) {
-          const listeners = this.listeners.get(
-            attached === this.root ? ROOT_ID : attached.id,
-          );
+          for (const attached of queuedUpdates) {
+            const listeners = this.listeners.get(
+              attached === this.root ? ROOT_ID : attached.id,
+            );
 
-          if (listeners) {
-            for (const listener of listeners) {
-              listener(attached);
+            if (listeners) {
+              for (const listener of listeners) {
+                listener(attached);
+              }
             }
           }
-        }
-      }, 0);
-    }
+
+          resolve();
+        }, 0);
+      });
 
     this.queuedUpdates.add(attached);
+
+    return this.timeout;
   }
 
   private attach(child: Child) {

@@ -1,5 +1,7 @@
-import React, {memo, createElement} from 'react';
+import React, {memo, createElement, useEffect} from 'react';
 import {
+  retain,
+  release,
   Serialized,
   RemoteReceiver,
   RemoteComponent as RemoteComponentDescription,
@@ -19,6 +21,14 @@ export const RemoteComponent = memo(
   ({receiver, component, controller}: Props) => {
     const {props, children} = useAttached(receiver, component);
     const Implementation = controller.get(component.type)!;
+
+    useEffect(() => {
+      retain(props);
+
+      return () => {
+        release(props);
+      };
+    }, [props]);
 
     return createElement(
       Implementation,
