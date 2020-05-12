@@ -3,7 +3,9 @@ import {createEndpoint, fromWebWorker, retain, release} from '@remote-ui/rpc';
 export {retain, release};
 
 export function expose(api: any) {
-  const endpoint = createEndpoint(fromWebWorker(self as any));
+  const endpoint = createEndpoint(fromWebWorker(self as any), {
+    callable: [],
+  });
 
   self.addEventListener('message', ({data}: MessageEvent) => {
     if (data == null) {
