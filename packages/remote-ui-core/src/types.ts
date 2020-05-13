@@ -2,7 +2,6 @@ import {
   RemoteComponentType,
   RemoteChild,
   PropsForRemoteComponent,
-  AllowedChildrenForRemoteComponent,
 } from '@shopify/remote-ui-types';
 
 type NonOptionalKeys<T> = {
@@ -58,12 +57,19 @@ type AllowedRemoteChildren<
   ? RemoteComponent<Children, Root>
   : never;
 
+type ExtractChildren<Type> = Type extends RemoteComponentType<
+  infer Children,
+  any
+>
+  ? Children
+  : never;
+
 type AllowedChildren<
   Children extends RemoteComponentType<any, any> | RemoteChild,
   Root extends RemoteRoot<any, any>
 > = Children extends RemoteChild
   ? RemoteComponent<any, Root> | RemoteText<Root>
-  : AllowedRemoteChildren<Children, Root>;
+  : AllowedRemoteChildren<Children, Root> | RemoteText<Root>;
 
 export interface RemoteRoot<
   AllowedComponents extends RemoteComponentType<any, any> = RemoteComponentType<
@@ -121,7 +127,9 @@ export interface RemoteComponent<
   readonly id: string;
   readonly type: Type['type'];
   readonly props: PropsForRemoteComponent<Type>;
-  readonly children: ReadonlyArray<AllowedChildrenForRemoteComponent<Type>>;
+  readonly children: ReadonlyArray<
+    AllowedChildren<ExtractChildren<Type>, Root>
+  >;
   readonly root: Root;
   readonly top: RemoteComponent<any, Root> | Root | null;
   readonly parent: RemoteComponent<any, Root> | Root | null;
@@ -129,14 +137,14 @@ export interface RemoteComponent<
     props: Partial<PropsForRemoteComponent<Type>>,
   ): void | Promise<void>;
   appendChild(
-    child: AllowedChildrenForRemoteComponent<Type>,
+    child: AllowedChildren<ExtractChildren<Type>, Root>,
   ): void | Promise<void>;
   removeChild(
-    child: AllowedChildrenForRemoteComponent<Type>,
+    child: AllowedChildren<ExtractChildren<Type>, Root>,
   ): void | Promise<void>;
   insertChildBefore(
-    child: AllowedChildrenForRemoteComponent<Type>,
-    before: AllowedChildrenForRemoteComponent<Type>,
+    child: AllowedChildren<ExtractChildren<Type>, Root>,
+    before: AllowedChildren<ExtractChildren<Type>, Root>,
   ): void | Promise<void>;
 }
 
