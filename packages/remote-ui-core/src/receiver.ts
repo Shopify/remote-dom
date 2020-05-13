@@ -32,7 +32,7 @@ export class RemoteReceiver {
 
   private readonly listeners = new Map<
     string | typeof ROOT_ID,
-    UpdateListener<any>
+    Set<UpdateListener<any>>
   >();
 
   readonly receive: RemoteChannel = (type, ...args) => {
@@ -116,10 +116,12 @@ export class RemoteReceiver {
         const text = this.attached.get(id) as RemoteTextSerialization;
         text.text = newText;
 
-        const listener = this.listeners.get(id);
+        const listeners = this.listeners.get(id);
 
-        if (listener) {
-          listener(text);
+        if (listeners) {
+          for (const listener of listeners) {
+            listener(text);
+          }
         }
 
         break;
@@ -132,11 +134,24 @@ export class RemoteReceiver {
   }
 
   listen<T extends Attachable>({id}: T, listener: UpdateListener<T>) {
-    this.listeners.set(id, listener);
+    let listeners: Set<UpdateListener<any>>;
+    if (this.listeners.has(id)) {
+      listeners = this.listeners.get(id)!;
+    } else {
+      listeners = new Set();
+      this.listeners.set(id, listeners);
+    }
+    listeners.add(listener);
 
     return () => {
-      if (this.listeners.get(id) === listener) {
-        this.listeners.delete(id);
+      const listeners = this.listeners.get(id);
+      if (listeners) {
+        listeners.delete(listener);
+        if (listeners.size) {
+          this.listeners.set(id, listeners);
+        } else {
+          this.listeners.delete(id);
+        }
       }
     };
   }
@@ -150,11 +165,15 @@ export class RemoteReceiver {
         this.queuedUpdates.clear();
 
         for (const attached of queuedUpdates) {
-          const listener = this.listeners.get(
+          const listeners = this.listeners.get(
             attached === this.root ? ROOT_ID : attached.id,
           );
 
-          listener?.(attached);
+          if (listeners) {
+            for (const listener of listeners) {
+              listener(attached);
+            }
+          }
         }
       }, 0);
     }
