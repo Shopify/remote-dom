@@ -13,6 +13,9 @@ export class Controller<ComponentConfig extends ComponentMapping = {}> {
   }
 
   get(type: string | RemoteComponentType<any, any, any>) {
+    if (!this.registry.has(type as any)) {
+      throw new Error(`Unknown component: ${type}`);
+    }
     return this.registry.get(type as any);
   }
 }
