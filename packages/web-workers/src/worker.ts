@@ -20,6 +20,9 @@ export function expose(api: any) {
 
   Reflect.defineProperty(self, 'endpoint', {
     value: endpoint,
+    enumerable: false,
+    writable: false,
+    configurable: true,
   });
 
   endpoint.expose(api);
