@@ -1,12 +1,8 @@
-import {
-  Retainer,
-  RETAINED_BY,
-  RETAIN_METHOD,
-  RELEASE_METHOD,
-  MemoryManageable,
-} from './types';
+import {RETAINED_BY, RETAIN_METHOD, RELEASE_METHOD} from './types';
+import type {Retainer, MemoryManageable} from './types';
 
-export {Retainer, RETAINED_BY, RETAIN_METHOD, RELEASE_METHOD, MemoryManageable};
+export {RETAINED_BY, RETAIN_METHOD, RELEASE_METHOD};
+export type {Retainer, MemoryManageable};
 
 export class StackFrame {
   private readonly memoryManaged = new Set<MemoryManageable>();
