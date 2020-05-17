@@ -81,18 +81,21 @@ export function expose(
   api: {[key: string]: Function | undefined},
 ) {
   const endpoint = getEndpoint(caller);
-  return endpoint && endpoint.expose(api);
+
+  endpoint?.expose(api);
+
+  return endpoint != null;
 }
 
 export function terminate(caller: any) {
   const endpoint = getEndpoint(caller);
-  if (endpoint) {
-    endpoint.terminate();
-  }
 
+  endpoint?.terminate();
   workerEndpointCache.delete(caller);
+
+  return endpoint != null;
 }
 
-export function getEndpoint(caller: any) {
+export function getEndpoint<T = unknown>(caller: any): Endpoint<T> | undefined {
   return workerEndpointCache.get(caller);
 }

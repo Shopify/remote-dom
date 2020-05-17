@@ -26,6 +26,7 @@ export interface Endpoint<T> {
   readonly functions: FunctionStrategy<unknown>;
   replace(messenger: MessageEndpoint): void;
   expose(api: {[key: string]: Function | undefined}): void;
+  callable(methods: string[]): void;
   terminate(): void;
 }
 
@@ -125,11 +126,21 @@ export function createEndpoint<T>(
       );
     }
 
+    const cache = new Map<string | number | symbol, Function>();
+
     call = new Proxy(
       {},
       {
         get(_target, property) {
-          return handlerForCall(property);
+          const cached = cache.get(property);
+
+          if (cached != null) {
+            return cached;
+          }
+
+          const handler = handlerForCall(property);
+          cache.set(property, handler);
+          return handler;
         },
       },
     );
@@ -140,6 +151,7 @@ export function createEndpoint<T>(
       Object.defineProperty(call, method, {
         value: handlerForCall(method),
         writable: false,
+        configurable: true,
         enumerable: true,
       });
     }
@@ -164,6 +176,20 @@ export function createEndpoint<T>(
         } else {
           activeApi.delete(key);
         }
+      }
+    },
+    callable(newCallable) {
+      // If no callable methods are supplied initially, we use a Proxy instead,
+      // so all methods end up being treated as callable by default.
+      if (callable == null) return;
+
+      for (const method of newCallable) {
+        Object.defineProperty(call, method, {
+          value: handlerForCall(method),
+          writable: false,
+          configurable: true,
+          enumerable: true,
+        });
       }
     },
     terminate() {
