@@ -1,6 +1,13 @@
 import {createEndpoint, fromWebWorker, retain, release} from '@remote-ui/rpc';
+import type {Endpoint} from '@remote-ui/rpc';
 
 export {retain, release};
+
+declare global {
+  interface WindowOrWorkerGlobalScope {
+    readonly endpoint: Endpoint<unknown>;
+  }
+}
 
 export function expose(api: any) {
   const endpoint = createEndpoint(fromWebWorker(self as any), {
