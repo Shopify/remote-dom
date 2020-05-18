@@ -62,12 +62,20 @@ type ExtractChildren<Type> = Type extends RemoteComponentType<
 
 type AllowedChildren<
   Children extends RemoteComponentType<any, any> | boolean,
-  Root extends RemoteRoot<any, any>
+  Root extends RemoteRoot<any, any>,
+  AllowString extends boolean = false
 > = Children extends true
-  ? RemoteComponent<any, Root> | RemoteText<Root>
+  ? RemoteComponent<any, Root> | AllowedTextChildren<Root, AllowString>
   : Children extends false
   ? never
-  : AllowedRemoteChildren<Children, Root> | RemoteText<Root>;
+  :
+      | AllowedRemoteChildren<Children, Root>
+      | AllowedTextChildren<Root, AllowString>;
+
+type AllowedTextChildren<
+  Root extends RemoteRoot<any, any>,
+  AllowString extends boolean = false
+> = AllowString extends true ? RemoteText<Root> | string : RemoteText<Root>;
 
 export interface RemoteRoot<
   AllowedComponents extends RemoteComponentType<any, any> = RemoteComponentType<
@@ -83,7 +91,8 @@ export interface RemoteRoot<
   appendChild(
     child: AllowedChildren<
       AllowedChildrenTypes,
-      RemoteRoot<AllowedComponents, AllowedChildrenTypes>
+      RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
+      true
     >,
   ): void | Promise<void>;
   removeChild(
@@ -131,7 +140,7 @@ export interface RemoteComponent<
     props: Partial<PropsForRemoteComponent<Type>>,
   ): void | Promise<void>;
   appendChild(
-    child: AllowedChildren<ExtractChildren<Type>, Root>,
+    child: AllowedChildren<ExtractChildren<Type>, Root, true>,
   ): void | Promise<void>;
   removeChild(
     child: AllowedChildren<ExtractChildren<Type>, Root>,

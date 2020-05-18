@@ -6,9 +6,6 @@ import {
   RemoteText,
   RemoteChannel,
   RemoteComponent,
-  // RemoteComponentInsertChildViolation,
-  // RemoteComponentInsertRootViolation,
-  // RemoteComponentUpdatePropsViolation,
 } from './types';
 
 export interface Options<
@@ -51,18 +48,20 @@ export function createRemoteRoot<
 
       const component: RemoteComponent<AllowedComponents, Root> = {
         get children() {
-          return children.get(component as any) as any;
+          return children.get(component);
         },
         get props() {
           return props.get(component)!;
         },
         updateProps: (newProps) => updateProps(component, newProps),
-        appendChild: (child) => appendChild(component, child as any),
-        removeChild: (child) => removeChild(component, child as any),
+        appendChild: (child) => appendChild(component, child),
+        removeChild: (child) => removeChild(component, child),
         insertChildBefore: (child, before) =>
-          insertChildBefore(component, child as any, before as any),
+          insertChildBefore(component, child, before),
         // Just satisfying the type definition, since we need to write
-        // some properties manually.
+        // some properties manually, which we do below. If we just `as any`
+        // the whole object, we lose the implicit argument types for the
+        // methods above.
         ...({} as any),
       };
 
@@ -75,7 +74,7 @@ export function createRemoteRoot<
 
       makePartOfTree(component);
       makeRemote(component, id, remoteRoot);
-      props.set(component, initialProps || ({} as any));
+      props.set(component, initialProps ?? ({} as any));
       children.set(component, []);
 
       return (component as unknown) as RemoteComponent<typeof type, Root>;
@@ -123,8 +122,8 @@ export function createRemoteRoot<
     const recurse = (element: CanBeChild) => {
       if ('children' in element) {
         for (const child of element.children) {
-          withEach(child as any);
-          recurse(child as any);
+          withEach(child);
+          recurse(child);
         }
       }
     };
@@ -181,26 +180,31 @@ export function createRemoteRoot<
     });
   }
 
-  function appendChild(container: HasChildren, child: CanBeChild) {
+  function appendChild(container: HasChildren, child: CanBeChild | string) {
+    const normalizedChild =
+      typeof child === 'string' ? remoteRoot.createText(child) : child;
+
     return perform(container, {
       remote: (channel) =>
         channel(
           Action.InsertChild,
           (container as any).id,
           container.children.length,
-          serialize(child),
+          serialize(normalizedChild),
         ),
       local: () => {
         const newTop =
           container === remoteRoot ? remoteRoot : tops.get(container as any)!;
 
-        parents.set(child, container);
-        tops.set(child, newTop);
-        allDescendants(child, (descendant) => tops.set(descendant, newTop));
+        parents.set(normalizedChild, container);
+        tops.set(normalizedChild, newTop);
+        allDescendants(normalizedChild, (descendant) =>
+          tops.set(descendant, newTop),
+        );
 
         children.set(
           container,
-          Object.freeze([...(children.get(container) || []), child]),
+          Object.freeze([...(children.get(container) ?? []), normalizedChild]),
         );
       },
     });
@@ -269,7 +273,7 @@ export function createRemoteRoot<
       get() {
         return parents.get(value);
       },
-      configurable: false,
+      configurable: true,
       enumerable: true,
     });
 
@@ -277,7 +281,7 @@ export function createRemoteRoot<
       get() {
         return tops.get(value);
       },
-      configurable: false,
+      configurable: true,
       enumerable: true,
     });
   }
@@ -301,100 +305,15 @@ function makeRemote<Root extends RemoteRoot<any, any>>(
 ) {
   Reflect.defineProperty(value, 'id', {
     value: id,
-    configurable: false,
+    configurable: true,
     writable: false,
+    enumerable: false,
   });
 
   Reflect.defineProperty(value, 'root', {
     value: root,
-    configurable: false,
+    configurable: true,
     writable: false,
     enumerable: false,
   });
 }
-
-// type ValidationCollector<Validator extends (...args: any[]) => any> = (
-//   ...args: Arguments<Validator>
-// ) => Exclude<ReturnType<Validator>, undefined>[];
-
-// function createViolationCollector<Validator extends (...args: any[]) => any>(
-//   validators: Validator | Validator[] = [],
-// ): ValidationCollector<Validator> {
-//   const normalizedValidators = Array.isArray(validators)
-//     ? validators
-//     : [validators];
-
-//   return (...args) => {
-//     return normalizedValidators.reduce<
-//       Exclude<ReturnType<Validator>, undefined>[]
-//     >((all, validator) => {
-//       const violation = validator(...args);
-//       return violation ? [...all, violation] : all;
-//     }, []);
-//   };
-// }
-
-// export interface RemoteRootValidatorOptions<RemoteComponents extends string> {
-//   insertRoot?: RemoteRootInsertRootValidator | RemoteRootInsertRootValidator[];
-//   components?: {
-//     [RemoteComponent in RemoteComponents]: {
-//       insert?:
-//         | RemoteRootInsertChildValidator
-//         | RemoteRootInsertChildValidator[];
-//       updateProps?:
-//         | RemoteRootUpdatePropsValidator<RemoteComponent>
-//         | RemoteRootUpdatePropsValidator<RemoteComponent>[];
-//     };
-//   };
-// }
-
-// export class RemoteRootValidator<RemoteComponents extends string> {
-//   readonly insertRoot: ValidationCollector<RemoteRootInsertRootValidator>;
-//   private readonly components?: Map<
-//     RemoteComponents,
-//     {
-//       insert: ValidationCollector<RemoteRootInsertChildValidator>;
-//       updateProps: ValidationCollector<
-//         RemoteRootUpdatePropsValidator<RemoteComponents>
-//       >;
-//     }
-//   >;
-
-//   constructor({
-//     insertRoot,
-//     components,
-//   }: RemoteRootValidatorOptions<RemoteComponents> = {}) {
-//     this.insertRoot = createViolationCollector(insertRoot);
-//     this.components =
-//       components &&
-//       new Map(
-//         (Object.entries(components) as [RemoteComponents, any][]).map(
-//           ([component, {insert, updateProps}]) => [
-//             component as any,
-//             {
-//               insert: createViolationCollector(insert),
-//               updateProps: createViolationCollector(updateProps),
-//             },
-//           ],
-//         ),
-//       );
-//   }
-
-//   supports(component: string): component is RemoteComponents {
-//     return this.components == null
-//       ? true
-//       : this.components.has(component as any);
-//   }
-
-//   component(component: string) {
-//     if (!this.supports(component)) {
-//       throw new Error(
-//         `Can’t access component config for unsupported ${component} component`,
-//       );
-//     }
-
-//     return this.components
-//       ? this.components.get(component)
-//       : {insert: () => [], updateProps: () => []};
-//   }
-// }
