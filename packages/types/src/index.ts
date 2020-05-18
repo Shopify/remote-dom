@@ -2,11 +2,19 @@ export type RemoteComponentType<
   Type extends string,
   Props = {},
   AllowedChildren extends RemoteComponentType<any, any> | boolean = true
-> = Type & {
-  readonly __type: Type;
-  readonly __props: Props;
-  readonly __allowedChildren: AllowedChildren;
-};
+> =
+  // If we don't include the object part, this type gets "erased" to just
+  // be the string type, which means the props/ children can’t be extracted
+  // from the object later.
+  Type & {readonly props?: Props; readonly children?: AllowedChildren};
+
+export type IdentifierForRemoteComponent<T> = T extends RemoteComponentType<
+  infer Type,
+  any,
+  any
+>
+  ? Type
+  : never;
 
 export type PropsForRemoteComponent<T> = T extends RemoteComponentType<
   string,

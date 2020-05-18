@@ -1,4 +1,8 @@
-import {RemoteComponentType, PropsForRemoteComponent} from '@remote-ui/types';
+import {
+  RemoteComponentType,
+  IdentifierForRemoteComponent,
+  PropsForRemoteComponent,
+} from '@remote-ui/types';
 
 type NonOptionalKeys<T> = {
   [K in keyof T]-?: undefined extends T[K] ? never : K;
@@ -49,13 +53,14 @@ export enum RemoteKind {
 type AllowedRemoteChildren<
   Children,
   Root extends RemoteRoot<any, any>
-> = Children extends RemoteComponentType<any, any>
+> = Children extends RemoteComponentType<string, any, any>
   ? RemoteComponent<Children, Root>
   : never;
 
 type ExtractChildren<Type> = Type extends RemoteComponentType<
-  infer Children,
-  any
+  string,
+  any,
+  infer Children
 >
   ? Children
   : never;
@@ -130,7 +135,7 @@ export interface RemoteComponent<
   Root extends RemoteRoot<any, any>
 > {
   readonly id: string;
-  readonly type: Type['type'];
+  readonly type: IdentifierForRemoteComponent<Type>;
   readonly props: PropsForRemoteComponent<Type>;
   readonly children: readonly AllowedChildren<ExtractChildren<Type>, Root>[];
   readonly root: Root;
@@ -183,21 +188,3 @@ export enum RemoteComponentViolationType {
   InsertRoot,
   UpdateProps,
 }
-
-// export interface RemoteComponentInsertChildViolation {
-//   type: RemoteComponentViolationType.InsertChild;
-//   component: string;
-//   message: string;
-// }
-
-// export interface RemoteComponentInsertRootViolation {
-//   type: RemoteComponentViolationType.InsertRoot;
-//   component: string;
-//   message: string;
-// }
-
-// export interface RemoteComponentUpdatePropsViolation {
-//   type: RemoteComponentViolationType.UpdateProps;
-//   component: string;
-//   message: string;
-// }
