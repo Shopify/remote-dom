@@ -6,7 +6,11 @@ export type RemoteComponentType<
   // If we don't include the object part, this type gets "erased" to just
   // be the string type, which means the props/ children can’t be extracted
   // from the object later.
-  Type & {readonly props?: Props; readonly children?: AllowedChildren};
+  Type & {
+    readonly type?: Type;
+    readonly props?: Props;
+    readonly children?: AllowedChildren;
+  };
 
 export type IdentifierForRemoteComponent<T> = T extends RemoteComponentType<
   infer Type,

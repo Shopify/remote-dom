@@ -2,6 +2,7 @@ export type {
   RemoteComponentType,
   PropsForRemoteComponent,
   AllowedChildrenForRemoteComponent,
+  IdentifierForRemoteComponent,
 } from '@remote-ui/types';
 
 export {retain, release} from '@remote-ui/rpc';
