@@ -12,7 +12,7 @@ export class Controller<ComponentConfig extends ComponentMapping = {}> {
     this.registry = new Map(Object.entries(components));
   }
 
-  get(type: string | RemoteComponentType<any, any, any>) {
+  get(type: string | RemoteComponentType<string, any, any>) {
     if (!this.registry.has(type as any)) {
       throw new Error(`Unknown component: ${type}`);
     }

@@ -9,16 +9,16 @@ import {
 } from './types';
 
 export interface Options<
-  AllowedComponents extends RemoteComponentType<any, any>
+  AllowedComponents extends RemoteComponentType<string, any>
 > {
   readonly components: readonly AllowedComponents[];
 }
 
 export function createRemoteRoot<
-  AllowedComponents extends RemoteComponentType<any, any> = RemoteComponentType<
-    any,
+  AllowedComponents extends RemoteComponentType<
+    string,
     any
-  >,
+  > = RemoteComponentType<any, any>,
   AllowedChildrenTypes extends AllowedComponents | boolean = true
 >(
   channel: RemoteChannel,

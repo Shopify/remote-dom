@@ -9,7 +9,7 @@ import {
 
 const reconciler = reactReconciler<
   // type
-  RemoteComponentType<any, any>,
+  RemoteComponentType<string, any>,
   // props
   Record<string, unknown>,
   // root container

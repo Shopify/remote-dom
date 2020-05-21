@@ -66,7 +66,7 @@ type ExtractChildren<Type> = Type extends RemoteComponentType<
   : never;
 
 type AllowedChildren<
-  Children extends RemoteComponentType<any, any> | boolean,
+  Children extends RemoteComponentType<string, any> | boolean,
   Root extends RemoteRoot<any, any>,
   AllowString extends boolean = false
 > = Children extends true
@@ -83,11 +83,11 @@ type AllowedTextChildren<
 > = AllowString extends true ? RemoteText<Root> | string : RemoteText<Root>;
 
 export interface RemoteRoot<
-  AllowedComponents extends RemoteComponentType<any, any> = RemoteComponentType<
-    any,
+  AllowedComponents extends RemoteComponentType<
+    string,
     any
-  >,
-  AllowedChildrenTypes extends RemoteComponentType<any, any> | boolean = true
+  > = RemoteComponentType<any, any>,
+  AllowedChildrenTypes extends RemoteComponentType<string, any> | boolean = true
 > {
   readonly children: readonly AllowedChildren<
     AllowedChildrenTypes,
@@ -131,7 +131,7 @@ export interface RemoteRoot<
 }
 
 export interface RemoteComponent<
-  Type extends RemoteComponentType<any, any>,
+  Type extends RemoteComponentType<string, any>,
   Root extends RemoteRoot<any, any>
 > {
   readonly id: string;
@@ -166,7 +166,10 @@ export interface RemoteText<Root extends RemoteRoot<any, any>> {
 }
 
 export type RemoteComponentSerialization<
-  Type extends RemoteComponentType<any, any> = RemoteComponentType<any, any>
+  Type extends RemoteComponentType<string, any> = RemoteComponentType<
+    string,
+    any
+  >
 > = {
   -readonly [K in 'id' | 'type' | 'props']: RemoteComponent<Type, any>[K];
 } & {

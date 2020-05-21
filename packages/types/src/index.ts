@@ -1,7 +1,7 @@
 export type RemoteComponentType<
   Type extends string,
   Props = {},
-  AllowedChildren extends RemoteComponentType<any, any> | boolean = true
+  AllowedChildren extends RemoteComponentType<string, any> | boolean = true
 > =
   // If we don't include the object part, this type gets "erased" to just
   // be the string type, which means the props/ children can’t be extracted
