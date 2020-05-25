@@ -23,7 +23,7 @@
     "@sewing-kit/plugin-javascript": "^0.0.55",
     "@sewing-kit/plugin-jest": "^0.0.51",
     "@sewing-kit/plugin-package-flexible-outputs": "^0.0.50",
-    "@sewing-kit/plugin-react": "^0.0.46",
+    "@sewing-kit/plugin-react": "^0.0.47",
     "@sewing-kit/plugin-typescript": "^0.0.59",
     "lerna": "^3.20.2"
   },
