@@ -9,13 +9,13 @@ import type {Node} from '../types';
 
 import {assertIsNode, diffPropsForNode} from './utilities';
 
-export function toHaveReactProps<Props>(
+export function toHaveRemoteProps<Props>(
   this: jest.MatcherUtils,
   node: Node<Props>,
   props: Partial<Props>,
 ) {
   assertIsNode(node, {
-    expectation: 'toHaveReactProps',
+    expectation: 'toHaveRemoteProps',
     isNot: this.isNot,
   });
 
@@ -35,7 +35,7 @@ export function toHaveReactProps<Props>(
 
   const message = pass
     ? () =>
-        `${matcherHint('.not.toHaveReactProps', node.toString())}\n\n` +
+        `${matcherHint('.not.toHaveRemoteProps', node.toString())}\n\n` +
         `Expected the React element:\n  ${receivedColor(node.toString())}\n` +
         `Not to have props:\n  ${printExpected(props)}\n` +
         `Received:\n  ${printReceived(node.props)}\n`
@@ -45,7 +45,7 @@ export function toHaveReactProps<Props>(
         });
 
         return (
-          `${matcherHint('.toHaveReactProps', node.toString())}\n\n` +
+          `${matcherHint('.toHaveRemoteProps', node.toString())}\n\n` +
           `Expected the React element:\n  ${receivedColor(node.toString())}\n` +
           `To have props:\n  ${printExpected(props)}\n` +
           `Received:\n  ${printReceived(node.props)}\n${

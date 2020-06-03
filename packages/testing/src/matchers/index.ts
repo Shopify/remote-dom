@@ -5,12 +5,12 @@ import type {
 
 import type {Node} from '../types';
 
-import {toHaveReactProps} from './props';
+import {toHaveRemoteProps} from './props';
 import {
   toContainRemoteComponent,
   toContainRemoteComponentTimes,
 } from './components';
-import {toContainReactText} from './text';
+import {toContainRemoteText} from './text';
 
 type PropsFromNode<T> = NonNullable<T> extends Node<infer U> ? U : never;
 
@@ -18,7 +18,7 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R, T = {}> {
-      toHaveReactProps(props: Partial<PropsFromNode<T>>): void;
+      toHaveRemoteProps(props: Partial<PropsFromNode<T>>): void;
       toContainRemoteComponent<
         Type extends RemoteComponentType<string, any, any>
       >(
@@ -32,14 +32,14 @@ declare global {
         times: number,
         props?: Partial<PropsForRemoteComponent<Type>>,
       ): void;
-      toContainReactText(text: string): void;
+      toContainRemoteText(text: string): void;
     }
   }
 }
 
 expect.extend({
-  toHaveReactProps,
+  toHaveRemoteProps,
   toContainRemoteComponent,
   toContainRemoteComponentTimes,
-  toContainReactText,
+  toContainRemoteText,
 });

@@ -9,13 +9,13 @@ import type {Node} from '../types';
 
 import {assertIsNode, printReceivedWithHighlight} from './utilities';
 
-export function toContainReactText<Props>(
+export function toContainRemoteText<Props>(
   this: jest.MatcherUtils,
   node: Node<Props>,
   text: string,
 ) {
   assertIsNode(node, {
-    expectation: 'toContainReactText',
+    expectation: 'toContainRemoteText',
     isNot: this.isNot,
   });
 
@@ -25,7 +25,7 @@ export function toContainReactText<Props>(
 
   const message = pass
     ? () =>
-        `${matcherHint('.not.toContainReactText', node.toString())}\n\n` +
+        `${matcherHint('.not.toContainRemoteText', node.toString())}\n\n` +
         `Expected the React element:\n  ${receivedColor(node.toString())}\n` +
         `Not to contain text:\n  ${printExpected(text)}\n` +
         `But it did:\n  ${printReceivedWithHighlight(
@@ -34,7 +34,7 @@ export function toContainReactText<Props>(
           text.length,
         )}\n`
     : () =>
-        `${matcherHint('.not.toContainReactText', node.toString())}\n\n` +
+        `${matcherHint('.not.toContainRemoteText', node.toString())}\n\n` +
         `Expected the React element:\n  ${receivedColor(node.toString())}\n` +
         `With text content:\n  ${printReceived(nodeText)}\n` +
         `To contain string:\n  ${printExpected(text)}\n`;
