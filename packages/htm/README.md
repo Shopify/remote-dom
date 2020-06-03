@@ -7,13 +7,13 @@ This library provides a binding that converts [`htm`](https://github.com/develop
 Using `yarn`:
 
 ```
-yarn add @remote-ui/core
+yarn add @remote-ui/htm
 ```
 
 or, using `npm`:
 
 ```
-npm install @remote-ui/core --save
+npm install @remote-ui/htm --save
 ```
 
 ## Usage
