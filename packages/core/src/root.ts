@@ -1,6 +1,14 @@
 import {RemoteComponentType} from '@remote-ui/types';
 import {
-  Action,
+  ACTION_MOUNT,
+  ACTION_INSERT_CHILD,
+  ACTION_REMOVE_CHILD,
+  ACTION_UPDATE_PROPS,
+  ACTION_UPDATE_TEXT,
+  KIND_COMPONENT,
+  KIND_TEXT,
+} from './types';
+import type {
   Serialized,
   RemoteRoot,
   RemoteText,
@@ -47,6 +55,7 @@ export function createRemoteRoot<
       const id = `${currentId++}`;
 
       const component: RemoteComponent<AllowedComponents, Root> = {
+        kind: KIND_COMPONENT,
         get children() {
           return children.get(component);
         },
@@ -83,6 +92,7 @@ export function createRemoteRoot<
       const id = `${currentId++}`;
 
       const text: RemoteText<Root> = {
+        kind: KIND_TEXT,
         get text() {
           return texts.get(text)!;
         },
@@ -103,7 +113,7 @@ export function createRemoteRoot<
     insertChildBefore: (child, before) =>
       insertChildBefore(remoteRoot, child, before),
     async mount() {
-      await channel(Action.Mount, children.get(remoteRoot)!.map(serialize));
+      await channel(ACTION_MOUNT, children.get(remoteRoot)!.map(serialize));
     },
   };
 
@@ -163,14 +173,14 @@ export function createRemoteRoot<
 
   function updateText(text: Text, newText: string) {
     return perform(text, {
-      remote: (channel) => channel(Action.UpdateText, text.id, newText),
+      remote: (channel) => channel(ACTION_UPDATE_TEXT, text.id, newText),
       local: () => texts.set(text, newText),
     });
   }
 
   function updateProps(component: Component, newProps: any) {
     return perform(component, {
-      remote: (channel) => channel(Action.UpdateProps, component.id, newProps),
+      remote: (channel) => channel(ACTION_UPDATE_PROPS, component.id, newProps),
       local: () => {
         props.set(
           component,
@@ -187,7 +197,7 @@ export function createRemoteRoot<
     return perform(container, {
       remote: (channel) =>
         channel(
-          Action.InsertChild,
+          ACTION_INSERT_CHILD,
           (container as any).id,
           container.children.length,
           serialize(normalizedChild),
@@ -223,7 +233,7 @@ export function createRemoteRoot<
     return perform(container, {
       remote: (channel) =>
         channel(
-          Action.RemoveChild,
+          ACTION_REMOVE_CHILD,
           (container as any).id,
           container.children.indexOf(child as any),
         ),
@@ -248,7 +258,7 @@ export function createRemoteRoot<
     return perform(container, {
       remote: (channel) =>
         channel(
-          Action.InsertChild,
+          ACTION_INSERT_CHILD,
           (container as any).id,
           container.children.indexOf(before as any),
           serialize(child),

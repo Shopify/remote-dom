@@ -1,6 +1,12 @@
 import {retain, release} from '@remote-ui/rpc';
 import {
-  Action,
+  ACTION_MOUNT,
+  ACTION_INSERT_CHILD,
+  ACTION_REMOVE_CHILD,
+  ACTION_UPDATE_PROPS,
+  ACTION_UPDATE_TEXT,
+} from './types';
+import type {
   MessageMap,
   RemoteChannel,
   RemoteTextSerialization,
@@ -36,8 +42,8 @@ export class RemoteReceiver {
 
   readonly receive: RemoteChannel = (type, ...args) => {
     switch (type) {
-      case Action.Mount: {
-        const children = (args as MessageMap[Action.Mount])[0];
+      case ACTION_MOUNT: {
+        const children = (args as MessageMap[typeof ACTION_MOUNT])[0];
 
         this.root.children = children;
 
@@ -50,8 +56,11 @@ export class RemoteReceiver {
 
         break;
       }
-      case Action.RemoveChild: {
-        const [id = ROOT_ID, index] = args as MessageMap[Action.RemoveChild];
+      case ACTION_REMOVE_CHILD: {
+        const [
+          id = ROOT_ID,
+          index,
+        ] = args as MessageMap[typeof ACTION_REMOVE_CHILD];
 
         const attached = this.attached.get(id) as Root;
         const children = [...attached.children];
@@ -67,12 +76,12 @@ export class RemoteReceiver {
 
         break;
       }
-      case Action.InsertChild: {
+      case ACTION_INSERT_CHILD: {
         const [
           id = ROOT_ID,
           index,
           child,
-        ] = args as MessageMap[Action.InsertChild];
+        ] = args as MessageMap[typeof ACTION_INSERT_CHILD];
 
         retain(child);
         this.attach(child);
@@ -91,8 +100,8 @@ export class RemoteReceiver {
 
         break;
       }
-      case Action.UpdateProps: {
-        const [id, newProps] = args as MessageMap[Action.UpdateProps];
+      case ACTION_UPDATE_PROPS: {
+        const [id, newProps] = args as MessageMap[typeof ACTION_UPDATE_PROPS];
 
         const component = this.attached.get(id) as RemoteComponentSerialization;
         const {props: oldProps} = component;
@@ -111,8 +120,8 @@ export class RemoteReceiver {
 
         break;
       }
-      case Action.UpdateText: {
-        const [id, newText] = args as MessageMap[Action.UpdateText];
+      case ACTION_UPDATE_TEXT: {
+        const [id, newText] = args as MessageMap[typeof ACTION_UPDATE_TEXT];
 
         const text = this.attached.get(id) as RemoteTextSerialization;
         text.text = newText;

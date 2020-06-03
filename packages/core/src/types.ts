@@ -14,35 +14,34 @@ type IfAllOptionalKeys<Obj, If, Else = never> = NonOptionalKeys<Obj> extends {
   ? If
   : Else;
 
-export enum Action {
-  UpdateText,
-  UpdateProps,
-  InsertChild,
-  RemoveChild,
-  Mount,
-}
+export const ACTION_MOUNT = 0;
+export const ACTION_INSERT_CHILD = 1;
+export const ACTION_REMOVE_CHILD = 2;
+export const ACTION_UPDATE_TEXT = 3;
+export const ACTION_UPDATE_PROPS = 4;
 
-export enum UpdateOperation {
-  Insert,
-  Remove,
-}
+export const UPDATE_INSERT = 0;
+export const UPDATE_REMOVE = 1;
 
 export type Id = string;
 
 export interface MessageMap {
-  [Action.UpdateText]: [Id, string];
-  [Action.UpdateProps]: [Id, object];
-  [Action.InsertChild]: [
+  [ACTION_UPDATE_TEXT]: [Id, string];
+  [ACTION_UPDATE_PROPS]: [Id, object];
+  [ACTION_INSERT_CHILD]: [
     Id | undefined,
     number,
     RemoteTextSerialization | RemoteComponentSerialization,
   ];
-  [Action.RemoveChild]: [Id | undefined, number];
-  [Action.Mount]: [(RemoteTextSerialization | RemoteComponentSerialization)[]];
+  [ACTION_REMOVE_CHILD]: [Id | undefined, number];
+  [ACTION_MOUNT]: [(RemoteTextSerialization | RemoteComponentSerialization)[]];
 }
 
 export interface RemoteChannel {
-  <T extends Action>(type: T, ...payload: MessageMap[T]): void | Promise<void>;
+  <T extends keyof MessageMap>(
+    type: T,
+    ...payload: MessageMap[T]
+  ): void | Promise<void>;
 }
 
 export enum RemoteKind {
@@ -130,10 +129,14 @@ export interface RemoteRoot<
   mount(): Promise<void>;
 }
 
+export const KIND_COMPONENT = 1;
+export const KIND_TEXT = 2;
+
 export interface RemoteComponent<
   Type extends RemoteComponentType<string, any>,
   Root extends RemoteRoot<any, any>
 > {
+  readonly kind: typeof KIND_COMPONENT;
   readonly id: string;
   readonly type: IdentifierForRemoteComponent<Type>;
   readonly props: PropsForRemoteComponent<Type>;
@@ -157,6 +160,7 @@ export interface RemoteComponent<
 }
 
 export interface RemoteText<Root extends RemoteRoot<any, any>> {
+  readonly kind: typeof KIND_TEXT;
   readonly id: string;
   readonly text: string;
   readonly root: Root;
@@ -164,6 +168,10 @@ export interface RemoteText<Root extends RemoteRoot<any, any>> {
   readonly parent: RemoteComponent<any, Root> | Root | null;
   updateText(text: string): void | Promise<void>;
 }
+
+export type RemoteChild<Root extends RemoteRoot<any, any>> =
+  | RemoteComponent<any, Root>
+  | RemoteText<Root>;
 
 export type RemoteComponentSerialization<
   Type extends RemoteComponentType<string, any> = RemoteComponentType<
