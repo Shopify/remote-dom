@@ -22,7 +22,7 @@ export function createRemoteRoot<
   AllowedChildrenTypes extends AllowedComponents | boolean = true
 >(
   channel: RemoteChannel,
-  _options: Options<AllowedComponents>,
+  _options?: Options<AllowedComponents>,
 ): RemoteRoot<AllowedComponents, AllowedChildrenTypes> {
   type Root = RemoteRoot<AllowedComponents, AllowedChildrenTypes>;
   type Component = RemoteComponent<AllowedComponents, Root>;
