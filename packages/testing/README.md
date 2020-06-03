@@ -46,7 +46,7 @@ const tree = mount((root) => {
   });
   button.appendChild('Submit');
   root.appendChild(button);
-}, createRemoteRoot);
+}, myRoot);
 ```
 
 The value returned from this function reflects the state of the remote-ui root after the operations have been performed. This object exposes a rich API for traversing the resulting tree: it includes all the same operations as a [`@shopify/react-testing` `RemoteRoot`](https://github.com/Shopify/quilt/tree/master/packages/react-testing#root), with the exception of any DOM-related properties (which don’t make sense, since there’s no DOM anywhere in sight!).
