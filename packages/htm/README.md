@@ -41,10 +41,10 @@ import {BlockStack, Button, Text} from 'my-remote-components';
 
 render(
   htm`
-    <BlockStack spacing="tight">
-      <Button onPress=${() => console.log('Pressed!')}>Submit<//>
-      <Text subdued>You’ll have a chance to review your purchase<//>
-    </BlockStack>
+    <${BlockStack} spacing="tight">
+      <${Button} onPress=${() => console.log('Pressed!')}>Submit<//>
+      <${Text} subdued>You’ll have a chance to review your purchase<//>
+    <//>
   `,
   root,
 );
