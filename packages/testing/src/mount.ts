@@ -15,7 +15,7 @@ export function mount<Root extends RemoteRoot<any, any> = RemoteRoot<any, any>>(
   root: Root = createTestRoot() as any,
 ) {
   let acting = false;
-  let mounted = false;
+  let mounted = true;
   let rootNode!: Node<unknown>;
 
   act(() => {
@@ -175,7 +175,6 @@ export function mount<Root extends RemoteRoot<any, any> = RemoteRoot<any, any>>(
   // treat that root as a "noop").
   function act<T>(action: () => T, {update = true, eager = false} = {}): T {
     const performUpdate = update ? updateRootNode : noop;
-    let result!: T;
 
     if (acting) {
       return action();
@@ -189,7 +188,7 @@ export function mount<Root extends RemoteRoot<any, any> = RemoteRoot<any, any>>(
       return result;
     };
 
-    const actResult = action();
+    const result = action();
 
     if (isPromise(result)) {
       if (eager) {
@@ -199,7 +198,7 @@ export function mount<Root extends RemoteRoot<any, any> = RemoteRoot<any, any>>(
           afterResolve,
         ) as any;
       } else {
-        return Promise.resolve(actResult).then(afterResolve) as any;
+        return Promise.resolve(result).then(afterResolve) as any;
       }
     }
 
