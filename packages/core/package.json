@@ -1,6 +1,6 @@
 {
   "name": "@remote-ui/core",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
