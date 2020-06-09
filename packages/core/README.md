@@ -63,6 +63,10 @@ const button = root.createComponent('Button', {
 });
 ```
 
+If you are familiar with React, or if the "host" side of these components is implemented in React, you may be tempted to pass a function as the `children` prop. This pattern is commonly referred to as "render props" in React. However, this pattern likely is not doing what you think it is. Remember that functions passed as props will always be asynchronous when called by the host, because they are implemented with message passing. This makes them poorly suited for rendering UI, where you generally need to run synchronous functions.
+
+To prevent this kind of mistake, any `children` prop will be deleted from the props object. If you want to implement a render prop-style API, you can do so without potentially causing confusion by using a different prop name, and ensuring that you handle the fact that the host will receive a promise whenever they call this function. If you are just trying to append other `RemoteComponent` and `RemoteText` instances to your tree, use `RemoteComponent#appendChild()`.
+
 ##### `RemoteRoot#appendChild()`
 
 This method appends a `RemoteComponent` or `RemoteText` to the remote root as the last child. This method returns a promise for when the update has been flushed to the host.

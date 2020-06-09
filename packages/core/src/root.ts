@@ -51,7 +51,25 @@ export function createRemoteRoot<
       return children.get(remoteRoot) as any;
     },
     createComponent(type, ...propsPart) {
-      const [initialProps = {} as any] = propsPart;
+      let [initialProps] = propsPart;
+
+      if (initialProps) {
+        // "children" as a prop can be extremely confusing with the "children" of
+        // a component. In React, a "child" can be anything, but once it reaches
+        // a host environment (like this remote `Root`), we want "children" to have
+        // only one meaning: the actual, resolved children components and text.
+        //
+        // To enforce this, we delete any prop named "children". We don’t take a copy
+        // of the props for performance, so a user calling this function must do so
+        // with an object that can handle being mutated.
+        //
+        // I didn’t think checking that the prop exists before deleting it would matter,
+        // but I ran a few benchmarks and it ran substantially faster this way /shrug
+        if (initialProps.children) delete initialProps.children;
+      } else {
+        initialProps = {} as any;
+      }
+
       const id = `${currentId++}`;
 
       const component: RemoteComponent<AllowedComponents, Root> = {
@@ -83,7 +101,7 @@ export function createRemoteRoot<
 
       makePartOfTree(component);
       makeRemote(component, id, remoteRoot);
-      props.set(component, initialProps ?? ({} as any));
+      props.set(component, initialProps);
       children.set(component, []);
 
       return (component as unknown) as RemoteComponent<typeof type, Root>;
@@ -179,6 +197,9 @@ export function createRemoteRoot<
   }
 
   function updateProps(component: Component, newProps: any) {
+    // See notes above for why we treat `children` as a reserved prop.
+    if (newProps.children) delete newProps.children;
+
     return perform(component, {
       remote: (channel) => channel(ACTION_UPDATE_PROPS, component.id, newProps),
       local: () => {
