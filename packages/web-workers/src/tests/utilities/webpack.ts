@@ -20,6 +20,7 @@ export function runWebpack(
           globalObject: 'self',
           ...extraConfig.output,
         },
+        mode: 'production',
         resolve: {
           // Need to include .esnext to get the non-polyfill-assuming version of
           // @remote-ui/rpc.

@@ -49,9 +49,9 @@ export type SafeRpcArgument<T> = T extends (
 
 interface SafeRpcArgumentArray<T> extends Array<SafeRpcArgument<T>> {}
 
-export const RETAIN_METHOD = Symbol('retain');
-export const RELEASE_METHOD = Symbol('release');
-export const RETAINED_BY = Symbol('retainedBy');
+export const RETAIN_METHOD = Symbol.for('Remote::Retain');
+export const RELEASE_METHOD = Symbol.for('Remote::Release');
+export const RETAINED_BY = Symbol.for('Remote::RetainedBy');
 
 export interface Retainer {
   add(manageable: MemoryManageable): void;
@@ -61,23 +61,4 @@ export interface MemoryManageable {
   readonly [RETAINED_BY]: Set<Retainer>;
   [RETAIN_METHOD](): void;
   [RELEASE_METHOD](): void;
-}
-
-export interface FunctionStrategy<T> {
-  toWire(value: Function): [T, Transferable[]?];
-  fromWire(value: T, retainedBy?: Retainer[]): Function;
-  revoke?(value: Function): void;
-  exchange?(value: Function, newValue: Function): void;
-  terminate?(): void;
-  has(value: Function): boolean;
-}
-
-export interface FunctionStrategyOptions {
-  readonly messenger: MessageEndpoint;
-  uuid(): string;
-  toWire(value: unknown): [any, Transferable[]?];
-  fromWire<Input = unknown, Output = unknown>(
-    value: Input,
-    retainedBy?: Retainer[],
-  ): Output;
 }
