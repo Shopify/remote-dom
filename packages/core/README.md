@@ -301,32 +301,4 @@ card.appendChild(button);
 
 ### Other exports
 
-This package exports a variety of helper types for easy access in more complex use cases, including some types representing the wire format remote-ui uses to communicate component tree updates. It also re-exports the `retain` and `release` methods from `@remote-ui/rpc` for easy access. Finally, it provides some types that may be useful for you to describe the different objects in remote-ui in your application:
-
-- `RemoteComponentType` represents the components created by `createRemoteComponent`. This type has the prop types and allowed children embedded in its type.
-- `PropsForRemoteComponent` accepts a `RemoteComponentType` as a type argument, and returns the type of the props for that component.
-
-  ```ts
-  import {
-    createRemoteComponent,
-    PropsForRemoteComponent,
-  } from '@remote-ui/core';
-
-  const Button = createRemoteComponent<'Button', {onPress?(): void}>('Button');
-  type ButtonProps = PropsForRemoteComponent<typeof Button>; // {onPress?(): void}
-  ```
-
-- `AllowedChildrenForRemoteComponent` accepts a `RemoteComponentType` as a type argument, and returns the types of the components allowed to be direct children of that component.
-
-  ```ts
-  import {
-    createRemoteComponent,
-    AllowedChildrenForRemoteComponent,
-  } from '@remote-ui/core';
-
-  const Button = createRemoteComponent<'Button', {onPress?(): void}>('Button');
-  const ButtonGroup = createRemoteComponent<'ButtonGroup', {}, typeof Button>(
-    'ButtonGroup',
-  );
-  type ButtonChildren = AllowedChildrenForRemoteComponent<typeof ButtonGroup>; // Button
-  ```
+This package exports a variety of helper types for easy access in more complex use cases, including some types representing the wire format remote-ui uses to communicate component tree updates. It also re-exports the [`retain` and `release` methods from `@remote-ui/rpc`](../rpc), and the [helper TypeScript types from `@remote-ui/types`](../types), for easy access.
