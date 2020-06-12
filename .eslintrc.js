@@ -1,6 +1,7 @@
 module.exports = {
   extends: ['plugin:@sewing-kit/typescript', 'plugin:@sewing-kit/prettier'],
   ignorePatterns: [
+    'examples/',
     'node_modules/',
     'packages/*/build/',
     'packages/*/*.d.ts',

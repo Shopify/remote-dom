@@ -19,7 +19,9 @@ Finally, this repo provides a small library for testing the outputs of [`@remote
 
 ## Examples
 
-Ready to learn more? [Read through the comprehensive example](documentation/comprehensive-example.md), demonstrating an implementation of remote-ui across both the host (browser) and remote (web worker) environments.
+We have created an example project, bootstrapped with [Create React App](https://github.com/facebook/create-react-app), that shows how you can incorporate the different parts of remote-ui into a simple React codebase.
+
+Want to learn even more? [Read through the comprehensive example](documentation/comprehensive-example.md), a written guide that documents a fully-featured implementation of remote-ui across both the host (browser) and remote (web worker) environments.
 
 ## Want to contribute?
 
