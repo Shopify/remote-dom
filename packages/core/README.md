@@ -18,7 +18,7 @@ npm install @remote-ui/core --save
 
 ## Prerequisites
 
-`@remote-ui/core` uses JavaScript’s native `Map`, `Set`, and `WeakSet`. It also uses numerous language constructs that require the `Symbol` global. Polyfills for these features (via [`core-js`](https://github.com/zloirock/core-js)) are imported automatically with the “default” version of this package. If you have a build system that is smart about adding polyfills, you can configure it to [prefer (and process) a special build meant to minimize polyfills](../documentation/).
+`@remote-ui/core` uses JavaScript’s native `Map`, `Set`, and `WeakSet`. It also uses numerous language constructs that require the `Symbol` global. Polyfills for these features (via [`core-js`](https://github.com/zloirock/core-js)) are imported automatically with the “default” version of this package. If you have a build system that is smart about adding polyfills, you can configure it to [prefer (and process) a special build meant to minimize polyfills](../documentation/guides/polyfills.md).
 
 ## Usage
 

@@ -20,7 +20,7 @@ npm install @remote-ui/rpc --save
 
 `@remote-ui/core` uses JavaScript’s native `Map`, `Set`, `WeakSet`. It also uses numerous language constructs that require the `Symbol` global. This package also makes heavy use of Promises and async/ await, which are based on generators.
 
-Polyfills for all of these features (via [`core-js`](https://github.com/zloirock/core-js) and [regenerator-runtime](https://github.com/facebook/regenerator/tree/master/packages/regenerator-runtime)) are imported automatically with the “default” version of this package. If you have a build system that is smart about adding polyfills, you can configure it to [prefer (and process) a special build meant to minimize polyfills](../documentation/).
+Polyfills for all of these features (via [`core-js`](https://github.com/zloirock/core-js) and [regenerator-runtime](https://github.com/facebook/regenerator/tree/master/packages/regenerator-runtime)) are imported automatically with the “default” version of this package. If you have a build system that is smart about adding polyfills, you can configure it to [prefer (and process) a special build meant to minimize polyfills](../documentation/guides/polyfills.md).
 
 ## Usage
 
@@ -273,7 +273,7 @@ async function sayHello(user: User) {
 
 This automatic behavior is problematic if you want to hold on to a function received via `@remote-ui/rpc` and call it later, after the function that received it has finished. To address this need, this library provides two functions for manual memory management: `retain` and `release`.
 
-### `retain()`
+#### `retain()`
 
 As noted above, you will `retain()` a value when you want to prevent its automatic release. Calling `retain` will, by default, deeply retain the value — that is, it will traverse into nested array elements and object properties, and retain every `retain`-able thing it finds. You will typically use this alongside also storing that value in a variable that lives outside the context of the function.
 
@@ -291,7 +291,7 @@ async function sayHello(user: User) {
 
 Once you have explicitly `retain`ed a value, it will never be released until the `Endpoint` is terminated, or a matching number of `release()` calls are performed on the object.
 
-### `release()`
+#### `release()`
 
 Once you are no longer using the a `retain`-ed value, you must `release` it. Like `retain()`, this function will apply to all nested array elements and object properties.
 
