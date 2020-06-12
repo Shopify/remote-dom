@@ -1,6 +1,6 @@
 # `@remote-ui/core`
 
-This library provides the core model for implementing a remote representation of a UI, and for signalling operations on that representation to another context via a small message channel. For a full overview of how `@remote-ui/core` fits in to the different pieces of Remote UI, you can refer to our [comprehensive example](../../README.md#example).
+This library provides the core model for implementing a remote representation of a UI, and for signalling operations on that representation to another context via a message channel. For a full overview of how `@remote-ui/core` fits in to the different pieces of remote-ui, you can refer to our [comprehensive example](../../documentation/comprehensive-example.md).
 
 ## Installation
 
@@ -16,9 +16,13 @@ or, using `npm`:
 npm install @remote-ui/core --save
 ```
 
+## Prerequisites
+
+`@remote-ui/core` uses JavaScript’s native `Map`, `Set`, and `WeakSet`. It also uses numerous language constructs that require the `Symbol` global. Polyfills for these features (via [`core-js`](https://github.com/zloirock/core-js)) are imported automatically with the “default” version of this package. If you have a build system that is smart about adding polyfills, you can configure it to [prefer (and process) a special build meant to minimize polyfills](../documentation/).
+
 ## Usage
 
-`@remote-ui/core` provides two main exports. You’ll use [`RemoteRoot`](#createremoteroot) in the remote environment to construct a tree for attaching UI components, and [`RemoteReceiver`](#remotereceiver) on the host to react to changes in the remote root.
+`@remote-ui/core` provides two main exports. You’ll use [`createRemoteRoot`](#createremoteroot) in the remote environment to construct a tree for attaching UI components, and [`RemoteReceiver`](#remotereceiver) on the host to react to changes in the remote root.
 
 ### `createRemoteRoot()`
 
@@ -26,15 +30,15 @@ npm install @remote-ui/core --save
 
 This function accepts two arguments:
 
-- `channel` is a `RemoteChannel`, which is just a function that will be called with serialized representation of UI updates. [`RemoteReceiver#receive`](#remotereceiverreceive) is one such function, and most uses of Remote UI will just pass that function here.
+- `channel` is a `RemoteChannel`, which is just a function that will be called with serialized representation of UI updates. [`RemoteReceiver#receive`](#remotereceiverreceive) is one such function, and most uses of remote-ui will just pass that function here.
 - `options` is an optional options object. There is currently one supported option: `components`. This value is the list of components that can be constructed and attached to this root. This is necessary because, by default, this library does not supply any components to render; you are responsible for implementing a component API that makes sense for your use case.
 
 ```ts
 import {createRemoteRoot, RemoteReceiver} from '@remote-ui/core';
 
-const {receive} = new RemoteReceiver();
+const receiver = new RemoteReceiver();
 
-const root = createRemoteRoot(receive, {
+const root = createRemoteRoot(receiver.receive, {
   components: ['Button', 'TextField', 'Card'],
 });
 ```
@@ -297,7 +301,7 @@ card.appendChild(button);
 
 ### Other exports
 
-This package exports a variety of helper types for easy access in more complex use cases, including some types representing the wire format Remote UI uses to communicate component tree updates. It also re-exports the `retain` and `release` methods from `@remote-ui/rpc` for easy access. Finally, it provides some types that may be useful for you to describe the different objects in Remote UI in your application:
+This package exports a variety of helper types for easy access in more complex use cases, including some types representing the wire format remote-ui uses to communicate component tree updates. It also re-exports the `retain` and `release` methods from `@remote-ui/rpc` for easy access. Finally, it provides some types that may be useful for you to describe the different objects in remote-ui in your application:
 
 - `RemoteComponentType` represents the components created by `createRemoteComponent`. This type has the prop types and allowed children embedded in its type.
 - `PropsForRemoteComponent` accepts a `RemoteComponentType` as a type argument, and returns the type of the props for that component.

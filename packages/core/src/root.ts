@@ -130,8 +130,10 @@ export function createRemoteRoot<
     removeChild: (child) => removeChild(remoteRoot, child),
     insertChildBefore: (child, before) =>
       insertChildBefore(remoteRoot, child, before),
-    async mount() {
-      await channel(ACTION_MOUNT, children.get(remoteRoot)!.map(serialize));
+    mount() {
+      return Promise.resolve(
+        channel(ACTION_MOUNT, children.get(remoteRoot)!.map(serialize)),
+      );
     },
   };
 

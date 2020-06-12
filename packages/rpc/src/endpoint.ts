@@ -26,7 +26,7 @@ export interface Endpoint<T> {
   readonly functions: FunctionStrategy<unknown>;
   replace(messenger: MessageEndpoint): void;
   expose(api: {[key: string]: Function | undefined}): void;
-  callable(methods: string[]): void;
+  callable(...methods: string[]): void;
   terminate(): void;
 }
 
@@ -178,7 +178,7 @@ export function createEndpoint<T>(
         }
       }
     },
-    callable(newCallable) {
+    callable(...newCallable) {
       // If no callable methods are supplied initially, we use a Proxy instead,
       // so all methods end up being treated as callable by default.
       if (callable == null) return;

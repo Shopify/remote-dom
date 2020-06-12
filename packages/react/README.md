@@ -1,6 +1,6 @@
 # `@remote-ui/react`
 
-This library provides a custom React renderer that gives you the full power of React for your remote application, and provides an optional host layer that makes it easy for existing React apps to integrate a remote root. For a full overview of how `@remote-ui/react` can fit in with the different pieces of Remote UI, you can refer to our [comprehensive example](../../README.md#example).
+This library provides a custom React renderer that gives you the full power of React for your remote application, and provides an optional host layer that makes it easy for existing React apps to integrate a remote root. For a full overview of how `@remote-ui/react` can fit in with the different pieces of remote-ui, you can refer to our [comprehensive example](../../README.md#example).
 
 ## Installation
 
@@ -22,7 +22,7 @@ npm install @remote-ui/react --save
 
 #### `render()`
 
-The main entrypoint for this package, `@remote-ui/react`, provides the custom React renderer that outputs instructions to a [`@remote-ui/core` `RemoteRoot`](../core#remoteroot) object. This lets you use the Remote UI system for communicating patch updates to host components over a bridge, but have React help manage your stateful application logic. To run a React ap against a `RemoteRoot`, use the `render` function exported by this library, passing in the remote root and your root React component:
+The main entrypoint for this package, `@remote-ui/react`, provides the custom React renderer that outputs instructions to a [`@remote-ui/core` `RemoteRoot`](../core#remoteroot) object. This lets you use the remote-ui system for communicating patch updates to host components over a bridge, but have React help manage your stateful application logic. To run a React ap against a `RemoteRoot`, use the `render` function exported by this library, passing in the remote root and your root React component:
 
 ```tsx
 // React usually has to be in scope when using JSX

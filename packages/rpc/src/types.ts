@@ -16,24 +16,22 @@ export type RemoteCallable<T> = {[K in keyof T]: RemoteCallableField<T[K]>};
 type RemoteCallableField<T> = T extends (
   ...args: infer Args
 ) => infer TypeReturned
-  ? (...args: Args) => Promise<ForcePromiseWrapped<TypeReturned>>
+  ? (...args: Args) => AlwaysAsync<TypeReturned>
   : never;
 
-type ForcePromiseWrapped<T> = T extends infer U | Promise<infer U>
-  ? ForcePromise<U>
-  : ForcePromise<T>;
-
-type ForcePromise<T> = T extends Promise<any>
+type AlwaysAsync<T> = T extends Promise<any>
   ? T
+  : T extends infer U | Promise<infer U>
+  ? Promise<U>
   : T extends (...args: infer Args) => infer TypeReturned
-  ? (...args: Args) => Promise<ForcePromiseWrapped<TypeReturned>>
+  ? (...args: Args) => AlwaysAsync<TypeReturned>
   : T extends (infer ArrayElement)[]
-  ? ForcePromiseArray<ArrayElement>
+  ? AlwaysAsync<ArrayElement>[]
+  : T extends readonly (infer ArrayElement)[]
+  ? readonly AlwaysAsync<ArrayElement>[]
   : T extends object
-  ? {[K in keyof T]: ForcePromiseWrapped<T[K]>}
+  ? {[K in keyof T]: AlwaysAsync<T[K]>}
   : T;
-
-interface ForcePromiseArray<T> extends Array<ForcePromiseWrapped<T>> {}
 
 export type SafeRpcArgument<T> = T extends (
   ...args: infer Args
@@ -42,12 +40,12 @@ export type SafeRpcArgument<T> = T extends (
     ? (...args: Args) => TypeReturned
     : (...args: Args) => TypeReturned | Promise<TypeReturned>
   : T extends (infer ArrayElement)[]
-  ? SafeRpcArgumentArray<ArrayElement>
+  ? SafeRpcArgument<ArrayElement>[]
+  : T extends readonly (infer ArrayElement)[]
+  ? readonly SafeRpcArgument<ArrayElement>[]
   : T extends object
   ? {[K in keyof T]: SafeRpcArgument<T[K]>}
   : T;
-
-interface SafeRpcArgumentArray<T> extends Array<SafeRpcArgument<T>> {}
 
 export const RETAIN_METHOD = Symbol('retain');
 export const RELEASE_METHOD = Symbol('release');
