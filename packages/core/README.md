@@ -196,7 +196,7 @@ Updates the text content.
 const text = root.createText('Hello');
 
 if (LOCALE === 'fr') {
-  text.setText('Bonjour');
+  text.updateText('Bonjour');
 }
 ```
 
