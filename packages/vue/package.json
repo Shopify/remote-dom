@@ -1,0 +1,14 @@
+{
+  "name": "@remote-ui/vue",
+  "version": "0.0.0",
+  "publishConfig": {
+    "access": "public",
+    "@remote-ui:registry": "https://registry.npmjs.org"
+  },
+  "dependencies": {
+    "@vue/runtime-core": "^3.0.0-beta.15",
+    "vue": "^3.0.0-beta.15"
+  },
+  "sideEffects": false,
+  "license": "MIT"
+}

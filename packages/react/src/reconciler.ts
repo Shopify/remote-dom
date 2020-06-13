@@ -69,7 +69,7 @@ const reconciler = reactReconciler<
     let needsUpdate = false;
 
     for (const key in oldProps) {
-      if (!Reflect.has(oldProps, key) || key === 'children') {
+      if (!has(oldProps, key) || key === 'children') {
         continue;
       }
 
@@ -94,7 +94,7 @@ const reconciler = reactReconciler<
     }
 
     for (const key in newProps) {
-      if (!Reflect.has(newProps, key) || key === 'children') {
+      if (!has(newProps, key) || key === 'children') {
         continue;
       }
 
@@ -123,16 +123,16 @@ const reconciler = reactReconciler<
 
   // Update children
   appendInitialChild(parent, child) {
-    (parent as any).appendChild(child);
+    parent.appendChild(child);
   },
   appendChild(parent, child) {
-    (parent as any).appendChild(child);
+    parent.appendChild(child);
   },
   insertBefore(parent, newChild, beforeChild) {
-    (parent as any).insertChildBefore(newChild, beforeChild);
+    parent.insertChildBefore(newChild, beforeChild);
   },
   removeChild(parent, child) {
-    (parent as any).removeChild(child);
+    parent.removeChild(child);
   },
 
   // Deferred callbacks
@@ -165,5 +165,10 @@ const reconciler = reactReconciler<
   resetAfterCommit() {},
   commitMount() {},
 });
+
+const {hasOwnProperty} = {};
+function has(object: object, property: string | number | symbol) {
+  return hasOwnProperty.call(object, property);
+}
 
 export default reconciler;
