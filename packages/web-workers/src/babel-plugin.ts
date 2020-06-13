@@ -79,7 +79,7 @@ export default function workerBabelPlugin({
             continue;
           }
 
-          const importedName = specifier.get('imported').node.name;
+          const importedName = specifier.node.imported.name;
           const processableImport = processImports.find(
             ({name}) => name === importedName,
           );
@@ -89,7 +89,7 @@ export default function workerBabelPlugin({
           }
 
           const binding = specifier.scope.getBinding(
-            specifier.get('imported').node.name,
+            specifier.node.imported.name,
           );
 
           if (binding == null) {
