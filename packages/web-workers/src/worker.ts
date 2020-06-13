@@ -1,36 +1,25 @@
-import {createEndpoint, fromWebWorker, retain, release} from '@remote-ui/rpc';
-import type {Endpoint} from '@remote-ui/rpc';
+import {createEndpoint, fromWebWorker} from '@remote-ui/rpc';
 
-export {retain, release};
+const endpoint = createEndpoint(fromWebWorker(self as any), {
+  callable: [],
+});
 
-declare global {
-  interface WindowOrWorkerGlobalScope {
-    readonly endpoint: Endpoint<unknown>;
+self.addEventListener('message', ({data}: MessageEvent) => {
+  if (data == null) {
+    return;
   }
-}
 
-export function expose(api: any) {
-  const endpoint = createEndpoint(fromWebWorker(self as any), {
-    callable: [],
-  });
+  if (data.__replace instanceof MessagePort) {
+    endpoint.replace(data.__replace);
+    data.__replace.start();
+  }
+});
 
-  self.addEventListener('message', ({data}: MessageEvent) => {
-    if (data == null) {
-      return;
-    }
+Object.defineProperty(self, 'endpoint', {
+  value: endpoint,
+  enumerable: false,
+  writable: false,
+  configurable: true,
+});
 
-    if (data.__replace instanceof MessagePort) {
-      endpoint.replace(data.__replace);
-      data.__replace.start();
-    }
-  });
-
-  Reflect.defineProperty(self, 'endpoint', {
-    value: endpoint,
-    enumerable: false,
-    writable: false,
-    configurable: true,
-  });
-
-  endpoint.expose(api);
-}
+export {endpoint};

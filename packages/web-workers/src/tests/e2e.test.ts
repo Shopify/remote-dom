@@ -931,8 +931,9 @@ describe('web-worker', () => {
         await workspace.write(
           workerFile,
           `
+          import {endpoint} from '@remote-ui/web-workers/worker';
           export async function terminateAttemptFromWorker(){
-            self.endpoint.terminate();
+            endpoint.terminate();
           }
           export function greet(name) {
             return \`${greetingPrefix}\${name}\`;

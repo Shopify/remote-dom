@@ -6,6 +6,7 @@
     "access": "public"
   },
   "license": "MIT",
+  "sideEffects": false,
   "devDependencies": {
     "@types/uuid": "^8.0.0",
     "uuid": "^8.0.0"

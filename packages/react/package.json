@@ -6,6 +6,7 @@
     "@remote-ui:registry": "https://registry.npmjs.org"
   },
   "license": "MIT",
+  "sideEffects": false,
   "devDependencies": {
     "@types/react-dom": "^16.9.7",
     "@types/react-reconciler": "*",

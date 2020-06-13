@@ -348,3 +348,229 @@ onRender((root) => {
   );
 });
 ```
+
+So far, the remote scripts we’ve seen have been very simple pieces of UI, doing no more than logging a message when pressed. In a real implementation of remote-ui, there is another important class of API you should consider: the data and functions you make available to the remote scripts. There are two ways to provide this kind of API:
+
+1. **Providing additional global methods**. Earlier, we defined our global API — `self.onRender` — which stored a callback to run when the main thread calls the sandbox’s `run()` function. We can expose other globals, too, which can perform actions on behalf of the remote script. We’ll demonstrate this by writing an `authenticatedFetch` global, where we will allow any remote code to fetch an API endpoint in our application, and we will have the main thread handle this action by running a `fetch` on the remote code’s behalf. We’ll start with the definition, which will go in our `worker.ts`:
+
+   ```ts
+   // in worker.ts
+
+   // ... the existing global API...
+
+   // Our new, globally-available function
+   self.authenticatedFetch = (endpoint: string) => {};
+   ```
+
+   Our example application can use this at any time, like in response to a user event:
+
+   ```tsx
+   // in the third-party code... (note, they would need to bundle their code!)
+
+   import React, {useState} from 'react';
+   import {render} from '@remote-ui/react';
+   import {onRender, Card, Button} from '@company/ui-api';
+
+   onRender((root) => {
+     render(<App />, root);
+   });
+
+   function App() {
+     const [cardContent, setCardContent] = useState();
+
+     return (
+       <Card>
+         {cardContent}
+         <Button
+           onPress={() => {
+             // Make sure you handle more edge cases in data fetching than we’re
+             // doing here :)
+             self.authenticatedFetch('/products.json').then((data) => {
+               setCardContent(data.products[0].title);
+             });
+           }}
+         >
+           Fetch products
+         </Button>
+       </Card>
+     );
+   }
+   ```
+
+   The implementation of this function needs a way to talk back to the main thread. By default, `@remote-ui/web-workers` only exposes functionality on the side of the web worker. If you want to expose functionality on the host side, you will first need to use the `endpoint` object that is available only to the trusted, sandbox code, and can be imported from `@remote-ui/web-workers/worker`. This [`@remote-ui/rpc` `Endpoint`](../packages/rpc#endpoint) is the communication hub from the worker to the main thread. It exposes functionality from the worker and, if we teach it what functionality is available on the main thread, it can call into that functionality, too. Here, we will tell the worker that there is an `authenticatedFetch` method exposed by the main thread, and we will call it from our `self.authenticatedFetch` global function.
+
+   ```ts
+   // in worker.ts
+
+   import {endpoint} from '@remote-ui/web-workers/worker';
+
+   endpoint.callable('authenticatedFetch');
+
+   // Our new, globally-available function
+   self.authenticatedFetch = (endpoint: string) => {
+     return endpoint.call.authenticatedFetch(endpoint);
+   };
+   ```
+
+   Finally, we need to expose this new method on each worker sandbox we create. We can do so with the help of [`@remote-ui/web-workers`’ `expose` utility](../packages/web-workers#expose), which does the work of getting the `Endpoint` for a `Worker` and exposing the methods you pass in:
+
+   ```tsx
+   // back in WorkerRenderer.tsx
+
+   import React, {useMemo, useEffect, ReactNode} from 'react';
+   import {
+     RemoteReceiver,
+     RemoteRenderer,
+     useWorker,
+   } from '@remote-ui/react/host';
+   import {createWorkerFactory, expose} from '@remote-ui/web-workers';
+
+   const createWorker = createWorkerFactory(() => import('./worker'));
+
+   const COMPONENTS = {Card, Button};
+   const THIRD_PARTY_SCRIPT = 'https://third-party.com/remote-app.js';
+
+   export function WorkerRenderer() {
+     const receiver = useMemo(() => new RemoteReceiver());
+     const worker = useWorker(createWorker);
+
+     useEffect(() => {
+       expose(worker, {
+         authenticatedFetch: (endpoint: string) =>
+           fetch(endpoint, {
+             headers: {'X-Auth-Token': 'legit-auth'},
+           }),
+       });
+
+       // This runs the exported run() function from our worker
+       worker.run(THIRD_PARTY_SCRIPT, receiver.receive);
+     }, [receiver, worker]);
+
+     return <RemoteRenderer receiver={receiver} components={COMPONENTS} />;
+   }
+   ```
+
+   Now, whenever the remote script in this web worker runs `self.authenticatedFetch`, the main thread will transparently receive and handle that call, returning its results to the sandbox code.
+
+2. **Providing data when you run the remote script**. When you are providing large collections of data, or data that may only be relevant to individual render calls, you probably want to pass this data to the `onRender` function directly. We are already passing one argument to this function — the `RemoteRoot` that allows the script to attach UI — and it’s certainly possible to pass more. In this example, we’ll pass a user object, containing a string `id` and a function to retrieve additional details.
+
+   First, let’s augment the definition of the `onRender` callback to include this additional argument. Our `run` function, which is exposed to the main thread, will also need to accept, and pass along, this new argument:
+
+   ```tsx
+   // in worker.ts
+
+   import {createRemoteRoot, RemoteRoot, RemoteReceiver} from '@remote-ui/core';
+
+   interface User {
+     id: string;
+     getDetails(): Promise<{occupation?: string}>;
+   }
+
+   type RenderCallback = (root: RemoteRoot, user: User) => void;
+
+   let renderCallback: RenderCallback | undefined;
+
+   self.onRender = (callback: RenderCallback) => {
+     renderCallback = callback;
+   };
+
+   export function run(script: string, receiver: RemoteReceiver, user: User) {
+     // Functions you get from the UI thread that you want to "keep alive"
+     // outside the scope of the function in which they were received need
+     // to be manually retained. See @remote-ui/rpc documentation for details.
+
+     retain(receiver);
+
+     importScripts(script);
+
+     if (renderCallback != null) {
+       const remoteRoot = createRemoteRoot();
+       renderCallback(remoteRoot, user);
+     }
+   }
+   ```
+
+   When we run this remote script, our main thread code now needs to pass the `user` object to the worker. Thanks to the RPC library at the heart of remote-ui, you can do so by passing a plain object, including functions, without any additional configuration:
+
+   ```tsx
+   // back in WorkerRenderer.tsx
+
+   import React, {useMemo, useEffect, ReactNode} from 'react';
+   import {
+     RemoteReceiver,
+     RemoteRenderer,
+     useWorker,
+   } from '@remote-ui/react/host';
+   import {createWorkerFactory, expose} from '@remote-ui/web-workers';
+
+   const createWorker = createWorkerFactory(() => import('./worker'));
+
+   const COMPONENTS = {Card, Button};
+   const THIRD_PARTY_SCRIPT = 'https://third-party.com/remote-app.js';
+
+   export function WorkerRenderer() {
+     const receiver = useMemo(() => new RemoteReceiver());
+     const worker = useWorker(createWorker);
+
+     useEffect(() => {
+       worker.run(THIRD_PARTY_SCRIPT, receiver.receive, {
+         id: 'gid://User/1',
+         async getDetails() {
+           const response = await fetch('/user.json');
+           const json = await response.json();
+
+           return {occupation: json.occupation};
+         },
+       });
+     }, [receiver, worker]);
+
+     return <RemoteRenderer receiver={receiver} components={COMPONENTS} />;
+   }
+   ```
+
+   Most importantly, our remote code can now be updated to receive, and use, this new `user` argument:
+
+   ```tsx
+   import {htm, render} from '@remote-ui/htm';
+
+   self.onRender((root, user) => {
+     render(
+       htm`
+         <Card>
+           Details for user ${user.id}
+         <//>
+       `,
+       root,
+     );
+   });
+   ```
+
+   If you intend on “holding on” to the `user` object after this `onRender` function has returned, you must do a bit of additional memory management to prevent the `user.getDetails` function. `@remote-ui/rpc` is proxying this function from the main thread to the worker, but you must instruct the RPC layer that you are done with the function before it can be garbage collected. You can tell remote-ui that you are holding on to a function (or an object or array that has nested functions), and that you are done with that function, by calling [`@remote-ui/rpc`’s `retain()` and `release()`](../packages/rpc), respectively.
+
+   ```tsx
+   import {retain} from '@remote-ui/core';
+   import {htm, render} from '@remote-ui/htm';
+
+   self.onRender((root, user) => {
+     retain(user);
+
+     render(
+       htm`
+         <Card>
+           Details for user ${user.id}
+           <Button onPress=${() =>
+             user.getDetails().then((result) => {
+               // Promise we won’t try to use it again!
+               release(user);
+               console.log(result);
+             })}>Get details<//>
+         <//>
+       `,
+       root,
+     );
+   });
+   ```
+
+   Instead of putting this burden on the remote script itself, we could have added the additional `retain` and `release` calls to our global `run()` function. Where you place this responsibility depends on the developer experience you are trying to provide for authors of these remote scripts.
+
+   Please read through [`@remote-ui/rpc`’s documentation](../packages/rpc) for additional details on when remote-ui will automatically manage memory for you, and when you must do so yourself.

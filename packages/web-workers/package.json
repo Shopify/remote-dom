@@ -6,6 +6,7 @@
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
   },
+  "sideEffects": false,
   "license": "MIT",
   "dependencies": {
     "@remote-ui/rpc": "^0.0.10",
