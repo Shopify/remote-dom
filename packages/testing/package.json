@@ -1,6 +1,6 @@
 {
   "name": "@remote-ui/testing",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
@@ -8,7 +8,7 @@
   "license": "MIT",
   "sideEffects": false,
   "dependencies": {
-    "@remote-ui/core": "^0.0.29",
+    "@remote-ui/core": "^0.0.30",
     "jest-matcher-utils": "^26.0.1"
   }
 }
