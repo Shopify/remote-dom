@@ -20,10 +20,17 @@ export const Card = createRemoteReactComponent<'Card', CardProps>('Card');
 
 // Global API
 
-export type RenderCallback = (root: RemoteRoot) => void;
+export interface User {
+  id: string;
+  getDetails(): Promise<{occupation?: string}>;
+}
+
+export type RenderCallback = (root: RemoteRoot, user: User) => void;
 
 export interface GlobalApi {
   onRender(renderer: RenderCallback): void;
 }
 
-export const onRender = (self as any as GlobalApi).onRender;
+export function onRender(renderer: RenderCallback) {
+  return (self as any as GlobalApi).onRender(renderer);
+}
