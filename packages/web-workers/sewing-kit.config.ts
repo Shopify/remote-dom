@@ -1,5 +1,4 @@
 import {createPackage, Runtime} from '@sewing-kit/config';
-import {createProjectBuildPlugin} from '@sewing-kit/plugins';
 import {defaultProjectPlugin} from '../../config/sewing-kit';
 
 export default createPackage((pkg) => {
@@ -17,35 +16,4 @@ export default createPackage((pkg) => {
     runtime: Runtime.Node,
   });
   pkg.use(defaultProjectPlugin());
-  pkg.use(copyWrappersPlugin);
 });
-
-const copyWrappersPlugin = createProjectBuildPlugin(
-  'RemoteUi.CopyWrappers',
-  ({api, hooks, project}) => {
-    hooks.variant.hook(({variant, hooks}) => {
-      hooks.steps.hook((steps) => [
-        ...steps,
-        api.createStep(
-          {id: 'RemoteUi.CopyWrappers', label: 'Copying wrapper files'},
-          async () => {
-            const {copy} = await import('fs-extra');
-            const variantName = Object.keys(variant)[0];
-
-            await copy(
-              project.fs.resolvePath('src/wrappers'),
-              project.fs.buildPath(
-                variantName === 'commonjs' ? 'cjs' : variantName,
-                'wrappers',
-              ),
-              {
-                overwrite: true,
-                recursive: true,
-              },
-            );
-          },
-        ),
-      ]);
-    });
-  },
-);
