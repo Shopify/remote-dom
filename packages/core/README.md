@@ -1,6 +1,6 @@
 # `@remote-ui/core`
 
-This library provides the core model for implementing a remote representation of a UI, and for signalling operations on that representation to another context via a message channel. For a full overview of how `@remote-ui/core` fits in to the different pieces of remote-ui, you can refer to our [comprehensive example](../../documentation/comprehensive-example.md).
+This library provides the core model for maintaining a tree of UI components, and for communicating operations on that tree to another context through tiny messages. For a full overview of how `@remote-ui/core` fits in to the different pieces of remote-ui, you can refer to our [comprehensive example](../../documentation/comprehensive-example.md).
 
 ## Installation
 
@@ -18,11 +18,11 @@ npm install @remote-ui/core --save
 
 ## Prerequisites
 
-`@remote-ui/core` uses JavaScript’s native `Map`, `Set`, and `WeakSet`. It also uses numerous language constructs that require the `Symbol` global. Polyfills for these features (via [`core-js`](https://github.com/zloirock/core-js)) are imported automatically with the “default” version of this package. If you have a build system that is smart about adding polyfills, you can configure it to [prefer (and process) a special build meant to minimize polyfills](../documentation/guides/polyfills.md).
+`@remote-ui/core` uses JavaScript’s native `Map`, `Set`, `Promise`, and `WeakSet`. It also uses numerous language constructs that require the `Symbol` global. Polyfills for these features (via [`core-js`](https://github.com/zloirock/core-js)) are imported automatically with the “default” version of this package. If you have a build system that is smart about adding polyfills, you can configure it to [prefer (and process) a special build meant to minimize polyfills](../documentation/guides/polyfills.md).
 
 ## Usage
 
-`@remote-ui/core` provides two main exports. You’ll use [`createRemoteRoot`](#createremoteroot) in the remote environment to construct a tree for attaching UI components, and [`RemoteReceiver`](#remotereceiver) on the host to react to changes in the remote root.
+`@remote-ui/core` provides two main exports. You’ll use [`createRemoteRoot`](#createremoteroot) in the “remote” environment — where the source of truth for your UI will live — to construct a tree of UI components. If you are writing an application that will “host” these remote contexts, you’ll also use [`RemoteReceiver`](#remotereceiver) in that application to respond to updates from the remote context.
 
 ### `createRemoteRoot()`
 
@@ -30,7 +30,7 @@ npm install @remote-ui/core --save
 
 This function accepts two arguments:
 
-- `channel` is a `RemoteChannel`, which is just a function that will be called with serialized representation of UI updates. [`RemoteReceiver#receive`](#remotereceiverreceive) is one such function, and most uses of remote-ui will just pass that function here.
+- `channel` is a `RemoteChannel`, a function that will be called with serialized representation of UI updates. [`RemoteReceiver#receive`](#remotereceiverreceive) is one such function, and most uses of remote-ui will rely on connecting those two “sides” by passing the `receive` method for this argument.
 - `options` is an optional options object. There is currently one supported option: `components`. This value is the list of components that can be constructed and attached to this root. This is necessary because, by default, this library does not supply any components to render; you are responsible for implementing a component API that makes sense for your use case.
 
 ```ts
@@ -49,7 +49,7 @@ The output of `createRemoteRoot` is a `RemoteRoot`. This object has methods meth
 
 ##### `RemoteRoot#createText()`
 
-`createText` creates a [`RemoteText` instance](#remotetext). All text rendered to the UI needs to be represented as a `RemoteText` instance (component properties are still just strings). You can pass an initial text content as part of this method.
+`createText` creates a [`RemoteText` instance](#remotetext). All text rendered to the UI needs to be represented as a `RemoteText` instance (component properties are still just strings). You can pass an initial text content as the first argument to this method.
 
 ```ts
 const text = root.createText('Hello world!');
@@ -57,7 +57,7 @@ const text = root.createText('Hello world!');
 
 ##### `RemoteRoot#createComponent()`
 
-`createComponent` creates a [`RemoteComponent` instance](#remotecomponent). These objects represent the UI components on the host. You must pass a component type (which will be validated against allowed components), and you must also pass initial properties, if there are non-optional properties in the component.
+`createComponent` creates a [`RemoteComponent` instance](#remotecomponent). These objects represent the UI components on the host. You must pass a component type and any initial properties, if there are non-optional properties for the component.
 
 ```ts
 const button = root.createComponent('Button', {
@@ -67,13 +67,13 @@ const button = root.createComponent('Button', {
 });
 ```
 
-If you are familiar with React, or if the "host" side of these components is implemented in React, you may be tempted to pass a function as the `children` prop. This pattern is commonly referred to as "render props" in React. However, this pattern likely is not doing what you think it is. Remember that functions passed as props will always be asynchronous when called by the host, because they are implemented with message passing. This makes them poorly suited for rendering UI, where you generally need to run synchronous functions.
+If you are familiar with React, or if the “host” side of these components is implemented in React, you may be tempted to pass a function as the `children` prop. This pattern is commonly referred to as “render props” in React. However, this pattern likely is not doing what you think it is. Remember that functions passed as props will always be asynchronous when called by the host, because they are implemented with message passing. This makes them poorly suited for rendering UI, where you generally need to run synchronous functions.
 
 To prevent this kind of mistake, any `children` prop will be deleted from the props object. If you want to implement a render prop-style API, you can do so without potentially causing confusion by using a different prop name, and ensuring that you handle the fact that the host will receive a promise whenever they call this function. If you are just trying to append other `RemoteComponent` and `RemoteText` instances to your tree, use `RemoteComponent#appendChild()`.
 
 ##### `RemoteRoot#appendChild()`
 
-This method appends a `RemoteComponent` or `RemoteText` to the remote root as the last child. This method returns a promise for when the update has been flushed to the host.
+This method appends a `RemoteComponent` or `RemoteText` to the remote root as the last child. This method returns a promise for when the update has been applied in the host.
 
 ```ts
 const card = root.createComponent('Card');
@@ -82,7 +82,7 @@ root.appendChild(card);
 
 ##### `RemoteRoot#insertChildBefore()`
 
-This method inserts a `RemoteComponent` or `RemoteText` in the remote root before the specified child. This method returns a promise for when the update has been flushed to the host.
+This method inserts a `RemoteComponent` or `RemoteText` in the remote root before the specified child. This method returns a promise for when the update has been applied in the host.
 
 ```ts
 const card = root.createComponent('Card');
@@ -93,7 +93,7 @@ root.insertChildBefore(earlierCard, card);
 
 ##### `RemoteRoot#removeChild()`
 
-This method removes a `RemoteComponent` or `RemoteText` from the remote root. This method returns a promise for when the update has been flushed to the host.
+This method removes a `RemoteComponent` or `RemoteText` from the remote root. This method returns a promise for when the update has been applied in the host.
 
 ```ts
 const card = root.createComponent('Card');
@@ -106,7 +106,7 @@ root.removeChild(card);
 
 ##### `RemoteRoot#children`
 
-The `children` property is a readonly listing of the components mounted to the tree. It does not necessarily represent the state of the host, as updates are reflected immediately in the tree, even though they take some time to be sent and applied to the host.
+The `children` property is a readonly list of the components mounted to the tree. It does not necessarily represent the state of the host, as updates are reflected immediately to the local tree of components, but can be applied asynchronously in the host.
 
 ##### `RemoteRoot#mount()`
 
@@ -202,7 +202,7 @@ if (LOCALE === 'fr') {
 
 ### `RemoteReceiver`
 
-The opposite side of a `RemoteRoot` is a `RemoteReceiver`. This object can accept the UI updates from the remote context and reconstruct them into an observable tree on the host. This tree can then be used to render the host components.
+The opposite side of a `RemoteRoot` is a `RemoteReceiver`. This object can accept the UI updates from the remote context and reconstruct them into an observable tree on the host. This tree can then be used to render the components to their native representation in the host (in a web application, this representation is the DOM).
 
 ```ts
 import {RemoteReceiver} from '@remote-ui/core';
@@ -264,13 +264,11 @@ Host implementations can use this method to update their representation of the U
 
 ### `createRemoteComponent`
 
-By default, "native" components are referenced by their string name, like `'Button'` or `'Card'`. However, this library provides a way of attaching validations to components, and to specify the TypeScript type for the available component properties. This more formal creation of a "remote component" is accomplished with the `createRemoteComponent`.
+By default, “native” components are referenced by their string name, like `'Button'` or `'Card'`. However, this library provides a way of attaching additional meaning to components, like the TypeScript types for the available component properties. This more formal creation of a remote component is accomplished with the `createRemoteComponent()` utility.
 
-This function accepts two arguments. The first is the string name of the component, and the second is an optional options object.
+This function accepts only one argument: the (string) name of the component.
 
-> Note: validation API still TODO
-
-The function also accepts a set of generic type arguments that let you enforce some metadata about the component in TypeScript. The first type argument is the friendly name of the component, the second is the type of the props available for the component, and the third is the components that are allowed to be direct children of this one (by default, all component types are allowed).
+The function also accepts a set of generic type arguments that let you enforce some metadata about the component in TypeScript. The first type argument is the name of the component, the second is the type of the props available for the component, and the third is the components that are allowed to be direct children of this one (by default, all component types are allowed).
 
 ```ts
 import {createRemoteComponent} from '@remote-ui/core';

@@ -18,7 +18,7 @@ npm install @remote-ui/testing --save-dev
 
 ## Usage
 
-This library exports a `mount` function. The first argument to this function is a function, in which you can perform any number of operations on a [`@remote-ui/core` `RemoteRoot` object](https://github.com/lemonmade/remote-ui/tree/master/packages/core#remoteroot):
+This library exports a `mount` function. The first argument to this function is a function, in which you can perform any number of operations on a [`@remote-ui/core` `RemoteRoot` object](../core#remoteroot):
 
 ```tsx
 import {mount} from '@remote-ui/testing';
