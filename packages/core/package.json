@@ -1,6 +1,6 @@
 {
   "name": "@remote-ui/core",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
@@ -8,7 +8,7 @@
   "license": "MIT",
   "sideEffects": false,
   "dependencies": {
-    "@remote-ui/rpc": "^0.0.11",
-    "@remote-ui/types": "^0.0.9"
+    "@remote-ui/rpc": "^0.0.12",
+    "@remote-ui/types": "^0.0.10"
   }
 }
