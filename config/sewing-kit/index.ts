@@ -17,9 +17,7 @@ export function defaultProjectPlugin() {
     typescript(),
     jestProjectHooks(),
     react(),
-    buildFlexibleOutputs({
-      esmodules: false,
-    }),
+    buildFlexibleOutputs(),
     createProjectTestPlugin(PLUGIN, ({hooks}) => {
       hooks.configure.hook((configure) => {
         configure.jestEnvironment?.hook(() => 'jsdom');

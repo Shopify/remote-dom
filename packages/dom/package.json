@@ -5,6 +5,19 @@
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
   },
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js"
+    },
+    "./": "./",
+    "./browser": {
+      "import": "./browser.mjs",
+      "require": "./browser.js"
+    }
+  },
   "sideEffects": false,
   "license": "MIT",
   "dependencies": {
