@@ -1,23 +1,23 @@
 {
-  "name": "@shopify/remote-ui-core",
+  "name": "@shopify/rui-core",
   "version": "0.0.21",
   "author": "Shopify Inc.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Shopify/remote-ui.git",
-    "directory": "packages/remote-ui-core"
+    "directory": "packages/rui-core"
   },
   "main": "index.js",
   "scripts": {
     "build": "tsc --tsBuildInfoFile .core.tsbuildinfo"
   },
   "publishConfig": {
-    "access": "restricted",
-    "registry": "https://packages.shopify.io/shopify/node/npm/"
+    "access": "public",
+    "@shopify:registry": "https://registry.npmjs.org/"
   },
   "license": "MIT",
   "dependencies": {
-    "@shopify/remote-ui-types": "^0.0.13",
+    "@shopify/rui-types": "^0.0.13",
     "@shopify/rpc": "^1.0.5"
   }
 }

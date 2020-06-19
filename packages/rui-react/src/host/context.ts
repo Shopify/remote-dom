@@ -5,5 +5,5 @@ export const ControllerContext = createContext<
 >(null);
 
 export const RemoteReceiverContext = createContext<
-  import('@shopify/remote-ui-core').RemoteReceiver | null
+  import('@shopify/rui-core').RemoteReceiver | null
 >(null);

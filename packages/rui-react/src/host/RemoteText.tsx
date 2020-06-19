@@ -3,7 +3,7 @@ import {
   Serialized,
   RemoteReceiver,
   RemoteText as RemoteTextDescription,
-} from '@shopify/remote-ui-core';
+} from '@shopify/rui-core';
 
 import {useAttached} from './hooks';
 

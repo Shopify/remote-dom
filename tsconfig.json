@@ -2,8 +2,8 @@
   "files": [],
   "include": [],
   "references": [
-    {"path": "./packages/remote-ui-types"},
-    {"path": "./packages/remote-ui-core"},
-    {"path": "./packages/remote-ui-react"}
+    {"path": "./packages/rui-types"},
+    {"path": "./packages/rui-core"},
+    {"path": "./packages/rui-react"}
   ]
 }

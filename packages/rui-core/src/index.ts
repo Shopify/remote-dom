@@ -3,7 +3,7 @@ export {
   RemoteComponentType,
   PropsForRemoteComponent,
   AllowedChildrenForRemoteComponent,
-} from '@shopify/remote-ui-types';
+} from '@shopify/rui-types';
 
 export {retain, release} from '@shopify/rpc';
 

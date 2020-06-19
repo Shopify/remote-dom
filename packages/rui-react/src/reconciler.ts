@@ -4,7 +4,7 @@ import {
   RemoteText,
   RemoteComponent,
   RemoteComponentType,
-} from '@shopify/remote-ui-core';
+} from '@shopify/rui-core';
 
 const reconciler = reactReconciler<
   // type

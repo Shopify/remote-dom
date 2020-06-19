@@ -1,19 +1,19 @@
 {
-  "name": "@shopify/remote-ui-react",
+  "name": "@shopify/rui-react",
   "version": "0.0.24",
   "author": "Shopify Inc.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Shopify/remote-ui.git",
-    "directory": "packages/remote-ui-react"
+    "directory": "packages/rui-react"
   },
   "main": "index.js",
   "scripts": {
     "build": "tsc --tsBuildInfoFile .react.tsbuildinfo"
   },
   "publishConfig": {
-    "access": "restricted",
-    "registry": "https://packages.shopify.io/shopify/node/npm/"
+    "access": "public",
+    "@shopify:registry": "https://registry.npmjs.org/"
   },
   "license": "MIT",
   "devDependencies": {
@@ -23,7 +23,7 @@
     "react-dom": "^16.12.0"
   },
   "dependencies": {
-    "@shopify/remote-ui-core": "^0.0.21",
+    "@shopify/rui-core": "^0.0.21",
     "@types/react": ">=16.8.0 <17.0.0",
     "react-reconciler": "*"
   }

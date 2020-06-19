@@ -1,4 +1,4 @@
-import {RemoteComponentType, RemoteChild} from '@shopify/remote-ui-types';
+import {RemoteComponentType, RemoteChild} from '@shopify/rui-types';
 
 export function createRemoteComponent<
   Type extends string,

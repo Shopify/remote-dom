@@ -1,4 +1,4 @@
-export {RemoteReceiver} from '@shopify/remote-ui-core';
+export {RemoteReceiver} from '@shopify/rui-core';
 
 export {RemoteRenderer} from './Renderer';
 export {

@@ -1,5 +1,5 @@
 import {useState, useRef, useContext, useEffect} from 'react';
-import type {RemoteReceiver} from '@shopify/remote-ui-core';
+import type {RemoteReceiver} from '@shopify/rui-core';
 
 import {ControllerContext, RemoteReceiverContext} from './context';
 

@@ -1,5 +1,5 @@
 import React, {memo, useMemo, Fragment, createElement} from 'react';
-import {RemoteReceiver} from '@shopify/remote-ui-core';
+import {RemoteReceiver} from '@shopify/rui-core';
 
 import {Controller, ComponentMapping} from './controller';
 import {useAttached} from './hooks';

@@ -4,7 +4,7 @@ import reconciler from './reconciler';
 
 export function render(
   element: ReactElement,
-  root: import('@shopify/remote-ui-core').RemoteRoot<any, any>,
+  root: import('@shopify/rui-core').RemoteRoot<any, any>,
 ) {
   const container = reconciler.createContainer(root, false, false);
 

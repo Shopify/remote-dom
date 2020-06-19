@@ -1,19 +1,19 @@
 {
-  "name": "@shopify/remote-ui-types",
+  "name": "@shopify/rui-types",
   "version": "0.0.13",
   "author": "Shopify Inc.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Shopify/remote-ui.git",
-    "directory": "packages/remote-ui-types"
+    "directory": "packages/rui-types"
   },
   "main": "index.js",
   "scripts": {
     "build": "tsc --tsBuildInfoFile .types.tsbuildinfo"
   },
   "publishConfig": {
-    "access": "restricted",
-    "registry": "https://packages.shopify.io/shopify/node/npm/"
+    "access": "public",
+    "@shopify:registry": "https://registry.npmjs.org/"
   },
   "license": "MIT"
 }

@@ -1,7 +1,7 @@
 import React, {useEffect, useContext, createContext} from 'react';
 import {render as domRender} from 'react-dom';
 import {act as domAct} from 'react-dom/test-utils';
-import {createRemoteRoot, RemoteReceiver} from '@shopify/remote-ui-core';
+import {createRemoteRoot, RemoteReceiver} from '@shopify/rui-core';
 
 import {RemoteRenderer} from '../host';
 
@@ -11,7 +11,7 @@ import {
   ReactPropsFromRemoteComponentType,
 } from '..';
 
-declare module '@shopify/remote-ui-types' {
+declare module '@shopify/rui-types' {
   interface RemoteComponentMap {
     HelloWorld: [{name: string}];
     WithPerson: [{run(person: {name: string}): void | Promise<void>}];
