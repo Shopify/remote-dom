@@ -25,7 +25,7 @@ export const UPDATE_REMOVE = 1;
 
 export type Id = string;
 
-export interface MessageMap {
+export interface ActionArgumentMap {
   [ACTION_UPDATE_TEXT]: [Id, string];
   [ACTION_UPDATE_PROPS]: [Id, object];
   [ACTION_INSERT_CHILD]: [
@@ -38,9 +38,9 @@ export interface MessageMap {
 }
 
 export interface RemoteChannel {
-  <T extends keyof MessageMap>(
+  <T extends keyof ActionArgumentMap>(
     type: T,
-    ...payload: MessageMap[T]
+    ...payload: ActionArgumentMap[T]
   ): void | Promise<void>;
 }
 
@@ -193,9 +193,3 @@ export type Serialized<T> = T extends RemoteComponent<infer Type, any>
   : T extends RemoteText<any>
   ? RemoteTextSerialization
   : never;
-
-export enum RemoteComponentViolationType {
-  InsertChild,
-  InsertRoot,
-  UpdateProps,
-}

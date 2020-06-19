@@ -45,6 +45,7 @@ export function createRemoteRoot<
   const tops = new WeakMap<CanBeChild, HasChildren>();
 
   let currentId = 0;
+  let mounted = false;
 
   const remoteRoot: Root = {
     get children() {
@@ -131,6 +132,7 @@ export function createRemoteRoot<
     insertChildBefore: (child, before) =>
       insertChildBefore(remoteRoot, child, before),
     mount() {
+      mounted = true;
       return Promise.resolve(
         channel(ACTION_MOUNT, children.get(remoteRoot)!.map(serialize)),
       );
@@ -171,7 +173,7 @@ export function createRemoteRoot<
       local(): void;
     },
   ) {
-    if (element === remoteRoot || connected(element as any)) {
+    if (mounted && (element === remoteRoot || connected(element as any))) {
       // should only create context once async queue is cleared
       remote(channel);
 

@@ -13,7 +13,11 @@ export const htm = baseHtm.bind<Element>((type, props, ...children) => {
   }
 
   for (const child of children) {
-    if (typeof child !== 'string' && !isElement(child)) {
+    if (
+      typeof child !== 'string' &&
+      typeof child !== 'number' &&
+      !isElement(child)
+    ) {
       throw new Error(`Unexpected child ${JSON.stringify(child)}`);
     }
   }
@@ -39,6 +43,8 @@ function attach<Root extends RemoteRoot<any, any>>(
   for (const child of children) {
     if (typeof child === 'string') {
       component.appendChild(child);
+    } else if (typeof child === 'number') {
+      component.appendChild(String(child));
     } else {
       attach(child, component, root);
     }

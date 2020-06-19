@@ -1,0 +1,11 @@
+{
+  "extends": "../../config/typescript/tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "build/ts",
+    "baseUrl": "src",
+    "rootDir": "src",
+    "experimentalDecorators": true
+  },
+  "include": ["src/**/*.ts"],
+  "references": [{"path": "../core"}]
+}

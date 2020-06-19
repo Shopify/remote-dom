@@ -1,0 +1,1 @@
+export {DomReceiver} from './receiver';

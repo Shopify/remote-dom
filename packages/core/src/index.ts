@@ -24,7 +24,10 @@ export type {
   RemoteText,
   RemoteChild,
   Serialized,
+  ActionArgumentMap,
+  RemoteTextSerialization,
+  RemoteComponentSerialization,
 } from './types';
 export {createRemoteRoot} from './root';
-export {RemoteReceiver} from './receiver';
+export {RemoteReceiver, createRemoteChannel} from './receiver';
 export {isRemoteComponent, isRemoteText} from './utilities';
