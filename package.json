@@ -7,7 +7,6 @@
     "./packages/*"
   ],
   "scripts": {
-    "postinstall": "lerna bootstrap",
     "test": "sk test",
     "lint": "sk lint",
     "type-check": "sk type-check",
@@ -25,7 +24,7 @@
     "@sewing-kit/plugin-package-flexible-outputs": "^0.1.0",
     "@sewing-kit/plugin-react": "^0.1.0",
     "@sewing-kit/plugin-typescript": "^0.1.0",
-    "lerna": "^3.20.2"
+    "lerna": "^2.11.0"
   },
   "dependencies": {}
 }
