@@ -1,0 +1,8 @@
+ci:
+  require:
+    - lint
+    - test
+    - type-check
+dependencies:
+  post:
+    - yarn run build
