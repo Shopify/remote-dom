@@ -4,6 +4,7 @@
   "references": [
     {"path": "./packages/types"},
     {"path": "./packages/core"},
+    {"path": "./packages/dom"},
     {"path": "./packages/htm"},
     {"path": "./packages/react"},
     {"path": "./packages/rpc"},
