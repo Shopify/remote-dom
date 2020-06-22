@@ -91,6 +91,48 @@ const receiver = new DomReceiver({
 receiver.unbind();
 ```
 
+By default, all props on a remote component are directly applied as properties to the matching custom element. This is the simplest behavior that is guaranteed to work for all the types that can be passed as props from a remote component (strings, numbers, booleans, objects, arrays, and functions). However, you can customize way a property is applied to its custom element by passing the `applyProperty` option. This option is passed the custom element being created, the name of the property being applied, the value for that property, and the `type` of the remote component. You can use these details to change the behavior on a per-prop basis; for instance, using attributes instead of properties in some cases, or attaching event listeners. If this function returns `false`, the default logic for applying a property will be used instead.
+
+```ts
+import {DomReceiver} from '@remote-ui/dom';
+
+const root = document.querySelector('#root');
+
+const receiver = new DomReceiver({
+  bind: root,
+  customElement: {
+    Card: 'ui-card',
+    Button: 'ui-button',
+  },
+  // For the `disabled` property on Button, we will use an HTML attribute.
+  applyProperty({type, element, property, value}) {
+    if (type !== 'Button' || property !== 'disabled') return false;
+    element.setAttribute('disabled', 'disabled');
+  },
+});
+```
+
+One particularly common way to customize custom elements is to turn some function properties into native DOM event listeners. You can pass the `withEventListeners` function from this package to `applyProperty` to automatically convert any prop starting with `on` into an event listener, and otherwise using the default property setting logic noted above.
+
+```ts
+import {DomReceiver, withEventListeners} from '@remote-ui/dom';
+
+const root = document.querySelector('#root');
+
+const receiver = new DomReceiver({
+  bind: root,
+  customElement: {
+    Card: 'ui-card',
+    Button: 'ui-button',
+  },
+  applyProperty: withEventListeners,
+});
+
+// Now, if we have a remote component that creates a `Button` component with an
+// `onPress` prop, that will become a `ui-button` custom element, with an
+// `addEventListener('press', props.onPress)` applied to it.
+```
+
 ### As a custom element
 
 This library also provides a small custom element meant to make this library feel more ergonomic in larger, custom element-based apps. This custom element is registered for the name `remote-ui-root`. In environments that support custom elements, you can use this element in your HTML like so:

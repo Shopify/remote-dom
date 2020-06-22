@@ -3,8 +3,10 @@ import type {
   RemoteTextSerialization,
   RemoteComponentSerialization,
 } from '@remote-ui/core';
+import {PropertyApply, PropertyApplyOptions} from './types';
 
 const REMOTE_ID = Symbol.for('RemoteUi::Dom::Id');
+const REMOTE_TYPE = Symbol.for('RemoteUi::Dom::Type');
 const REMOTE_PROPS = Symbol.for('RemoteUi::Dom::Props');
 
 type ResolveCustomElement = (component: string) => string | undefined;
@@ -15,6 +17,7 @@ interface Options {
     | Map<string, string>
     | {[key: string]: string}
     | ResolveCustomElement;
+  applyProperty?: PropertyApply;
 }
 
 export class DomReceiver {
@@ -67,6 +70,7 @@ export class DomReceiver {
     },
     updateProps: (id, newProps) => {
       const node = this.nodes.get(id) as HTMLElement & {
+        [REMOTE_TYPE]: string;
         [REMOTE_PROPS]: object;
       };
       const oldProps = {...node[REMOTE_PROPS]};
@@ -76,7 +80,12 @@ export class DomReceiver {
       Object.assign(node[REMOTE_PROPS], newProps);
 
       for (const key of Object.keys(newProps)) {
-        (node as any)[key] = (newProps as any)[key];
+        this.apply({
+          type: node[REMOTE_TYPE],
+          element: node as HTMLElement,
+          property: key,
+          value: (oldProps as any)[key],
+        });
         release((oldProps as any)[key]);
       }
     },
@@ -88,9 +97,15 @@ export class DomReceiver {
   private nodes = new Map<string, Node>();
   private bound: Node | null = null;
   private children: Node[] = [];
+  private applyProperty: PropertyApply;
   private resolveCustomElement: ResolveCustomElement;
 
-  constructor({bind, customElement}: Options) {
+  constructor({
+    bind,
+    customElement,
+    applyProperty = defaultApplyProperty,
+  }: Options) {
+    this.applyProperty = applyProperty;
     this.resolveCustomElement = normalizeCustomElement(customElement);
     if (bind) this.bind(bind);
   }
@@ -111,6 +126,14 @@ export class DomReceiver {
 
     for (const child of this.children) {
       child.parentNode?.removeChild(child);
+    }
+  }
+
+  private apply(options: PropertyApplyOptions) {
+    const result = this.applyProperty(options);
+
+    if (result === false) {
+      defaultApplyProperty(options);
     }
   }
 
@@ -144,7 +167,12 @@ export class DomReceiver {
       node = document.createElement(elementType);
 
       for (const key of Object.keys(serialized.props)) {
-        (node as any)[key] = serialized.props[key];
+        this.apply({
+          type: serialized.type,
+          element: node as HTMLElement,
+          property: key,
+          value: serialized.props[key],
+        });
       }
 
       for (const child of serialized.children) {
@@ -154,6 +182,13 @@ export class DomReceiver {
 
       Object.defineProperty(node, REMOTE_PROPS, {
         value: serialized.props,
+        writable: false,
+        enumerable: false,
+        configurable: true,
+      });
+
+      Object.defineProperty(node, REMOTE_TYPE, {
+        value: serialized.type,
         writable: false,
         enumerable: false,
         configurable: true,
@@ -184,4 +219,12 @@ function normalizeCustomElement(
   }
 
   return (component) => customElement[component];
+}
+
+function defaultApplyProperty({
+  element,
+  property,
+  value,
+}: PropertyApplyOptions) {
+  (element as any)[property] = value;
 }
