@@ -19,6 +19,8 @@ type RemoteCallableField<T> = T extends (
   ? (...args: Args) => AlwaysAsync<TypeReturned>
   : never;
 
+export type MaybePromise<T> = T extends Promise<any> ? T : T | Promise<T>;
+
 type AlwaysAsync<T> = T extends Promise<any>
   ? T
   : T extends infer U | Promise<infer U>

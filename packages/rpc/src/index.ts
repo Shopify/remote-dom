@@ -20,4 +20,5 @@ export type {
   RemoteCallable,
   SafeRpcArgument,
   MessageEndpoint,
+  MaybePromise,
 } from './types';

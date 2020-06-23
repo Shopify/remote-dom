@@ -2,6 +2,7 @@
   "files": [],
   "include": [],
   "references": [
+    {"path": "./packages/async-subscription"},
     {"path": "./packages/types"},
     {"path": "./packages/core"},
     {"path": "./packages/dom"},
