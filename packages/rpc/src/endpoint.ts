@@ -1,165 +1,108 @@
-import {
+import {createBasicEncoder} from './encoding';
+import type {
   MessageEndpoint,
   RemoteCallable,
-  FunctionStrategy,
-  FunctionStrategyOptions,
+  EncodingStrategy,
+  EncodingStrategyApi,
 } from './types';
-import {Retainer, StackFrame} from './memory';
-import {createMessengerFunctionStrategy} from './strategies';
 
-const APPLY = 0;
+import {StackFrame} from './memory';
+import type {Retainer} from './memory';
+
+const CALL = 0;
 const RESULT = 1;
 const TERMINATE = 2;
+const RELEASE = 3;
+const FUNCTION_APPLY = 5;
+const FUNCTION_RESULT = 6;
 
-const FUNCTION = '_@f';
+interface MessageMap {
+  [CALL]: [string, string | number, any];
+  [RESULT]: [string, Error?, any?];
+  [TERMINATE]: [];
+  [RELEASE]: [string];
+  [FUNCTION_APPLY]: [string, string, any];
+  [FUNCTION_RESULT]: [string, Error?, any?];
+}
 
 interface Options<T = unknown> {
   uuid?(): string;
-  createFunctionStrategy?(
-    options: FunctionStrategyOptions,
-  ): FunctionStrategy<unknown>;
+  createEncoder?(api: EncodingStrategyApi): EncodingStrategy;
   callable?: (keyof T)[];
 }
 
 export interface Endpoint<T> {
   readonly call: RemoteCallable<T>;
-  readonly functions: FunctionStrategy<unknown>;
   replace(messenger: MessageEndpoint): void;
   expose(api: {[key: string]: Function | undefined}): void;
   callable(...methods: string[]): void;
   terminate(): void;
 }
 
+/**
+ * An endpoint wraps around a messenger, acting as the intermediary for all
+ * messages both send from, and received by, that messenger. The endpoint sends
+ * all messages as arrays, where the first element is the message type, and the
+ * second is the arguments for that message (as an array). For messages that send
+ * meaningful content across the wire (e.g., arguments to function calls, return
+ * results), the endpoint first encodes these values.
+ *
+ * Encoding is done using a CBOR-like encoding scheme. The value is encoded into
+ * an array buffer, and is paired with an additional array buffer that contains all
+ * the strings used in that message (in the encoded value, strings are encoded as
+ * their index in the "strings" encoding to reduce the cost of heavily-duplicated
+ * strings, which is more likely in payloads containing UI). This encoding also takes
+ * care of encoding functions: it uses a "tagged" item in CBOR to represent a
+ * function as a string ID, which the opposite endpoint will be capable of turning
+ * into a consistent, memory-manageable function proxy.
+ *
+ * The main CBOR encoding is entirely take from the [cbor.js package](https://github.com/paroga/cbor-js).
+ * The special behavior for encoding strings and functions was then added in to the
+ * encoder and decoder. For additional details on CBOR:
+ *
+ * @see https://tools.ietf.org/html/rfc7049
+ */
 export function createEndpoint<T>(
   initialMessenger: MessageEndpoint,
   {
     uuid = defaultUuid,
-    createFunctionStrategy = createMessengerFunctionStrategy,
+    createEncoder = createBasicEncoder,
     callable,
   }: Options<T> = {},
 ): Endpoint<T> {
   let terminated = false;
   let messenger = initialMessenger;
-  const eventListeners = new Set<Function>();
 
-  const functions = createFunctionStrategy({
+  const activeApi = new Map<string | number, Function>();
+  const callIdsToResolver = new Map<
+    string,
+    (
+      ...args: MessageMap[typeof FUNCTION_RESULT] | MessageMap[typeof RESULT]
+    ) => void
+  >();
+
+  const call = createCallable<T>(handlerForCall, callable);
+
+  const encoder = createEncoder({
     uuid,
-    toWire,
-    fromWire,
-    messenger: {
-      postMessage: (...args) => messenger.postMessage(...args),
-      addEventListener: (_, listener) => {
-        eventListeners.add(listener);
-      },
-      removeEventListener: (_, listener) => {
-        eventListeners.delete(listener);
-      },
+    release(id) {
+      send(RELEASE, [id]);
+    },
+    call(id, args, retainedBy) {
+      const callId = uuid();
+      const done = waitForResult(callId, retainedBy);
+      const [encoded, transferables] = encoder.encode(args);
+
+      send(FUNCTION_APPLY, [callId, id, encoded], transferables);
+
+      return done;
     },
   });
 
-  const activeApi = new Map<string, Function>();
-
-  function terminate() {
-    terminated = true;
-    activeApi.clear();
-    messenger.removeEventListener('message', listener);
-
-    if (functions.terminate != null) {
-      functions.terminate();
-    }
-  }
-
-  async function listener(event: MessageEvent) {
-    for (const listener of [...eventListeners]) {
-      listener(event);
-    }
-
-    const {data} = event;
-
-    if (data == null) {
-      return;
-    }
-
-    switch (data[0]) {
-      case TERMINATE: {
-        terminate();
-        break;
-      }
-      case APPLY: {
-        const stackFrame = new StackFrame();
-        const [, id, target, args] = data;
-        const func = activeApi.get(target);
-
-        try {
-          if (func == null) {
-            throw new Error(
-              `No '${target}' method is exposed on this endpoint`,
-            );
-          }
-
-          const result = await func(...(fromWire(args, [stackFrame]) as any[]));
-          const [serializedResult, transferables] = toWire(result);
-          messenger.postMessage(
-            [RESULT, id, undefined, serializedResult],
-            transferables,
-          );
-        } catch (error) {
-          const {name, message, stack} = error;
-          messenger.postMessage([RESULT, id, {name, message, stack}]);
-        } finally {
-          stackFrame.release();
-        }
-
-        break;
-      }
-    }
-  }
-
   messenger.addEventListener('message', listener);
-
-  let call: any;
-
-  if (callable == null) {
-    if (typeof Proxy !== 'function') {
-      throw new Error(
-        `You must pass an array of callable methods in environments without Proxies.`,
-      );
-    }
-
-    const cache = new Map<string | number | symbol, Function>();
-
-    call = new Proxy(
-      {},
-      {
-        get(_target, property) {
-          const cached = cache.get(property);
-
-          if (cached != null) {
-            return cached;
-          }
-
-          const handler = handlerForCall(property);
-          cache.set(property, handler);
-          return handler;
-        },
-      },
-    );
-  } else {
-    call = {};
-
-    for (const method of callable) {
-      Object.defineProperty(call, method, {
-        value: handlerForCall(method),
-        writable: false,
-        configurable: true,
-        enumerable: true,
-      });
-    }
-  }
 
   return {
     call,
-    functions,
     replace(newMessenger) {
       const oldMessenger = messenger;
       messenger = newMessenger;
@@ -198,10 +141,100 @@ export function createEndpoint<T>(
       if (messenger.terminate) {
         messenger.terminate();
       } else {
-        messenger.postMessage([TERMINATE]);
+        send(TERMINATE, []);
       }
     },
   };
+
+  function send<Type extends keyof MessageMap>(
+    type: Type,
+    args: MessageMap[Type],
+    transferables?: Transferable[],
+  ) {
+    messenger.postMessage([type, args], transferables);
+  }
+
+  async function listener(event: MessageEvent) {
+    const {data} = event;
+
+    if (data == null || !Array.isArray(data)) {
+      return;
+    }
+
+    switch (data[0]) {
+      case TERMINATE: {
+        terminate();
+        break;
+      }
+      case CALL: {
+        const stackFrame = new StackFrame();
+        const [id, property, args] = data[1] as MessageMap[typeof CALL];
+        const func = activeApi.get(property);
+
+        try {
+          if (func == null) {
+            throw new Error(
+              `No '${property}' method is exposed on this endpoint`,
+            );
+          }
+
+          const [encoded, transferables] = encoder.encode(
+            await func(...(encoder.decode(args, [stackFrame]) as any[])),
+          );
+
+          send(RESULT, [id, undefined, encoded], transferables);
+        } catch (error) {
+          const {name, message, stack} = error;
+          send(RESULT, [id, {name, message, stack}]);
+        } finally {
+          stackFrame.release();
+        }
+
+        break;
+      }
+      case RESULT: {
+        const [callId] = data[1] as MessageMap[typeof RESULT];
+
+        callIdsToResolver.get(callId)!(
+          ...(data[1] as MessageMap[typeof RESULT]),
+        );
+        callIdsToResolver.delete(callId);
+        break;
+      }
+      case RELEASE: {
+        const [id] = data[1] as MessageMap[typeof RELEASE];
+        encoder.release(id);
+        break;
+      }
+      case FUNCTION_RESULT: {
+        const [callId] = data[1] as MessageMap[typeof FUNCTION_RESULT];
+
+        callIdsToResolver.get(callId)!(
+          ...(data[1] as MessageMap[typeof FUNCTION_RESULT]),
+        );
+        callIdsToResolver.delete(callId);
+        break;
+      }
+      case FUNCTION_APPLY: {
+        const [
+          callId,
+          funcId,
+          args,
+        ] = data[1] as MessageMap[typeof FUNCTION_APPLY];
+
+        try {
+          const result = await encoder.call(funcId, args);
+          const [encoded, transferables] = encoder.encode(result);
+          send(FUNCTION_RESULT, [callId, undefined, encoded], transferables);
+        } catch (error) {
+          const {name, message, stack} = error;
+          send(FUNCTION_RESULT, [callId, {name, message, stack}]);
+        }
+
+        break;
+      }
+    }
+  }
 
   function handlerForCall(property: string | number | symbol) {
     return (...args: any[]) => {
@@ -211,99 +244,42 @@ export function createEndpoint<T>(
         );
       }
 
+      if (typeof property !== 'string' && typeof property !== 'number') {
+        throw new Error(
+          `Can’t call a symbol method on a remote endpoint: ${property.toString()}`,
+        );
+      }
+
       const id = uuid();
-      const done = new Promise<any>((resolve, reject) => {
-        messenger.addEventListener('message', function listener({data}) {
-          if (data == null || data[0] !== RESULT || data[1] !== id) {
-            return;
-          }
+      const done = waitForResult(id);
+      const [encoded, transferables] = encoder.encode(args);
 
-          messenger.removeEventListener('message', listener);
-
-          const [, , errorResult, value] = data;
-
-          if (errorResult == null) {
-            resolve(fromWire(value));
-          } else {
-            const error = new Error();
-            Object.assign(error, errorResult);
-            reject(error);
-          }
-        });
-      });
-
-      const [serializedArgs, transferables] = toWire(args);
-      messenger.postMessage(
-        [APPLY, id, property, serializedArgs],
-        transferables,
-      );
+      send(CALL, [id, property, encoded], transferables);
 
       return done;
     };
   }
 
-  function toWire(value: unknown): [any, Transferable[]?] {
-    if (typeof value === 'object') {
-      if (value == null) {
-        return [value];
-      }
-
-      const transferables: Transferable[] = [];
-
-      if (Array.isArray(value)) {
-        const result = value.map((item) => {
-          const [result, nestedTransferables = []] = toWire(item);
-          transferables.push(...nestedTransferables);
-          return result;
-        });
-
-        return [result, transferables];
-      }
-
-      const result = Object.keys(value).reduce((object, key) => {
-        const [result, nestedTransferables = []] = toWire((value as any)[key]);
-        transferables.push(...nestedTransferables);
-        return {...object, [key]: result};
-      }, {});
-
-      return [result, transferables];
-    }
-
-    if (typeof value === 'function') {
-      const [result, transferables] = functions.toWire(value);
-      return [{[FUNCTION]: result}, transferables];
-    }
-
-    return [value];
+  function waitForResult(id: string, retainedBy?: Iterable<Retainer>) {
+    return new Promise<any>((resolve, reject) => {
+      callIdsToResolver.set(id, (_, errorResult, value) => {
+        if (errorResult == null) {
+          resolve(value && encoder.decode(value, retainedBy));
+        } else {
+          const error = new Error();
+          Object.assign(error, errorResult);
+          reject(error);
+        }
+      });
+    });
   }
 
-  function fromWire<Input = unknown, Output = unknown>(
-    value: Input,
-    retainedBy: Retainer[] = [],
-  ): Output {
-    if (typeof value === 'object') {
-      if (value == null) {
-        return value as any;
-      }
-
-      if (Array.isArray(value)) {
-        return value.map((value) => fromWire(value, retainedBy)) as any;
-      }
-
-      if (FUNCTION in value) {
-        return functions.fromWire((value as any)[FUNCTION], retainedBy) as any;
-      }
-
-      return Object.keys(value).reduce(
-        (object, key) => ({
-          ...object,
-          [key]: fromWire((value as any)[key], retainedBy),
-        }),
-        {},
-      ) as any;
-    }
-
-    return value as any;
+  function terminate() {
+    terminated = true;
+    activeApi.clear();
+    callIdsToResolver.clear();
+    encoder.terminate?.();
+    messenger.removeEventListener('message', listener);
   }
 }
 
@@ -313,4 +289,49 @@ function defaultUuid() {
 
 function uuidSegment() {
   return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(16);
+}
+
+function createCallable<T>(
+  handlerForCall: (property: string | number | symbol) => Function | undefined,
+  callable?: (keyof T)[],
+): RemoteCallable<T> {
+  let call: any;
+
+  if (callable == null) {
+    if (typeof Proxy !== 'function') {
+      throw new Error(
+        `You must pass an array of callable methods in environments without Proxies.`,
+      );
+    }
+
+    const cache = new Map<string | number | symbol, Function | undefined>();
+
+    call = new Proxy(
+      {},
+      {
+        get(_target, property) {
+          if (cache.has(property)) {
+            return cache.get(property);
+          }
+
+          const handler = handlerForCall(property);
+          cache.set(property, handler);
+          return handler;
+        },
+      },
+    );
+  } else {
+    call = {};
+
+    for (const method of callable) {
+      Object.defineProperty(call, method, {
+        value: handlerForCall(method),
+        writable: false,
+        configurable: true,
+        enumerable: true,
+      });
+    }
+  }
+
+  return call;
 }
