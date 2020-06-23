@@ -11,6 +11,9 @@ module.exports = {
     'packages/*/*.node',
     'packages/*/*.esnext',
   ],
+  rules: {
+    'lines-around-comment': 'off',
+  },
   overrides: [
     {
       files: ['sewing-kit.config.ts', 'config/sewing-kit/**/*'],
