@@ -1,0 +1,16 @@
+{
+  "name": "@remote-ui/traversal",
+  "version": "0.0.0",
+  "publishConfig": {
+    "access": "public",
+    "@remote-ui:registry": "https://registry.npmjs.org"
+  },
+  "sideEffects": false,
+  "license": "MIT",
+  "dependencies": {
+    "@remote-ui/core": "^0.0.32"
+  },
+  "devDependencies": {
+    "@remote-ui/htm": "^0.0.6"
+  }
+}

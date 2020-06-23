@@ -10,6 +10,7 @@
     {"path": "./packages/react"},
     {"path": "./packages/rpc"},
     {"path": "./packages/testing"},
+    {"path": "./packages/traversal"},
     {"path": "./packages/web-workers"}
   ]
 }
