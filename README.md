@@ -13,7 +13,9 @@ remote-ui is a collection of projects that work together to provide the capabili
 The main API of remote-ui, provided by [`@remote-ui/core`](packages/core), is small, and similar to the DOM. This makes it well-suited as a target for other libraries, which can provide different tradeoffs of performance and developer ergonomics for code executing in the remote environment. The “host” side is also meant to be flexible, allowing you to map the simple “tree of components” structure from the remote environment into many different UI libraries on the main thread. This repo provides bindings to the host and/ or remote parts of remote-ui for a few popular libraries:
 
 > **Legend:**
+>
 > Host 🌎: provides a host layer that can map remote-ui components to UI components
+>
 > Remote 🛰️: provides a way to manage the tree of remote-ui components in the remote context
 
 | Library                              | Host 🌎 | Remote 🛰️ |
