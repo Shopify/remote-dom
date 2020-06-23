@@ -15,7 +15,11 @@ The main API of remote-ui, provided by [`@remote-ui/core`](packages/core), is sm
 - [`@remote-ui/react`](packages/react) provides a custom [React](https://reactjs.org) renderer that lets you use all the React features you’re used to from React DOM or React Native, but which outputs updates as operations on an [`@remote-ui/core` `RemoteRoot`](packages/core#remoteroot). It also provides a React component that handles the UI thread by mapping custom components from the remote root to React components on the host.
 - [`@remote-ui/htm`](packages/htm) provides utilities to convert [`htm`](https://github.com/developit/htm) templates into operations on a [`@remote-ui/core` `RemoteRoot`](packages/core#remoteroot).
 
-Finally, this repo provides a small library for testing the outputs of [`@remote-ui/core`](packages/core), [`@remote-ui/testing`](packages/testing).
+This repo also contains a number of utility libraries for working with remote-ui:
+
+- [`@remote-ui/testing`](packages/testing) provides a test-friendly `RemoteRoot` object, and a collection of helpful Jest assertions.
+- [`@remote-ui/traversal`](packages/traversal) provides DOM-like APIs for finding components in a `RemoteRoot`.
+- [`@remote-ui/async-subscription`](packages/async-subscription) helps you build subscriptions that work when all functions must be asynchronous, like they are when passed over the bridge created by [`@remote-ui/rpc`](packages/rpc).
 
 ## Examples
 
