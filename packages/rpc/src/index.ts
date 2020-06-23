@@ -1,9 +1,6 @@
 export {createEndpoint} from './endpoint';
 export type {Endpoint} from './endpoint';
-export {
-  createChannelFunctionStrategy,
-  createMessengerFunctionStrategy,
-} from './strategies';
+export {createBasicEncoder} from './encoding';
 export {fromMessagePort, fromWebWorker} from './adaptors';
 export {
   retain,
@@ -15,8 +12,8 @@ export {
 } from './memory';
 export type {Retainer, MemoryManageable} from './memory';
 export type {
-  FunctionStrategy,
-  FunctionStrategyOptions,
+  EncodingStrategy,
+  EncodingStrategyApi,
   RemoteCallable,
   SafeRpcArgument,
   MessageEndpoint,

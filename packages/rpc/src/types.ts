@@ -49,9 +49,9 @@ export type SafeRpcArgument<T> = T extends (
   ? {[K in keyof T]: SafeRpcArgument<T[K]>}
   : T;
 
-export const RETAIN_METHOD = Symbol('retain');
-export const RELEASE_METHOD = Symbol('release');
-export const RETAINED_BY = Symbol('retainedBy');
+export const RETAIN_METHOD = Symbol.for('RemoteUi::Retain');
+export const RELEASE_METHOD = Symbol.for('RemoteUi::Release');
+export const RETAINED_BY = Symbol.for('RemoteUi::RetainedBy');
 
 export interface Retainer {
   add(manageable: MemoryManageable): void;
@@ -63,21 +63,16 @@ export interface MemoryManageable {
   [RELEASE_METHOD](): void;
 }
 
-export interface FunctionStrategy<T> {
-  toWire(value: Function): [T, Transferable[]?];
-  fromWire(value: T, retainedBy?: Retainer[]): Function;
-  revoke?(value: Function): void;
-  exchange?(value: Function, newValue: Function): void;
+export interface EncodingStrategy {
+  encode(value: unknown): [any, Transferable[]?];
+  decode(value: unknown, retainedBy?: Iterable<Retainer>): unknown;
+  call(id: string, args: any[]): Promise<any>;
+  release(id: string): void;
   terminate?(): void;
-  has(value: Function): boolean;
 }
 
-export interface FunctionStrategyOptions {
-  readonly messenger: MessageEndpoint;
+export interface EncodingStrategyApi {
   uuid(): string;
-  toWire(value: unknown): [any, Transferable[]?];
-  fromWire<Input = unknown, Output = unknown>(
-    value: Input,
-    retainedBy?: Retainer[],
-  ): Output;
+  release(id: string): void;
+  call(id: string, args: any[], retainedBy?: Iterable<Retainer>): Promise<any>;
 }
