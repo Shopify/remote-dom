@@ -7,13 +7,13 @@ This package provides a set of utility functions for finding components within a
 Using `yarn`:
 
 ```
-yarn add @remote-ui/core
+yarn add @remote-ui/traversal
 ```
 
 or, using `npm`:
 
 ```
-npm install @remote-ui/core --save
+npm install @remote-ui/traversal --save
 ```
 
 ## Usage
