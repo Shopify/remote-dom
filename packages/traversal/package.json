@@ -1,16 +1,28 @@
 {
   "name": "@remote-ui/traversal",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
   },
-  "sideEffects": false,
   "license": "MIT",
+  "main": "index.js",
+  "module": "index.mjs",
+  "esnext": "index.esnext",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js",
+      "esnext": "./index.esnext"
+    },
+    "./": "./"
+  },
+  "sideEffects": false,
   "dependencies": {
-    "@remote-ui/core": "^1.1.0"
+    "@remote-ui/core": "^1.1.1"
   },
   "devDependencies": {
-    "@remote-ui/htm": "^1.0.2"
+    "@remote-ui/htm": "^1.0.3"
   }
 }

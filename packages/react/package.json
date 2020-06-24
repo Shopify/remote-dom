@@ -1,11 +1,28 @@
 {
   "name": "@remote-ui/react",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
   },
   "license": "MIT",
+  "main": "index.js",
+  "module": "index.mjs",
+  "esnext": "index.esnext",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js",
+      "esnext": "./index.esnext"
+    },
+    "./": "./",
+    "./host": {
+      "import": "./host.mjs",
+      "require": "./host.js",
+      "esnext": "./host.esnext"
+    }
+  },
   "sideEffects": false,
   "devDependencies": {
     "@types/react-dom": "^16.9.7",
@@ -14,9 +31,9 @@
     "react-dom": "^16.13.1"
   },
   "dependencies": {
-    "@remote-ui/core": "^1.1.0",
-    "@remote-ui/rpc": "^1.0.1",
-    "@remote-ui/web-workers": "^1.0.1",
+    "@remote-ui/core": "^1.1.1",
+    "@remote-ui/rpc": "^1.0.2",
+    "@remote-ui/web-workers": "^1.0.2",
     "@types/react": ">=16.8.0 <17.0.0",
     "react-reconciler": "^0.25.0"
   }

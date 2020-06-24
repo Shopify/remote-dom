@@ -1,26 +1,30 @@
 {
   "name": "@remote-ui/dom",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
   },
   "main": "index.js",
+  "module": "index.mjs",
+  "esnext": "index.esnext",
   "types": "index.d.ts",
   "exports": {
     ".": {
       "import": "./index.mjs",
-      "require": "./index.js"
+      "require": "./index.js",
+      "esnext": "./index.esnext"
     },
     "./": "./",
     "./browser": {
       "import": "./browser.mjs",
-      "require": "./browser.js"
+      "require": "./browser.js",
+      "esnext": "./browser.esnext"
     }
   },
   "sideEffects": false,
   "license": "MIT",
   "dependencies": {
-    "@remote-ui/core": "^1.1.0"
+    "@remote-ui/core": "^1.1.1"
   }
 }

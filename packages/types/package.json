@@ -1,10 +1,22 @@
 {
   "name": "@remote-ui/types",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
   },
-  "sideEffects": false,
-  "license": "MIT"
+  "license": "MIT",
+  "main": "index.js",
+  "module": "index.mjs",
+  "esnext": "index.esnext",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js",
+      "esnext": "./index.esnext"
+    },
+    "./": "./"
+  },
+  "sideEffects": false
 }
