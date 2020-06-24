@@ -30,6 +30,13 @@ Finally, this repo also contains a number of utility libraries for working with 
 - [`@remote-ui/traversal`](packages/traversal) provides DOM-like APIs for finding components in a `RemoteRoot`.
 - [`@remote-ui/async-subscription`](packages/async-subscription) helps you build subscriptions that work when all functions must be asynchronous, like they are when passed over the bridge created by [`@remote-ui/rpc`](packages/rpc).
 
+## Learn more
+
+We’ve prepared some guides for getting the most out of remote-ui:
+
+- Recommendations on [component API design patterns](documentation/component-design.md).
+- [Performance considerations](documentation/performance.md) when using remote-ui.
+
 ## Examples
 
 We have created an example project, bootstrapped with [Create React App](https://github.com/facebook/create-react-app), that shows how you can incorporate the different parts of remote-ui into a simple React codebase.
