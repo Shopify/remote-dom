@@ -38,7 +38,7 @@ export function useAttached<T extends Attachable>(
     // If the subscription has been updated, we'll schedule another update with React.
     // React will process this update immediately, so the old subscription value won't be committed.
     // It is still nice to avoid returning a mismatched value though, so let's override the return value.
-    returnValue = receiver.get(attached);
+    returnValue = {...receiver.get(attached)};
 
     setState({
       receiver,
@@ -56,8 +56,6 @@ export function useAttached<T extends Attachable>(
         return;
       }
 
-      const value = receiver.get(attached);
-
       setState((previousState) => {
         const {
           receiver: previousReceiver,
@@ -69,13 +67,15 @@ export function useAttached<T extends Attachable>(
           return previousState;
         }
 
+        const value = {...receiver.get(attached)};
+
         // If the value hasn't changed, no update is needed.
         // Return state as-is so React can bail out and avoid an unnecessary render.
-        if (deepEqual(previousValue, value)) {
+        if (shallowEqual(previousValue, value)) {
           return previousState;
         }
 
-        return {...previousState, value: {...value}};
+        return {receiver, value};
       });
     };
 
@@ -93,7 +93,7 @@ export function useAttached<T extends Attachable>(
   return returnValue;
 }
 
-function deepEqual<T>(one: T, two: T) {
+function shallowEqual<T>(one: T, two: T) {
   return Object.keys(two).every(
     (key) => (one as any)[key] === (two as any)[key],
   );

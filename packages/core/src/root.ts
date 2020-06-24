@@ -19,7 +19,8 @@ import type {
 export interface Options<
   AllowedComponents extends RemoteComponentType<string, any>
 > {
-  readonly components: readonly AllowedComponents[];
+  readonly strict?: boolean;
+  readonly components?: readonly AllowedComponents[];
 }
 
 export function createRemoteRoot<
@@ -30,7 +31,7 @@ export function createRemoteRoot<
   AllowedChildrenTypes extends AllowedComponents | boolean = true
 >(
   channel: RemoteChannel,
-  _options?: Options<AllowedComponents>,
+  {strict = true}: Options<AllowedComponents> = {},
 ): RemoteRoot<AllowedComponents, AllowedChildrenTypes> {
   type Root = RemoteRoot<AllowedComponents, AllowedChildrenTypes>;
   type Component = RemoteComponent<AllowedComponents, Root>;
@@ -102,8 +103,8 @@ export function createRemoteRoot<
 
       makePartOfTree(component);
       makeRemote(component, id, remoteRoot);
-      props.set(component, initialProps);
-      children.set(component, []);
+      props.set(component, strict ? Object.freeze(initialProps) : initialProps);
+      children.set(component, strict ? Object.freeze([]) : []);
 
       return (component as unknown) as RemoteComponent<typeof type, Root>;
     },
@@ -207,10 +208,9 @@ export function createRemoteRoot<
     return perform(component, {
       remote: (channel) => channel(ACTION_UPDATE_PROPS, component.id, newProps),
       local: () => {
-        props.set(
-          component,
-          Object.freeze({...props.get(component), ...newProps}),
-        );
+        const mergedProps = {...props.get(component), ...newProps};
+
+        props.set(component, strict ? Object.freeze(mergedProps) : mergedProps);
       },
     });
   }
@@ -237,9 +237,14 @@ export function createRemoteRoot<
           tops.set(descendant, newTop),
         );
 
+        const mergedChildren = [
+          ...(children.get(container) ?? []),
+          normalizedChild,
+        ];
+
         children.set(
           container,
-          Object.freeze([...(children.get(container) ?? []), normalizedChild]),
+          strict ? Object.freeze(mergedChildren) : mergedChildren,
         );
       },
     });
@@ -270,7 +275,10 @@ export function createRemoteRoot<
 
         const newChildren = [...(children.get(container) ?? [])];
         newChildren.splice(newChildren.indexOf(child as any), 1);
-        children.set(container, Object.freeze(newChildren));
+        children.set(
+          container,
+          strict ? Object.freeze(newChildren) : newChildren,
+        );
       },
     });
   }
@@ -298,7 +306,10 @@ export function createRemoteRoot<
 
         const newChildren = [...(children.get(container) || [])];
         newChildren.splice(newChildren.indexOf(before as any), 0, child);
-        children.set(container, Object.freeze(newChildren));
+        children.set(
+          container,
+          strict ? Object.freeze(newChildren) : newChildren,
+        );
       },
     });
   }
