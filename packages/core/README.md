@@ -31,7 +31,7 @@ npm install @remote-ui/core --save
 This function accepts two arguments:
 
 - `channel` is a `RemoteChannel`, a function that will be called with serialized representation of UI updates. [`RemoteReceiver#receive`](#remotereceiverreceive) is one such function, and most uses of remote-ui will rely on connecting those two “sides” by passing the `receive` method for this argument.
-- `options` is an optional options object. There is currently one supported option: `components`. This value is the list of components that can be constructed and attached to this root. This is necessary because, by default, this library does not supply any components to render; you are responsible for implementing a component API that makes sense for your use case.
+- `options` is an optional options object. There is currently one supported option: `strict`, which is enabled by default. When enabled, all `props` and `children` for remote components will be frozen (with `Object.freeze()`) in order to prevent direct mutation of those values (to prevent unexpected behavior, all mutations to these values should be done with the [`RemoteComponent`](#remotecomponent) API). The default `strict`ness also prevents potentially-untrusted code from adding properties or children that it is not supposed to. However, `Object.freeze` does have a small runtime cost, so if you are comfortable without this safety, you can disable it by passing `strict: false`:
 
 ```ts
 import {createRemoteRoot, RemoteReceiver} from '@remote-ui/core';
@@ -39,7 +39,7 @@ import {createRemoteRoot, RemoteReceiver} from '@remote-ui/core';
 const receiver = new RemoteReceiver();
 
 const root = createRemoteRoot(receiver.receive, {
-  components: ['Button', 'TextField', 'Card'],
+  strict: false,
 });
 ```
 
