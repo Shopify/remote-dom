@@ -110,8 +110,10 @@ export function createRemoteRoot<
         const normalizedChildren: CanBeChild[] = [];
 
         for (const child of initialChildren) {
-          const normalizedChild =
-            typeof child === 'string' ? remoteRoot.createText(child) : child;
+          const normalizedChild: CanBeChild =
+            typeof child === 'string'
+              ? remoteRoot.createText(child)
+              : (child as any);
 
           normalizedChildren.push(normalizedChild);
           moveChildToContainer(component, normalizedChild);

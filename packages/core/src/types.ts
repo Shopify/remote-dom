@@ -124,7 +124,8 @@ export interface RemoteRoot<
         Iterable<
           AllowedChildren<
             AllowedChildrenTypes,
-            RemoteRoot<AllowedComponents, AllowedChildrenTypes>
+            RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
+            true
           >
         >?,
       ],
@@ -133,7 +134,8 @@ export interface RemoteRoot<
         Iterable<
           AllowedChildren<
             AllowedChildrenTypes,
-            RemoteRoot<AllowedComponents, AllowedChildrenTypes>
+            RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
+            true
           >
         >?,
       ]
