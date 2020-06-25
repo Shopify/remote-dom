@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2020-06-25
+
+### Added
+
+- `RemoteRoot#createComponent()` now accepts an array of children as the third argument, which allows you to more seamlessly construct a large tree of nodes.
+
 ## [1.1.1] - 2020-06-24
 
 ### Fixed

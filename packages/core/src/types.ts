@@ -117,10 +117,26 @@ export interface RemoteRoot<
   ): void | Promise<void>;
   createComponent<Type extends AllowedComponents>(
     type: Type,
-    ...propsPart: IfAllOptionalKeys<
+    ...rest: IfAllOptionalKeys<
       PropsForRemoteComponent<Type>,
-      [PropsForRemoteComponent<Type>?],
-      [PropsForRemoteComponent<Type>]
+      [
+        PropsForRemoteComponent<Type>?,
+        Iterable<
+          AllowedChildren<
+            AllowedChildrenTypes,
+            RemoteRoot<AllowedComponents, AllowedChildrenTypes>
+          >
+        >?,
+      ],
+      [
+        PropsForRemoteComponent<Type>,
+        Iterable<
+          AllowedChildren<
+            AllowedChildrenTypes,
+            RemoteRoot<AllowedComponents, AllowedChildrenTypes>
+          >
+        >?,
+      ]
     >
   ): RemoteComponent<Type, RemoteRoot<AllowedComponents, AllowedChildrenTypes>>;
   createText(

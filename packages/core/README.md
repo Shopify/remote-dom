@@ -71,6 +71,24 @@ If you are familiar with React, or if the “host” side of these components is
 
 To prevent this kind of mistake, any `children` prop will be deleted from the props object. If you want to implement a render prop-style API, you can do so without potentially causing confusion by using a different prop name, and ensuring that you handle the fact that the host will receive a promise whenever they call this function. If you are just trying to append other `RemoteComponent` and `RemoteText` instances to your tree, use `RemoteComponent#appendChild()`.
 
+`createComponent` also accepts a third argument: an array of children. This can be used to construct a tree of components without requiring intermediate variables.
+
+```ts
+root.appendChild(
+  root.createComponent('BlockStack', undefined, [
+    root.createComponent(
+      'Button',
+      {
+        onPress() {
+          console.log('Pressed!');
+        },
+      },
+      ['Press me!'],
+    ),
+  ]),
+);
+```
+
 ##### `RemoteRoot#appendChild()`
 
 This method appends a `RemoteComponent` or `RemoteText` to the remote root as the last child. This method returns a promise for when the update has been applied in the host.

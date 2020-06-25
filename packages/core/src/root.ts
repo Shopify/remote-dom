@@ -52,8 +52,9 @@ export function createRemoteRoot<
     get children() {
       return children.get(remoteRoot) as any;
     },
-    createComponent(type, ...propsPart) {
-      let [initialProps] = propsPart;
+    createComponent(type, ...rest) {
+      let initialProps = rest[0];
+      const initialChildren = rest[1];
 
       if (initialProps) {
         // "children" as a prop can be extremely confusing with the "children" of
@@ -104,7 +105,25 @@ export function createRemoteRoot<
       makePartOfTree(component);
       makeRemote(component, id, remoteRoot);
       props.set(component, strict ? Object.freeze(initialProps) : initialProps);
-      children.set(component, strict ? Object.freeze([]) : []);
+
+      if (initialChildren) {
+        const normalizedChildren: CanBeChild[] = [];
+
+        for (const child of initialChildren) {
+          const normalizedChild =
+            typeof child === 'string' ? remoteRoot.createText(child) : child;
+
+          normalizedChildren.push(normalizedChild);
+          moveChildToContainer(component, normalizedChild);
+        }
+
+        children.set(
+          component,
+          strict ? Object.freeze(normalizedChildren) : normalizedChildren,
+        );
+      } else {
+        children.set(component, strict ? Object.freeze([]) : []);
+      }
 
       return (component as unknown) as RemoteComponent<typeof type, Root>;
     },
@@ -209,7 +228,6 @@ export function createRemoteRoot<
       remote: (channel) => channel(ACTION_UPDATE_PROPS, component.id, newProps),
       local: () => {
         const mergedProps = {...props.get(component), ...newProps};
-
         props.set(component, strict ? Object.freeze(mergedProps) : mergedProps);
       },
     });
@@ -228,14 +246,7 @@ export function createRemoteRoot<
           serialize(normalizedChild),
         ),
       local: () => {
-        const newTop =
-          container === remoteRoot ? remoteRoot : tops.get(container as any)!;
-
-        parents.set(normalizedChild, container);
-        tops.set(normalizedChild, newTop);
-        allDescendants(normalizedChild, (descendant) =>
-          tops.set(descendant, newTop),
-        );
+        moveChildToContainer(container, normalizedChild);
 
         const mergedChildren = [
           ...(children.get(container) ?? []),
@@ -274,7 +285,7 @@ export function createRemoteRoot<
         );
 
         const newChildren = [...(children.get(container) ?? [])];
-        newChildren.splice(newChildren.indexOf(child as any), 1);
+        newChildren.splice(newChildren.indexOf(child), 1);
         children.set(
           container,
           strict ? Object.freeze(newChildren) : newChildren,
@@ -297,21 +308,26 @@ export function createRemoteRoot<
           serialize(child),
         ),
       local: () => {
-        const newTop =
-          container === remoteRoot ? remoteRoot : tops.get(container as any)!;
-
-        tops.set(child, newTop);
-        parents.set(child, container);
-        allDescendants(child, (descendant) => tops.set(descendant, newTop));
+        moveChildToContainer(container, child);
 
         const newChildren = [...(children.get(container) || [])];
-        newChildren.splice(newChildren.indexOf(before as any), 0, child);
+        newChildren.splice(newChildren.indexOf(before), 0, child);
+
         children.set(
           container,
           strict ? Object.freeze(newChildren) : newChildren,
         );
       },
     });
+  }
+
+  function moveChildToContainer(container: HasChildren, child: CanBeChild) {
+    const newTop =
+      container === remoteRoot ? remoteRoot : tops.get(container as any)!;
+
+    tops.set(child, newTop);
+    parents.set(child, container);
+    allDescendants(child, (descendant) => tops.set(descendant, newTop));
   }
 
   function makePartOfTree(value: CanBeChild) {
