@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2020-06-25
+
+- Fixed the type of `RemoteReceiver#get()` to correctly indicate that an attached element may be `null`.
+
 ## [1.2.1] - 2020-06-25
 
 - Fixed an error that prevented strings from being passed in the array of children for `RemoteRoot#createComponent()`.
@@ -27,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added a `strict` option to control immutability in `@remote-ui/core`’s `createRemoteRoot()` ([pull request](https://github.com/Shopify/remote-ui/pull/16))
+- Added a `strict` option to control immutability in `@remote-ui/core`’s `createRemoteRoot()` ([pull request](https://github.com/Shopify/remote-ui/pull/16)).
 
 ## [1.0.1] - 2020-06-23
 

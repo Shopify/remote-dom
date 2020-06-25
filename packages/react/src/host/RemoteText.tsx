@@ -13,6 +13,6 @@ interface Props {
 }
 
 export const RemoteText = memo(({text, receiver}: Props) => {
-  const {text: textContent} = useAttached(receiver, text);
-  return <>{textContent}</>;
+  const attached = useAttached(receiver, text);
+  return attached ? <>{attached.text}</> : null;
 });

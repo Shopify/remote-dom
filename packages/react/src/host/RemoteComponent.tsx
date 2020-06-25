@@ -19,8 +19,10 @@ interface Props {
 
 export const RemoteComponent = memo(
   ({receiver, component, controller}: Props) => {
-    const {props, children} = useAttached(receiver, component);
     const Implementation = controller.get(component.type)!;
+
+    const attached = useAttached(receiver, component);
+    const props = attached?.props;
 
     useEffect(() => {
       retain(props);
@@ -29,6 +31,10 @@ export const RemoteComponent = memo(
         release(props);
       };
     }, [props]);
+
+    if (attached == null) return null;
+
+    const {children} = attached;
 
     return createElement(
       Implementation,

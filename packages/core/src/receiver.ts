@@ -130,8 +130,8 @@ export class RemoteReceiver {
     Set<UpdateListener<any>>
   >();
 
-  get<T extends Attachable>({id}: T) {
-    return this.attached.get(id) as T;
+  get<T extends Attachable>({id}: T): T | null {
+    return (this.attached.get(id) as T | undefined) ?? null;
   }
 
   listen<T extends Attachable>({id}: T, listener: UpdateListener<T>) {
