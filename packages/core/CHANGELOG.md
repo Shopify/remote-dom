@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.2] - 2020-06-25
 
-- Fixed the type of `RemoteReceiver#get()` to correctly indicate that an attached element may be `null`.
+- Fixed the type of `RemoteReceiver#get()` to correctly indicate that an attached element may be `null` ([pull request](https://github.com/Shopify/remote-ui/pull/17)).
 
 ## [1.2.1] - 2020-06-25
 

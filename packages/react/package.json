@@ -1,6 +1,6 @@
 {
   "name": "@remote-ui/react",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
@@ -31,7 +31,7 @@
     "react-dom": "^16.13.1"
   },
   "dependencies": {
-    "@remote-ui/core": "^1.2.1",
+    "@remote-ui/core": "^1.2.2",
     "@remote-ui/rpc": "^1.0.2",
     "@remote-ui/web-workers": "^1.0.2",
     "@types/react": ">=16.8.0 <17.0.0",
