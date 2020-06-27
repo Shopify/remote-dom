@@ -1,8 +1,9 @@
 import {
-  Project,
-  Service,
+  addHooks,
   createProjectPlugin,
   WaterfallHook,
+  Runtime,
+  TargetRuntime,
 } from '@sewing-kit/plugins';
 import type {} from '@sewing-kit/plugin-webpack';
 import type {BabelConfig} from '@sewing-kit/plugin-javascript';
@@ -37,21 +38,24 @@ declare module '@sewing-kit/hooks' {
   interface BuildProjectConfigurationCustomHooks extends Hooks {}
 }
 
-const addHooks = (hooks: any) => ({
-  ...hooks,
+const addWorkerHooks = addHooks<Hooks>(() => ({
   remoteUiWorkerNoop: new WaterfallHook(),
   remoteUiWorkerWebpackPlugins: new WaterfallHook(),
   remoteUiWorkerWebpackGlobalObject: new WaterfallHook(),
   remoteUiWorkerApplyBabelToPackages: new WaterfallHook(),
-});
+}));
 
 export function webWorkers(options: Options = {}) {
   return createProjectPlugin(PLUGIN, ({tasks: {dev, build}, project}) => {
     dev.hook(({hooks}) => {
-      hooks.configureHooks.hook(addHooks);
+      hooks.configureHooks.hook(addWorkerHooks);
       hooks.configure.hook((configure) => {
         configure.babelConfig?.hook(
-          createBabelConfigUpdater(project, configure, options),
+          createBabelConfigUpdater(
+            TargetRuntime.fromProject(project),
+            configure,
+            options,
+          ),
         );
         configure.webpackPlugins?.hook(
           createWebpackPluginAdder(configure, options),
@@ -60,24 +64,27 @@ export function webWorkers(options: Options = {}) {
     });
 
     build.hook(({hooks}) => {
-      hooks.configureHooks.hook(addHooks);
-      hooks.configure.hook((configure) => {
-        configure.babelConfig?.hook(
-          createBabelConfigUpdater(project, configure, options),
-        );
-        configure.webpackPlugins?.hook(
-          createWebpackPluginAdder(configure, options),
-        );
+      hooks.configureHooks.hook(addWorkerHooks);
+
+      hooks.target.hook(({target, hooks}) => {
+        hooks.configure.hook((configure) => {
+          configure.babelConfig?.hook(
+            createBabelConfigUpdater(target.runtime, configure, options),
+          );
+          configure.webpackPlugins?.hook(
+            createWebpackPluginAdder(configure, options),
+          );
+        });
       });
     });
   });
 }
 
 function createBabelConfigUpdater(
-  project: Project,
+  runtime: TargetRuntime,
   configure: Partial<Hooks>,
   {
-    noop: defaultNoop = project instanceof Service,
+    noop: defaultNoop = !runtime.includes(Runtime.Browser),
     applyBabelToPackages = {},
   }: Options,
 ) {
