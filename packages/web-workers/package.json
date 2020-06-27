@@ -1,6 +1,6 @@
 {
   "name": "@remote-ui/web-workers",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "",
   "publishConfig": {
     "access": "public",
