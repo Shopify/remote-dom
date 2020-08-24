@@ -7,6 +7,8 @@ import {
   ACTION_UPDATE_TEXT,
   KIND_COMPONENT,
   KIND_TEXT,
+  ACTION_ERROR,
+  ERROR_UNSUPPORTED_COMPONENT,
 } from './types';
 import type {
   Serialized,
@@ -31,7 +33,7 @@ export function createRemoteRoot<
   AllowedChildrenTypes extends AllowedComponents | boolean = true
 >(
   channel: RemoteChannel,
-  {strict = true}: Options<AllowedComponents> = {},
+  {strict = true, components = []}: Options<AllowedComponents> = {},
 ): RemoteRoot<AllowedComponents, AllowedChildrenTypes> {
   type Root = RemoteRoot<AllowedComponents, AllowedChildrenTypes>;
   type Component = RemoteComponent<AllowedComponents, Root>;
@@ -239,6 +241,16 @@ export function createRemoteRoot<
     const normalizedChild =
       typeof child === 'string' ? remoteRoot.createText(child) : child;
 
+    if (!validateAllowedComponent(normalizedChild, components)) {
+      channel(
+        ACTION_ERROR,
+        undefined,
+        ERROR_UNSUPPORTED_COMPONENT,
+        getComponentType(normalizedChild),
+      );
+      return;
+    }
+
     return perform(container, {
       remote: (channel) =>
         channel(
@@ -301,6 +313,16 @@ export function createRemoteRoot<
     child: CanBeChild,
     before: CanBeChild,
   ) {
+    if (!validateAllowedComponent(child, components)) {
+      channel(
+        ACTION_ERROR,
+        undefined,
+        ERROR_UNSUPPORTED_COMPONENT,
+        getComponentType(child),
+      );
+      return;
+    }
+
     return perform(container, {
       remote: (channel) =>
         channel(
@@ -359,6 +381,19 @@ export function createRemoteRoot<
           props: value.props,
           children: value.children.map((child) => serialize(child as any)),
         };
+  }
+
+  function validateAllowedComponent(
+    component: CanBeChild,
+    allowedComponents: readonly AllowedComponents[],
+  ) {
+    const type = getComponentType(component);
+    const isAllowed = allowedComponents.indexOf(type as any) >= 0;
+    return isAllowed;
+  }
+
+  function getComponentType(component: CanBeChild) {
+    return component.kind === KIND_TEXT ? 'Text' : component.type;
   }
 }
 

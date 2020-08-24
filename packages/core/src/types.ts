@@ -19,11 +19,17 @@ export const ACTION_INSERT_CHILD = 1;
 export const ACTION_REMOVE_CHILD = 2;
 export const ACTION_UPDATE_TEXT = 3;
 export const ACTION_UPDATE_PROPS = 4;
+export const ACTION_ERROR = 5;
 
 export const UPDATE_INSERT = 0;
 export const UPDATE_REMOVE = 1;
 
+export const ERROR_UNSUPPORTED_COMPONENT = 1;
+
 export type Id = string;
+
+export type ErrorCode = number;
+export type ErrorMessage = string;
 
 export interface ActionArgumentMap {
   [ACTION_UPDATE_TEXT]: [Id, string];
@@ -35,6 +41,7 @@ export interface ActionArgumentMap {
   ];
   [ACTION_REMOVE_CHILD]: [Id | undefined, number];
   [ACTION_MOUNT]: [(RemoteTextSerialization | RemoteComponentSerialization)[]];
+  [ACTION_ERROR]: [Id | undefined, ErrorCode, ErrorMessage];
 }
 
 export interface RemoteChannel {

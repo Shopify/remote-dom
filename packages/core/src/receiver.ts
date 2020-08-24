@@ -5,6 +5,7 @@ import {
   ACTION_REMOVE_CHILD,
   ACTION_UPDATE_PROPS,
   ACTION_UPDATE_TEXT,
+  ACTION_ERROR,
 } from './types';
 import type {
   ActionArgumentMap,
@@ -32,6 +33,7 @@ interface RemoteChannelRunner {
   removeChild(...args: ActionArgumentMap[typeof ACTION_INSERT_CHILD]): void;
   updateProps(...args: ActionArgumentMap[typeof ACTION_UPDATE_PROPS]): void;
   updateText(...args: ActionArgumentMap[typeof ACTION_UPDATE_TEXT]): void;
+  error(...args: ActionArgumentMap[typeof ACTION_ERROR]): void;
 }
 
 export function createRemoteChannel({
@@ -40,6 +42,7 @@ export function createRemoteChannel({
   removeChild,
   updateProps,
   updateText,
+  error,
 }: RemoteChannelRunner): RemoteChannel {
   const messageMap = new Map<number, Function>([
     [ACTION_MOUNT, mount],
@@ -47,6 +50,7 @@ export function createRemoteChannel({
     [ACTION_INSERT_CHILD, insertChild],
     [ACTION_UPDATE_PROPS, updateProps],
     [ACTION_UPDATE_TEXT, updateText],
+    [ACTION_ERROR, error],
   ]);
 
   return (type, ...args) => (messageMap.get(type) as any)(...args);
@@ -115,6 +119,9 @@ export class RemoteReceiver {
       const text = this.attached.get(id) as RemoteTextSerialization;
       text.text = newText;
       this.enqueueUpdate(text);
+    },
+    error: () => {
+      // Noop
     },
   });
 

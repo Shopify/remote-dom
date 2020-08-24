@@ -92,6 +92,9 @@ export class DomReceiver {
     updateText: (id, newText) => {
       (this.nodes.get(id) as Text).textContent = newText;
     },
+    error: () => {
+      // Noop
+    },
   });
 
   private nodes = new Map<string, Node>();
