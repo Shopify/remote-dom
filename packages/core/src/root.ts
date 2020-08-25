@@ -7,8 +7,6 @@ import {
   ACTION_UPDATE_TEXT,
   KIND_COMPONENT,
   KIND_TEXT,
-  ACTION_ERROR,
-  ERROR_UNSUPPORTED_COMPONENT,
 } from './types';
 import type {
   Serialized,
@@ -46,6 +44,7 @@ export function createRemoteRoot<
   const props = new WeakMap<Component, any>();
   const texts = new WeakMap<Text, string>();
   const tops = new WeakMap<CanBeChild, HasChildren>();
+  const componentsSet = new WeakSet<CanBeChild>();
 
   let currentId = 0;
   let mounted = false;
@@ -55,6 +54,10 @@ export function createRemoteRoot<
       return children.get(remoteRoot) as any;
     },
     createComponent(type, ...rest) {
+      if (!validateAllowedComponent(type, components)) {
+        throw new Error(`Unsupported component: ${type}`);
+      }
+
       let initialProps = rest[0];
       const initialChildren = rest[1];
 
@@ -129,9 +132,15 @@ export function createRemoteRoot<
         children.set(component, strict ? Object.freeze([]) : []);
       }
 
+      componentsSet.add(component);
+
       return (component as unknown) as RemoteComponent<typeof type, Root>;
     },
     createText(content = '') {
+      if (!validateAllowedComponent('Text' as any, components)) {
+        throw new Error(`Unsupported component: Text`);
+      }
+
       const id = `${currentId++}`;
 
       const text: RemoteText<Root> = {
@@ -148,6 +157,8 @@ export function createRemoteRoot<
       makePartOfTree(text);
       makeRemote(text, id, remoteRoot);
       texts.set(text, content);
+
+      componentsSet.add(text as any);
 
       return text;
     },
@@ -241,14 +252,8 @@ export function createRemoteRoot<
     const normalizedChild =
       typeof child === 'string' ? remoteRoot.createText(child) : child;
 
-    if (!validateAllowedComponent(normalizedChild, components)) {
-      channel(
-        ACTION_ERROR,
-        undefined,
-        ERROR_UNSUPPORTED_COMPONENT,
-        getComponentType(normalizedChild),
-      );
-      return;
+    if (!componentsSet.has(normalizedChild)) {
+      throw new Error('Append invalid component');
     }
 
     return perform(container, {
@@ -285,6 +290,7 @@ export function createRemoteRoot<
   // Might need to send the removed child ID, or find out if we
   // can collect removals into a single update.
   function removeChild(container: HasChildren, child: CanBeChild) {
+    componentsSet.delete(child);
     return perform(container, {
       remote: (channel) =>
         channel(
@@ -313,14 +319,8 @@ export function createRemoteRoot<
     child: CanBeChild,
     before: CanBeChild,
   ) {
-    if (!validateAllowedComponent(child, components)) {
-      channel(
-        ACTION_ERROR,
-        undefined,
-        ERROR_UNSUPPORTED_COMPONENT,
-        getComponentType(child),
-      );
-      return;
+    if (!componentsSet.has(child)) {
+      throw new Error('Insert invalid component');
     }
 
     return perform(container, {
@@ -384,16 +384,13 @@ export function createRemoteRoot<
   }
 
   function validateAllowedComponent(
-    component: CanBeChild,
+    componentType: AllowedComponents,
     allowedComponents: readonly AllowedComponents[],
   ) {
-    const type = getComponentType(component);
-    const isAllowed = allowedComponents.indexOf(type as any) >= 0;
+    const isAllowed =
+      allowedComponents.length === 0 ||
+      allowedComponents.indexOf(componentType) >= 0;
     return isAllowed;
-  }
-
-  function getComponentType(component: CanBeChild) {
-    return component.kind === KIND_TEXT ? 'Text' : component.type;
   }
 }
 
