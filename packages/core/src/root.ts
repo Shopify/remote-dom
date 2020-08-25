@@ -31,7 +31,7 @@ export function createRemoteRoot<
   AllowedChildrenTypes extends AllowedComponents | boolean = true
 >(
   channel: RemoteChannel,
-  {strict = true, components = []}: Options<AllowedComponents> = {},
+  {strict = true, components}: Options<AllowedComponents> = {},
 ): RemoteRoot<AllowedComponents, AllowedChildrenTypes> {
   type Root = RemoteRoot<AllowedComponents, AllowedChildrenTypes>;
   type Component = RemoteComponent<AllowedComponents, Root>;
@@ -137,10 +137,6 @@ export function createRemoteRoot<
       return (component as unknown) as RemoteComponent<typeof type, Root>;
     },
     createText(content = '') {
-      if (!validateAllowedComponent('Text' as any, components)) {
-        throw new Error(`Unsupported component: Text`);
-      }
-
       const id = `${currentId++}`;
 
       const text: RemoteText<Root> = {
@@ -253,7 +249,9 @@ export function createRemoteRoot<
       typeof child === 'string' ? remoteRoot.createText(child) : child;
 
     if (!componentsSet.has(normalizedChild)) {
-      throw new Error('Append invalid component');
+      throw new Error(
+        `Can't append a node that was not created by this RemoteRoot`,
+      );
     }
 
     return perform(container, {
@@ -290,7 +288,6 @@ export function createRemoteRoot<
   // Might need to send the removed child ID, or find out if we
   // can collect removals into a single update.
   function removeChild(container: HasChildren, child: CanBeChild) {
-    componentsSet.delete(child);
     return perform(container, {
       remote: (channel) =>
         channel(
@@ -320,7 +317,9 @@ export function createRemoteRoot<
     before: CanBeChild,
   ) {
     if (!componentsSet.has(child)) {
-      throw new Error('Insert invalid component');
+      throw new Error(
+        `Can't insert a node that was not created by this RemoteRoot`,
+      );
     }
 
     return perform(container, {
@@ -385,11 +384,10 @@ export function createRemoteRoot<
 
   function validateAllowedComponent(
     componentType: AllowedComponents,
-    allowedComponents: readonly AllowedComponents[],
+    allowedComponents?: readonly AllowedComponents[],
   ) {
     const isAllowed =
-      allowedComponents.length === 0 ||
-      allowedComponents.indexOf(componentType) >= 0;
+      !allowedComponents || allowedComponents.indexOf(componentType) >= 0;
     return isAllowed;
   }
 }
