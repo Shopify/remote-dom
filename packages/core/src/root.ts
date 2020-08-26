@@ -44,7 +44,7 @@ export function createRemoteRoot<
   const props = new WeakMap<Component, any>();
   const texts = new WeakMap<Text, string>();
   const tops = new WeakMap<CanBeChild, HasChildren>();
-  const componentsSet = new WeakSet<CanBeChild>();
+  const nodes = new WeakSet<CanBeChild>();
 
   let currentId = 0;
   let mounted = false;
@@ -54,7 +54,7 @@ export function createRemoteRoot<
       return children.get(remoteRoot) as any;
     },
     createComponent(type, ...rest) {
-      if (!validateAllowedComponent(type, components)) {
+      if (components && components.indexOf(type) < 0) {
         throw new Error(`Unsupported component: ${type}`);
       }
 
@@ -132,7 +132,7 @@ export function createRemoteRoot<
         children.set(component, strict ? Object.freeze([]) : []);
       }
 
-      componentsSet.add(component);
+      nodes.add(component);
 
       return (component as unknown) as RemoteComponent<typeof type, Root>;
     },
@@ -154,7 +154,7 @@ export function createRemoteRoot<
       makeRemote(text, id, remoteRoot);
       texts.set(text, content);
 
-      componentsSet.add(text as any);
+      nodes.add(text);
 
       return text;
     },
@@ -248,9 +248,9 @@ export function createRemoteRoot<
     const normalizedChild =
       typeof child === 'string' ? remoteRoot.createText(child) : child;
 
-    if (!componentsSet.has(normalizedChild)) {
+    if (!nodes.has(normalizedChild)) {
       throw new Error(
-        `Can't append a node that was not created by this RemoteRoot`,
+        `Cannot append a node that was not created by this Remote Root`,
       );
     }
 
@@ -316,9 +316,9 @@ export function createRemoteRoot<
     child: CanBeChild,
     before: CanBeChild,
   ) {
-    if (!componentsSet.has(child)) {
+    if (!nodes.has(child)) {
       throw new Error(
-        `Can't insert a node that was not created by this RemoteRoot`,
+        `Cannot insert a node that was not created by this Remote Root`,
       );
     }
 
@@ -380,15 +380,6 @@ export function createRemoteRoot<
           props: value.props,
           children: value.children.map((child) => serialize(child as any)),
         };
-  }
-
-  function validateAllowedComponent(
-    componentType: AllowedComponents,
-    allowedComponents?: readonly AllowedComponents[],
-  ) {
-    const isAllowed =
-      !allowedComponents || allowedComponents.indexOf(componentType) >= 0;
-    return isAllowed;
   }
 }
 

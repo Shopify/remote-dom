@@ -38,19 +38,28 @@ describe('root', () => {
     });
   });
 
+  describe('createText', () => {
+    it('does not throw error when appending a child created by the remote root', () => {
+      const components: string[] = [];
+      const root = createRemoteRoot(() => {}, {components});
+
+      expect(() => {
+        root.createText();
+      }).not.toThrowError();
+    });
+  });
+
   describe('appendChild', () => {
-    it('does not throw error for component created by appendChild', () => {
+    it('does not throw error when appending a child created by the remote root', () => {
       const root = createRemoteRoot(() => {});
 
       expect(() => {
         const card = root.createComponent('Card');
-        const button = root.createComponent('Button');
-        card.appendChild(button);
         root.appendChild(card);
       }).not.toThrowError();
     });
 
-    it('throws error for component which is not created by appendChild', () => {
+    it('throws error when appending a child not created by the remote root', () => {
       const root = createRemoteRoot(() => {});
 
       expect(() => {
@@ -61,22 +70,18 @@ describe('root', () => {
   });
 
   describe('insertChildBefore', () => {
-    it('does not throw error for component created by insertChildBefore', () => {
+    it('does not throw error when calling insertChildBefore for a component created by the remote root', () => {
       const root = createRemoteRoot(() => {});
 
       expect(() => {
         const card = root.createComponent('Card');
-        const button = root.createComponent('Button');
-        const text = root.createComponent('Text');
         const image = root.createComponent('Image');
-        card.appendChild(button);
-        card.insertChildBefore(text, button);
         root.appendChild(image);
         root.insertChildBefore(card, image);
       }).not.toThrowError();
     });
 
-    it('throws error for component which is not created by insertChildBefore', () => {
+    it('throws error when calling insertChildBefore for a component not created by the remote root', () => {
       const root = createRemoteRoot(() => {});
 
       expect(() => {
