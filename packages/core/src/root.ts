@@ -31,7 +31,7 @@ export function createRemoteRoot<
   AllowedChildrenTypes extends AllowedComponents | boolean = true
 >(
   channel: RemoteChannel,
-  {strict = true}: Options<AllowedComponents> = {},
+  {strict = true, components}: Options<AllowedComponents> = {},
 ): RemoteRoot<AllowedComponents, AllowedChildrenTypes> {
   type Root = RemoteRoot<AllowedComponents, AllowedChildrenTypes>;
   type Component = RemoteComponent<AllowedComponents, Root>;
@@ -44,6 +44,7 @@ export function createRemoteRoot<
   const props = new WeakMap<Component, any>();
   const texts = new WeakMap<Text, string>();
   const tops = new WeakMap<CanBeChild, HasChildren>();
+  const nodes = new WeakSet<CanBeChild>();
 
   let currentId = 0;
   let mounted = false;
@@ -53,6 +54,10 @@ export function createRemoteRoot<
       return children.get(remoteRoot) as any;
     },
     createComponent(type, ...rest) {
+      if (components && components.indexOf(type) < 0) {
+        throw new Error(`Unsupported component: ${type}`);
+      }
+
       let initialProps = rest[0];
       const initialChildren = rest[1];
 
@@ -127,6 +132,8 @@ export function createRemoteRoot<
         children.set(component, strict ? Object.freeze([]) : []);
       }
 
+      nodes.add(component);
+
       return (component as unknown) as RemoteComponent<typeof type, Root>;
     },
     createText(content = '') {
@@ -146,6 +153,8 @@ export function createRemoteRoot<
       makePartOfTree(text);
       makeRemote(text, id, remoteRoot);
       texts.set(text, content);
+
+      nodes.add(text);
 
       return text;
     },
@@ -239,6 +248,12 @@ export function createRemoteRoot<
     const normalizedChild =
       typeof child === 'string' ? remoteRoot.createText(child) : child;
 
+    if (!nodes.has(normalizedChild)) {
+      throw new Error(
+        `Cannot append a node that was not created by this Remote Root`,
+      );
+    }
+
     return perform(container, {
       remote: (channel) =>
         channel(
@@ -301,6 +316,12 @@ export function createRemoteRoot<
     child: CanBeChild,
     before: CanBeChild,
   ) {
+    if (!nodes.has(child)) {
+      throw new Error(
+        `Cannot insert a node that was not created by this Remote Root`,
+      );
+    }
+
     return perform(container, {
       remote: (channel) =>
         channel(
