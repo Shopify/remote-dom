@@ -45,7 +45,7 @@
     "@sewing-kit/plugins": "^0.1.4",
     "@types/webpack": "^4.41.12",
     "loader-utils": "^2.0.0",
-    "webpack-virtual-modules": "^0.2.2"
+    "webpack-virtual-modules": "^0.3.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.1",
@@ -61,7 +61,7 @@
     "koa": "^2.11.0",
     "koa-mount": "^4.0.0",
     "koa-static": "^5.0.0",
-    "puppeteer": "^3.0.2"
+    "puppeteer": "^5.3.0"
   },
   "optionalDependencies": {
     "@babel/core": "^7.9.0",

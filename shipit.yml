@@ -4,5 +4,10 @@ ci:
     - test
     - type-check
 dependencies:
-  post:
+  override:
+    - yarn install --frozen-lockfile --no-progress
+deploy:
+  pre:
     - yarn run build
+  override:
+    - yarn run publish --yes

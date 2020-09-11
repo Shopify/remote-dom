@@ -65,3 +65,12 @@ Each contributor is required to [sign a CLA](https://cla.shopify.com/). This pro
 ### Releasing changes
 
 Currently, only developers with access to Shopify’s internal tools can tag new versions and publish releases. We’ll automatically publish new versions as pull requests are merged, but we ask that you suggest the type of version change you expect a package to need as the result of your changes. This project uses [Semantic Versioning](https://semver.org), with each package individually-versioned.
+
+For Shopify developers doing a release, please follow these steps:
+
+1. Create a new branch off `main`.
+1. On your new branch, run `yarn version-bump` and select new versions for all packages.
+1. Ensure that any packages with meaningful version changes have corresponding updates to their collocated `CHANGELOG.md`.
+1. Push your changes to the `origin` remote, ensuring you also `--follow-tags`.
+1. Open a PR for your new branch, and get it approved and merged.
+1. After merging, visit the [shipit stack](https://shipit.shopify.io/shopify/remote-ui/production) and deploy your commit. This will publish the new versions to the npm registry.
