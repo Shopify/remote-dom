@@ -12,7 +12,7 @@
     "type-check": "sk type-check",
     "build": "sk build",
     "version-bump": "lerna version --no-push",
-    "release": "lerna publish from-package"
+    "deploy": "lerna publish from-package --yes"
   },
   "devDependencies": {
     "@sewing-kit/cli": "^0.1.5",

@@ -10,4 +10,4 @@ deploy:
   pre:
     - yarn run build
   override:
-    - yarn run publish --yes
+    - yarn run deploy
