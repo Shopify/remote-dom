@@ -30,15 +30,15 @@ export const KIND_TEXT = 2;
 export type Id = string;
 
 export interface ActionArgumentMap {
-  [ACTION_UPDATE_TEXT]: [Id, string];
-  [ACTION_UPDATE_PROPS]: [Id, object];
+  [ACTION_MOUNT]: [(RemoteTextSerialization | RemoteComponentSerialization)[]];
   [ACTION_INSERT_CHILD]: [
     Id | undefined,
     number,
     RemoteTextSerialization | RemoteComponentSerialization,
   ];
   [ACTION_REMOVE_CHILD]: [Id | undefined, number];
-  [ACTION_MOUNT]: [(RemoteTextSerialization | RemoteComponentSerialization)[]];
+  [ACTION_UPDATE_TEXT]: [Id, string];
+  [ACTION_UPDATE_PROPS]: [Id, object];
 }
 
 export interface RemoteChannel {

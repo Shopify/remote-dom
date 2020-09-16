@@ -1,9 +1,9 @@
 import {createRemoteRoot, createRemoteComponent} from '@remote-ui/core';
-import {createElement, render, Component} from '..';
+import {createElement, render, Component} from '../preact';
 
 describe('e2e', () => {
   it('works', async () => {
-    const root = createRemoteRoot(console.log);
+    const root = createRemoteRoot(() => {});
     const Button = createRemoteComponent('Button');
 
     await new Promise((resolve) => {
