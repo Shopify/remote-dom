@@ -2,9 +2,9 @@ import type {RemoteChild} from '@remote-ui/core';
 
 import {createVNode} from '../create-element';
 import {Fragment} from '../Fragment';
+import {getRemoteSibling} from '../Component';
 import {EMPTY_ARRAY} from '../constants';
 import {removeNode} from '../utilities';
-import {getRemoteSibling} from '../component';
 import type {
   Ref,
   VNode,
