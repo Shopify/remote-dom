@@ -5,7 +5,11 @@ import {createElement} from './create-element';
 import {Fragment} from './Fragment';
 import options from './options';
 
-import type {VNode, RemoteParentNode, ComponentInternal} from './types';
+import type {
+  ComponentChild,
+  RemoteParentNode,
+  ComponentInternal,
+} from './types';
 
 // Unlike Preact, this library does not support hydration, or providing a
 // `replaceNode` that preserves some part of the existing tree.
@@ -13,7 +17,7 @@ import type {VNode, RemoteParentNode, ComponentInternal} from './types';
 /**
  * Renders a virtual node into a remote-ui node.
  */
-export function render(vnode: VNode<any>, remoteNode: RemoteParentNode) {
+export function render(vnode: ComponentChild, remoteNode: RemoteParentNode) {
   options._root?.(vnode, remoteNode);
 
   // To be able to support calling `render()` multiple times on the same

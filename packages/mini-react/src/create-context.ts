@@ -1,40 +1,34 @@
-import type {ComponentChildren, ComponentType} from './types';
+import type {
+  ComponentInternal,
+  Context,
+  ContextConsumerProps,
+  ContextInternal,
+  ContextProviderProps,
+} from './types';
 import {enqueueRender, Component} from './component';
 
 let i = 0;
 
-interface ConsumerProps<T> {
-  children(value: T): ComponentChildren;
-}
-
-interface ProviderProps<T> {
-  value: T;
-  children?: ComponentChildren;
-}
-
-export interface Context<T> {
-  Consumer: ComponentType<ConsumerProps<T>>;
-  Provider: ComponentType<ProviderProps<T>>;
-}
-
 export function createContext<T>(defaultValue: T): Context<T> {
   const contextId = `__cC${i++}`;
 
-  class Provider extends Component<ProviderProps<T>> {
-    private subs: Component<any>[] = [];
-    private context = {[contextId]: this};
+  class Provider extends Component<ContextProviderProps<T>> {
+    private subs: ComponentInternal<any>[] = [];
+    private contextValue = {[contextId]: this};
 
     getChildContext() {
-      return this.context;
+      return this.contextValue;
     }
 
-    shouldComponentUpdate(newProps: ProviderProps<T>) {
+    shouldComponentUpdate(newProps: ContextProviderProps<T>) {
       if (this.props.value !== newProps.value) {
         this.subs.forEach(enqueueRender);
       }
+
+      return true;
     }
 
-    sub(component: Component<any>) {
+    sub(component: ComponentInternal<any>) {
       const {subs} = this;
       subs.push(component);
 
@@ -46,19 +40,19 @@ export function createContext<T>(defaultValue: T): Context<T> {
       };
     }
 
-    render({children}: ProviderProps<T>) {
+    render({children}: ContextProviderProps<T>) {
       return children;
     }
   }
 
-  function Consumer(props: ConsumerProps<T>, contextValue: T) {
+  function Consumer(props: ContextConsumerProps<T>, contextValue: T) {
     // return props.children(
     // 	context[contextId] ? context[contextId].props.value : defaultValue
     // );
     return props.children(contextValue);
   }
 
-  const context = {
+  const context: ContextInternal<T> = {
     _id: contextId,
     _defaultValue: defaultValue,
     Provider,

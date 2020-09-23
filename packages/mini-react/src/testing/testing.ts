@@ -1,13 +1,14 @@
 import {createRemoteRoot} from '@remote-ui/core';
 import type {RemoteRoot} from '@remote-ui/core';
-import {Component, render} from '@remote-ui/mini-react';
-import type {ComponentChild, VNode} from '@remote-ui/mini-react';
 
 import {createEnvironment} from '@quilted/react-testing/environment';
 import type {
   CustomMount,
   Environment,
 } from '@quilted/react-testing/environment';
+
+import {render} from '..';
+import type {ComponentChild, VNode, ComponentInternal} from '../types';
 
 import {act, setupRerender, teardown} from './act';
 
@@ -24,13 +25,12 @@ const {mount, createMount, mounted, unmountAll} = createEnvironment<Context>({
   mount(tree) {
     const root = createRemoteRoot(() => {});
 
-    render(tree, root);
+    render(tree as any, root);
 
     return {root};
   },
-  unmount({element}) {
-    render(null, element);
-    element.remove();
+  unmount({root}) {
+    render(null, root);
   },
   update(instance, create) {
     return createNodeFromComponentChild(getVNode(instance), create) as any;
@@ -59,8 +59,8 @@ function createNodeFromComponentChild(
 
 function createNodeFromVNode(node: VNode<unknown>, create: Create): Child {
   const props = {...node.props};
-  const instance = getComponent(node) ?? getDOMNode(node);
-  const children = toArray(getDescendants(node))
+  const instance = node._component ?? node._remoteNode;
+  const children = toArray(node._children ?? [])
     .filter(Boolean)
     .map((child) => createNodeFromComponentChild(child, create));
 
@@ -80,57 +80,16 @@ function isVNode(maybeNode: ComponentChild): maybeNode is VNode<unknown> {
   );
 }
 
-/**
- * Preact mangles it's private internals, these types help us access them safely(ish)
- * See https://github.com/preactjs/preact/blob/master/mangle.json
- */
-
-interface PreactComponent<P> extends Component<P> {
-  __v: VNode;
-}
-
-interface PreactVNode<P> extends VNode<P> {
-  // the DOM node
-  __e: typeof window['Node'] | null;
-
-  // the component instance
-  __c: PreactComponent<P> | null;
-
-  // the rendered children
-  __k: VNode[] | null;
-}
-
 interface TextNode {
   type: null;
   props: string;
 }
 
 /**
- * Returns the descendants of the given vnode from it's last render.
- */
-function getDescendants<P>(node: VNode<P>) {
-  return (node as PreactVNode<P>)._children ?? [];
-}
-
-/**
- * Returns the rendered DOM node associated with a rendered VNode.
- */
-function getDOMNode<P>(node: VNode<P>): PreactVNode<P>['__e'] {
-  return (node as PreactVNode<P>)._remoteNode;
-}
-
-/**
- * Returns the `Component` instance associated with a rendered VNode.
- */
-function getComponent<P>(node: VNode<P>): PreactComponent<P> | null {
-  return (node as PreactVNode<P>)._component;
-}
-
-/**
  * Returns the `VNode` associated with a component.
  */
-function getVNode<P>(component: Component<P>) {
-  return (component as PreactComponent<P>)._vnode;
+function getVNode<P>(component: ComponentInternal<P>) {
+  return component._vnode;
 }
 
 // Text nodes in peact are very weird, they actually have a null `type` field

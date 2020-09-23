@@ -14,6 +14,7 @@ import type {
   ComponentInternal,
   ComponentClass,
   FunctionComponent,
+  ContextInternal,
 } from '../types';
 
 import {diffChildren, placeChild} from './children';
@@ -56,7 +57,9 @@ export function diff(
 
       // Necessary for createContext api. Setting this property will pass
       // the context value as `this.context` just for this component.
-      const contextType = (newType as ComponentClass<any>).contextType;
+      const contextType = (newType as ComponentClass<any>)
+        .contextType as ContextInternal<any>;
+
       const provider = contextType && globalContext[contextType._id];
       // eslint-disable-next-line no-nested-ternary
       const componentContext = contextType
@@ -337,8 +340,7 @@ export function unmount(
 
   // Must be set to `undefined` to properly clean up `_nextRemoteNode`
   // for which `null` is a valid value. See comment in `create-element.js`
-  // TODO
-  vnode._remoteNode = undefined as any;
+  vnode._remoteNode = undefined;
   vnode._nextRemoteNode = undefined;
 
   if (component != null) {
@@ -378,7 +380,7 @@ export function unmount(
  * @returns {import('../internal').PreactElement}
  */
 function diffElementNodes(
-  remoteNode: RemoteChildNode | undefined,
+  remoteNode: RemoteChildNode | undefined | null,
   remoteRoot: RemoteRoot<any, any>,
   newVNode: VNode<any>,
   oldVNode: VNode<any> | undefined,

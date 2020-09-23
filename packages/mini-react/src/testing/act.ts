@@ -1,6 +1,6 @@
 /* eslint @typescript-eslint/camelcase: off */
 
-import {options} from '@remote-ui/mini-react';
+import {options} from '..';
 
 type OptionsTestExtensions = typeof options & {
   __test__previousDebounce?: typeof options['debounceRendering'];
@@ -15,7 +15,7 @@ export function setupRerender() {
     options.debounceRendering;
 
   options.debounceRendering = (cb) => {
-    options.__test__drainQueue = cb;
+    (options as OptionsTestExtensions).__test__drainQueue = cb;
     return cb;
   };
 
@@ -55,14 +55,15 @@ export function act(cb: () => void | Promise<void>) {
   const previousRequestAnimationFrame = options.requestAnimationFrame;
   const rerender = setupRerender();
 
-  let flush: (() => void) | undefined;
-  let toFlush: () => void;
+  let flush: Parameters<typeof requestAnimationFrame>[0] | undefined;
+  let toFlush: Parameters<typeof requestAnimationFrame>[0];
   let error: Error | undefined;
   let result: any;
 
   // Override requestAnimationFrame so we can flush pending hooks.
   options.requestAnimationFrame = (fc) => {
     flush = fc;
+    return 0;
   };
 
   const finish = () => {
@@ -73,7 +74,7 @@ export function act(cb: () => void | Promise<void>) {
         toFlush = flush;
         flush = undefined;
 
-        toFlush();
+        toFlush(Date.now());
         rerender();
       }
 

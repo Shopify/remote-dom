@@ -11,16 +11,7 @@ export {
   options,
   cloneElement,
   createElement,
-  createRef,
-  isValidElement,
-  Fragment,
-  Component,
-  render,
-};
-
-export default {
-  cloneElement,
-  createElement,
+  createElement as h,
   createRef,
   isValidElement,
   Fragment,

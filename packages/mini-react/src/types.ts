@@ -125,8 +125,7 @@ export interface ComponentClass<P = {}, S = {}> {
   new (props: P, context?: any): Component<P, S>;
   displayName?: string;
   defaultProps?: Partial<P>;
-  // TODO
-  contextType?: any;
+  contextType?: Context<any>;
   getDerivedStateFromProps?(
     props: Readonly<P>,
     state: Readonly<S>,
@@ -152,14 +151,13 @@ export interface VNode<P = {}> {
    */
   ref?: Ref<any>;
 
-  // TODO
   _children: (VNode<any> | null | undefined)[] | null;
   _parent: VNode<any> | null;
   _depth: number;
   /**
    * The first (for Fragments) remote child of a VNode
    */
-  _remoteNode: RemoteChildNode | null;
+  _remoteNode?: RemoteChildNode | null;
   /**
    * The last remote child of a Fragment, or components that return a Fragment
    */
@@ -206,7 +204,7 @@ export interface Options {
   /** Attach a hook that is invoked before a vnode is diffed. */
   _diff?(vnode: VNode): void;
   /** Attach a hook that is invoked after a tree was mounted or was updated. */
-  _commit?(vnode: VNode, commitQueue: Component[]): void;
+  _commit?(vnode: VNode, commitQueue: ComponentInternal<any>[]): void;
   /** Attach a hook that is invoked before a vnode has rendered. */
   _render?(vnode: VNode): void;
   /** Attach a hook that is invoked before a hook's state is queried. */
@@ -215,4 +213,23 @@ export interface Options {
   _skipEffects?: boolean;
   /** Attach a hook that is invoked after an error is caught in a component but before calling lifecycle hooks */
   _catchError(error: any, vnode: VNode, oldVNode?: VNode): void;
+}
+
+export interface ContextConsumerProps<T> {
+  children(value: T): ComponentChildren;
+}
+
+export interface ContextProviderProps<T> {
+  value: T;
+  children?: ComponentChildren;
+}
+
+export interface Context<T> {
+  Consumer: ComponentType<ContextConsumerProps<T>>;
+  Provider: ComponentType<ContextProviderProps<T>>;
+}
+
+export interface ContextInternal<T> extends Context<T> {
+  _id: string;
+  _defaultValue: T;
 }
