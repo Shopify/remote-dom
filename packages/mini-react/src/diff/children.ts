@@ -93,12 +93,8 @@ export function diffChildren(
       continue;
     }
 
-    try {
-      childVNode._parent = newParentVNode;
-      childVNode._depth = newParentVNode._depth + 1;
-    } catch (error) {
-      console.log(error, childVNode);
-    }
+    childVNode._parent = newParentVNode;
+    childVNode._depth = newParentVNode._depth + 1;
 
     // Check if we find a corresponding element in oldChildren.
     // If found, delete the array item by setting to `undefined`.

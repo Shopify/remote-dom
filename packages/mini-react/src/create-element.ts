@@ -58,7 +58,6 @@ export function createVNode(
   props: Record<string, any> | string | number | null,
   key: Key | undefined,
   ref: Ref<unknown> | undefined,
-  // TODO
   original: VNode<unknown>['_original'] | null,
 ) {
   // V8 seems to be better at detecting type shapes if the object is allocated from the same call site

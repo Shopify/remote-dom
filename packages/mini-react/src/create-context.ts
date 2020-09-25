@@ -5,7 +5,7 @@ import type {
   ContextInternal,
   ContextProviderProps,
 } from './types';
-import {enqueueRender, Component} from './component';
+import {enqueueRender, Component} from './Component';
 
 let i = 0;
 
