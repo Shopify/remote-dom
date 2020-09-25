@@ -9,7 +9,6 @@ import type {
   Ref,
   VNode,
   ComponentInternal,
-  ComponentChild,
   ComponentChildren,
   RemoteRootNode,
   RemoteParentNode,
@@ -224,28 +223,6 @@ export function diffChildren(
       applyRef(...refEntry);
     }
   }
-}
-
-/**
- * Flatten and loop through the children of a virtual node
- */
-export function toChildArray(
-  children: ComponentChildren,
-  out: ComponentChild[] = [],
-) {
-  if (children == null || typeof children === 'boolean') {
-    return out;
-  }
-
-  if (Array.isArray(children)) {
-    for (const grandChild of children) {
-      toChildArray(grandChild, out);
-    }
-  } else {
-    out.push(children);
-  }
-
-  return out;
 }
 
 export function placeChild(

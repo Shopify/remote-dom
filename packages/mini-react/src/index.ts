@@ -1,22 +1,35 @@
-import {cloneElement} from './clone-element';
-import {createElement} from './create-element';
-import {createRef} from './create-ref';
-import {isValidElement} from './is-valid-element';
-import {Fragment} from './Fragment';
-import {Component} from './Component';
-import {render} from './render';
-import {createContext} from './create-context';
-import options from './options';
-
+export {cloneElement} from './clone-element';
+export {createElement} from './create-element';
+export {createRef} from './create-ref';
+export {isValidElement} from './is-valid-element';
+export {Fragment} from './Fragment';
+export {Component} from './Component';
+export {render} from './render';
+export {createContext} from './create-context';
 export {
-  options,
-  cloneElement,
-  createContext,
-  createElement,
-  createElement as h,
-  createRef,
-  isValidElement,
-  Fragment,
-  Component,
-  render,
-};
+  useCallback,
+  useContext,
+  useDebugValue,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from './hooks';
+export type {StateUpdater} from './hooks';
+export type {
+  Key,
+  Ref,
+  RefCallback,
+  RefObject,
+  VNode,
+  ComponentChild,
+  ComponentChildren,
+  ComponentClass,
+  FunctionComponent,
+  ComponentType,
+  ComponentProps,
+  Context,
+} from './types';

@@ -9,7 +9,6 @@ import {
   RemoteReceiver,
 } from '@remote-ui/core';
 
-import {cloneElement} from '../clone-element';
 import {createElement} from '../create-element';
 import {createRef} from '../create-ref';
 import {isValidElement} from '../is-valid-element';
@@ -30,6 +29,26 @@ import {
 } from '../hooks';
 
 import {render} from './render';
+import {Children} from './Children';
+import {forwardRef} from './forward-ref';
+import {memo} from './memo';
+import {PureComponent} from './PureComponent';
+import {
+  cloneElement,
+  createFactory,
+  unmountComponentAtNode,
+  // eslint-disable-next-line @typescript-eslint/camelcase
+  unstable_batchedUpdates,
+} from './uncommon';
+
+// trick libraries to think we are react
+const version = '16.8.0';
+
+/**
+ * Strict Mode is not implemented in mini-react, so we provide a stand-in for it
+ * that just renders its children without imposing any restrictions.
+ */
+const StrictMode = Fragment;
 
 export {
   // @remote-ui/react compatibility
@@ -39,13 +58,23 @@ export {
   RemoteReceiver,
   render,
   // react compatibility
+  version,
   cloneElement,
   createElement,
   createRef,
   createContext,
   isValidElement,
+  StrictMode,
   Fragment,
   Component,
+  Children,
+  forwardRef,
+  memo,
+  PureComponent,
+  createFactory,
+  unmountComponentAtNode,
+  // eslint-disable-next-line @typescript-eslint/camelcase
+  unstable_batchedUpdates,
   useState,
   useReducer,
   useMemo,
@@ -60,13 +89,23 @@ export {
 
 // More react compatibility
 const React = {
+  version,
   cloneElement,
   createElement,
   createRef,
   createContext,
   isValidElement,
+  StrictMode,
   Fragment,
   Component,
+  Children,
+  forwardRef,
+  memo,
+  PureComponent,
+  createFactory,
+  unmountComponentAtNode,
+  // eslint-disable-next-line @typescript-eslint/camelcase
+  unstable_batchedUpdates,
   render,
   useState,
   useReducer,

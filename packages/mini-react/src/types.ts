@@ -1,4 +1,9 @@
-import type {RemoteRoot, RemoteText, RemoteComponent} from '@remote-ui/core';
+import type {
+  RemoteRoot,
+  RemoteText,
+  RemoteComponent,
+  RemoteComponentType,
+} from '@remote-ui/core';
 
 export interface RemoteExtensions {
   // This is used to track the vnode that backs a remote-ui node. It can
@@ -140,6 +145,14 @@ export interface FunctionComponent<P = {}> {
 }
 
 export type ComponentType<P = {}> = ComponentClass<P> | FunctionComponent<P>;
+
+export type ComponentProps<
+  C extends ComponentType<any> | RemoteComponentType<any>
+> = C extends ComponentType<infer P>
+  ? P
+  : C extends RemoteComponentType<infer P>
+  ? P
+  : never;
 
 export interface VNode<P = {}> {
   type: ComponentType<P> | string | null;

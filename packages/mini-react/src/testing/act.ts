@@ -1,6 +1,6 @@
 /* eslint @typescript-eslint/camelcase: off */
 
-import {options} from '..';
+import options from '../options';
 
 type OptionsTestExtensions = typeof options & {
   __test__previousDebounce?: typeof options['debounceRendering'];
