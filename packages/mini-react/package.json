@@ -26,6 +26,7 @@
   "sideEffects": false,
   "dependencies": {
     "@quilted/react-testing": "^0.1.6",
-    "@remote-ui/core": "^1.3.0"
+    "@remote-ui/core": "^1.3.0",
+    "htm": "^3.0.0"
   }
 }

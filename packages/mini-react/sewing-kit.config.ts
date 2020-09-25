@@ -4,6 +4,7 @@ import {defaultProjectPlugin} from '../../config/sewing-kit';
 
 export default createPackage((pkg) => {
   pkg.entry({root: './src/index'});
+  pkg.entry({name: 'htm', root: './src/htm-binding'});
   pkg.entry({name: 'compat', root: './src/compat'});
   pkg.entry({name: 'testing', root: './src/testing'});
   pkg.use(

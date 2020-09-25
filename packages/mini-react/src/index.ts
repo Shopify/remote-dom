@@ -1,5 +1,5 @@
 export {cloneElement} from './clone-element';
-export {createElement} from './create-element';
+export {createElement, createElement as h} from './create-element';
 export {createRef} from './create-ref';
 export {isValidElement} from './is-valid-element';
 export {Fragment} from './Fragment';
