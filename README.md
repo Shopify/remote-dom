@@ -18,11 +18,12 @@ The main API of remote-ui, provided by [`@remote-ui/core`](packages/core), is sm
 >
 > Remote 🛰️: provides a way to manage the tree of remote-ui components in the remote context
 
-| Library                              | Host 🌎 | Remote 🛰️ |
-| ------------------------------------ | ------- | --------- |
-| [`@remote-ui/react`](packages/react) | ✅      | ✅        |
-| [`@remote-ui/dom`](packages/dom)     | ✅      | ❌        |
-| [`@remote-ui/htm`](packages/htm)     | ❌      | ✅        |
+| Library                                        | Host 🌎 | Remote 🛰️ |
+| ---------------------------------------------- | ------- | --------- |
+| [`@remote-ui/mini-react`](packages/mini-react) | ❌      | ✅        |
+| [`@remote-ui/react`](packages/react)           | ✅      | ✅        |
+| [`@remote-ui/dom`](packages/dom)               | ✅      | ❌        |
+| [`@remote-ui/htm`](packages/htm)               | ❌      | ✅        |
 
 Finally, this repo also contains a number of utility libraries for working with remote-ui:
 
