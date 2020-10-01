@@ -156,7 +156,7 @@ export type ComponentProps<
 
 export interface VNode<P = {}> {
   type: ComponentType<P> | string | null;
-  props: P & {children: ComponentChildren};
+  props: P & {children?: ComponentChildren};
   key: Key;
   /**
    * ref is not guaranteed by React.ReactElement, for compatibility reasons
@@ -176,7 +176,7 @@ export interface VNode<P = {}> {
    */
   _nextRemoteNode?: RemoteChildNode | null;
   _component?: ComponentInternal<P, any>;
-  constructor: unknown;
+  constructor: any;
   _original: VNode<any> | string | number | null;
 }
 
@@ -197,16 +197,16 @@ export enum HookType {
 
 export interface Options {
   /** Attach a hook that is invoked whenever a VNode is created. */
-  vnode?(vnode: VNode): void;
+  vnode?(vnode: VNode<any>): void;
   /** Attach a hook that is invoked immediately before a vnode is unmounted. */
-  unmount?(vnode: VNode): void;
+  unmount?(vnode: VNode<any>): void;
   /** Attach a hook that is invoked after a vnode has rendered. */
-  diffed?(vnode: VNode): void;
+  diffed?(vnode: VNode<any>): void;
   event?(e: Event): any;
   requestAnimationFrame?: typeof requestAnimationFrame;
   debounceRendering?(cb: () => void): void;
   useDebugValue?(value: string | number): void;
-  __suspenseDidResolve?(vnode: VNode, cb: () => void): void;
+  __suspenseDidResolve?(vnode: VNode<any>, cb: () => void): void;
 
   //
   // INTERNAL
@@ -215,17 +215,17 @@ export interface Options {
   /** Attach a hook that is invoked before render, mainly to check the arguments. */
   _root?(vnode: ComponentChild, parent: RemoteNode): void;
   /** Attach a hook that is invoked before a vnode is diffed. */
-  _diff?(vnode: VNode): void;
+  _diff?(vnode: VNode<any>): void;
   /** Attach a hook that is invoked after a tree was mounted or was updated. */
-  _commit?(vnode: VNode, commitQueue: ComponentInternal<any>[]): void;
+  _commit?(vnode: VNode<any>, commitQueue: ComponentInternal<any>[]): void;
   /** Attach a hook that is invoked before a vnode has rendered. */
-  _render?(vnode: VNode): void;
+  _render?(vnode: VNode<any>): void;
   /** Attach a hook that is invoked before a hook's state is queried. */
   _hook?(component: Component, index: number, type: HookType): void;
   /** Bypass effect execution. Currenty only used in devtools for hooks inspection */
   _skipEffects?: boolean;
   /** Attach a hook that is invoked after an error is caught in a component but before calling lifecycle hooks */
-  _catchError(error: any, vnode: VNode, oldVNode?: VNode): void;
+  _catchError(error: any, vnode: VNode<any>, oldVNode?: VNode<any>): void;
 }
 
 export interface ContextConsumerProps<T> {
