@@ -23,18 +23,22 @@ export const ACTION_UPDATE_PROPS = 4;
 export const UPDATE_INSERT = 0;
 export const UPDATE_REMOVE = 1;
 
+export const KIND_ROOT = 0;
+export const KIND_COMPONENT = 1;
+export const KIND_TEXT = 2;
+
 export type Id = string;
 
 export interface ActionArgumentMap {
-  [ACTION_UPDATE_TEXT]: [Id, string];
-  [ACTION_UPDATE_PROPS]: [Id, object];
+  [ACTION_MOUNT]: [(RemoteTextSerialization | RemoteComponentSerialization)[]];
   [ACTION_INSERT_CHILD]: [
     Id | undefined,
     number,
     RemoteTextSerialization | RemoteComponentSerialization,
   ];
   [ACTION_REMOVE_CHILD]: [Id | undefined, number];
-  [ACTION_MOUNT]: [(RemoteTextSerialization | RemoteComponentSerialization)[]];
+  [ACTION_UPDATE_TEXT]: [Id, string];
+  [ACTION_UPDATE_PROPS]: [Id, object];
 }
 
 export interface RemoteChannel {
@@ -42,11 +46,6 @@ export interface RemoteChannel {
     type: T,
     ...payload: ActionArgumentMap[T]
   ): void | Promise<void>;
-}
-
-export enum RemoteKind {
-  Text,
-  Component,
 }
 
 type AllowedRemoteChildren<
@@ -88,6 +87,7 @@ export interface RemoteRoot<
   > = RemoteComponentType<any, any>,
   AllowedChildrenTypes extends RemoteComponentType<string, any> | boolean = true
 > {
+  readonly kind: typeof KIND_ROOT;
   readonly children: readonly AllowedChildren<
     AllowedChildrenTypes,
     RemoteRoot<AllowedComponents, AllowedChildrenTypes>
@@ -146,9 +146,6 @@ export interface RemoteRoot<
   ): RemoteText<RemoteRoot<AllowedComponents, AllowedChildrenTypes>>;
   mount(): Promise<void>;
 }
-
-export const KIND_COMPONENT = 1;
-export const KIND_TEXT = 2;
 
 export interface RemoteComponent<
   Type extends RemoteComponentType<string, any>,

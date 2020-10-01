@@ -78,7 +78,9 @@ describe('@remote-ui/react', () => {
 
     domAct(() => {
       domRender(<HostApp />, appElement);
-      render(<RemoteApp />, remoteRoot);
+      render(<RemoteApp />, remoteRoot, () => {
+        remoteRoot.mount();
+      });
       jest.runAllTimers();
     });
 
@@ -116,7 +118,9 @@ describe('@remote-ui/react', () => {
         </PersonContext.Provider>,
         appElement,
       );
-      render(<RemoteApp />, remoteRoot);
+      render(<RemoteApp />, remoteRoot, () => {
+        remoteRoot.mount();
+      });
       jest.runAllTimers();
     });
 

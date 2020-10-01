@@ -1,4 +1,4 @@
-import {KIND_COMPONENT} from '@remote-ui/core';
+import {KIND_COMPONENT, KIND_ROOT} from '@remote-ui/core';
 import type {RemoteElement, RemoteComponent} from './types';
 
 export function eachComponent(
@@ -8,7 +8,7 @@ export function eachComponent(
   each(element);
 
   function each(element: RemoteElement): boolean {
-    if ('kind' in element) {
+    if (element.kind !== KIND_ROOT) {
       const result = callback(element);
       if (result === false) return false;
     }

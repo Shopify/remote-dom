@@ -5,6 +5,7 @@ import {
   ACTION_REMOVE_CHILD,
   ACTION_UPDATE_PROPS,
   ACTION_UPDATE_TEXT,
+  KIND_ROOT,
   KIND_COMPONENT,
   KIND_TEXT,
 } from './types';
@@ -50,6 +51,7 @@ export function createRemoteRoot<
   let mounted = false;
 
   const remoteRoot: Root = {
+    kind: KIND_ROOT,
     get children() {
       return children.get(remoteRoot) as any;
     },

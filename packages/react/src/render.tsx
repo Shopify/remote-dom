@@ -5,12 +5,13 @@ import reconciler from './reconciler';
 export function render(
   element: ReactElement,
   root: import('@remote-ui/core').RemoteRoot<any, any>,
+  callback?: () => void,
 ) {
   const container = reconciler.createContainer(root, false, false);
 
-  reconciler.updateContainer(element, container, null, () => {
-    root.mount();
-  });
+  // callback is cast here because the typings do not mark that argument
+  // as optional, even though it is.
+  reconciler.updateContainer(element, container, null, callback as any);
 
   // Did not work for me because (I think?) it is done by the worker
   // and therefore has an entirely different React.
