@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2020-10-01
+
+- Added a `kind` field to `RemoteRoot` to distinguish it from other remote nodes (its value is always the newly-exported `KIND_REMOTE_ROOT` constant) ([pull request](https://github.com/Shopify/remote-ui/pull/23)).
+
+## [1.3.0] - 2020-08-31
+
+- `RemoteRoot#createComponent()` now checks whether the passed component is supported if the `components` option was provided `createRemoteRoot()` ([pull request](https://github.com/Shopify/remote-ui/pull/20)).
+- Only nodes created by `RemoteRoot#createComponent()` or `RemoteRoot#createText()` can be added to a tree of remote components ([pull request](https://github.com/Shopify/remote-ui/pull/20)).
+
 ## [1.2.2] - 2020-06-25
 
 - Fixed the type of `RemoteReceiver#get()` to correctly indicate that an attached element may be `null` ([pull request](https://github.com/Shopify/remote-ui/pull/17)).
