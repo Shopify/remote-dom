@@ -11,4 +11,9 @@ export type {
   CreateWorkerOptions,
   PlainWorkerCreator,
 } from './create';
-export {createWorkerMessenger, createIframeWorkerMessenger} from './messenger';
+export {
+  createWorkerMessenger,
+  createIframeWorkerMessenger,
+  createNullOriginIframeMessenger,
+  createRemoteOriginIframeMessengerFactory,
+} from './messenger';
