@@ -1,3 +1,11 @@
+export {
+  retain,
+  release,
+  createRemoteRoot,
+  RemoteReceiver,
+} from '@remote-ui/core';
+export type {RemoteRoot} from '@remote-ui/core';
+
 export {cloneElement} from './clone-element';
 export {createElement, createElement as h} from './create-element';
 export {createRef} from './create-ref';
@@ -32,4 +40,6 @@ export type {
   ComponentType,
   ComponentProps,
   Context,
+  ReactPropsFromRemoteComponentType,
+  ReactComponentTypeFromRemoteComponentType,
 } from './types';

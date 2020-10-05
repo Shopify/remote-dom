@@ -3,6 +3,7 @@ import type {
   RemoteText,
   RemoteComponent,
   RemoteComponentType,
+  PropsForRemoteComponent,
 } from '@remote-ui/core';
 
 export interface RemoteExtensions {
@@ -246,3 +247,11 @@ export interface ContextInternal<T> extends Context<T> {
   _id: string;
   _defaultValue: T;
 }
+
+export type ReactPropsFromRemoteComponentType<
+  Type extends RemoteComponentType<string, any, any>
+> = PropsForRemoteComponent<Type> & {children?: ComponentChildren};
+
+export type ReactComponentTypeFromRemoteComponentType<
+  Type extends RemoteComponentType<string, any, any>
+> = ComponentType<ReactPropsFromRemoteComponentType<Type>>;

@@ -1,7 +1,8 @@
 import React, {memo, useMemo, Fragment, createElement} from 'react';
-import {RemoteReceiver} from '@remote-ui/core';
+import type {RemoteReceiver} from '@remote-ui/core';
 
-import {Controller, ComponentMapping} from './controller';
+import {Controller} from './controller';
+import type {ComponentMapping} from './controller';
 import {useAttached} from './hooks';
 import {RemoteText} from './RemoteText';
 import {RemoteComponent} from './RemoteComponent';

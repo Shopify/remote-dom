@@ -1,5 +1,6 @@
 import {useEffect, useRef} from 'react';
-import {terminate, WorkerCreator} from '@remote-ui/web-workers';
+import {terminate} from '@remote-ui/web-workers';
+import type {WorkerCreator} from '@remote-ui/web-workers';
 
 export function useWorker<Worker>(
   creator: WorkerCreator<Worker>,

@@ -1,5 +1,5 @@
 import type {RemoteComponentType} from '@remote-ui/core';
-import type {ReactComponentTypeFromRemoteComponentType} from './types';
+import type {ReactComponentTypeFromRemoteComponentType} from '../types';
 
 export function createRemoteReactComponent<
   Type extends string,

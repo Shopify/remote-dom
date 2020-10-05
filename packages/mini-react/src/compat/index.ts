@@ -29,6 +29,7 @@ import {
 } from '../hooks';
 
 import {render} from './render';
+import {createRemoteReactComponent} from './create-component';
 import {Children} from './Children';
 import {forwardRef} from './forward-ref';
 import {memo} from './memo';
@@ -57,6 +58,7 @@ export {
   createRemoteRoot,
   RemoteReceiver,
   render,
+  createRemoteReactComponent,
   // react compatibility
   version,
   cloneElement,
