@@ -1,7 +1,7 @@
 export {RemoteReceiver} from '@remote-ui/core';
 
 export {RemoteRenderer} from './Renderer';
-export {
+export type {
   ReactPropsFromRemoteComponentType,
   ReactComponentTypeFromRemoteComponentType,
 } from '../types';

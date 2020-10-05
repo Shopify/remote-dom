@@ -1,6 +1,6 @@
 import reactReconciler from 'react-reconciler';
 
-import {
+import type {
   RemoteRoot,
   RemoteText,
   RemoteComponent,

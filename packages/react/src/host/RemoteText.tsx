@@ -1,5 +1,5 @@
 import React, {memo} from 'react';
-import {
+import type {
   Serialized,
   RemoteReceiver,
   RemoteText as RemoteTextDescription,

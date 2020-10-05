@@ -1,7 +1,6 @@
 import React, {memo, createElement, useEffect} from 'react';
-import {
-  retain,
-  release,
+import {retain, release} from '@remote-ui/core';
+import type {
   Serialized,
   RemoteReceiver,
   RemoteComponent as RemoteComponentDescription,
