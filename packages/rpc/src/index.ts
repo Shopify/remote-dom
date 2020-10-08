@@ -1,5 +1,5 @@
 export {createEndpoint} from './endpoint';
-export type {Endpoint} from './endpoint';
+export type {Endpoint, CreateEndpointOptions} from './endpoint';
 export {createBasicEncoder} from './encoding';
 export {fromMessagePort, fromWebWorker} from './adaptors';
 export {

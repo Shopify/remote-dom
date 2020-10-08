@@ -25,7 +25,7 @@ interface MessageMap {
   [FUNCTION_RESULT]: [string, Error?, any?];
 }
 
-interface Options<T = unknown> {
+export interface CreateEndpointOptions<T = unknown> {
   uuid?(): string;
   createEncoder?(api: EncodingStrategyApi): EncodingStrategy;
   callable?: (keyof T)[];
@@ -68,7 +68,7 @@ export function createEndpoint<T>(
     uuid = defaultUuid,
     createEncoder = createBasicEncoder,
     callable,
-  }: Options<T> = {},
+  }: CreateEndpointOptions<T> = {},
 ): Endpoint<T> {
   let terminated = false;
   let messenger = initialMessenger;
