@@ -1,14 +1,19 @@
-import {createEndpoint, Endpoint, MessageEndpoint} from '@remote-ui/rpc';
+import {
+  createEndpoint,
+  Endpoint,
+  MessageEndpoint,
+  CreateEndpointOptions,
+} from '@remote-ui/rpc';
 import {createWorkerMessenger} from '../messenger';
 import {createScriptUrl, FileOrModuleResolver} from './utilities';
 
-export interface CreateWorkerOptions {
+export interface CreateWorkerOptions<T> extends CreateEndpointOptions<T> {
   createMessenger?(url: URL): MessageEndpoint;
 }
 
 export interface WorkerCreator<T> {
   readonly url?: URL;
-  (options?: CreateWorkerOptions): Endpoint<T>['call'];
+  (options?: CreateWorkerOptions<T>): Endpoint<T>['call'];
 }
 
 const workerEndpointCache = new WeakMap<Endpoint<any>['call'], Endpoint<any>>();
@@ -20,9 +25,13 @@ export function createWorkerFactory<T = unknown>(
 
   function createWorker({
     createMessenger = createWorkerMessenger,
-  }: CreateWorkerOptions = {}): Endpoint<T>['call'] {
+    ...endpointOptions
+  }: CreateWorkerOptions<T> = {}): Endpoint<T>['call'] {
     if (scriptUrl) {
-      const endpoint = createEndpoint(createMessenger(scriptUrl));
+      const endpoint = createEndpoint(
+        createMessenger(scriptUrl),
+        endpointOptions,
+      );
       const {call: caller} = endpoint;
 
       workerEndpointCache.set(caller, endpoint);
