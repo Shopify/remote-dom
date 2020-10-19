@@ -14,6 +14,7 @@ interface Props {
   receiver: RemoteReceiver;
   component: Serialized<RemoteComponentDescription<any, any>>;
   controller: Controller;
+  __type__?: React.ReactChild;
 }
 
 export const RemoteComponent = memo(
@@ -46,6 +47,7 @@ export const RemoteComponent = memo(
               receiver={receiver}
               component={child}
               controller={controller}
+              __type__={(controller.get(child.type) as any)?.__type__}
             />
           );
         } else {
