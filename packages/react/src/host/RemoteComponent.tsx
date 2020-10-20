@@ -14,7 +14,9 @@ interface Props {
   receiver: RemoteReceiver;
   component: Serialized<RemoteComponentDescription<any, any>>;
   controller: Controller;
-  __type__?: React.ReactChild;
+  // Type override allows components to bypass default wrapping behavior, specifically in Argo Admin which uses Polaris to render on the host. Ex: Stack, ResourceList...
+  // See https://github.com/Shopify/app-extension-libs/issues/996#issuecomment-710437088
+  __type__?: React.ComponentType;
 }
 
 export const RemoteComponent = memo(
