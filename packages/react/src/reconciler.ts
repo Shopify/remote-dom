@@ -277,9 +277,16 @@ export default reconciler;
 function wrapFunctionToHotSwapImplementation<T extends Function>(
   func: T,
 ): HotSwappableFunction<T> {
-  const proxyFunction = (...args: any[]) => {
-    return proxyFunction.current(...args);
-  };
-  proxyFunction.current = func;
-  return proxyFunction as any;
+  const wrappedFunction: HotSwappableFunction<T> = ((...args: any[]) => {
+    return wrappedFunction[FUNCTION_CURRENT_IMPLEMENTATION_KEY](...args);
+  }) as any;
+
+  Object.defineProperty(wrappedFunction, FUNCTION_CURRENT_IMPLEMENTATION_KEY, {
+    enumerable: false,
+    configurable: false,
+    writable: true,
+    value: func,
+  });
+
+  return wrappedFunction;
 }
