@@ -109,10 +109,7 @@ const reconciler = reactReconciler<
           oldValue
         ) {
           needsUpdate = true;
-          hotSwapFunctions.push([
-            oldValueOnRemoteProps[FUNCTION_CURRENT_IMPLEMENTATION_KEY],
-            newValue,
-          ]);
+          hotSwapFunctions.push([oldValueOnRemoteProps, newValue]);
         }
       }
 
