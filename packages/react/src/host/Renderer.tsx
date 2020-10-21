@@ -26,6 +26,7 @@ export const RemoteRenderer = memo(({components, receiver}: Props) => {
           component={child}
           receiver={receiver}
           controller={controller}
+          __type__={(controller.get(child.type) as any)?.__type__}
         />
       ) : (
         <RemoteText key={child.id} text={child} receiver={receiver} />
