@@ -48,8 +48,14 @@ interface TextInternals {
   text: string;
 }
 
+const FUNCTION_CURRENT_IMPLEMENTATION_KEY = '__current';
+
 const EMPTY_OBJECT = {} as any;
 const EMPTY_ARRAY: any[] = [];
+
+type HotSwappableFunction<T extends Function> = T & {
+  [FUNCTION_CURRENT_IMPLEMENTATION_KEY]: any;
+};
 
 export function createRemoteRoot<
   AllowedComponents extends RemoteComponentType<
@@ -85,27 +91,28 @@ export function createRemoteRoot<
         throw new Error(`Unsupported component: ${type}`);
       }
 
-      let initialProps = rest[0];
-      const initialChildren = rest[1];
-
-      if (initialProps) {
-        // "children" as a prop can be extremely confusing with the "children" of
-        // a component. In React, a "child" can be anything, but once it reaches
-        // a host environment (like this remote `Root`), we want "children" to have
-        // only one meaning: the actual, resolved children components and text.
-        //
-        // To enforce this, we delete any prop named "children". We don’t take a copy
-        // of the props for performance, so a user calling this function must do so
-        // with an object that can handle being mutated.
-        //
-        // I didn’t think checking that the prop exists before deleting it would matter,
-        // but I ran a few benchmarks and it ran substantially faster this way /shrug
-        if (initialProps.children) delete initialProps.children;
-      } else {
-        initialProps = EMPTY_OBJECT;
-      }
+      const [initialProps, initialChildren] = rest;
 
       const normalizedInitialChildren: AnyChild[] = [];
+      const normalizedInitialProps: {[key: string]: any} = {};
+
+      if (initialProps) {
+        for (const key of Object.keys(initialProps)) {
+          // "children" as a prop can be extremely confusing with the "children" of
+          // a component. In React, a "child" can be anything, but once it reaches
+          // a host environment (like this remote `Root`), we want "children" to have
+          // only one meaning: the actual, resolved children components and text.
+          //
+          // To enforce this, we delete any prop named "children". We don’t take a copy
+          // of the props for performance, so a user calling this function must do so
+          // with an object that can handle being mutated.
+          if (key === 'children') continue;
+
+          normalizedInitialProps[key] = makeValueHotSwappable(
+            initialProps[key],
+          );
+        }
+      }
 
       if (initialChildren) {
         for (const child of initialChildren) {
@@ -116,7 +123,9 @@ export function createRemoteRoot<
       const id = `${currentId++}`;
 
       const internals: ComponentInternals = {
-        props: strict ? Object.freeze(initialProps!) : initialProps!,
+        props: strict
+          ? Object.freeze(normalizedInitialProps!)
+          : normalizedInitialProps!,
         children: strict
           ? Object.freeze(normalizedInitialChildren)
           : normalizedInitialChildren,
@@ -282,6 +291,10 @@ function updateText(
   });
 }
 
+type HotSwapRecord = readonly [HotSwappableFunction<any>, any];
+
+const IGNORE = Symbol('ignore');
+
 function updateProps(
   component: RemoteComponent<any, any>,
   newProps: any,
@@ -289,17 +302,305 @@ function updateProps(
   rootInternals: RootInternals,
 ) {
   const {strict} = rootInternals;
+  const {props: currentProps} = internals;
 
-  // See notes above for why we treat `children` as a reserved prop.
-  if (newProps.children) delete newProps.children;
+  const normalizedNewProps: {[key: string]: any} = {};
+  const hotSwapFunctions: HotSwapRecord[] = [];
+  let hasRemoteChange = false;
+
+  for (const key of Object.keys(newProps)) {
+    // See notes above for why we treat `children` as a reserved prop.
+    if (key === 'children') continue;
+
+    const currentValue = currentProps[key];
+    const newValue = newProps[key];
+
+    // Bail out if we have equal, primitive types
+    if (
+      currentValue === newValue &&
+      (newValue == null || typeof newValue !== 'object')
+    ) {
+      continue;
+    }
+
+    const [value, hotSwaps] = tryHotSwappingValues(currentValue, newValue);
+
+    if (hotSwaps) {
+      hotSwapFunctions.push(...hotSwaps);
+    }
+
+    if (value === IGNORE) continue;
+
+    hasRemoteChange = true;
+    normalizedNewProps[key] = value;
+  }
 
   return perform(component, rootInternals, {
-    remote: (channel) => channel(ACTION_UPDATE_PROPS, component.id, newProps),
+    remote: (channel) => {
+      if (hasRemoteChange) {
+        channel(ACTION_UPDATE_PROPS, component.id, normalizedNewProps);
+      }
+    },
     local: () => {
-      const mergedProps = {...internals.props, ...newProps};
+      const mergedProps = {...internals.props, ...normalizedNewProps};
       internals.props = strict ? Object.freeze(mergedProps) : mergedProps;
+
+      for (const [hotSwappable, newValue] of hotSwapFunctions) {
+        hotSwappable[FUNCTION_CURRENT_IMPLEMENTATION_KEY] = newValue;
+      }
     },
   });
+}
+
+// Imagine the following remote-ui components we might render in a remote context:
+//
+// const root = createRemoteRoot();
+// const {value, onChange, onPress} = getPropsForValue();
+//
+// const textField = root.createComponent('TextField', {value, onChange});
+// const button = root.createComponent('Button', {onPress});
+//
+// root.appendChild(textField);
+// root.appendChild(button);
+//
+// function getPropsForValue(value = '') {
+//   return {
+//     value,
+//     onChange: () => {
+//       const {value, onChange, onPress} = getPropsForValue();
+//       textField.updateProps({value, onChange});
+//       button.updateProps({onPress});
+//     },
+//     onPress: () => console.log(value),
+//   };
+// }
+//
+//
+// In this example, assume that the `TextField` `onChange` prop is run on blur.
+// If this were running on the host, the following steps would happen if you pressed
+// on the button:
+//
+// 1. The text field blurs, and so calls `onChange()` with its current value, which
+//    then calls `setValue()` with the updated value.
+// 2. We synchronously update the `value`, `onChange`, and `onPress` props to point at
+//    the most current `value`.
+// 3. Handling blur is finished, so the browser now handles the click by calling the
+//    (newly-updated) `Button` `onPress()`, which logs out the new value.
+//
+// Because remote-ui reproduces a UI tree asynchronously from the remote context, the
+// steps above run in a different order:
+//
+// 1. The text field blurs, and so calls `onChange()` with its current value.
+// 2. Handling blur is finished **from the perspective of the main thread**, so the
+//    browser now handles the click by calling the (original) `Button` `onPress()`, which
+//    logs out the **initial** value.
+// 3. In the remote context, we receive the `onChange()` call, which calls updates the props
+//    on the `Button` and `TextField` to be based on the new `value`, but by now it’s
+//    already too late for `onPress` — the old version has already been called!
+//
+// As you can see, the timing issue introduced by the asynchronous nature of remote-ui
+// can cause “old props” to be called from the main thread. This example may seem like
+// an unusual pattern, and it is if you are using `@remote-ui/core` directly; you’d generally
+// keep a mutable reference to the state, instead of closing over the state with new props.
+// However, abstractions on top of `@remote-ui/core`, like the React reconciler in
+// `@remote-ui/react`, work almost entirely by closing over state, so this issue is
+// much more common with those declarative libraries.
+//
+// To protect against this, we handle function props a bit differently. When we have a
+// function prop, we replace it with a new function that calls the original. However,
+// we make the original mutable, by making it a property on the function itself. When
+// this function subsequently updates, we don’t send the update to the main thread (as
+// we just saw, this can often be "too late" to be of any use). Instead, we swap out
+// the mutable reference to the current implementation of the function prop, which can
+// be done synchronously. In the example above, this would all happen synchronously in
+// the remote context; in our handling of `TextField onChange()`, we update `Button onPress()`,
+// and swap out the implementations. Now, when the main thread attempts to call `Button onPress()`,
+// it instead calls our wrapper around the function, which can refer to, and call, the
+// most recently-applied implementation, instead of directly calling the old implementation.
+
+function tryHotSwappingValues(
+  currentValue: unknown,
+  newValue: unknown,
+): [any, HotSwapRecord[]?] {
+  if (
+    typeof currentValue === 'function' &&
+    FUNCTION_CURRENT_IMPLEMENTATION_KEY in currentValue
+  ) {
+    return [
+      typeof newValue === 'function' ? IGNORE : makeValueHotSwappable(newValue),
+      [[currentValue as HotSwappableFunction<any>, newValue]],
+    ];
+  }
+
+  if (Array.isArray(currentValue)) {
+    if (!Array.isArray(newValue)) {
+      return [
+        makeValueHotSwappable(newValue),
+        collectNestedHotSwappableValues(currentValue)?.map(
+          (hotSwappable) => [hotSwappable, undefined] as const,
+        ),
+      ];
+    }
+
+    let hasChanged = false;
+    const hotSwaps: HotSwapRecord[] = [];
+
+    const newLength = newValue.length;
+    const currentLength = currentValue.length;
+    const maxLength = Math.max(currentLength, newLength);
+
+    const normalizedNewValue: any[] = [];
+
+    for (let i = 0; i < maxLength; i++) {
+      const currentElement = currentValue[i];
+      const newElement = newValue[i];
+
+      if (i < newLength) {
+        if (i >= currentLength) {
+          hasChanged = true;
+          normalizedNewValue[i] = makeValueHotSwappable(newValue);
+        } else {
+          const [updatedValue, elementHotSwaps] = tryHotSwappingValues(
+            currentElement,
+            newElement,
+          );
+
+          if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);
+
+          if (updatedValue === IGNORE) {
+            normalizedNewValue[i] = currentValue;
+          } else {
+            hasChanged = true;
+            normalizedNewValue[i] = updatedValue;
+          }
+        }
+      } else {
+        hasChanged = true;
+
+        const nestedHotSwappables = collectNestedHotSwappableValues(
+          currentElement,
+        );
+
+        if (nestedHotSwappables) {
+          hotSwaps.push(
+            ...nestedHotSwappables.map(
+              (hotSwappable) => [hotSwappable, undefined] as const,
+            ),
+          );
+        }
+      }
+    }
+
+    return [hasChanged ? normalizedNewValue : IGNORE, hotSwaps];
+  }
+
+  if (typeof currentValue === 'object' && currentValue != null) {
+    if (typeof newValue !== 'object' || newValue == null) {
+      return [
+        makeValueHotSwappable(newValue),
+        collectNestedHotSwappableValues(currentValue)?.map(
+          (hotSwappable) => [hotSwappable, undefined] as const,
+        ),
+      ];
+    }
+
+    let hasChanged = false;
+    const hotSwaps: HotSwapRecord[] = [];
+
+    const normalizedNewValue: {[key: string]: any} = {};
+
+    // eslint-disable-next-line guard-for-in
+    for (const key in currentValue) {
+      const currentElement = (currentValue as any)[key];
+
+      if (!(key in newValue)) {
+        hasChanged = true;
+
+        const nestedHotSwappables = collectNestedHotSwappableValues(
+          currentElement,
+        );
+
+        if (nestedHotSwappables) {
+          hotSwaps.push(
+            ...nestedHotSwappables.map(
+              (hotSwappable) => [hotSwappable, undefined] as const,
+            ),
+          );
+        }
+      }
+
+      const newElement = (newValue as any)[key];
+
+      const [updatedValue, elementHotSwaps] = tryHotSwappingValues(
+        currentElement,
+        newElement,
+      );
+
+      if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);
+
+      if (updatedValue === IGNORE) {
+        normalizedNewValue[key] = currentValue;
+      } else {
+        hasChanged = true;
+        normalizedNewValue[key] = updatedValue;
+      }
+    }
+
+    for (const key in newValue) {
+      if (key in normalizedNewValue) continue;
+
+      hasChanged = true;
+      normalizedNewValue[key] = makeValueHotSwappable((newValue as any)[key]);
+    }
+
+    return [hasChanged ? normalizedNewValue : IGNORE, hotSwaps];
+  }
+
+  return [currentValue === newValue ? IGNORE : newValue];
+}
+
+function makeValueHotSwappable(value: unknown) {
+  if (typeof value === 'function') {
+    const wrappedFunction: HotSwappableFunction<any> = ((...args: any[]) => {
+      return wrappedFunction[FUNCTION_CURRENT_IMPLEMENTATION_KEY](...args);
+    }) as any;
+
+    Object.defineProperty(
+      wrappedFunction,
+      FUNCTION_CURRENT_IMPLEMENTATION_KEY,
+      {
+        enumerable: false,
+        configurable: false,
+        writable: true,
+        value,
+      },
+    );
+
+    return wrappedFunction;
+  }
+
+  return value;
+}
+
+function collectNestedHotSwappableValues(
+  value: unknown,
+): HotSwappableFunction<any>[] | undefined {
+  if (typeof value === 'function') {
+    if (FUNCTION_CURRENT_IMPLEMENTATION_KEY in value) return [value];
+  } else if (Array.isArray(value)) {
+    return value.reduce<HotSwappableFunction<any>[]>((all, element) => {
+      const nested = collectNestedHotSwappableValues(element);
+      return nested ? [...all, ...nested] : all;
+    }, []);
+  } else if (typeof value === 'object' && value != null) {
+    return Object.keys(value).reduce<HotSwappableFunction<any>[]>(
+      (all, key) => {
+        const nested = collectNestedHotSwappableValues((value as any)[key]);
+        return nested ? [...all, ...nested] : all;
+      },
+      [],
+    );
+  }
 }
 
 function appendChild(
