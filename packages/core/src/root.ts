@@ -24,6 +24,33 @@ export interface Options<
   readonly components?: readonly AllowedComponents[];
 }
 
+type AnyChild = RemoteText<any> | RemoteComponent<any, any>;
+type AnyParent = RemoteRoot<any, any> | RemoteComponent<any, any>;
+
+interface RootInternals {
+  strict: boolean;
+  mounted: boolean;
+  channel: RemoteChannel;
+  nodes: WeakSet<AnyChild>;
+  tops: WeakMap<AnyChild, AnyParent>;
+  parents: WeakMap<AnyChild, AnyParent>;
+  children: readonly AnyChild[];
+}
+
+interface ComponentInternals {
+  props: {readonly [key: string]: any};
+  children: readonly AnyChild[];
+}
+
+type ParentInternals = RootInternals | ComponentInternals;
+
+interface TextInternals {
+  text: string;
+}
+
+const EMPTY_OBJECT = {} as any;
+const EMPTY_ARRAY: any[] = [];
+
 export function createRemoteRoot<
   AllowedComponents extends RemoteComponentType<
     string,
@@ -35,25 +62,23 @@ export function createRemoteRoot<
   {strict = true, components}: Options<AllowedComponents> = {},
 ): RemoteRoot<AllowedComponents, AllowedChildrenTypes> {
   type Root = RemoteRoot<AllowedComponents, AllowedChildrenTypes>;
-  type Component = RemoteComponent<AllowedComponents, Root>;
-  type Text = RemoteText<Root>;
-  type HasChildren = Root | Component;
-  type CanBeChild = Component | Text;
-
-  const parents = new WeakMap<CanBeChild, HasChildren>();
-  const children = new WeakMap<HasChildren, readonly CanBeChild[]>();
-  const props = new WeakMap<Component, any>();
-  const texts = new WeakMap<Text, string>();
-  const tops = new WeakMap<CanBeChild, HasChildren>();
-  const nodes = new WeakSet<CanBeChild>();
 
   let currentId = 0;
-  let mounted = false;
+
+  const rootInternals: RootInternals = {
+    strict,
+    mounted: false,
+    channel,
+    children: EMPTY_ARRAY,
+    nodes: new WeakSet(),
+    parents: new WeakMap(),
+    tops: new WeakMap(),
+  };
 
   const remoteRoot: Root = {
     kind: KIND_ROOT,
     get children() {
-      return children.get(remoteRoot) as any;
+      return rootInternals.children as any;
     },
     createComponent(type, ...rest) {
       if (components && components.indexOf(type) < 0) {
@@ -77,312 +102,359 @@ export function createRemoteRoot<
         // but I ran a few benchmarks and it ran substantially faster this way /shrug
         if (initialProps.children) delete initialProps.children;
       } else {
-        initialProps = {} as any;
+        initialProps = EMPTY_OBJECT;
+      }
+
+      const normalizedInitialChildren: AnyChild[] = [];
+
+      if (initialChildren) {
+        for (const child of initialChildren) {
+          normalizedInitialChildren.push(normalizeChild(child, remoteRoot));
+        }
       }
 
       const id = `${currentId++}`;
 
+      const internals: ComponentInternals = {
+        props: strict ? Object.freeze(initialProps!) : initialProps!,
+        children: strict
+          ? Object.freeze(normalizedInitialChildren)
+          : normalizedInitialChildren,
+      };
+
       const component: RemoteComponent<AllowedComponents, Root> = {
         kind: KIND_COMPONENT,
         get children() {
-          return children.get(component);
+          return internals.children;
         },
         get props() {
-          return props.get(component)!;
+          return internals.props;
         },
-        updateProps: (newProps) => updateProps(component, newProps),
-        appendChild: (child) => appendChild(component, child),
-        removeChild: (child) => removeChild(component, child),
+        updateProps: (newProps) =>
+          updateProps(component, newProps, internals, rootInternals),
+        appendChild: (child) =>
+          appendChild(
+            component,
+            normalizeChild(child, remoteRoot),
+            internals,
+            rootInternals,
+          ),
+        removeChild: (child) =>
+          removeChild(component, child, internals, rootInternals),
         insertChildBefore: (child, before) =>
-          insertChildBefore(component, child, before),
+          insertChildBefore(component, child, before, internals, rootInternals),
         // Just satisfying the type definition, since we need to write
         // some properties manually, which we do below. If we just `as any`
         // the whole object, we lose the implicit argument types for the
         // methods above.
-        ...({} as any),
+        ...EMPTY_OBJECT,
       };
 
-      Reflect.defineProperty(component, 'type', {
+      Object.defineProperty(component, 'type', {
         value: type,
         configurable: false,
         writable: false,
         enumerable: true,
       });
 
-      makePartOfTree(component);
+      makePartOfTree(component, rootInternals);
       makeRemote(component, id, remoteRoot);
-      props.set(component, strict ? Object.freeze(initialProps) : initialProps);
 
-      if (initialChildren) {
-        const normalizedChildren: CanBeChild[] = [];
-
-        for (const child of initialChildren) {
-          const normalizedChild: CanBeChild =
-            typeof child === 'string'
-              ? remoteRoot.createText(child)
-              : (child as any);
-
-          normalizedChildren.push(normalizedChild);
-          moveChildToContainer(component, normalizedChild);
-        }
-
-        children.set(
-          component,
-          strict ? Object.freeze(normalizedChildren) : normalizedChildren,
-        );
-      } else {
-        children.set(component, strict ? Object.freeze([]) : []);
+      for (const child of internals.children) {
+        moveChildToContainer(component, child, rootInternals);
       }
 
-      nodes.add(component);
-
-      return (component as unknown) as RemoteComponent<typeof type, Root>;
+      return component;
     },
     createText(content = '') {
       const id = `${currentId++}`;
+      const internals: TextInternals = {text: content};
 
       const text: RemoteText<Root> = {
         kind: KIND_TEXT,
         get text() {
-          return texts.get(text)!;
+          return internals.text;
         },
-        updateText: (newText) => updateText(text, newText),
+        updateText: (newText) =>
+          updateText(text, newText, internals, rootInternals),
         // Just satisfying the type definition, since we need to write
         // some properties manually.
-        ...({} as any),
+        ...EMPTY_OBJECT,
       };
 
-      makePartOfTree(text);
+      makePartOfTree(text, rootInternals);
       makeRemote(text, id, remoteRoot);
-      texts.set(text, content);
-
-      nodes.add(text);
 
       return text;
     },
-    appendChild: (child) => appendChild(remoteRoot, child),
-    removeChild: (child) => removeChild(remoteRoot, child),
+    appendChild: (child) =>
+      appendChild(
+        remoteRoot,
+        normalizeChild(child, remoteRoot),
+        rootInternals,
+        rootInternals,
+      ),
+    removeChild: (child) =>
+      removeChild(remoteRoot, child, rootInternals, rootInternals),
     insertChildBefore: (child, before) =>
-      insertChildBefore(remoteRoot, child, before),
+      insertChildBefore(
+        remoteRoot,
+        child,
+        before,
+        rootInternals,
+        rootInternals,
+      ),
     mount() {
-      mounted = true;
+      rootInternals.mounted = true;
       return Promise.resolve(
-        channel(ACTION_MOUNT, children.get(remoteRoot)!.map(serialize)),
+        channel(ACTION_MOUNT, rootInternals.children.map(serialize)),
       );
     },
   };
 
-  children.set(remoteRoot, []);
-
   return remoteRoot;
+}
 
-  function connected(element: CanBeChild) {
-    return tops.get(element) === remoteRoot;
-  }
+function connected(element: AnyChild, {tops}: RootInternals) {
+  return tops.get(element)?.kind === KIND_ROOT;
+}
 
-  function allDescendants(
-    element: CanBeChild,
-    withEach: (item: CanBeChild) => void,
-  ) {
-    const recurse = (element: CanBeChild) => {
-      if ('children' in element) {
-        for (const child of element.children) {
-          withEach(child);
-          recurse(child);
-        }
+function allDescendants(element: AnyChild, withEach: (item: AnyChild) => void) {
+  const recurse = (element: AnyChild) => {
+    if ('children' in element) {
+      for (const child of element.children) {
+        withEach(child);
+        recurse(child);
       }
-    };
+    }
+  };
 
-    recurse(element);
+  recurse(element);
+}
+
+function perform(
+  element: AnyChild | AnyParent,
+  rootInternals: RootInternals,
+  {
+    remote,
+    local,
+  }: {
+    remote(channel: RemoteChannel): void | Promise<void>;
+    local(): void;
+  },
+) {
+  const {mounted, channel} = rootInternals;
+
+  if (
+    mounted &&
+    (element.kind === KIND_ROOT || connected(element, rootInternals))
+  ) {
+    // should only create context once async queue is cleared
+    remote(channel);
+
+    // technically, we should be waiting for the remote update to apply,
+    // then apply it locally. The implementation below is too naive because
+    // it allows local updates to get out of sync with remote ones.
+    // if (remoteResult == null || !('then' in remoteResult)) {
+    //   local();
+    //   return;
+    // } else {
+    //   return remoteResult.then(() => {
+    //     local();
+    //   });
+    // }
   }
 
-  function perform(
-    element: Text | Component | Root,
-    {
-      remote,
-      local,
-    }: {
-      remote(channel: RemoteChannel): void | Promise<void>;
-      local(): void;
+  local();
+}
+
+function updateText(
+  text: RemoteText<any>,
+  newText: string,
+  internals: TextInternals,
+  rootInternals: RootInternals,
+) {
+  return perform(text, rootInternals, {
+    remote: (channel) => channel(ACTION_UPDATE_TEXT, text.id, newText),
+    local: () => {
+      internals.text = newText;
     },
-  ) {
-    if (mounted && (element === remoteRoot || connected(element as any))) {
-      // should only create context once async queue is cleared
-      remote(channel);
+  });
+}
 
-      // technically, we should be waiting for the remote update to apply,
-      // then apply it locally. The implementation below is too naive because
-      // it allows local updates to get out of sync with remote ones.
-      // if (remoteResult == null || !('then' in remoteResult)) {
-      //   local();
-      //   return;
-      // } else {
-      //   return remoteResult.then(() => {
-      //     local();
-      //   });
-      // }
-    }
+function updateProps(
+  component: RemoteComponent<any, any>,
+  newProps: any,
+  internals: ComponentInternals,
+  rootInternals: RootInternals,
+) {
+  const {strict} = rootInternals;
 
-    local();
+  // See notes above for why we treat `children` as a reserved prop.
+  if (newProps.children) delete newProps.children;
+
+  return perform(component, rootInternals, {
+    remote: (channel) => channel(ACTION_UPDATE_PROPS, component.id, newProps),
+    local: () => {
+      const mergedProps = {...internals.props, ...newProps};
+      internals.props = strict ? Object.freeze(mergedProps) : mergedProps;
+    },
+  });
+}
+
+function appendChild(
+  container: AnyParent,
+  child: AnyChild,
+  internals: ParentInternals,
+  rootInternals: RootInternals,
+) {
+  const {nodes, strict} = rootInternals;
+
+  if (!nodes.has(child)) {
+    throw new Error(
+      `Cannot append a node that was not created by this Remote Root`,
+    );
   }
 
-  function updateText(text: Text, newText: string) {
-    return perform(text, {
-      remote: (channel) => channel(ACTION_UPDATE_TEXT, text.id, newText),
-      local: () => texts.set(text, newText),
-    });
+  return perform(container, rootInternals, {
+    remote: (channel) =>
+      channel(
+        ACTION_INSERT_CHILD,
+        (container as any).id,
+        container.children.length,
+        serialize(child),
+      ),
+    local: () => {
+      moveChildToContainer(container, child, rootInternals);
+
+      const mergedChildren = [...internals.children, child];
+      internals.children = strict
+        ? Object.freeze(mergedChildren)
+        : mergedChildren;
+    },
+  });
+}
+
+// there is a problem with this, because when multiple children
+// are removed, there is no guarantee the messages will arrive in the
+// order we need them to on the host side (it depends how React
+// calls our reconciler). If it calls with, for example, the removal of
+// the second last item, then the removal of the last item, it will fail
+// because the indexes moved around.
+//
+// Might need to send the removed child ID, or find out if we
+// can collect removals into a single update.
+function removeChild(
+  container: AnyParent,
+  child: AnyChild,
+  internals: ParentInternals,
+  rootInternals: RootInternals,
+) {
+  const {strict, tops, parents} = rootInternals;
+
+  return perform(container, rootInternals, {
+    remote: (channel) =>
+      channel(
+        ACTION_REMOVE_CHILD,
+        (container as any).id,
+        container.children.indexOf(child),
+      ),
+    local: () => {
+      parents.delete(child);
+
+      if (child.kind === KIND_COMPONENT) {
+        allDescendants(child, (descendant) => tops.set(descendant, child));
+      }
+
+      const newChildren = [...internals.children];
+      newChildren.splice(newChildren.indexOf(child), 1);
+      internals.children = strict ? Object.freeze(newChildren) : newChildren;
+    },
+  });
+}
+
+function insertChildBefore(
+  container: AnyParent,
+  child: AnyChild,
+  before: AnyChild,
+  internals: ParentInternals,
+  rootInternals: RootInternals,
+) {
+  const {strict, nodes} = rootInternals;
+
+  if (!nodes.has(child)) {
+    throw new Error(
+      `Cannot insert a node that was not created by this Remote Root`,
+    );
   }
 
-  function updateProps(component: Component, newProps: any) {
-    // See notes above for why we treat `children` as a reserved prop.
-    if (newProps.children) delete newProps.children;
+  return perform(container, rootInternals, {
+    remote: (channel) =>
+      channel(
+        ACTION_INSERT_CHILD,
+        (container as any).id,
+        container.children.indexOf(before as any),
+        serialize(child),
+      ),
+    local: () => {
+      moveChildToContainer(container, child, rootInternals);
 
-    return perform(component, {
-      remote: (channel) => channel(ACTION_UPDATE_PROPS, component.id, newProps),
-      local: () => {
-        const mergedProps = {...props.get(component), ...newProps};
-        props.set(component, strict ? Object.freeze(mergedProps) : mergedProps);
-      },
-    });
-  }
+      const newChildren = [...internals.children];
+      newChildren.splice(newChildren.indexOf(before), 0, child);
+      internals.children = strict ? Object.freeze(newChildren) : newChildren;
+    },
+  });
+}
 
-  function appendChild(container: HasChildren, child: CanBeChild | string) {
-    const normalizedChild =
-      typeof child === 'string' ? remoteRoot.createText(child) : child;
+function normalizeChild(
+  child: AnyChild | string,
+  root: RemoteRoot<any, any>,
+): AnyChild {
+  return typeof child === 'string' ? root.createText(child) : child;
+}
 
-    if (!nodes.has(normalizedChild)) {
-      throw new Error(
-        `Cannot append a node that was not created by this Remote Root`,
-      );
-    }
+function moveChildToContainer(
+  container: AnyParent,
+  child: AnyChild,
+  {tops, parents}: RootInternals,
+) {
+  const newTop =
+    container.kind === KIND_ROOT ? container : tops.get(container)!;
 
-    return perform(container, {
-      remote: (channel) =>
-        channel(
-          ACTION_INSERT_CHILD,
-          (container as any).id,
-          container.children.length,
-          serialize(normalizedChild),
-        ),
-      local: () => {
-        moveChildToContainer(container, normalizedChild);
+  tops.set(child, newTop);
+  parents.set(child, container);
+  allDescendants(child, (descendant) => tops.set(descendant, newTop));
+}
 
-        const mergedChildren = [
-          ...(children.get(container) ?? []),
-          normalizedChild,
-        ];
+function makePartOfTree(node: AnyChild, {parents, tops, nodes}: RootInternals) {
+  nodes.add(node);
 
-        children.set(
-          container,
-          strict ? Object.freeze(mergedChildren) : mergedChildren,
-        );
-      },
-    });
-  }
+  Object.defineProperty(node, 'parent', {
+    get() {
+      return parents.get(node);
+    },
+    configurable: true,
+    enumerable: true,
+  });
 
-  // there is a problem with this, because when multiple children
-  // are removed, there is no guarantee the messages will arrive in the
-  // order we need them to on the host side (it depends how React
-  // calls our reconciler). If it calls with, for example, the removal of
-  // the second last item, then the removal of the last item, it will fail
-  // because the indexes moved around.
-  //
-  // Might need to send the removed child ID, or find out if we
-  // can collect removals into a single update.
-  function removeChild(container: HasChildren, child: CanBeChild) {
-    return perform(container, {
-      remote: (channel) =>
-        channel(
-          ACTION_REMOVE_CHILD,
-          (container as any).id,
-          container.children.indexOf(child as any),
-        ),
-      local: () => {
-        parents.delete(child);
-        allDescendants(child, (descendant) =>
-          tops.set(descendant, child as any),
-        );
+  Object.defineProperty(node, 'top', {
+    get() {
+      return tops.get(node);
+    },
+    configurable: true,
+    enumerable: true,
+  });
+}
 
-        const newChildren = [...(children.get(container) ?? [])];
-        newChildren.splice(newChildren.indexOf(child), 1);
-        children.set(
-          container,
-          strict ? Object.freeze(newChildren) : newChildren,
-        );
-      },
-    });
-  }
-
-  function insertChildBefore(
-    container: HasChildren,
-    child: CanBeChild,
-    before: CanBeChild,
-  ) {
-    if (!nodes.has(child)) {
-      throw new Error(
-        `Cannot insert a node that was not created by this Remote Root`,
-      );
-    }
-
-    return perform(container, {
-      remote: (channel) =>
-        channel(
-          ACTION_INSERT_CHILD,
-          (container as any).id,
-          container.children.indexOf(before as any),
-          serialize(child),
-        ),
-      local: () => {
-        moveChildToContainer(container, child);
-
-        const newChildren = [...(children.get(container) || [])];
-        newChildren.splice(newChildren.indexOf(before), 0, child);
-
-        children.set(
-          container,
-          strict ? Object.freeze(newChildren) : newChildren,
-        );
-      },
-    });
-  }
-
-  function moveChildToContainer(container: HasChildren, child: CanBeChild) {
-    const newTop =
-      container === remoteRoot ? remoteRoot : tops.get(container as any)!;
-
-    tops.set(child, newTop);
-    parents.set(child, container);
-    allDescendants(child, (descendant) => tops.set(descendant, newTop));
-  }
-
-  function makePartOfTree(value: CanBeChild) {
-    Reflect.defineProperty(value, 'parent', {
-      get() {
-        return parents.get(value);
-      },
-      configurable: true,
-      enumerable: true,
-    });
-
-    Reflect.defineProperty(value, 'top', {
-      get() {
-        return tops.get(value);
-      },
-      configurable: true,
-      enumerable: true,
-    });
-  }
-
-  function serialize(value: Text | Component): Serialized<typeof value> {
-    return 'text' in value
-      ? {id: value.id, text: value.text}
-      : {
-          id: value.id,
-          type: value.type,
-          props: value.props,
-          children: value.children.map((child) => serialize(child as any)),
-        };
-  }
+function serialize(value: AnyChild): Serialized<typeof value> {
+  return value.kind === KIND_TEXT
+    ? {id: value.id, text: value.text}
+    : {
+        id: value.id,
+        type: value.type,
+        props: value.props,
+        children: value.children.map((child) => serialize(child as any)),
+      };
 }
 
 function makeRemote<Root extends RemoteRoot<any, any>>(
@@ -390,14 +462,14 @@ function makeRemote<Root extends RemoteRoot<any, any>>(
   id: string,
   root: Root,
 ) {
-  Reflect.defineProperty(value, 'id', {
+  Object.defineProperty(value, 'id', {
     value: id,
     configurable: true,
     writable: false,
     enumerable: false,
   });
 
-  Reflect.defineProperty(value, 'root', {
+  Object.defineProperty(value, 'root', {
     value: root,
     configurable: true,
     writable: false,
