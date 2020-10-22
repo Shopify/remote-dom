@@ -214,6 +214,8 @@ export function createRemoteRoot<
         rootInternals,
       ),
     mount() {
+      if (rootInternals.mounted) return Promise.resolve();
+
       rootInternals.mounted = true;
       return Promise.resolve(
         channel(ACTION_MOUNT, rootInternals.children.map(serialize)),
