@@ -142,6 +142,9 @@ export function createRemoteRoot<
         get props() {
           return internals.externalProps;
         },
+        get remoteProps() {
+          return internals.internalProps;
+        },
         updateProps: (newProps) =>
           updateProps(component, newProps, internals, rootInternals),
         appendChild: (child) =>
@@ -776,7 +779,7 @@ function serialize(value: AnyChild): Serialized<typeof value> {
     : {
         id: value.id,
         type: value.type,
-        props: value.props,
+        props: value.remoteProps,
         children: value.children.map((child) => serialize(child as any)),
       };
 }
