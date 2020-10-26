@@ -561,7 +561,7 @@ function tryHotSwappingValues(
   return [currentValue === newValue ? IGNORE : newValue];
 }
 
-function makeValueHotSwappable(value: unknown) {
+function makeValueHotSwappable(value: unknown): unknown {
   if (typeof value === 'function') {
     const wrappedFunction: HotSwappableFunction<any> = ((...args: any[]) => {
       return wrappedFunction[FUNCTION_CURRENT_IMPLEMENTATION_KEY](...args);
@@ -579,6 +579,13 @@ function makeValueHotSwappable(value: unknown) {
     );
 
     return wrappedFunction;
+  } else if (Array.isArray(value)) {
+    return value.map(makeValueHotSwappable);
+  } else if (typeof value === 'object' && value != null) {
+    return Object.keys(value).reduce<{[key: string]: any}>((newValue, key) => {
+      newValue[key] = makeValueHotSwappable((value as any)[key]);
+      return newValue;
+    }, {});
   }
 
   return value;
