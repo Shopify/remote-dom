@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2020-10-26
+
+- `RemoteComponent#updateProps()` now performs a “hot swap” on any prop that is a function (including functions nested in objects or arrays) in order to prevent timing differences from causing the host to call a function prop that has already changed reference in the remote context ([pull request](https://github.com/Shopify/remote-ui/pull/32))
+
 ## [1.4.0] - 2020-10-01
 
 - Added a `kind` field to `RemoteRoot` to distinguish it from other remote nodes (its value is always the newly-exported `KIND_REMOTE_ROOT` constant) ([pull request](https://github.com/Shopify/remote-ui/pull/23)).
