@@ -140,7 +140,7 @@ export function createRemoteRoot<
           return internals.children;
         },
         get props() {
-          return internals.internalProps;
+          return internals.externalProps;
         },
         updateProps: (newProps) =>
           updateProps(component, newProps, internals, rootInternals),
