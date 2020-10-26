@@ -155,6 +155,7 @@ export interface RemoteComponent<
   readonly id: string;
   readonly type: IdentifierForRemoteComponent<Type>;
   readonly props: PropsForRemoteComponent<Type>;
+  readonly remoteProps: PropsForRemoteComponent<Type>;
   readonly children: readonly AllowedChildren<ExtractChildren<Type>, Root>[];
   readonly root: Root;
   readonly top: RemoteComponent<any, Root> | Root | null;
