@@ -38,7 +38,8 @@ interface RootInternals {
 }
 
 interface ComponentInternals {
-  props: {readonly [key: string]: any};
+  externalProps: {readonly [key: string]: any};
+  internalProps: {readonly [key: string]: any};
   children: readonly AnyChild[];
 }
 
@@ -93,8 +94,9 @@ export function createRemoteRoot<
 
       const [initialProps, initialChildren] = rest;
 
+      const normalizedInitialProps = initialProps ?? {};
       const normalizedInitialChildren: AnyChild[] = [];
-      const normalizedInitialProps: {[key: string]: any} = {};
+      const normalizedInternalProps: {[key: string]: any} = {};
 
       if (initialProps) {
         for (const key of Object.keys(initialProps)) {
@@ -108,7 +110,7 @@ export function createRemoteRoot<
           // with an object that can handle being mutated.
           if (key === 'children') continue;
 
-          normalizedInitialProps[key] = makeValueHotSwappable(
+          normalizedInternalProps[key] = makeValueHotSwappable(
             initialProps[key],
           );
         }
@@ -123,9 +125,10 @@ export function createRemoteRoot<
       const id = `${currentId++}`;
 
       const internals: ComponentInternals = {
-        props: strict
-          ? Object.freeze(normalizedInitialProps!)
-          : normalizedInitialProps!,
+        externalProps: strict
+          ? Object.freeze(normalizedInitialProps)
+          : normalizedInitialProps,
+        internalProps: normalizedInternalProps,
         children: strict
           ? Object.freeze(normalizedInitialChildren)
           : normalizedInitialChildren,
@@ -137,7 +140,7 @@ export function createRemoteRoot<
           return internals.children;
         },
         get props() {
-          return internals.props;
+          return internals.internalProps;
         },
         updateProps: (newProps) =>
           updateProps(component, newProps, internals, rootInternals),
@@ -304,7 +307,7 @@ function updateProps(
   rootInternals: RootInternals,
 ) {
   const {strict} = rootInternals;
-  const {props: currentProps} = internals;
+  const {internalProps: currentProps} = internals;
 
   const normalizedNewProps: {[key: string]: any} = {};
   const hotSwapFunctions: HotSwapRecord[] = [];
@@ -344,8 +347,19 @@ function updateProps(
       }
     },
     local: () => {
-      const mergedProps = {...internals.props, ...normalizedNewProps};
-      internals.props = strict ? Object.freeze(mergedProps) : mergedProps;
+      const mergedExternalProps = {
+        ...internals.externalProps,
+        ...newProps,
+      };
+
+      internals.externalProps = strict
+        ? Object.freeze(mergedExternalProps)
+        : mergedExternalProps;
+
+      internals.internalProps = {
+        ...internals.internalProps,
+        ...normalizedNewProps,
+      };
 
       for (const [hotSwappable, newValue] of hotSwapFunctions) {
         hotSwappable[FUNCTION_CURRENT_IMPLEMENTATION_KEY] = newValue;
