@@ -1,6 +1,6 @@
 import {createRemoteRoot} from '../root';
 import {RemoteReceiver} from '../receiver';
-import type {RemoteChannel, RemoteComponent} from '../types';
+import type {RemoteChannel} from '../types';
 
 describe('root', () => {
   describe('createComponent()', () => {
