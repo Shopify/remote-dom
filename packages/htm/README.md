@@ -29,7 +29,7 @@ const ui = createRender(root);
 
 const onPress = () => {};
 
-append(root, ui`<Button primary onPress=${onPress}>Submit</Button>`);
+append(ui`<Button primary onPress=${onPress}>Submit</Button>`, root);
 ```
 
 This library only helps you create the initial structure of remote components. Any subsequent updates to that structure (for example, responding to a button press by changing its content) would be performed with the [`RemoteRoot` and `RemoteComponent` APIs](../core).
@@ -41,14 +41,13 @@ import {createRender, append} from '@remote-ui/htm';
 import {BlockStack, Button, Text} from 'my-remote-components';
 
 const ui = createRender(root);
+const stack = root.createComponent(BlockStack);
 
 append(
-  root,
   ui`
-    <${BlockStack} spacing="tight">
-      <${Button} onPress=${() => console.log('Pressed!')}>Submit<//>
-      <${Text} subdued>You’ll have a chance to review your purchase<//>
-    <//>
+    <${Button} onPress=${() => console.log('Pressed!')}>Submit<//>
+    <${Text} subdued>You’ll have a chance to review your purchase<//>
   `,
+  stack,
 );
 ```

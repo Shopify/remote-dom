@@ -25,8 +25,8 @@ export function createRender(root: RemoteRoot<any, any>) {
 }
 
 export function append(
-  parent: RemoteRoot<any, any> | RemoteComponent<any, any>,
   tree: ReturnType<ReturnType<typeof createRender>>,
+  parent: RemoteRoot<any, any> | RemoteComponent<any, any>,
 ) {
   if (Array.isArray(tree)) {
     for (const child of tree) {

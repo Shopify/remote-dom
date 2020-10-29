@@ -15,7 +15,7 @@ describe('htm', () => {
     const onPress = jest.fn();
     const content = 'Buy me!';
 
-    append(root, ui`<${Button} onPress=${onPress}>${content}<//>`);
+    append(ui`<${Button} onPress=${onPress}>${content}<//>`, root);
 
     expect(root.children).toHaveLength(1);
     expect(root.children[0]).toStrictEqual(
