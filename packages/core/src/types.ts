@@ -119,26 +119,38 @@ export interface RemoteRoot<
     type: Type,
     ...rest: IfAllOptionalKeys<
       PropsForRemoteComponent<Type>,
-      [
-        PropsForRemoteComponent<Type>?,
-        Iterable<
+      | [
+          (PropsForRemoteComponent<Type> | null)?,
+          ...AllowedChildren<
+            AllowedChildrenTypes,
+            RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
+            true
+          >[]
+        ]
+      | [
+          (PropsForRemoteComponent<Type> | null)?,
           AllowedChildren<
             AllowedChildrenTypes,
             RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
             true
-          >
-        >?,
-      ],
-      [
-        PropsForRemoteComponent<Type>,
-        Iterable<
+          >[]?,
+        ],
+      | [
+          PropsForRemoteComponent<Type>,
+          ...AllowedChildren<
+            AllowedChildrenTypes,
+            RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
+            true
+          >[]
+        ]
+      | [
+          PropsForRemoteComponent<Type>,
           AllowedChildren<
             AllowedChildrenTypes,
             RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
             true
-          >
-        >?,
-      ]
+          >[]?,
+        ]
     >
   ): RemoteComponent<Type, RemoteRoot<AllowedComponents, AllowedChildrenTypes>>;
   createText(
