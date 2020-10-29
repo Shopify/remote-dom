@@ -80,6 +80,8 @@ type AllowedTextChildren<
   AllowString extends boolean = false
 > = AllowString extends true ? RemoteText<Root> | string : RemoteText<Root>;
 
+type MaybeArray<T> = T | T[];
+
 export interface RemoteRoot<
   AllowedComponents extends RemoteComponentType<
     string,
@@ -120,24 +122,34 @@ export interface RemoteRoot<
     ...rest: IfAllOptionalKeys<
       PropsForRemoteComponent<Type>,
       [
-        PropsForRemoteComponent<Type>?,
-        Iterable<
+        (PropsForRemoteComponent<Type> | null)?,
+        MaybeArray<
           AllowedChildren<
             AllowedChildrenTypes,
             RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
             true
           >
         >?,
+        ...AllowedChildren<
+          AllowedChildrenTypes,
+          RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
+          true
+        >[]
       ],
       [
         PropsForRemoteComponent<Type>,
-        Iterable<
+        MaybeArray<
           AllowedChildren<
             AllowedChildrenTypes,
             RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
             true
           >
         >?,
+        ...AllowedChildren<
+          AllowedChildrenTypes,
+          RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
+          true
+        >[]
       ]
     >
   ): RemoteComponent<Type, RemoteRoot<AllowedComponents, AllowedChildrenTypes>>;

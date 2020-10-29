@@ -71,11 +71,12 @@ If you are familiar with React, or if the “host” side of these components is
 
 To prevent this kind of mistake, any `children` prop will be deleted from the props object. If you want to implement a render prop-style API, you can do so without potentially causing confusion by using a different prop name, and ensuring that you handle the fact that the host will receive a promise whenever they call this function. If you are just trying to append other `RemoteComponent` and `RemoteText` instances to your tree, use `RemoteComponent#appendChild()`.
 
-`createComponent` also accepts a third argument: an array of children. This can be used to construct a tree of components without requiring intermediate variables.
+`createComponent` also allows you to pass initial children for the created component. If you have only one child, you can pass it directly as the third argument. If you have more than one child, you can either pass them as an array for the third argument, or as additional positional arguments. You can also pass a string directly, and it will be normalized into a `RemoteText` object for you.
 
 ```ts
 root.appendChild(
   root.createComponent('BlockStack', undefined, [
+    root.createComponent('Text', undefined, 'This will be fun!'),
     root.createComponent(
       'Button',
       {
@@ -83,7 +84,7 @@ root.appendChild(
           console.log('Pressed!');
         },
       },
-      ['Press me!'],
+      'Press me!',
     ),
   ]),
 );

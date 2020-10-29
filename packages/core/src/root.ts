@@ -92,7 +92,7 @@ export function createRemoteRoot<
         throw new Error(`Unsupported component: ${type}`);
       }
 
-      const [initialProps, initialChildren] = rest;
+      const [initialProps, initialChildren, ...moreChildren] = rest;
 
       const normalizedInitialProps = initialProps ?? {};
       const normalizedInitialChildren: AnyChild[] = [];
@@ -117,8 +117,22 @@ export function createRemoteRoot<
       }
 
       if (initialChildren) {
-        for (const child of initialChildren) {
-          normalizedInitialChildren.push(normalizeChild(child, remoteRoot));
+        if (Array.isArray(initialChildren)) {
+          for (const child of initialChildren) {
+            normalizedInitialChildren.push(normalizeChild(child, remoteRoot));
+          }
+        } else {
+          normalizedInitialChildren.push(
+            normalizeChild(initialChildren, remoteRoot),
+          );
+
+          // The complex tuple type of `rest` makes it so `moreChildren` is
+          // incorrectly inferred as potentially being the props of the component,
+          // lazy casting since we know it will be an array of child elements
+          // (or empty).
+          for (const child of moreChildren as any[]) {
+            normalizedInitialChildren.push(normalizeChild(child, remoteRoot));
+          }
         }
       }
 
