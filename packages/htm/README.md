@@ -18,7 +18,7 @@ npm install @remote-ui/htm --save
 
 ## Usage
 
-`@remote-ui/htm` provides two functions. The first, `createRender`, is a factory function that takes a [`@remote-ui/core` `RemoteRoot`](../core#remoteroot), and returns a [tagged template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates). This tagged template binds the main function from the `htm` library into creating a tree of `@remote-ui/core` `RemoteComponent` and `RemoteText` objects. `append`, is a helper to call `appendChild()` on a `RemoteRoot` or `RemoteComponent` for each node in the tree returned by the tagged template.
+`@remote-ui/htm` provides two functions. The first, `createRender`, is a factory function that takes a [`@remote-ui/core` `RemoteRoot`](../core#remoteroot), and returns a [tagged template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates). This tagged template binds the main function from the `htm` library into creating a tree of `@remote-ui/core` `RemoteComponent` and `RemoteText` objects. The second function, `append`, is a helper to call `appendChild()` on a `RemoteRoot` or `RemoteComponent` for each node in the tree returned by the tagged template.
 
 ```ts
 import {createRemoteRoot} from '@remote-ui/core';
