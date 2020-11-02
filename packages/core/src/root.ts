@@ -572,7 +572,7 @@ function tryHotSwappingValues(
       if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);
 
       if (updatedValue === IGNORE) {
-        normalizedNewValue[key] = currentValue;
+        normalizedNewValue[key] = currentElement;
       } else {
         hasChanged = true;
         normalizedNewValue[key] = updatedValue;
