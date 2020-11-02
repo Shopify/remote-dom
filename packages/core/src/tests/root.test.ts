@@ -118,6 +118,41 @@ describe('root', () => {
       expect(funcTwo).toHaveBeenCalled();
     });
 
+    it('hot-swaps function props nested in objects', () => {
+      const funcOne = jest.fn();
+      const funcTwo = jest.fn();
+      const receiver = createDelayedReceiver();
+
+      const root = createRemoteRoot(receiver.receive);
+      const resourceList = root.createComponent('ResourceList', {
+        filterControl: {
+          onQueryChange: funcOne,
+          queryValue: 'foo',
+        },
+      });
+
+      root.appendChild(resourceList);
+      root.mount();
+
+      resourceList.updateProps({
+        filterControl: {
+          onQueryChange: funcTwo,
+          queryValue: 'bar',
+        },
+      });
+
+      // After this, the receiver will have the initial ResourceList component
+      receiver.flush();
+
+      const receivedResourceList = receiver.children[0] as any;
+      const queryValue = receivedResourceList.props.filterControl.queryValue;
+      receivedResourceList.props.filterControl.onQueryChange();
+
+      expect(queryValue).toStrictEqual('bar');
+      expect(funcOne).not.toHaveBeenCalled();
+      expect(funcTwo).toHaveBeenCalled();
+    });
+
     it('hot-swaps function props nested in objects and arrays', () => {
       const funcOne = jest.fn();
       const funcTwo = jest.fn();
