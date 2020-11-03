@@ -9,14 +9,19 @@ export function createIframeWorkerMessenger(
 
   const iframe = document.createElement('iframe');
   iframe.setAttribute('style', 'display:none;');
-  iframe.addEventListener('load', () => {
+
+  function loadHandler() {
     port1.start();
     iframe.contentWindow!.postMessage(
       {[IFRAME_RUN_IDENTIFIER]: url.href},
       '*',
       [port2],
     );
-  });
+
+    iframe.removeEventListener('load', loadHandler);
+  }
+
+  iframe.addEventListener('load', loadHandler);
 
   prepareIframe(iframe);
   document.body.appendChild(iframe);
