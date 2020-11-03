@@ -37,9 +37,11 @@ This library only helps you create the initial structure of remote components. A
 `htm` supports [many handy syntax features](https://github.com/developit/htm#syntax-like-jsx-but-also-lit). Notably, if you have external definitions of the remote components available in your system, you can interpolate them as the type name within your markup.
 
 ```tsx
+import {createRemoteRoot} from '@remote-ui/core';
 import {createRender, append} from '@remote-ui/htm';
 import {BlockStack, Button, Text} from 'my-remote-components';
 
+const root = createRemoteRoot(() => {});
 const ui = createRender(root);
 const stack = root.createComponent(BlockStack);
 
