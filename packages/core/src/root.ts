@@ -485,8 +485,8 @@ function tryHotSwappingValues(
     const normalizedNewValue: any[] = [];
 
     for (let i = 0; i < maxLength; i++) {
-      const currentElement = currentValue[i];
-      const newElement = newValue[i];
+      const currentArrayValue = currentValue[i];
+      const newArrayValue = newValue[i];
 
       if (i < newLength) {
         if (i >= currentLength) {
@@ -494,8 +494,8 @@ function tryHotSwappingValues(
           normalizedNewValue[i] = makeValueHotSwappable(newValue);
         } else {
           const [updatedValue, elementHotSwaps] = tryHotSwappingValues(
-            currentElement,
-            newElement,
+            currentArrayValue,
+            newArrayValue,
           );
 
           if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);
@@ -511,7 +511,7 @@ function tryHotSwappingValues(
         hasChanged = true;
 
         const nestedHotSwappables = collectNestedHotSwappableValues(
-          currentElement,
+          currentArrayValue,
         );
 
         if (nestedHotSwappables) {
@@ -544,13 +544,13 @@ function tryHotSwappingValues(
 
     // eslint-disable-next-line guard-for-in
     for (const key in currentValue) {
-      const currentElement = (currentValue as any)[key];
+      const currentObjectValue = (currentValue as any)[key];
 
       if (!(key in newValue)) {
         hasChanged = true;
 
         const nestedHotSwappables = collectNestedHotSwappableValues(
-          currentElement,
+          currentObjectValue,
         );
 
         if (nestedHotSwappables) {
@@ -562,17 +562,17 @@ function tryHotSwappingValues(
         }
       }
 
-      const newElement = (newValue as any)[key];
+      const newObjectValue = (newValue as any)[key];
 
       const [updatedValue, elementHotSwaps] = tryHotSwappingValues(
-        currentElement,
-        newElement,
+        currentObjectValue,
+        newObjectValue,
       );
 
       if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);
 
       if (updatedValue === IGNORE) {
-        normalizedNewValue[key] = currentValue;
+        normalizedNewValue[key] = currentObjectValue;
       } else {
         hasChanged = true;
         normalizedNewValue[key] = updatedValue;
