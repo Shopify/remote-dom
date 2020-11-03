@@ -28,4 +28,28 @@ describe('htm', () => {
       (root.children[0] as RemoteComponent<any, any>).children[0],
     ).toStrictEqual(expect.objectContaining({text: content}));
   });
+
+  it('can append to RemoteComponents', () => {
+    const root = createRemoteRoot(() => {});
+    const ui = createRender(root);
+
+    const onPress = jest.fn();
+    const content = 'Buy me!';
+
+    const Stack = createRemoteComponent('Stack');
+    const stack = root.createComponent(Stack);
+
+    append(ui`<${Button} onPress=${onPress}>${content}<//>`, stack);
+
+    expect(stack.children).toHaveLength(1);
+    expect(stack.children[0]).toStrictEqual(
+      expect.objectContaining({
+        type: Button,
+        props: {onPress},
+      }),
+    );
+    expect(
+      (stack.children[0] as RemoteComponent<any, any>).children[0],
+    ).toStrictEqual(expect.objectContaining({text: content}));
+  });
 });
