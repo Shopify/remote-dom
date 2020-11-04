@@ -466,127 +466,11 @@ function tryHotSwappingValues(
   }
 
   if (Array.isArray(currentValue)) {
-    if (!Array.isArray(newValue)) {
-      return [
-        makeValueHotSwappable(newValue),
-        collectNestedHotSwappableValues(currentValue)?.map(
-          (hotSwappable) => [hotSwappable, undefined] as const,
-        ),
-      ];
-    }
-
-    let hasChanged = false;
-    const hotSwaps: HotSwapRecord[] = [];
-
-    const newLength = newValue.length;
-    const currentLength = currentValue.length;
-    const maxLength = Math.max(currentLength, newLength);
-
-    const normalizedNewValue: any[] = [];
-
-    for (let i = 0; i < maxLength; i++) {
-      const currentArrayValue = currentValue[i];
-      const newArrayValue = newValue[i];
-
-      if (i < newLength) {
-        if (i >= currentLength) {
-          hasChanged = true;
-          normalizedNewValue[i] = makeValueHotSwappable(newValue);
-        } else {
-          const [updatedValue, elementHotSwaps] = tryHotSwappingValues(
-            currentArrayValue,
-            newArrayValue,
-          );
-
-          if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);
-
-          if (updatedValue === IGNORE) {
-            normalizedNewValue[i] = currentValue;
-          } else {
-            hasChanged = true;
-            normalizedNewValue[i] = updatedValue;
-          }
-        }
-      } else {
-        hasChanged = true;
-
-        const nestedHotSwappables = collectNestedHotSwappableValues(
-          currentArrayValue,
-        );
-
-        if (nestedHotSwappables) {
-          hotSwaps.push(
-            ...nestedHotSwappables.map(
-              (hotSwappable) => [hotSwappable, undefined] as const,
-            ),
-          );
-        }
-      }
-    }
-
-    return [hasChanged ? normalizedNewValue : IGNORE, hotSwaps];
+    return tryHotSwappingArrayValues(currentValue, newValue);
   }
 
   if (typeof currentValue === 'object' && currentValue != null) {
-    if (typeof newValue !== 'object' || newValue == null) {
-      return [
-        makeValueHotSwappable(newValue),
-        collectNestedHotSwappableValues(currentValue)?.map(
-          (hotSwappable) => [hotSwappable, undefined] as const,
-        ),
-      ];
-    }
-
-    let hasChanged = false;
-    const hotSwaps: HotSwapRecord[] = [];
-
-    const normalizedNewValue: {[key: string]: any} = {};
-
-    // eslint-disable-next-line guard-for-in
-    for (const key in currentValue) {
-      const currentObjectValue = (currentValue as any)[key];
-
-      if (!(key in newValue)) {
-        hasChanged = true;
-
-        const nestedHotSwappables = collectNestedHotSwappableValues(
-          currentObjectValue,
-        );
-
-        if (nestedHotSwappables) {
-          hotSwaps.push(
-            ...nestedHotSwappables.map(
-              (hotSwappable) => [hotSwappable, undefined] as const,
-            ),
-          );
-        }
-      }
-
-      const newObjectValue = (newValue as any)[key];
-
-      const [updatedValue, elementHotSwaps] = tryHotSwappingValues(
-        currentObjectValue,
-        newObjectValue,
-      );
-
-      if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);
-
-      if (updatedValue === IGNORE) {
-        normalizedNewValue[key] = currentObjectValue;
-      } else {
-        hasChanged = true;
-        normalizedNewValue[key] = updatedValue;
-      }
-    }
-
-    for (const key in newValue) {
-      if (key in normalizedNewValue) continue;
-
-      hasChanged = true;
-      normalizedNewValue[key] = makeValueHotSwappable((newValue as any)[key]);
-    }
-
-    return [hasChanged ? normalizedNewValue : IGNORE, hotSwaps];
+    return tryHotSwappingObjectValues(currentValue, newValue);
   }
 
   return [currentValue === newValue ? IGNORE : newValue];
@@ -816,4 +700,134 @@ function makeRemote<Root extends RemoteRoot<any, any>>(
     writable: false,
     enumerable: false,
   });
+}
+
+function tryHotSwappingObjectValues(
+  currentValue: object,
+  newValue: unknown,
+): [any, HotSwapRecord[]?] {
+  if (typeof newValue !== 'object' || newValue == null) {
+    return [
+      makeValueHotSwappable(newValue),
+      collectNestedHotSwappableValues(currentValue)?.map(
+        (hotSwappable) => [hotSwappable, undefined] as const,
+      ),
+    ];
+  }
+
+  let hasChanged = false;
+  const hotSwaps: HotSwapRecord[] = [];
+
+  const normalizedNewValue: {[key: string]: any} = {};
+
+  // eslint-disable-next-line guard-for-in
+  for (const key in currentValue) {
+    const currentObjectValue = (currentValue as any)[key];
+
+    if (!(key in newValue)) {
+      hasChanged = true;
+
+      const nestedHotSwappables = collectNestedHotSwappableValues(
+        currentObjectValue,
+      );
+
+      if (nestedHotSwappables) {
+        hotSwaps.push(
+          ...nestedHotSwappables.map(
+            (hotSwappable) => [hotSwappable, undefined] as const,
+          ),
+        );
+      }
+    }
+
+    const newObjectValue = (newValue as any)[key];
+
+    const [updatedValue, elementHotSwaps] = tryHotSwappingValues(
+      currentObjectValue,
+      newObjectValue,
+    );
+
+    if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);
+
+    if (updatedValue !== IGNORE) {
+      hasChanged = true;
+      normalizedNewValue[key] = updatedValue;
+    }
+  }
+
+  for (const key in newValue) {
+    if (key in normalizedNewValue) continue;
+
+    hasChanged = true;
+    normalizedNewValue[key] = makeValueHotSwappable((newValue as any)[key]);
+  }
+
+  return [hasChanged ? normalizedNewValue : IGNORE, hotSwaps];
+}
+
+function tryHotSwappingArrayValues(
+  currentValue: unknown[],
+  newValue: unknown,
+): [any, HotSwapRecord[]?] {
+  if (!Array.isArray(newValue)) {
+    return [
+      makeValueHotSwappable(newValue),
+      collectNestedHotSwappableValues(currentValue)?.map(
+        (hotSwappable) => [hotSwappable, undefined] as const,
+      ),
+    ];
+  }
+
+  let hasChanged = false;
+  const hotSwaps: HotSwapRecord[] = [];
+
+  const newLength = newValue.length;
+  const currentLength = currentValue.length;
+  const maxLength = Math.max(currentLength, newLength);
+
+  const normalizedNewValue: any[] = [];
+
+  for (let i = 0; i < maxLength; i++) {
+    const currentArrayValue = currentValue[i];
+    const newArrayValue = newValue[i];
+
+    if (i < newLength) {
+      if (i >= currentLength) {
+        hasChanged = true;
+        normalizedNewValue[i] = makeValueHotSwappable(newArrayValue);
+        continue;
+      }
+
+      const [updatedValue, elementHotSwaps] = tryHotSwappingValues(
+        currentArrayValue,
+        newArrayValue,
+      );
+
+      if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);
+
+      if (updatedValue === IGNORE) {
+        normalizedNewValue[i] = currentArrayValue;
+        continue;
+      }
+
+      hasChanged = true;
+      normalizedNewValue[i] = updatedValue;
+    } else {
+      hasChanged = true;
+
+      const nestedHotSwappables = collectNestedHotSwappableValues(
+        currentArrayValue,
+      );
+
+      if (nestedHotSwappables) {
+        hotSwaps.push(
+          ...nestedHotSwappables.map(
+            (hotSwappable) => [hotSwappable, undefined] as const,
+          ),
+        );
+      }
+    }
+  }
+
+  return [hasChanged ? normalizedNewValue : IGNORE, hotSwaps];
 }

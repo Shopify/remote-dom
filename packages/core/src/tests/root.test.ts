@@ -176,6 +176,89 @@ describe('root', () => {
       expect(funcOne).not.toHaveBeenCalled();
       expect(funcTwo).toHaveBeenCalled();
     });
+
+    it('hot-swaps function props for arrays when the length increases', () => {
+      const firstActionFuncOne = jest.fn();
+      const firstActionFuncTwo = jest.fn();
+      const secondActionFunc = jest.fn();
+      const receiver = createDelayedReceiver();
+
+      const root = createRemoteRoot(receiver.receive);
+      const modal = root.createComponent('Modal', {
+        secondaryActions: [{onAction: firstActionFuncOne}],
+      });
+
+      root.appendChild(modal);
+      root.mount();
+
+      modal.updateProps({
+        secondaryActions: [
+          {onAction: firstActionFuncTwo},
+          {onAction: secondActionFunc},
+        ],
+      });
+
+      receiver.flush();
+
+      const {
+        secondaryActions: [firstAction, secondAction],
+      } = (receiver.children[0] as any).props;
+
+      firstAction.onAction();
+      secondAction.onAction();
+
+      expect(firstActionFuncOne).not.toHaveBeenCalled();
+      expect(firstActionFuncTwo).toHaveBeenCalled();
+      expect(secondActionFunc).toHaveBeenCalled();
+    });
+
+    it('hot-swaps function props for nested arrays', () => {
+      const firstActionFuncOne = jest.fn();
+      const firstActionFuncTwo = jest.fn();
+      const secondActionFuncOne = jest.fn();
+      const receiver = createDelayedReceiver();
+
+      const root = createRemoteRoot(receiver.receive);
+      const modal = root.createComponent('Modal', {
+        actionGroups: [
+          {
+            actions: [{onAction: firstActionFuncOne}],
+          },
+        ],
+      });
+
+      root.appendChild(modal);
+      root.mount();
+
+      modal.updateProps({
+        actionGroups: [
+          {
+            actions: [
+              {onAction: firstActionFuncTwo},
+              {onAction: secondActionFuncOne},
+            ],
+          },
+        ],
+      });
+
+      receiver.flush();
+
+      const {
+        actionGroups: [
+          {
+            actions: [actionOne, actionTwo],
+          },
+        ],
+      } = (receiver.children[0] as any).props;
+
+      actionOne.onAction();
+      actionTwo.onAction();
+
+      expect(firstActionFuncOne).not.toHaveBeenCalled();
+      expect(firstActionFuncTwo).toHaveBeenCalled();
+
+      expect(secondActionFuncOne).toHaveBeenCalled();
+    });
   });
 });
 
