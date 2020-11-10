@@ -2,7 +2,7 @@ import baseHtm from 'htm';
 import {isRemoteComponent} from '@remote-ui/core';
 import type {RemoteRoot, RemoteComponent} from '@remote-ui/core';
 
-export function createRender(root: RemoteRoot<any, any>) {
+export function createHtm(root: RemoteRoot<any, any>) {
   return baseHtm.bind((type, props, ...children) => {
     const normalizedChildren: (string | RemoteComponent<any, any>)[] = [];
 
@@ -25,7 +25,7 @@ export function createRender(root: RemoteRoot<any, any>) {
 }
 
 export function append(
-  tree: ReturnType<ReturnType<typeof createRender>>,
+  tree: ReturnType<ReturnType<typeof createHtm>>,
   parent: RemoteRoot<any, any> | RemoteComponent<any, any>,
 ) {
   if (Array.isArray(tree)) {

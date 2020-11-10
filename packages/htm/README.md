@@ -18,18 +18,18 @@ npm install @remote-ui/htm --save
 
 ## Usage
 
-`@remote-ui/htm` provides two functions. The first, `createRender`, is a factory function that takes a [`@remote-ui/core` `RemoteRoot`](../core#remoteroot), and returns a [tagged template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates). This tagged template binds the main function from the `htm` library into creating a tree of `@remote-ui/core` `RemoteComponent` and `RemoteText` objects. The second function, `append`, is a helper to call `appendChild()` on a `RemoteRoot` or `RemoteComponent` for each node in the tree returned by the tagged template.
+`@remote-ui/htm` provides two functions. The first, `createHtm`, is a factory function that takes a [`@remote-ui/core` `RemoteRoot`](../core#remoteroot), and returns a [tagged template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates). This tagged template binds the main function from the `htm` library into creating a tree of `@remote-ui/core` `RemoteComponent` and `RemoteText` objects. The second function, `append`, is a helper to call `appendChild()` on a `RemoteRoot` or `RemoteComponent` for each node in the tree returned by the tagged template.
 
 ```ts
 import {createRemoteRoot} from '@remote-ui/core';
-import {createRender, append} from '@remote-ui/htm';
+import {createHtm, append} from '@remote-ui/htm';
 
 const root = createRemoteRoot(() => {});
-const ui = createRender(root);
+const htm = createHtm(root);
 
 const onPress = () => {};
 
-append(ui`<Button primary onPress=${onPress}>Submit</Button>`, root);
+append(htm`<Button primary onPress=${onPress}>Submit</Button>`, root);
 ```
 
 This library only helps you create the initial structure of remote components. Any subsequent updates to that structure (for example, responding to a button press by changing its content) would be performed with the [`RemoteRoot` and `RemoteComponent` APIs](../core).
@@ -38,15 +38,15 @@ This library only helps you create the initial structure of remote components. A
 
 ```tsx
 import {createRemoteRoot} from '@remote-ui/core';
-import {createRender, append} from '@remote-ui/htm';
+import {createHtm, append} from '@remote-ui/htm';
 import {BlockStack, Button, Text} from 'my-remote-components';
 
 const root = createRemoteRoot(() => {});
-const ui = createRender(root);
+const htm = createHtm(root);
 const stack = root.createComponent(BlockStack);
 
 append(
-  ui`
+  htm`
     <${Button} onPress=${() => console.log('Pressed!')}>Submit<//>
     <${Text} subdued>You’ll have a chance to review your purchase<//>
   `,

@@ -3,19 +3,19 @@ import {
   createRemoteComponent,
   RemoteComponent,
 } from '@remote-ui/core';
-import {createRender, append} from './render';
+import {createHtm, append} from './render';
 
 const Button = createRemoteComponent('Button');
 
 describe('htm', () => {
   it('converts htm into RemoteRoot operations', () => {
     const root = createRemoteRoot(() => {});
-    const ui = createRender(root);
+    const htm = createHtm(root);
 
     const onPress = jest.fn();
     const content = 'Buy me!';
 
-    append(ui`<${Button} onPress=${onPress}>${content}<//>`, root);
+    append(htm`<${Button} onPress=${onPress}>${content}<//>`, root);
 
     expect(root.children).toHaveLength(1);
     expect(root.children[0]).toStrictEqual(
@@ -31,7 +31,7 @@ describe('htm', () => {
 
   it('can append to RemoteComponents', () => {
     const root = createRemoteRoot(() => {});
-    const ui = createRender(root);
+    const htm = createHtm(root);
 
     const onPress = jest.fn();
     const content = 'Buy me!';
@@ -39,7 +39,7 @@ describe('htm', () => {
     const Stack = createRemoteComponent('Stack');
     const stack = root.createComponent(Stack);
 
-    append(ui`<${Button} onPress=${onPress}>${content}<//>`, stack);
+    append(htm`<${Button} onPress=${onPress}>${content}<//>`, stack);
 
     expect(stack.children).toHaveLength(1);
     expect(stack.children[0]).toStrictEqual(
