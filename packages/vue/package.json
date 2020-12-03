@@ -6,9 +6,15 @@
     "@remote-ui:registry": "https://registry.npmjs.org"
   },
   "dependencies": {
-    "@vue/runtime-core": "^3.0.0-beta.15",
-    "vue": "^3.0.0-beta.15"
+    "@remote-ui/core": ">=1.0.0 <2.0.0",
+    "@remote-ui/rpc": ">=1.0.0 <2.0.0",
+    "@vue/runtime-core": ">=3.0.0 <4.0.0",
+    "vue": ">=3.0.0 <4.0.0"
   },
   "sideEffects": false,
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@vue/compiler-sfc": "^3.0.3",
+    "vue-jest": "5.0.0-alpha.7"
+  }
 }

@@ -6,7 +6,7 @@ import type {
   RemoteComponent as RemoteComponentDescription,
 } from '@remote-ui/core';
 
-import {Controller} from './controller';
+import type {Controller} from './controller';
 import {RemoteText} from './RemoteText';
 import {useAttached} from './hooks';
 

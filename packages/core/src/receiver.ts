@@ -157,6 +157,10 @@ export class RemoteReceiver {
     };
   }
 
+  flush() {
+    return this.timeout ?? Promise.resolve();
+  }
+
   private enqueueUpdate(attached: Attachable) {
     this.timeout =
       this.timeout ??
