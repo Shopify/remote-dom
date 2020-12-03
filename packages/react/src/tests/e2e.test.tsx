@@ -4,7 +4,7 @@ import {act as domAct} from 'react-dom/test-utils';
 
 import {createRemoteRoot, RemoteReceiver} from '@remote-ui/core';
 
-import {RemoteRenderer} from '../host';
+import {RemoteRenderer, createController} from '../host';
 import {
   render,
   createRemoteReactComponent,
@@ -67,13 +67,10 @@ describe('@remote-ui/react', () => {
       return <RemoteHelloWorld name={name} />;
     }
 
+    const controller = createController({HelloWorld: HostHelloWorld});
+
     function HostApp() {
-      return (
-        <RemoteRenderer
-          components={{HelloWorld: HostHelloWorld}}
-          receiver={receiver}
-        />
-      );
+      return <RemoteRenderer controller={controller} receiver={receiver} />;
     }
 
     domAct(() => {
@@ -100,15 +97,12 @@ describe('@remote-ui/react', () => {
       return <RemoteWithPerson run={spy} />;
     }
 
+    const controller = createController({
+      WithPerson: HostWithPerson,
+    });
+
     function HostApp() {
-      return (
-        <RemoteRenderer
-          components={{
-            WithPerson: HostWithPerson,
-          }}
-          receiver={receiver}
-        />
-      );
+      return <RemoteRenderer controller={controller} receiver={receiver} />;
     }
 
     domAct(() => {
