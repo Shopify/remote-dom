@@ -1,5 +1,5 @@
-import {h, defineComponent, ref, computed} from 'vue';
-import type {DefineComponent} from 'vue';
+import {h, defineComponent} from 'vue';
+import type {PropType} from 'vue';
 import {KIND_COMPONENT, KIND_TEXT} from '@remote-ui/core';
 import type {RemoteReceiver} from '@remote-ui/core';
 
@@ -13,17 +13,20 @@ interface Props {
   controller: Controller;
 }
 
-export const RemoteRenderer: DefineComponent<Props> = defineComponent({
+export const RemoteRenderer = defineComponent({
   name: 'RemoteRenderer',
-  props: ['receiver', 'controller'],
-  setup({receiver, controller}: Props) {
+  props: {
+    receiver: {type: Object as PropType<Props['receiver']>, required: true},
+    controller: {type: Object as PropType<Props['controller']>, required: true},
+  },
+  setup({receiver, controller}) {
     const attached = useAttached(receiver, receiver.root);
 
     return () => {
       return attached.value!.children.map((child) => {
         switch (child.kind) {
           case KIND_COMPONENT: {
-            return h(RemoteComponent, {
+            return h(RemoteComponent as any, {
               key: child.id,
               component: child,
               receiver,
@@ -31,7 +34,7 @@ export const RemoteRenderer: DefineComponent<Props> = defineComponent({
             });
           }
           case KIND_TEXT: {
-            return h(RemoteText, {
+            return h(RemoteText as any, {
               key: child.id,
               text: child,
               receiver,

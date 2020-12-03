@@ -3,8 +3,9 @@
   "compilerOptions": {
     "outDir": "build/ts",
     "baseUrl": "src",
-    "rootDir": "src"
+    "rootDir": "src",
+    "types": ["vue", "jest"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["config/typescript/**/*", "src/**/*.ts"],
   "references": []
 }

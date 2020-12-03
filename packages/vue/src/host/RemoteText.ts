@@ -1,4 +1,5 @@
 import {defineComponent} from 'vue';
+import type {PropType} from 'vue';
 import type {
   Serialized,
   RemoteReceiver,
@@ -14,8 +15,11 @@ interface Props {
 
 export const RemoteText = defineComponent({
   name: 'RemoteText',
-  props: ['text', 'receiver'],
-  setup({text, receiver}: Props) {
+  props: {
+    text: {type: Object as PropType<Props['text']>, required: true},
+    receiver: {type: Object as PropType<Props['receiver']>, required: true},
+  },
+  setup({text, receiver}) {
     const attached = useAttached(receiver, text);
     return () => (attached.value ? attached.value.text : null);
   },

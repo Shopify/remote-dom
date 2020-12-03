@@ -1,5 +1,5 @@
 import {defineComponent, h, watch, computed} from 'vue';
-import type {Ref, DefineComponent} from 'vue';
+import type {Ref, DefineComponent, PropType} from 'vue';
 
 import {retain, release} from '@remote-ui/core';
 import type {
@@ -18,10 +18,18 @@ interface Props {
   controller: Controller;
 }
 
-export const RemoteComponent: DefineComponent<Props> = defineComponent({
+export const RemoteComponent: DefineComponent<{
+  component: {type: PropType<Props['component']>; required: true};
+  receiver: {type: PropType<Props['receiver']>; required: true};
+  controller: {type: PropType<Props['controller']>; required: true};
+}> = defineComponent({
   name: 'RemoteComponent',
-  props: ['component', 'receiver', 'controller'],
-  setup({receiver, component, controller}: Props) {
+  props: {
+    component: {type: Object as PropType<Props['component']>, required: true},
+    receiver: {type: Object as PropType<Props['receiver']>, required: true},
+    controller: {type: Object as PropType<Props['controller']>, required: true},
+  },
+  setup({receiver, component, controller}) {
     const attached = useAttached(receiver, component);
     const propsRef: Ref<object | undefined> = computed(
       () => attached.value?.props as any,

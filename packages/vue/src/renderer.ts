@@ -64,7 +64,7 @@ export function createRenderer<Root extends RemoteRoot>(
       if (isRemoteText(node)) {
         node.updateText(text);
       } else {
-        setElementText(node, text);
+        setElementText(node as Component, text);
       }
     },
     parentNode(node) {
