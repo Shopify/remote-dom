@@ -8,7 +8,9 @@
   "dependencies": {
     "@remote-ui/core": "^1.6.0-alpha.0",
     "@remote-ui/rpc": "^1.1.0-alpha.0",
-    "@vue/runtime-core": ">=3.0.0 <4.0.0",
+    "@vue/runtime-core": ">=3.0.0 <4.0.0"
+  },
+  "peerDependencies": {
     "vue": ">=3.0.0 <4.0.0"
   },
   "sideEffects": false,
