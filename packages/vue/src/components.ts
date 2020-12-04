@@ -53,7 +53,7 @@ export function createRemoteVueComponent<
     emits,
     inheritAttrs: false,
     render() {
-      return h(componentType, props(this), this.$slots.default());
+      return h(componentType, props(this), this.$slots.default?.());
     },
     methods: emitMethods,
   });
