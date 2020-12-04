@@ -75,7 +75,10 @@ export default function workerBabelPlugin({
         }
 
         for (const specifier of importDeclaration.get('specifiers')) {
-          if (!specifier.isImportSpecifier()) {
+          if (
+            !specifier.isImportSpecifier() ||
+            specifier.node.imported.type !== 'Identifier'
+          ) {
             continue;
           }
 
