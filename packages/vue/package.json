@@ -16,7 +16,8 @@
   "sideEffects": false,
   "license": "MIT",
   "devDependencies": {
-    "@vue/compiler-sfc": "^3.0.3",
+    "vue": "^3.0.4",
+    "@vue/compiler-sfc": "^3.0.4",
     "vue-jest": "5.0.0-alpha.7"
   }
 }
