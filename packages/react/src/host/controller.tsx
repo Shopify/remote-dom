@@ -5,17 +5,20 @@ export interface ComponentMapping {
   [key: string]: ComponentType<any>;
 }
 
-export class Controller<ComponentConfig extends ComponentMapping = {}> {
-  private readonly registry: Map<string, ComponentType<any>>;
+export interface Controller {
+  get(type: string | RemoteComponentType<string, any, any>): ComponentType<any>;
+}
 
-  constructor(public readonly components: ComponentConfig = {} as any) {
-    this.registry = new Map(Object.entries(components));
-  }
+export function createController(components: ComponentMapping): Controller {
+  const registry = new Map(Object.entries(components));
 
-  get(type: string | RemoteComponentType<string, any, any>) {
-    if (!this.registry.has(type as any)) {
-      throw new Error(`Unknown component: ${type}`);
-    }
-    return this.registry.get(type as any);
-  }
+  return {
+    get(type) {
+      const value = registry.get(type as any);
+      if (value == null) {
+        throw new Error(`Unknown component: ${type}`);
+      }
+      return value;
+    },
+  };
 }

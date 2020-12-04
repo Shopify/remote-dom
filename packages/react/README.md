@@ -22,16 +22,16 @@ npm install @remote-ui/react --save
 
 #### `render()`
 
-The main entrypoint for this package, `@remote-ui/react`, provides the custom React renderer that outputs instructions to a [`@remote-ui/core` `RemoteRoot`](../core#remoteroot) object. This lets you use the remote-ui system for communicating patch updates to host components over a bridge, but have React help manage your stateful application logic. To run a React ap against a `RemoteRoot`, use the `render` function exported by this library, passing in the remote root and your root React component:
+The main entrypoint for this package, `@remote-ui/react`, provides the custom React renderer that outputs instructions to a [`@remote-ui/core` `RemoteRoot`](../core#remoteroot) object. This lets you use the remote-ui system for communicating patch updates to host components over a bridge, but have React help manage your stateful application logic. To run a React app against a `RemoteRoot`, use the `render` function exported by this library, passing in the remote root and your root React component:
 
 ```tsx
 // React usually has to be in scope when using JSX
 import React from 'react';
 
-// For convenience, this library re-exports several values from @remote-ui/core, like RemoteRoot
+// For convenience, this library re-exports several values from @remote-ui/core, like createRemoteRoot
 import {render, createRemoteRoot} from '@remote-ui/react';
 
-// a host component — see implementation below for getting strong
+// a remote component — see implementation below for getting strong
 // typing on the available props.
 const Button = 'Button';
 
@@ -69,10 +69,10 @@ const button = <Button>Save</Button>;
 If you have a situation where you have separate packages for React and non-React components (e.g., to support the smaller bundle size of using only the core library), you can pass the result of calling `@remote-ui/core`’s `createRemoteComponent` to this version of the function, and the props will be inferred automatically.
 
 ```tsx
-import {createRemoteComponent as coreCreateRemoteComponent} from '@remote-ui/core';
+import {createRemoteComponent} from '@remote-ui/core';
 import {createRemoteReactComponent} from '@remote-ui/react';
 
-const Button = coreCreateRemoteComponent<'Button', {onPress(): void}>('Button');
+const Button = createRemoteComponent<'Button', {onPress(): void}>('Button');
 const ReactButton = createRemoteReactComponent(Button);
 
 // Still a type error!
@@ -81,20 +81,97 @@ const button = <Button>Save</Button>;
 
 ### Host environment
 
-TODO: explain exports of `@remote-ui/react/host`.
+This package provides a second entrypoint, `@remote-ui/react/host`, with a collection of utilities for implementing the host side of a remote-ui environment in a React application. These utilities work for any React renderer, but will most commonly be used in applications that use `react-dom` or `react-native`. These host utilities take care of receiving the patch updates from a remote context, and maps the resulting component tree to a set of React components you provide.
+
+To show these utilities in action, we’ll use the same `Button` example we have looked at for the remote APIs. The host environment for those examples needs to be able to render the real `Button` component with the props received from the remote environment. To do so, we first create our host-side `Button` component (we’ll assume we are in a DOM environment, so this component will render an HTML button):
+
+```tsx
+import React from 'react';
+
+export function Button({onPress, children}) {
+  return (
+    <button type="button" onClick={() => onPress()}>
+      {children}
+    </button>
+  );
+}
+```
+
+The React component we will use to render our remote component tree needs to know how to map from a component name to component implementation. To do this, pass your host components to `createController()`, a function provided by this library:
+
+```tsx
+import React, {useMemo} from 'react';
+import {createController} from '@remote-ui/react/host';
+
+import {Button} from './Button';
+
+function MyRemoteRenderer() {
+  const controller = useMemo(() => createController({Button}), []);
+  // ...
+}
+```
+
+In addition to the `controller`, we need to create a [`RemoteReceiver` object](../core#remotereceiver). This object is responsible for accepting updates from the remote context, and turning them back into a tree of UI components on the host:
+
+```tsx
+import React, {useMemo, useEffect} from 'react';
+import {createController, RemoteReceiver} from '@remote-ui/react/host';
+
+import {Button} from './Button';
+
+function MyRemoteRenderer() {
+  const controller = useMemo(() => createController({Button}), []);
+  const receiver = useMemo(() => new RemoteReceiver(), []);
+
+  useEffect(() => {
+    // You’ll usually send the receiver.receive function to the remote
+    // context, and use it to construct a `@remote-ui/core` `RemoteRoot`
+    // object
+    sendReceiverToRemoteContext(receiver.receive);
+  }, [receiver]);
+
+  // ...
+}
+```
+
+Finally, you can pass these two objects to the `RemoteRenderer` component provided by this entrypoint, which will start listening for changes to the `receiver`, and render the host React component equivalent of the remote component tree.
+
+```tsx
+import React, {useMemo, useEffect} from 'react';
+import {
+  createController,
+  RemoteReceiver,
+  RemoteRenderer,
+} from '@remote-ui/react/host';
+
+import {Button} from './Button';
+
+function MyRemoteRenderer() {
+  const controller = useMemo(() => createController({Button}), []);
+  const receiver = useMemo(() => new RemoteReceiver(), []);
+
+  useEffect(() => {
+    sendReceiverToRemoteContext(receiver.receive);
+  }, [receiver]);
+
+  return <RemoteRenderer receiver={receiver} controller={controller} />;
+}
+```
 
 ### Other exports
 
-This package exports a helper type for extracting information from components created by `createRemoteComponent`:
+This package exports a helper type for extracting information from components created by `createRemoteReactComponent`:
 
 - `ReactPropsFromRemoteComponentType` accepts any type as a type argument and, if it is a remote component, returns its prop types when used as a React component.
 
   ```ts
   import {
-    createRemoteComponent,
+    createRemoteReactComponent,
     ReactPropsFromRemoteComponentType,
   } from '@remote-ui/react';
 
-  const Button = createRemoteComponent<'Button', {onPress?(): void}>('Button');
+  const Button = createRemoteReactComponent<'Button', {onPress?(): void}>(
+    'Button',
+  );
   type ButtonProps = ReactPropsFromRemoteComponentType<typeof Button>; // {onPress?(): void; children: ReactNode}
   ```
