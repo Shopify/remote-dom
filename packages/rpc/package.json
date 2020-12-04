@@ -1,7 +1,7 @@
 {
   "name": "@remote-ui/rpc",
   "description": "An RPC library with strong support for simulating the transfer of functions via postMessage",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "publishConfig": {
     "access": "public"
   },
