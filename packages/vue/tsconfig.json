@@ -1,0 +1,11 @@
+{
+  "extends": "../../config/typescript/tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "build/ts",
+    "baseUrl": "src",
+    "rootDir": "src",
+    "types": ["vue", "jest"]
+  },
+  "include": ["config/typescript/**/*", "src/**/*.ts"],
+  "references": []
+}

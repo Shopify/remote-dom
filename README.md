@@ -22,6 +22,7 @@ The main API of remote-ui, provided by [`@remote-ui/core`](packages/core), is sm
 | ---------------------------------------------- | ------- | --------- |
 | [`@remote-ui/mini-react`](packages/mini-react) | ❌      | ✅        |
 | [`@remote-ui/react`](packages/react)           | ✅      | ✅        |
+| [`@remote-ui/vue`](packages/vue)               | ✅      | ✅        |
 | [`@remote-ui/dom`](packages/dom)               | ✅      | ❌        |
 | [`@remote-ui/htm`](packages/htm)               | ❌      | ✅        |
 
