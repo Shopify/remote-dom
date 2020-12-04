@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2020-12-04
+
+- `RemoteReceiver` now has a `flush` method that returns a promise for a time after all in-progress updates are finished ([pull request](https://github.com/Shopify/remote-ui/pull/47)).
+- `RemoteRoot` now has an `options` field that allows a user of the root to determine whether it was constructed in strict mode, and what components are available for rendering ([pull request](https://github.com/Shopify/remote-ui/pull/47)).
+- The serialization of components and text now includes a `kind` key that uses the same `KIND_REMOTE_TEXT` or `KIND_REMOTE_COMPONENT` constants as the original object ([pull request](https://github.com/Shopify/remote-ui/pull/47)).
+
 ## [1.5.0] - 2020-10-26
 
 - `RemoteComponent#updateProps()` now performs a “hot swap” on any prop that is a function (including functions nested in objects or arrays) in order to prevent timing differences from causing the host to call a function prop that has already changed reference in the remote context ([pull request](https://github.com/Shopify/remote-ui/pull/32))
