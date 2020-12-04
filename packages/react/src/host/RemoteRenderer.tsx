@@ -1,19 +1,17 @@
-import React, {memo, useMemo, Fragment, createElement} from 'react';
+import React, {memo, Fragment, createElement} from 'react';
 import type {RemoteReceiver} from '@remote-ui/core';
 
-import {Controller} from './controller';
-import type {ComponentMapping} from './controller';
+import type {Controller} from './controller';
 import {useAttached} from './hooks';
 import {RemoteText} from './RemoteText';
 import {RemoteComponent} from './RemoteComponent';
 
 interface Props {
   receiver: RemoteReceiver;
-  components: ComponentMapping;
+  controller: Controller;
 }
 
-export const RemoteRenderer = memo(({components, receiver}: Props) => {
-  const controller = useMemo(() => new Controller(components), [components]);
+export const RemoteRenderer = memo(({controller, receiver}: Props) => {
   const {children} = useAttached(receiver, receiver.root)!;
 
   return createElement(

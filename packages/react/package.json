@@ -34,7 +34,7 @@
     "@remote-ui/core": "^1.5.4",
     "@remote-ui/rpc": "^1.0.11",
     "@remote-ui/web-workers": "^1.2.7",
-    "@types/react": ">=16.8.0 <17.0.0",
-    "react-reconciler": "^0.25.0"
+    "@types/react": ">=16.8.0 <18.0.0",
+    "react-reconciler": ">=0.25.0 <1.0.0"
   }
 }
