@@ -80,6 +80,13 @@ type AllowedTextChildren<
   AllowString extends boolean = false
 > = AllowString extends true ? RemoteText<Root> | string : RemoteText<Root>;
 
+export interface RemoteRootOptions<
+  AllowedComponents extends RemoteComponentType<string, any>
+> {
+  readonly strict?: boolean;
+  readonly components?: readonly AllowedComponents[];
+}
+
 export interface RemoteRoot<
   AllowedComponents extends RemoteComponentType<
     string,
@@ -92,6 +99,7 @@ export interface RemoteRoot<
     AllowedChildrenTypes,
     RemoteRoot<AllowedComponents, AllowedChildrenTypes>
   >[];
+  readonly options: RemoteRootOptions<AllowedComponents>;
   appendChild(
     child: AllowedChildren<
       AllowedChildrenTypes,
@@ -207,13 +215,16 @@ export type RemoteComponentSerialization<
     any
   >
 > = {
-  -readonly [K in 'id' | 'type' | 'props']: RemoteComponent<Type, any>[K];
+  -readonly [K in 'id' | 'type' | 'kind' | 'props']: RemoteComponent<
+    Type,
+    any
+  >[K];
 } & {
   children: (RemoteComponentSerialization | RemoteTextSerialization)[];
 };
 
 export type RemoteTextSerialization = {
-  -readonly [K in 'id' | 'text']: RemoteText<any>[K];
+  -readonly [K in 'id' | 'text' | 'kind']: RemoteText<any>[K];
 };
 
 export type Serialized<T> = T extends RemoteComponent<infer Type, any>

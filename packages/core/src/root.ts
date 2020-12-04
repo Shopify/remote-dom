@@ -15,14 +15,8 @@ import type {
   RemoteText,
   RemoteChannel,
   RemoteComponent,
+  RemoteRootOptions,
 } from './types';
-
-export interface Options<
-  AllowedComponents extends RemoteComponentType<string, any>
-> {
-  readonly strict?: boolean;
-  readonly components?: readonly AllowedComponents[];
-}
 
 type AnyChild = RemoteText<any> | RemoteComponent<any, any>;
 type AnyParent = RemoteRoot<any, any> | RemoteComponent<any, any>;
@@ -66,7 +60,7 @@ export function createRemoteRoot<
   AllowedChildrenTypes extends AllowedComponents | boolean = true
 >(
   channel: RemoteChannel,
-  {strict = true, components}: Options<AllowedComponents> = {},
+  {strict = true, components}: RemoteRootOptions<AllowedComponents> = {},
 ): RemoteRoot<AllowedComponents, AllowedChildrenTypes> {
   type Root = RemoteRoot<AllowedComponents, AllowedChildrenTypes>;
 
@@ -82,8 +76,13 @@ export function createRemoteRoot<
     tops: new WeakMap(),
   };
 
+  if (strict) Object.freeze(components);
+
   const remoteRoot: Root = {
     kind: KIND_ROOT,
+    options: strict
+      ? Object.freeze({strict, components})
+      : {strict, components},
     get children() {
       return rootInternals.children as any;
     },
@@ -673,9 +672,10 @@ function makePartOfTree(node: AnyChild, {parents, tops, nodes}: RootInternals) {
 
 function serialize(value: AnyChild): Serialized<typeof value> {
   return value.kind === KIND_TEXT
-    ? {id: value.id, text: value.text}
+    ? {id: value.id, kind: value.kind, text: value.text}
     : {
         id: value.id,
+        kind: value.kind,
         type: value.type,
         props: value.remoteProps,
         children: value.children.map((child) => serialize(child as any)),
