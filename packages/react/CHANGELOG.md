@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2020-12-04
+
+- **Braking:** the `RemoteRenderer` component no longer accepts a `components` mapping directly ([pull request](https://github.com/Shopify/remote-ui/pull/48)). Instead, it accepts a `controller` prop, which you must construct with your component mapping using the new `createController` function. If you are only using the remote React utilities (e.g., you were not importing from `@remote-ui/react/host`), this change does not affect you.
+- Loosened the version constraints on React and `react-reconciler` to allow the usage of React 17.x ([pull request](https://github.com/Shopify/remote-ui/pull/23)).
+
 ## [2.0.0] - 2020-10-01
 
 - **Breaking:** calling `render()` will no longer call `RemoteRoot#mount()` after the initial reconciliation ([pull request](https://github.com/Shopify/remote-ui/pull/23)). To reproduce the old behavior, you can use the new third argument to `render()`, a callback that is executed after the initial reconciliation:
