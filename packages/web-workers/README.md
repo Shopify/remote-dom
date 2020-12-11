@@ -22,7 +22,7 @@ This library contains three parts that must be used together:
 
 1. The public API of the package provided by `@remote-ui/web-workers`
 1. A babel plugin provided by `@shopify/remote-ui/babel` that identifies uses of `createWorkerFactory` that need to be processed
-1. A webpack plugin provided by `@shopify/remote-ui/webpacks` that outputs the worker as a dedicated chunk
+1. A webpack plugin provided by `@shopify/remote-ui/webpack` that outputs the worker as a dedicated chunk
 
 ### App code
 
