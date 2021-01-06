@@ -120,7 +120,7 @@ We now have a remote environment, but we need to plan exactly how this remote en
      importScripts(script);
 
      if (renderCallback != null) {
-       const remoteRoot = createRemoteRoot();
+       const remoteRoot = createRemoteRoot(receiver);
        renderCallback(remoteRoot);
      }
    }
@@ -141,7 +141,7 @@ We now have a remote environment, but we need to plan exactly how this remote en
      importScripts(script);
 
      if (renderCallback != null) {
-       const remoteRoot = createRemoteRoot({
+       const remoteRoot = createRemoteRoot(receiver, {
          components: ['Card', 'Button'],
        });
        renderCallback(remoteRoot);
@@ -179,12 +179,17 @@ The [`@remote-ui/react`](../packages/react) library has a couple of utilities we
 // back in WorkerRenderer.tsx
 
 import React, {useMemo, useEffect, ReactNode} from 'react';
-import {RemoteReceiver, RemoteRenderer, useWorker} from '@remote-ui/react/host';
+import {
+  RemoteReceiver,
+  RemoteRenderer,
+  useWorker,
+  createController,
+} from '@remote-ui/react/host';
 import {createWorkerFactory} from '@remote-ui/web-workers';
 
 const createWorker = createWorkerFactory(() => import('./worker'));
 
-const COMPONENTS = {Card, Button};
+const CONTROLLER = createController({Card, Button});
 const THIRD_PARTY_SCRIPT = 'https://third-party.com/remote-app.js';
 
 export function WorkerRenderer() {
@@ -196,7 +201,7 @@ export function WorkerRenderer() {
     worker.run(THIRD_PARTY_SCRIPT, receiver.receive);
   }, [receiver, worker]);
 
-  return <RemoteRenderer receiver={receiver} components={COMPONENTS} />;
+  return <RemoteRenderer receiver={receiver} controller={CONTROLLER} />;
 }
 
 // The "native" implementations of our remote components:
@@ -289,7 +294,7 @@ export function run(script: string, receiver: RemoteReceiver) {
   importScripts(script);
 
   if (renderCallback != null) {
-    const remoteRoot = createRemoteRoot({
+    const remoteRoot = createRemoteRoot(receiver, {
       components: [Card, Button],
     });
     renderCallback(remoteRoot);
@@ -307,7 +312,9 @@ import {render} from '@remote-ui/react';
 import {onRender, Card, Button} from '@company/ui-api';
 
 onRender((root) => {
-  render(<App />, root);
+  render(<App />, root, () => {
+    root.mount();
+  });
 });
 
 function App() {
@@ -333,11 +340,13 @@ With these small changes, the third-party developer will get great feedback on t
 Third party developers are also free to choose an abstraction that works for them. React isn’t everyone’s cup of tea, and at about ~20kb after gzip, the custom React reconciler it requires is a pretty hefty price to pay for a small UI script. Luckily, the small, DOM-like model at the heart of remote-ui means that it can support many different authoring abstractions. The third-party developer could decide to instead use [`@remote-ui/htm`](../packages/htm), which allows them to author static templates with a friendly, JSX-like syntax, using the exact same components you provided earlier, all for only ~500 _bytes_ after gzip:
 
 ```tsx
-import {htm, render} from '@remote-ui/htm';
+import {createHtm, append} from '@remote-ui/htm';
 import {onRender, Card, Button, Text} from '@company/ui-api';
 
 onRender((root) => {
-  render(
+  const htm = createHtm(root);
+
+  append(
     htm`
       <${Card}>
         <${Button} onPress=${() => console.log('Pressed!')}>Submit<//>
@@ -372,7 +381,9 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
    import {onRender, Card, Button} from '@company/ui-api';
 
    onRender((root) => {
-     render(<App />, root);
+     render(<App />, root, () => {
+       root.mount();
+     });
    });
 
    function App() {
@@ -422,12 +433,13 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
      RemoteReceiver,
      RemoteRenderer,
      useWorker,
+     createController,
    } from '@remote-ui/react/host';
    import {createWorkerFactory, expose} from '@remote-ui/web-workers';
 
    const createWorker = createWorkerFactory(() => import('./worker'));
 
-   const COMPONENTS = {Card, Button};
+   const CONTROLLER = createController({Card, Button});
    const THIRD_PARTY_SCRIPT = 'https://third-party.com/remote-app.js';
 
    export function WorkerRenderer() {
@@ -446,7 +458,7 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
        worker.run(THIRD_PARTY_SCRIPT, receiver.receive);
      }, [receiver, worker]);
 
-     return <RemoteRenderer receiver={receiver} components={COMPONENTS} />;
+     return <RemoteRenderer receiver={receiver} controller={CONTROLLER} />;
    }
    ```
 
@@ -484,7 +496,7 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
      importScripts(script);
 
      if (renderCallback != null) {
-       const remoteRoot = createRemoteRoot();
+       const remoteRoot = createRemoteRoot(receiver);
        renderCallback(remoteRoot, user);
      }
    }
@@ -500,12 +512,13 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
      RemoteReceiver,
      RemoteRenderer,
      useWorker,
+     createController,
    } from '@remote-ui/react/host';
    import {createWorkerFactory, expose} from '@remote-ui/web-workers';
 
    const createWorker = createWorkerFactory(() => import('./worker'));
 
-   const COMPONENTS = {Card, Button};
+   const CONTROLLER = createController({Card, Button});
    const THIRD_PARTY_SCRIPT = 'https://third-party.com/remote-app.js';
 
    export function WorkerRenderer() {
@@ -524,17 +537,19 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
        });
      }, [receiver, worker]);
 
-     return <RemoteRenderer receiver={receiver} components={COMPONENTS} />;
+     return <RemoteRenderer receiver={receiver} controller={CONTROLLER} />;
    }
    ```
 
    Most importantly, our remote code can now be updated to receive, and use, this new `user` argument:
 
    ```tsx
-   import {htm, render} from '@remote-ui/htm';
+   import {createHtm, append} from '@remote-ui/htm';
 
    self.onRender((root, user) => {
-     render(
+     const htm = createHtm(htm);
+
+     append(
        htm`
          <Card>
            Details for user ${user.id}
@@ -549,12 +564,14 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
 
    ```tsx
    import {retain} from '@remote-ui/core';
-   import {htm, render} from '@remote-ui/htm';
+   import {createHtm, append} from '@remote-ui/htm';
 
    self.onRender((root, user) => {
+     const htm = createHtm(root);
+
      retain(user);
 
-     render(
+     append(
        htm`
          <Card>
            Details for user ${user.id}
