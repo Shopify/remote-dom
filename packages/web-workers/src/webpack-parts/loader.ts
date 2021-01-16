@@ -89,13 +89,11 @@ export function pitch(
     );
   }
 
+  const {filename, chunkFilename} = compiler.options.output!;
+
   const workerOptions = {
-    filename: addWorkerSubExtension(
-      compiler.options.output!.filename as string,
-    ),
-    chunkFilename: addWorkerSubExtension(
-      compiler.options.output!.chunkFilename!,
-    ),
+    filename: addWorkerSubExtension((chunkFilename || filename) as string),
+    chunkFilename: addWorkerSubExtension(chunkFilename as string),
     globalObject: (plugin && plugin.options.globalObject) || 'self',
   };
 
