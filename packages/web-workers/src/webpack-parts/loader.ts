@@ -89,11 +89,13 @@ export function pitch(
     );
   }
 
-  const {filename, chunkFilename} = compiler.options.output!;
-
   const workerOptions = {
-    filename: addWorkerSubExtension((chunkFilename || filename) as string),
-    chunkFilename: addWorkerSubExtension(chunkFilename as string),
+    filename: addWorkerSubExtension(
+      plugin.options.filename || (compiler.options.output!.filename as string),
+    ),
+    chunkFilename: addWorkerSubExtension(
+      compiler.options.output!.chunkFilename!,
+    ),
     globalObject: (plugin && plugin.options.globalObject) || 'self',
   };
 
@@ -164,7 +166,7 @@ export function pitch(
 function addWorkerSubExtension(file: string) {
   return file.includes('[name]')
     ? file.replace(/\.([a-z]+)$/i, '.worker.$1')
-    : `${file.split('/').slice(0, -1).join('/')}/[name].worker.js`;
+    : file.replace(/\.([a-z]+)$/i, '.[name].worker.$1');
 }
 
 const loader = {
