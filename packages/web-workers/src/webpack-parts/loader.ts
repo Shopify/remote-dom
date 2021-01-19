@@ -90,9 +90,9 @@ export function pitch(
   }
 
   const workerOptions = {
-    filename: addWorkerSubExtension(
-      plugin.options.filename || (compiler.options.output!.filename as string),
-    ),
+    filename:
+      plugin.options.filename ??
+      addWorkerSubExtension(compiler.options.output!.filename as string),
     chunkFilename: addWorkerSubExtension(
       compiler.options.output!.chunkFilename!,
     ),
