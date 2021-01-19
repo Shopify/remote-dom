@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2020-01-19
+
+### Added
+
+- Allowed custom filename in WebWorkerPlugin when generating worker file.
+
 ## [1.0.2] - 2020-06-24
 
 ### Fixed
