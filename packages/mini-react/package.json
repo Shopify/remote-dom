@@ -17,6 +17,21 @@
       "esnext": "./index.esnext"
     },
     "./": "./",
+    "./compat": {
+      "import": "./htm.mjs",
+      "require": "./htm.js",
+      "esnext": "./htm.esnext"
+    },
+    "./htm": {
+      "import": "./htm.mjs",
+      "require": "./htm.js",
+      "esnext": "./htm.esnext"
+    },
+    "./jsx-runtime": {
+      "import": "./jsx-runtime.mjs",
+      "require": "./jsx-runtime.js",
+      "esnext": "./jsx-runtime.esnext"
+    },
     "./testing": {
       "import": "./testing.mjs",
       "require": "./testing.js",
