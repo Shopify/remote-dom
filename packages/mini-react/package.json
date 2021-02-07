@@ -12,30 +12,30 @@
   "types": "index.d.ts",
   "exports": {
     ".": {
+      "esnext": "./index.esnext",
       "import": "./index.mjs",
-      "require": "./index.js",
-      "esnext": "./index.esnext"
+      "require": "./index.js"
     },
     "./": "./",
     "./compat": {
-      "import": "./htm.mjs",
-      "require": "./htm.js",
-      "esnext": "./htm.esnext"
+      "esnext": "./compat.esnext",
+      "import": "./compat.mjs",
+      "require": "./compat.js"
     },
     "./htm": {
+      "esnext": "./htm.esnext",
       "import": "./htm.mjs",
-      "require": "./htm.js",
-      "esnext": "./htm.esnext"
+      "require": "./htm.js"
     },
     "./jsx-runtime": {
+      "esnext": "./jsx-runtime.esnext",
       "import": "./jsx-runtime.mjs",
-      "require": "./jsx-runtime.js",
-      "esnext": "./jsx-runtime.esnext"
+      "require": "./jsx-runtime.js"
     },
     "./testing": {
+      "esnext": "./testing.esnext",
       "import": "./testing.mjs",
-      "require": "./testing.js",
-      "esnext": "./testing.esnext"
+      "require": "./testing.js"
     }
   },
   "sideEffects": false,

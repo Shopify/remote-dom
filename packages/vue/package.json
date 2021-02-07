@@ -5,19 +5,36 @@
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
   },
+  "sideEffects": false,
+  "license": "MIT",
+  "main": "index.js",
+  "module": "index.mjs",
+  "esnext": "index.esnext",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "esnext": "./index.esnext",
+      "import": "./index.mjs",
+      "require": "./index.js"
+    },
+    "./": "./",
+    "./host": {
+      "esnext": "./host.esnext",
+      "import": "./host.mjs",
+      "require": "./host.js"
+    }
+  },
   "dependencies": {
     "@remote-ui/core": "^1.6.4",
     "@remote-ui/rpc": "^1.0.16",
     "@vue/runtime-core": ">=3.0.0 <4.0.0"
   },
-  "peerDependencies": {
-    "vue": ">=3.0.0 <4.0.0"
-  },
-  "sideEffects": false,
-  "license": "MIT",
   "devDependencies": {
     "@vue/compiler-sfc": "^3.0.4",
     "vue": "^3.0.4",
     "vue-jest": "5.0.0-alpha.7"
+  },
+  "peerDependencies": {
+    "vue": ">=3.0.0 <4.0.0"
   }
 }
