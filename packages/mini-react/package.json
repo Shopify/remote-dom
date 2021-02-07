@@ -1,6 +1,6 @@
 {
   "name": "@remote-ui/mini-react",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
@@ -41,7 +41,7 @@
   "sideEffects": false,
   "dependencies": {
     "@quilted/react-testing": "^0.1.6",
-    "@remote-ui/core": "^1.6.4",
+    "@remote-ui/core": "^1.6.5",
     "htm": "^3.0.0"
   }
 }
