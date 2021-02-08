@@ -11,7 +11,7 @@
     "lint": "sk lint",
     "type-check": "sk type-check",
     "build": "sk build",
-    "version-bump": "lerna version --no-push",
+    "version-bump": "lerna version --no-push --include-merged-tags",
     "deploy": "lerna publish from-package --yes"
   },
   "devDependencies": {
