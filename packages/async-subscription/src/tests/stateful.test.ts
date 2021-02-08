@@ -1,5 +1,5 @@
-import {makeStateful} from '../stateful';
-import type {AsyncSubscription} from '../types';
+import {makeStatefulSubscribable} from '../stateful';
+import type {RemoteSubscribable} from '../types';
 
 jest.mock('@remote-ui/rpc', () => ({
   retain: jest.fn(),
@@ -11,32 +11,32 @@ const {retain, release} = jest.requireMock('@remote-ui/rpc') as {
   release: jest.Mock;
 };
 
-describe('createAsyncSubscription()', () => {
+describe('makeStatefulSubscribable()', () => {
   beforeEach(() => {
     release.mockReset();
     retain.mockReset();
   });
 
   it('retains the subscription', () => {
-    const subscription = createAsyncSubscription(123);
-    makeStateful(subscription);
+    const subscription = createRemoteSubscribable(123);
+    makeStatefulSubscribable(subscription);
     expect(retain).toHaveBeenCalledWith(subscription);
   });
 
   it('keeps track of the current value', async () => {
-    const subscription = createAsyncSubscription('abc');
-    const statefulSubscription = makeStateful(subscription);
+    const subscription = createRemoteSubscribable('abc');
+    const statefulSubscription = makeStatefulSubscribable(subscription);
     await subscription.resolve();
 
     const newValue = 'xyz';
     subscription.update(newValue);
 
-    expect(statefulSubscription.getCurrentValue()).toBe(newValue);
+    expect(statefulSubscription.current).toBe(newValue);
   });
 
   it('calls subscribers with new values', async () => {
-    const subscription = createAsyncSubscription('abc');
-    const statefulSubscription = makeStateful(subscription);
+    const subscription = createRemoteSubscribable('abc');
+    const statefulSubscription = makeStatefulSubscribable(subscription);
     await subscription.resolve();
 
     const subscriber = jest.fn();
@@ -49,8 +49,8 @@ describe('createAsyncSubscription()', () => {
   });
 
   it('updates the current value when the value has changed before subscription', async () => {
-    const subscription = createAsyncSubscription('abc');
-    const statefulSubscription = makeStateful(subscription);
+    const subscription = createRemoteSubscribable('abc');
+    const statefulSubscription = makeStatefulSubscribable(subscription);
     const subscriber = jest.fn();
     statefulSubscription.subscribe(subscriber);
 
@@ -60,44 +60,44 @@ describe('createAsyncSubscription()', () => {
     await subscription.resolve();
 
     expect(subscriber).toHaveBeenCalledWith(newValue);
-    expect(statefulSubscription.getCurrentValue()).toBe(newValue);
+    expect(statefulSubscription.current).toBe(newValue);
   });
 
   it('releases the subscription when stopped', async () => {
-    const subscription = createAsyncSubscription('abc');
-    const statefulSubscription = makeStateful(subscription);
+    const subscription = createRemoteSubscribable('abc');
+    const statefulSubscription = makeStatefulSubscribable(subscription);
 
     await subscription.resolve();
-    await statefulSubscription.stop();
+    await statefulSubscription.destroy();
 
     expect(release).toHaveBeenCalledWith(subscription);
   });
 
   it('unsubscribes from the subscription on stop, and does not apply any updates', async () => {
-    const subscription = createAsyncSubscription('abc');
-    const statefulSubscription = makeStateful(subscription);
+    const subscription = createRemoteSubscribable('abc');
+    const statefulSubscription = makeStatefulSubscribable(subscription);
     const subscriber = jest.fn();
     statefulSubscription.subscribe(subscriber);
 
     const newValue = 'xyz';
     subscription.update(newValue);
 
-    statefulSubscription.stop();
+    statefulSubscription.destroy();
     await subscription.resolve();
 
     expect(release).toHaveBeenCalledWith(subscription);
     expect(subscriber).not.toHaveBeenCalled();
-    expect(statefulSubscription.getCurrentValue()).not.toBe(newValue);
+    expect(statefulSubscription.current).not.toBe(newValue);
   });
 });
 
-function createAsyncSubscription<T>(
+function createRemoteSubscribable<T>(
   initial: T,
-): AsyncSubscription<T> & {update(value: T): void; resolve(): Promise<void>} {
+): RemoteSubscribable<T> & {update(value: T): void; resolve(): Promise<void>} {
   let current = initial;
   let resolved = false;
   const subscribers = new Set<
-    Parameters<AsyncSubscription<T>['subscribe']>[0]
+    Parameters<RemoteSubscribable<T>['subscribe']>[0]
   >();
   const promises = new Set<Promise<void>>();
 

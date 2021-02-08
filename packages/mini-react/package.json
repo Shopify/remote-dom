@@ -43,5 +43,13 @@
     "@quilted/react-testing": "^0.2.3",
     "@remote-ui/core": "^1.6.5",
     "htm": "^3.0.0"
+  },
+  "peerDependencies": {
+    "@remote-ui/async-subscription": "^1.0.17"
+  },
+  "peerDependenciesMeta": {
+    "@remote-ui/async-subscription": {
+      "optional": true
+    }
   }
 }

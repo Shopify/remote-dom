@@ -34,6 +34,7 @@ import {Children} from './Children';
 import {forwardRef} from './forward-ref';
 import {memo} from './memo';
 import {PureComponent} from './PureComponent';
+import {useRemoteSubscription} from './hooks';
 import {StrictMode} from './StrictMode';
 import {version} from './version';
 import {
@@ -53,6 +54,7 @@ export {
   RemoteReceiver,
   render,
   createRemoteReactComponent,
+  useRemoteSubscription,
   // react compatibility
   version,
   cloneElement,

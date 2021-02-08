@@ -2,19 +2,18 @@ import type {MaybePromise} from '@remote-ui/rpc';
 
 export type Subscriber<T> = (value: T) => void;
 
-export type AsyncSubscribeResult<T> = [() => void, T];
+export type RemoteSubscribeResult<T> = [() => void, T];
 
-export interface AsyncSubscription<T> {
-  readonly initial: T;
-  subscribe(subscriber: Subscriber<T>): MaybePromise<AsyncSubscribeResult<T>>;
-}
-
-// @see https://github.com/facebook/react/tree/master/packages/use-subscription
-export interface SyncSubscription<T> {
-  getCurrentValue(): T;
+export interface SyncSubscribable<T> {
+  readonly current: T;
   subscribe(subscriber: Subscriber<T>): () => void;
 }
 
-export interface StatefulAsyncSubscription<T> extends SyncSubscription<T> {
-  stop(): Promise<void>;
+export interface RemoteSubscribable<T> {
+  readonly initial: T;
+  subscribe(subscriber: Subscriber<T>): MaybePromise<RemoteSubscribeResult<T>>;
+}
+
+export interface StatefulRemoteSubscribable<T> extends SyncSubscribable<T> {
+  destroy(): Promise<void>;
 }

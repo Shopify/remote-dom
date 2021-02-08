@@ -3,6 +3,7 @@ export {createRemoteRoot, RemoteReceiver} from '@remote-ui/core';
 export type {RemoteRoot} from '@remote-ui/core';
 export {render} from './render';
 export {createRemoteReactComponent} from './components';
+export {useRemoteSubscription} from './hooks';
 export type {
   ReactPropsFromRemoteComponentType,
   ReactComponentTypeFromRemoteComponentType,

@@ -6,5 +6,9 @@
     "rootDir": "src"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "references": [{"path": "../core"}, {"path": "../web-workers"}]
+  "references": [
+    {"path": "../core"},
+    {"path": "../async-subscription"},
+    {"path": "../web-workers"}
+  ]
 }

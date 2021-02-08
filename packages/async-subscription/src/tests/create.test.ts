@@ -1,5 +1,5 @@
-import {createAsyncSubscription} from '../create';
-import type {SyncSubscription} from '../types';
+import {createRemoteSubscribable} from '../create';
+import type {SyncSubscribable} from '../types';
 
 jest.mock('@remote-ui/rpc', () => ({
   retain: jest.fn(),
@@ -11,7 +11,7 @@ const {retain, release} = jest.requireMock('@remote-ui/rpc') as {
   release: jest.Mock;
 };
 
-describe('createAsyncSubscription()', () => {
+describe('createRemoteSubscribable()', () => {
   beforeEach(() => {
     release.mockReset();
     retain.mockReset();
@@ -19,25 +19,25 @@ describe('createAsyncSubscription()', () => {
 
   it('provides the initial value synchronously', () => {
     const initial = 123;
-    const subscription = createSyncSubscription(initial);
-    expect(createAsyncSubscription(subscription)).toHaveProperty(
+    const subscription = createSyncSubscribable(initial);
+    expect(createRemoteSubscribable(subscription)).toHaveProperty(
       'initial',
       initial,
     );
   });
 
   it('retains subscriptions on subscribe', async () => {
-    const subscription = createSyncSubscription('abc');
+    const subscription = createSyncSubscribable('abc');
     const subscriber = jest.fn();
-    await createAsyncSubscription(subscription).subscribe(subscriber);
+    await createRemoteSubscribable(subscription).subscribe(subscriber);
     expect(retain).toHaveBeenCalledWith(subscriber);
   });
 
   it('calls a subscription when the value changes', async () => {
-    const subscription = createSyncSubscription('abc');
+    const subscription = createSyncSubscribable('abc');
     const subscriber = jest.fn();
 
-    await createAsyncSubscription(subscription).subscribe(subscriber);
+    await createRemoteSubscribable(subscription).subscribe(subscriber);
 
     const newValue = 'xyz';
     subscription.update(newValue);
@@ -46,9 +46,9 @@ describe('createAsyncSubscription()', () => {
   });
 
   it('returns a teardown function that releases the subscription and prevents future updates', async () => {
-    const subscription = createSyncSubscription('abc');
+    const subscription = createSyncSubscribable('abc');
     const subscriber = jest.fn();
-    const [teardown] = await createAsyncSubscription(subscription).subscribe(
+    const [teardown] = await createRemoteSubscribable(subscription).subscribe(
       subscriber,
     );
 
@@ -62,11 +62,11 @@ describe('createAsyncSubscription()', () => {
   });
 
   it('returns the current value when the subscription is made', async () => {
-    const subscription = createSyncSubscription('abc');
+    const subscription = createSyncSubscribable('abc');
     const newValue = 'xyz';
     subscription.update(newValue);
 
-    const [, value] = await createAsyncSubscription(subscription).subscribe(
+    const [, value] = await createRemoteSubscribable(subscription).subscribe(
       jest.fn(),
     );
 
@@ -74,16 +74,18 @@ describe('createAsyncSubscription()', () => {
   });
 });
 
-function createSyncSubscription<T>(
+function createSyncSubscribable<T>(
   initial: T,
-): SyncSubscription<T> & {update(value: T): void} {
+): SyncSubscribable<T> & {update(value: T): void} {
   let current = initial;
   const subscribers = new Set<
-    Parameters<SyncSubscription<T>['subscribe']>[0]
+    Parameters<SyncSubscribable<T>['subscribe']>[0]
   >();
 
   return {
-    getCurrentValue: () => current,
+    get current() {
+      return current;
+    },
     update(value) {
       current = value;
 
