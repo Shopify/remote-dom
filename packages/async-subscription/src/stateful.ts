@@ -1,14 +1,14 @@
 import {retain, release} from '@remote-ui/rpc';
 import type {
   Subscriber,
-  AsyncSubscription,
-  AsyncSubscribeResult,
-  StatefulAsyncSubscription,
+  RemoteSubscribable,
+  RemoteSubscribeResult,
+  StatefulRemoteSubscribable,
 } from './types';
 
-export function makeStateful<T>(
-  subscription: AsyncSubscription<T>,
-): StatefulAsyncSubscription<T> {
+export function makeStatefulSubscribable<T>(
+  subscription: RemoteSubscribable<T>,
+): StatefulRemoteSubscribable<T> {
   // We retain because it will automatically retain any functions we get from
   // calling functions on this object, which will automatically manage the memory
   // for unsubscribe callbacks received from subscription.subscribe().
@@ -19,7 +19,7 @@ export function makeStateful<T>(
 
   const subscribers = new Set<Subscriber<T>>();
 
-  const subscriptionResult = Promise.resolve<AsyncSubscribeResult<T>>(
+  const subscriptionResult = Promise.resolve<RemoteSubscribeResult<T>>(
     subscription.subscribe(listener),
   ).then((result) => {
     listener(result[1]);
@@ -27,7 +27,7 @@ export function makeStateful<T>(
   });
 
   return {
-    getCurrentValue() {
+    get current() {
       return current;
     },
     subscribe(subscriber) {
@@ -37,14 +37,13 @@ export function makeStateful<T>(
         subscribers.delete(subscriber);
       };
     },
-    stop() {
+    async destroy() {
       listening = false;
       subscribers.clear();
 
-      return subscriptionResult.then(([unsubscribe]) => {
-        unsubscribe();
-        release(subscription);
-      });
+      const [unsubscribe] = await subscriptionResult;
+      unsubscribe();
+      release(subscription);
     },
   };
 

@@ -1,7 +1,7 @@
-export {makeStateful} from './stateful';
-export {createAsyncSubscription} from './create';
+export {makeStatefulSubscribable} from './stateful';
+export {createRemoteSubscribable} from './create';
 export type {
-  AsyncSubscription,
-  StatefulAsyncSubscription,
-  SyncSubscription,
+  SyncSubscribable,
+  RemoteSubscribable,
+  StatefulRemoteSubscribable,
 } from './types';

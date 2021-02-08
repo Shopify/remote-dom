@@ -175,3 +175,20 @@ This package exports a helper type for extracting information from components cr
   );
   type ButtonProps = ReactPropsFromRemoteComponentType<typeof Button>; // {onPress?(): void; children: ReactNode}
   ```
+
+It also exports a hook you can use to get direct, up-to-date access to a `StatefulRemoteSubscribable` created by `@remote-ui/async-subscription`:
+
+```tsx
+import type {StatefulRemoteSubscribable} from '@remote-ui/async-subscription';
+import {useRemoteSubscription} from '@remote-ui/react';
+
+function MyComponent({
+  products,
+}: {
+  products: StatefulRemoteSubscribable<{id: string}[]>;
+}) {
+  const currentProducts = useRemoteSubscription(products);
+
+  return <>{currentProducts.map((product) => product.id)}</>;
+}
+```

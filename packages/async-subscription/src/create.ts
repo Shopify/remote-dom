@@ -1,10 +1,10 @@
 import {retain, release} from '@remote-ui/rpc';
-import type {SyncSubscription, AsyncSubscription} from './types';
+import type {SyncSubscribable, RemoteSubscribable} from './types';
 
-export function createAsyncSubscription<T>(
-  subscription: SyncSubscription<T>,
-): AsyncSubscription<T> {
-  const initial = subscription.getCurrentValue();
+export function createRemoteSubscribable<T>(
+  subscription: SyncSubscribable<T>,
+): RemoteSubscribable<T> {
+  const initial = subscription.current;
 
   return {
     initial,
@@ -12,7 +12,7 @@ export function createAsyncSubscription<T>(
       retain(subscriber);
 
       const unsubscribe = subscription.subscribe(
-        (value = subscription.getCurrentValue()) => {
+        (value = subscription.current) => {
           subscriber(value);
         },
       );
@@ -22,7 +22,7 @@ export function createAsyncSubscription<T>(
         release(subscriber);
       };
 
-      return [teardown, subscription.getCurrentValue()];
+      return [teardown, subscription.current];
     },
   };
 }

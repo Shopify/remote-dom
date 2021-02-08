@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2021-02-08
+
+### Changed
+
+- **Breaking:** changed all type and function names to be more accurate and to decouple the library from React.
+
 ## [1.0.2] - 2020-06-24
 
 ### Fixed
