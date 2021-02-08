@@ -94,8 +94,10 @@ const config = {
   //...snip
   resolve: {
     alias: {
-      react: '@remote-ui/mini-react/compat',
-      '@remote-ui/react': '@remote-ui/mini-react/compat',
+      react$: '@remote-ui/mini-react/compat',
+      'react/jsx-runtime$': '@remote-ui/mini-react/jsx-runtime',
+      'react-dom': '@remote-ui/mini-react/compat',
+      '@remote-ui/react$': '@remote-ui/mini-react/compat',
     },
   },
 };
@@ -108,7 +110,9 @@ Parcel uses the standard `package.json` file to read configuration options under
 ```json
 {
   "alias": {
+    "react/jsx-runtime": "@remote-ui/mini-react/jsx-runtime",
     "react": "@remote-ui/mini-react/compat",
+    "react-dom": "@remote-ui/mini-react/compat",
     "@remote-ui/react": "@remote-ui/mini-react/compat"
   }
 }
@@ -125,7 +129,12 @@ module.exports = {
   plugins: [
     alias({
       entries: [
+        {
+          find: 'react/jsx-runtime',
+          replacement: '@remote-ui/mini-react/jsx-runtime',
+        },
         {find: 'react', replacement: '@remote-ui/mini-react/compat'},
+        {find: 'react-dom', replacement: '@remote-ui/mini-react/compat'},
         {find: '@remote-ui/react', replacement: '@remote-ui/mini-react/compat'},
       ],
     }),
@@ -141,6 +150,8 @@ Jest allows the rewriting of module paths similar to bundlers. These rewrites ar
 {
   "moduleNameMapper": {
     "^react$": "@remote-ui/mini-react/compat",
+    "^react/jsx-runtime$": "@remote-ui/mini-react/jsx-runtime",
+    "^react-dom$": "@remote-ui/mini-react/compat",
     "^@remote-ui/react$": "@remote-ui/mini-react/compat",
     "^@quilted/react-testing$": "@remote-ui/mini-react/testing"
   }
