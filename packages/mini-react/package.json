@@ -40,7 +40,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@quilted/react-testing": "^0.2.0",
+    "@quilted/react-testing": "^0.2.3",
     "@remote-ui/core": "^1.6.5",
     "htm": "^3.0.0"
   }
