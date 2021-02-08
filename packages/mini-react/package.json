@@ -1,6 +1,6 @@
 {
   "name": "@remote-ui/mini-react",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
