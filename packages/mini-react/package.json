@@ -32,6 +32,11 @@
       "import": "./jsx-runtime.mjs",
       "require": "./jsx-runtime.js"
     },
+    "./jsx-dev-runtime": {
+      "esnext": "./jsx-runtime.esnext",
+      "import": "./jsx-runtime.mjs",
+      "require": "./jsx-runtime.js"
+    },
     "./testing": {
       "esnext": "./testing.esnext",
       "import": "./testing.mjs",
