@@ -27,7 +27,7 @@ However, remote-ui has one important feature that can impact some component APIs
 - You can’t pass JSX or remote components as props to other remote components. This mistake is particularly common if you are coming from React, where you are probably familiar with APIs like `<Suspense fallback={<div>Loading...</div>} />`. While the following looks like it should work:
 
   ```tsx
-  import React, {ReactNode} from 'react';
+  import type {ReactNode} from 'react';
   import {createRemoteReactComponent} from '@remote-ui/react';
 
   interface Button {
@@ -40,7 +40,7 @@ However, remote-ui has one important feature that can impact some component APIs
   return <Button icon={<Icon />}>Press me!</Button>;
   ```
 
-  It will not do what you expect. This tells remote-ui that there is a `Button` component with an `icon` prop, but remote-ui will just see that prop as an object (the result of transpiling way the JSX to `React.createElement(Icon)`), and has no way of assigning that prop the special meaning of it actually being part of the tree, in another location.
+  It will not do what you expect. This tells remote-ui that there is a `Button` component with an `icon` prop, but remote-ui will just see that prop as an object (the result of transpiling away the JSX to `_jsx_(Icon)`), and has no way of assigning that prop the special meaning of it actually being part of the tree, in another location.
 
   A similar example using the base remote-ui API also does not work:
 

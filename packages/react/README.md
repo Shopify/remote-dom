@@ -25,9 +25,6 @@ npm install @remote-ui/react --save
 The main entrypoint for this package, `@remote-ui/react`, provides the custom React renderer that outputs instructions to a [`@remote-ui/core` `RemoteRoot`](../core#remoteroot) object. This lets you use the remote-ui system for communicating patch updates to host components over a bridge, but have React help manage your stateful application logic. To run a React app against a `RemoteRoot`, use the `render` function exported by this library, passing in the remote root and your root React component:
 
 ```tsx
-// React usually has to be in scope when using JSX
-import React from 'react';
-
 // For convenience, this library re-exports several values from @remote-ui/core, like createRemoteRoot
 import {render, createRemoteRoot} from '@remote-ui/react';
 
@@ -86,8 +83,6 @@ This package provides a second entrypoint, `@remote-ui/react/host`, with a colle
 To show these utilities in action, we’ll use the same `Button` example we have looked at for the remote APIs. The host environment for those examples needs to be able to render the real `Button` component with the props received from the remote environment. To do so, we first create our host-side `Button` component (we’ll assume we are in a DOM environment, so this component will render an HTML button):
 
 ```tsx
-import React from 'react';
-
 export function Button({onPress, children}) {
   return (
     <button type="button" onClick={() => onPress()}>
@@ -100,7 +95,7 @@ export function Button({onPress, children}) {
 The React component we will use to render our remote component tree needs to know how to map from a component name to component implementation. To do this, pass your host components to `createController()`, a function provided by this library:
 
 ```tsx
-import React, {useMemo} from 'react';
+import {useMemo} from 'react';
 import {createController} from '@remote-ui/react/host';
 
 import {Button} from './Button';
@@ -114,7 +109,7 @@ function MyRemoteRenderer() {
 In addition to the `controller`, we need to create a [`RemoteReceiver` object](../core#remotereceiver). This object is responsible for accepting updates from the remote context, and turning them back into a tree of UI components on the host:
 
 ```tsx
-import React, {useMemo, useEffect} from 'react';
+import {useMemo, useEffect} from 'react';
 import {createController, RemoteReceiver} from '@remote-ui/react/host';
 
 import {Button} from './Button';
@@ -137,7 +132,7 @@ function MyRemoteRenderer() {
 Finally, you can pass these two objects to the `RemoteRenderer` component provided by this entrypoint, which will start listening for changes to the `receiver`, and render the host React component equivalent of the remote component tree.
 
 ```tsx
-import React, {useMemo, useEffect} from 'react';
+import {useMemo, useEffect} from 'react';
 import {
   createController,
   RemoteReceiver,

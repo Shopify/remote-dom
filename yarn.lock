@@ -2228,7 +2228,7 @@
     graphql "^15.0.0"
     typescript ">=3 <4"
 
-"@sewing-kit/hooks@^0.1.4", "@sewing-kit/hooks@^0.1.6":
+"@sewing-kit/hooks@^0.1.6":
   version "0.1.6"
   resolved "https://registry.yarnpkg.com/@sewing-kit/hooks/-/hooks-0.1.6.tgz#e980817294d5888cdb4d4f632f1854419c5872f1"
   integrity sha512-UlCAvr6d6/g0MBnZa1heKrVztqjcVFnPRxPnrq7DLMESCnATXppaaUYiwqrYXK5Mpy//QO4z/UfsGDc/Q4zIUA==
@@ -2244,30 +2244,6 @@
     "@sewing-kit/hooks" "^0.1.6"
     "@sewing-kit/plugins" "^0.1.6"
     eslint "^7.0.0"
-
-"@sewing-kit/plugin-javascript@^0.1.10":
-  version "0.1.16"
-  resolved "https://registry.yarnpkg.com/@sewing-kit/plugin-javascript/-/plugin-javascript-0.1.16.tgz#2bb7c72c1cb175bba4912b8fb6ff829d682a640d"
-  integrity sha512-j0hJt6YKdUFg3pLFmr81s9mK7rGRsmSiS9fQQ9teaFNUEpWX8xpK6T1o4yxRKTnh3tF/c1Tdslst4NhJYzyKrw==
-  dependencies:
-    "@babel/cli" "^7.8.4"
-    "@babel/core" "^7.8.0"
-    "@babel/plugin-proposal-class-properties" "^7.8.3"
-    "@babel/plugin-proposal-nullish-coalescing-operator" "^7.8.3"
-    "@babel/plugin-proposal-numeric-separator" "^7.8.3"
-    "@babel/plugin-proposal-optional-chaining" "^7.9.0"
-    "@babel/plugin-syntax-dynamic-import" "^7.8.3"
-    "@babel/plugin-transform-runtime" "^7.10.3"
-    "@babel/preset-env" "^7.9.5"
-    "@sewing-kit/hooks" "^0.1.4"
-    "@sewing-kit/plugins" "^0.1.4"
-    "@types/babel__core" "^7.1.7"
-    babel-loader "^8.1.0"
-    core-js "^3.6.5"
-    node-object-hash "^2.0.0"
-  optionalDependencies:
-    "@sewing-kit/plugin-webpack" "^0.1.7"
-    webpack ">=4 <5"
 
 "@sewing-kit/plugin-javascript@^0.2.0":
   version "0.2.0"
@@ -2411,7 +2387,7 @@
     "@sewing-kit/plugin-jest" "^0.1.21"
     "@sewing-kit/plugin-webpack" "^0.1.9"
 
-"@sewing-kit/plugin-webpack@^0.1.6", "@sewing-kit/plugin-webpack@^0.1.7", "@sewing-kit/plugin-webpack@^0.1.9":
+"@sewing-kit/plugin-webpack@^0.1.0", "@sewing-kit/plugin-webpack@^0.1.9":
   version "0.1.9"
   resolved "https://registry.yarnpkg.com/@sewing-kit/plugin-webpack/-/plugin-webpack-0.1.9.tgz#802fa9e0284a69191d67c4f31b511017400e861a"
   integrity sha512-1PLJMzNgM2R7PUdX8iORdNuxS/Z++2ymByO6Ie9q3pRmOB71er95OEGgu7iyD/BD2YOp+nth4Bvt7GVbojucpA==
@@ -2428,7 +2404,7 @@
     webpack "^4.42.1"
     webpack-merge "^4.2.2"
 
-"@sewing-kit/plugins@^0.1.4", "@sewing-kit/plugins@^0.1.6":
+"@sewing-kit/plugins@^0.1.0", "@sewing-kit/plugins@^0.1.6":
   version "0.1.6"
   resolved "https://registry.yarnpkg.com/@sewing-kit/plugins/-/plugins-0.1.6.tgz#7a4fbd0cb9239e60f85968b51891287cad51e25d"
   integrity sha512-RLfGdchyLu6ZEpTPernAtI/3dUltIZDvYGExxfhRjwNWkKZEmhsRIm6VRSOFwAx/L2BGbHVzh0pYYWmIqSjuag==
@@ -2765,17 +2741,17 @@
   resolved "https://registry.yarnpkg.com/@types/range-parser/-/range-parser-1.2.3.tgz#7ee330ba7caafb98090bece86a5ee44115904c2c"
   integrity sha512-ewFXqrQHlFsgc09MK5jP5iR7vumV/BYayNC6PgJO2LPe8vrnNFyjQjSppfEngITi0qvfKtzFvgKymGheFM9UOA==
 
-"@types/react-dom@^16.9.7":
-  version "16.9.8"
-  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-16.9.8.tgz#fe4c1e11dfc67155733dfa6aa65108b4971cb423"
-  integrity sha512-ykkPQ+5nFknnlU6lDd947WbQ6TE3NNzbQAkInC2EKY1qeYdTKp7onFusmYZb+ityzx2YviqT6BXSu+LyWWJwcA==
+"@types/react-dom@^17.0.0":
+  version "17.0.1"
+  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-17.0.1.tgz#d92d77d020bfb083e07cc8e0ac9f933599a4d56a"
+  integrity sha512-yIVyopxQb8IDZ7SOHeTovurFq+fXiPICa+GV3gp0Xedsl+MwQlMLKmvrnEjFbQxjliH5YVAEWFh975eVNmKj7Q==
   dependencies:
     "@types/react" "*"
 
-"@types/react-reconciler@*":
-  version "0.18.0"
-  resolved "https://registry.yarnpkg.com/@types/react-reconciler/-/react-reconciler-0.18.0.tgz#fce2b444103f44904e73eba349ac6552e2771f64"
-  integrity sha512-hLVaxzL7cGgk/2C/sc8yyyvi+aeeimv7SKOFgyuPFYqNb2rnnQApHabcxo5Xp+GloUAfMe3tyQm2nkrmbLXq4w==
+"@types/react-reconciler@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@types/react-reconciler/-/react-reconciler-0.26.0.tgz#fee923cb6621e6817ab4b84ad0f64707e4670a07"
+  integrity sha512-kWnVUzDqUkvibnYaLGH251qE9+HHhklA18Fuj556dvbb4atzPDrU2F3+Xpmlt4NuoEwYbWLJSnk/YKGeqN9Acg==
   dependencies:
     "@types/react" "*"
 
@@ -2786,7 +2762,7 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react@*", "@types/react@>=16.8.0 <18.0.0":
+"@types/react@*", "@types/react@>=17.0.0 <18.0.0":
   version "17.0.0"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-17.0.0.tgz#5af3eb7fad2807092f0046a1302b7823e27919b8"
   integrity sha512-aj/L7RIMsRlWML3YB6KZiXB3fV2t41+5RBGYF8z+tAKU43Px8C3cYUZsDvf1/+Bm4FK21QWBrDutu8ZJ/70qOw==
@@ -9415,7 +9391,7 @@ promzard@^0.3.0:
   dependencies:
     read "1"
 
-prop-types@^15.6.2, prop-types@^15.7.2:
+prop-types@^15.7.2:
   version "15.7.2"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.7.2.tgz#52c41e75b8c87e72b9d9360e0206b99dcbffa6c5"
   integrity sha512-8QQikdH7//R2vurIJSutZ1smHYTcLpRWEOlHnzcWHmBYrOGUysKwSsrC89BCiFj3CbrfJ/nXFdJepOVrY1GCHQ==
@@ -9571,15 +9547,14 @@ randomfill@^1.0.3:
     randombytes "^2.0.5"
     safe-buffer "^5.1.0"
 
-react-dom@^16.13.1:
-  version "16.14.0"
-  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-16.14.0.tgz#7ad838ec29a777fb3c75c3a190f661cf92ab8b89"
-  integrity sha512-1gCeQXDLoIqMgqD3IO2Ah9bnf0w9kzhwN5q4FGnHZ67hBm9yePzB5JJAIQCc8x3pFnNlwFq4RidZggNAAkzWWw==
+react-dom@^17.0.0:
+  version "17.0.1"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-17.0.1.tgz#1de2560474ec9f0e334285662ede52dbc5426fc6"
+  integrity sha512-6eV150oJZ9U2t9svnsspTMrWNyHc6chX0KzDeAOXftRa8bNeOKTTfCJ7KorIwenkHd2xqVTBTCZd79yk/lx/Ug==
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
-    prop-types "^15.6.2"
-    scheduler "^0.19.1"
+    scheduler "^0.20.1"
 
 react-is@^16.12.0, "react-is@^16.12.0 || ^17.0.0", react-is@^16.8.1:
   version "16.13.1"
@@ -9591,17 +9566,7 @@ react-is@^17.0.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.1.tgz#5b3531bd76a645a4c9fb6e693ed36419e3301339"
   integrity sha512-NAnt2iGDXohE5LI7uBnLnqvLQMtzhkiAOLXTmv+qnF9Ky7xAPcX8Up/xWIhxvLVGJvuLiNc4xQLtuqDRzb4fSA==
 
-"react-reconciler@>=0.25.0 <0.26.0":
-  version "0.25.1"
-  resolved "https://registry.yarnpkg.com/react-reconciler/-/react-reconciler-0.25.1.tgz#f9814d59d115e1210762287ce987801529363aaa"
-  integrity sha512-R5UwsIvRcSs3w8n9k3tBoTtUHdVhu9u84EG7E5M0Jk9F5i6DA1pQzPfUZd6opYWGy56MJOtV3VADzy6DRwYDjw==
-  dependencies:
-    loose-envify "^1.1.0"
-    object-assign "^4.1.1"
-    prop-types "^15.6.2"
-    scheduler "^0.19.1"
-
-react-reconciler@^0.26.0:
+"react-reconciler@>=0.26.0 <1.0.0", react-reconciler@^0.26.0:
   version "0.26.1"
   resolved "https://registry.yarnpkg.com/react-reconciler/-/react-reconciler-0.26.1.tgz#860952dd359fd870f94895c254271e3a9de3b2d6"
   integrity sha512-6E/CvH9zcDmHjhiNJlP0qJ8+3ufnY2b5RWs774Uy8XKWN0l6qfnlkz0XnDacxqj2rbJdq76w9dlFXjPPOQrmqA==
@@ -9633,14 +9598,13 @@ react-test-renderer@^17.0.0:
     react-shallow-renderer "^16.13.1"
     scheduler "^0.20.1"
 
-react@^16.13.1:
-  version "16.14.0"
-  resolved "https://registry.yarnpkg.com/react/-/react-16.14.0.tgz#94d776ddd0aaa37da3eda8fc5b6b18a4c9a3114d"
-  integrity sha512-0X2CImDkJGApiAlcf0ODKIneSwBPhqJawOa5wCtKbu7ZECrmS26NvtSILynQ66cgkT/RJ4LidJOc3bUESwmU8g==
+react@^17.0.0:
+  version "17.0.1"
+  resolved "https://registry.yarnpkg.com/react/-/react-17.0.1.tgz#6e0600416bd57574e3f86d92edba3d9008726127"
+  integrity sha512-lG9c9UuMHdcAexXtigOZLX8exLWkW0Ku29qPRU8uhF2R9BN96dLCt0psvzPLlHc5OWkgymP3qwTRgbnw5BKx3w==
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
-    prop-types "^15.6.2"
 
 read-cmd-shim@^1.0.1:
   version "1.0.5"
@@ -10137,14 +10101,6 @@ saxes@^5.0.0:
   integrity sha512-5LBh1Tls8c9xgGjw3QrMwETmTMVk0oFgvrFSvWx62llR2hcEInrKNZ2GZCCuuy2lvWrdl5jhbpeqc5hRYKFOcw==
   dependencies:
     xmlchars "^2.2.0"
-
-scheduler@^0.19.1:
-  version "0.19.1"
-  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.19.1.tgz#4f3e2ed2c1a7d65681f4c854fa8c5a1ccb40f196"
-  integrity sha512-n/zwRWRYSUj0/3g/otKDRPMh6qv2SYMWNq85IEa8iZyAv8od9zDYpGSnpBEjNgcMNq6Scbu5KfIPxNF72R/2EA==
-  dependencies:
-    loose-envify "^1.1.0"
-    object-assign "^4.1.1"
 
 scheduler@^0.20.1:
   version "0.20.1"

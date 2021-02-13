@@ -53,7 +53,6 @@ This configuration will make it so that, whenever we use the `createWorkerFactor
 ```tsx
 // in WorkerRenderer.tsx
 
-import React from 'react';
 import {createWorkerFactory} from '@remote-ui/web-workers';
 
 const createWorker = createWorkerFactory(() => import('./worker'));
@@ -178,7 +177,7 @@ The [`@remote-ui/react`](../packages/react) library has a couple of utilities we
 ```tsx
 // back in WorkerRenderer.tsx
 
-import React, {useMemo, useEffect, ReactNode} from 'react';
+import {useMemo, useEffect, ReactNode} from 'react';
 import {
   RemoteReceiver,
   RemoteRenderer,
@@ -307,7 +306,7 @@ Finally, the third-party can use these strongly-typed React components in their 
 ```tsx
 // in the third-party code... (note, they would need to bundle their code!)
 
-import React, {useState} from 'react';
+import {useState} from 'react';
 import {render} from '@remote-ui/react';
 import {onRender, Card, Button} from '@company/ui-api';
 
@@ -376,7 +375,7 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
    ```tsx
    // in the third-party code... (note, they would need to bundle their code!)
 
-   import React, {useState} from 'react';
+   import {useState} from 'react';
    import {render} from '@remote-ui/react';
    import {onRender, Card, Button} from '@company/ui-api';
 
@@ -428,7 +427,7 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
    ```tsx
    // back in WorkerRenderer.tsx
 
-   import React, {useMemo, useEffect, ReactNode} from 'react';
+   import {useMemo, useEffect, ReactNode} from 'react';
    import {
      RemoteReceiver,
      RemoteRenderer,
@@ -507,7 +506,7 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
    ```tsx
    // back in WorkerRenderer.tsx
 
-   import React, {useMemo, useEffect, ReactNode} from 'react';
+   import {useMemo, useEffect, ReactNode} from 'react';
    import {
      RemoteReceiver,
      RemoteRenderer,
