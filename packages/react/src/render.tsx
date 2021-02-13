@@ -7,7 +7,9 @@ export function render(
   root: import('@remote-ui/core').RemoteRoot<any, any>,
   callback?: () => void,
 ) {
-  const container = reconciler.createContainer(root, false, false);
+  // @see https://github.com/facebook/react/blob/993ca533b42756811731f6b7791ae06a35ee6b4d/packages/react-reconciler/src/ReactRootTags.js
+  // I think we are a legacy root?
+  const container = reconciler.createContainer(root, 0, false, null);
 
   // callback is cast here because the typings do not mark that argument
   // as optional, even though it is.

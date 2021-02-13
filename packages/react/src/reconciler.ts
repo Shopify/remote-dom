@@ -18,6 +18,8 @@ const reconciler = reactReconciler<
   RemoteComponent<any, any>,
   // text instance
   RemoteText<any>,
+  // suspense instance
+  never,
   // hydratable instance
   unknown,
   // public instance
@@ -34,9 +36,15 @@ const reconciler = reactReconciler<
   unknown
 >({
   now: Date.now,
-  setTimeout,
-  clearTimeout,
+
+  // Timeout
+  scheduleTimeout: setTimeout,
+  cancelTimeout: clearTimeout,
   noTimeout: false,
+  // @see https://github.com/facebook/react/blob/master/packages/react-dom/src/client/ReactDOMHostConfig.js#L408
+  queueMicrotask: (callback) =>
+    Promise.resolve(null).then(callback).catch(handleErrorInNextTick),
+
   isPrimaryRenderer: true,
   supportsMutation: true,
   supportsHydration: false,
@@ -120,6 +128,11 @@ const reconciler = reactReconciler<
   removeChildFromContainer(remoteRoot, child) {
     remoteRoot.removeChild(child);
   },
+  clearContainer(remoteRoot) {
+    for (const child of remoteRoot.children) {
+      remoteRoot.removeChild(child);
+    }
+  },
 
   // Update children
   appendInitialChild(parent, child) {
@@ -135,21 +148,6 @@ const reconciler = reactReconciler<
     parent.removeChild(child);
   },
 
-  // Deferred callbacks
-  scheduleDeferredCallback() {},
-  cancelDeferredCallback() {},
-
-  // The react-reconciler types have not been updated to include
-  // these, but we *do* need them!
-  ...({
-    schedulePassiveEffects(fn: Function) {
-      return setTimeout(fn);
-    },
-    cancelPassiveEffects(handle: number) {
-      clearTimeout(handle);
-    },
-  } as {}),
-
   // Unknown
   finalizeInitialChildren() {
     return false;
@@ -158,13 +156,19 @@ const reconciler = reactReconciler<
     return false;
   },
   getPublicInstance() {},
-  shouldDeprioritizeSubtree() {
-    return false;
+  prepareForCommit() {
+    return null;
   },
-  prepareForCommit() {},
   resetAfterCommit() {},
   commitMount() {},
+  preparePortalMount() {},
 });
+
+function handleErrorInNextTick(error: Error) {
+  setTimeout(() => {
+    throw error;
+  });
+}
 
 const {hasOwnProperty} = {};
 function has(object: object, property: string | number | symbol) {
