@@ -40,7 +40,7 @@ However, remote-ui has one important feature that can impact some component APIs
   return <Button icon={<Icon />}>Press me!</Button>;
   ```
 
-  It will not do what you expect. This tells remote-ui that there is a `Button` component with an `icon` prop, but remote-ui will just see that prop as an object (the result of transpiling way the JSX to `React.createElement(Icon)`), and has no way of assigning that prop the special meaning of it actually being part of the tree, in another location.
+  It will not do what you expect. This tells remote-ui that there is a `Button` component with an `icon` prop, but remote-ui will just see that prop as an object (the result of transpiling away the JSX to `_jsx_(Icon)`), and has no way of assigning that prop the special meaning of it actually being part of the tree, in another location.
 
   A similar example using the base remote-ui API also does not work:
 

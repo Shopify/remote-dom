@@ -1,4 +1,5 @@
-import {memo, createElement, useEffect} from 'react';
+import {memo, useEffect} from 'react';
+import type {ComponentType} from 'react';
 import {retain, release} from '@remote-ui/core';
 import type {
   Serialized,
@@ -16,7 +17,7 @@ interface Props {
   controller: Controller;
   // Type override allows components to bypass default wrapping behavior, specifically in Argo Admin which uses Polaris to render on the host. Ex: Stack, ResourceList...
   // See https://github.com/Shopify/app-extension-libs/issues/996#issuecomment-710437088
-  __type__?: React.ComponentType;
+  __type__?: ComponentType;
 }
 
 export const RemoteComponent = memo(
@@ -38,24 +39,26 @@ export const RemoteComponent = memo(
 
     const {children} = attached;
 
-    return createElement(
-      Implementation,
-      props,
-      ...[...children].map((child) => {
-        if ('children' in child) {
-          return (
-            <RemoteComponent
-              key={child.id}
-              receiver={receiver}
-              component={child}
-              controller={controller}
-              __type__={(controller.get(child.type) as any)?.__type__}
-            />
-          );
-        } else {
-          return <RemoteText key={child.id} text={child} receiver={receiver} />;
-        }
-      }),
+    return (
+      <Implementation {...props}>
+        {[...children].map((child) => {
+          if ('children' in child) {
+            return (
+              <RemoteComponent
+                key={child.id}
+                receiver={receiver}
+                component={child}
+                controller={controller}
+                __type__={(controller.get(child.type) as any)?.__type__}
+              />
+            );
+          } else {
+            return (
+              <RemoteText key={child.id} text={child} receiver={receiver} />
+            );
+          }
+        })}
+      </Implementation>
     );
   },
 );
