@@ -1,5 +1,5 @@
 import {createRemoteRoot} from '../root';
-import {RemoteReceiver} from '../receiver';
+import {createRemoteReceiver} from '../receiver';
 import type {RemoteChannel} from '../types';
 
 describe('root', () => {
@@ -263,12 +263,12 @@ describe('root', () => {
 });
 
 function createDelayedReceiver() {
-  const receiver = new RemoteReceiver();
+  const receiver = createRemoteReceiver();
   const enqueued = new Set<() => void>();
 
   return {
     get children() {
-      return receiver.root.children;
+      return receiver.attached.root.children;
     },
     receive: ((type, ...args) => {
       const perform = () => {

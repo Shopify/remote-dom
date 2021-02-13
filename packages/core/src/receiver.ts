@@ -13,18 +13,27 @@ import type {
   RemoteComponentSerialization,
 } from './types';
 
-const ROOT_ID = Symbol('RootId');
+export const ROOT_ID = Symbol('RootId');
 
-type Child = RemoteTextSerialization | RemoteComponentSerialization<any>;
+export interface Text extends RemoteTextSerialization {
+  version: number;
+}
+
+export interface Component
+  extends Omit<RemoteComponentSerialization<any>, 'children'> {
+  children: Child[];
+  version: number;
+}
+
+type Child = Text | Component;
 
 interface Root {
   id: typeof ROOT_ID;
   children: Child[];
+  version: number;
 }
 
 type Attachable = Child | Root;
-
-type UpdateListener<T extends Attachable> = (updated: T) => void;
 
 interface RemoteChannelRunner {
   mount(...args: ActionArgumentMap[typeof ACTION_MOUNT]): void;
@@ -52,133 +61,196 @@ export function createRemoteChannel({
   return (type, ...args) => (messageMap.get(type) as any)(...args);
 }
 
-export class RemoteReceiver {
-  readonly root: Root = {id: ROOT_ID, children: []};
+export interface RemoteReceiverAttachment {
+  readonly root: Root;
+  get<T extends Attachable>(attachable: Pick<T, 'id'>): T | null;
+  subscribe<T extends Attachable>(
+    {id}: T,
+    subscriber: (value: T) => void,
+  ): () => void;
+}
 
-  readonly receive = createRemoteChannel({
+export interface RemoteReceiver {
+  readonly receive: RemoteChannel;
+  readonly attached: RemoteReceiverAttachment;
+  readonly state: 'mounted' | 'unmounted';
+  on(
+    event: 'mount',
+    handler: (details: {children: readonly Child[]}) => void,
+  ): () => void;
+  flush(): Promise<void>;
+}
+
+export function createRemoteReceiver(): RemoteReceiver {
+  const queuedUpdates = new Set<Attachable>();
+  const listeners = new Map<
+    Parameters<RemoteReceiver['on']>[0],
+    Set<Parameters<RemoteReceiver['on']>[1]>
+  >();
+
+  const attachmentSubscribers = new Map<
+    string | typeof ROOT_ID,
+    Set<(value: Attachable) => void>
+  >();
+
+  let timeout: Promise<void> | null = null;
+  const state: RemoteReceiver['state'] = 'unmounted';
+
+  const root: Root = {id: ROOT_ID, children: [], version: 0};
+  const attachedNodes = new Map<string | typeof ROOT_ID, Attachable>([
+    [ROOT_ID, root],
+  ]);
+
+  const receive = createRemoteChannel({
     mount: (children) => {
-      this.root.children = children;
+      const root = attachedNodes.get(ROOT_ID) as Root;
 
-      for (const child of children) {
+      const normalizedChildren = children.map(addVersion);
+
+      root.version += 1;
+      root.children = normalizedChildren;
+
+      for (const child of normalizedChildren) {
         retain(child);
-        this.attach(child);
+        attach(child);
       }
 
-      this.enqueueUpdate(this.root);
+      enqueueUpdate(root);
     },
     insertChild: (id, index, child) => {
-      retain(child);
-      this.attach(child);
-      const attached = this.attached.get(id ?? ROOT_ID) as Root;
-      const children = [...attached.children];
+      const normalizedChild = addVersion(child);
+      retain(normalizedChild);
+      attach(normalizedChild);
+
+      const attached = attachedNodes.get(id ?? ROOT_ID) as Root;
+      const {children} = attached;
 
       if (index === children.length) {
-        children.push(child);
+        children.push(normalizedChild);
       } else {
-        children.splice(index, 0, child);
+        children.splice(index, 0, normalizedChild);
       }
 
-      attached.children = children;
+      attached.version += 1;
 
-      this.enqueueUpdate(attached);
+      enqueueUpdate(attached);
     },
     removeChild: (id, index) => {
-      const attached = this.attached.get(id ?? ROOT_ID) as Root;
-      const children = [...attached.children];
-      const [removed] = children.splice(index, 1);
+      const attached = attachedNodes.get(id ?? ROOT_ID) as Root;
+      const {children} = attached;
 
-      this.detach(removed);
-      attached.children = children;
+      const [removed] = children.splice(index, 1);
+      attached.version += 1;
+
+      detach(removed);
 
       // eslint-disable-next-line promise/catch-or-return
-      this.enqueueUpdate(attached).then(() => {
+      enqueueUpdate(attached).then(() => {
         release(removed);
       });
     },
     updateProps: (id, newProps) => {
-      const component = this.attached.get(id) as RemoteComponentSerialization;
-      const {props: oldProps} = component;
+      const component = attachedNodes.get(id) as Component;
+      const oldProps = {...(component.props as any)};
 
       retain(newProps);
 
-      const props = {...(component.props as any), ...newProps};
-      component.props = props;
+      Object.assign(component.props, newProps);
+      component.version += 1;
 
       // eslint-disable-next-line promise/catch-or-return
-      this.enqueueUpdate(component).then(() => {
+      enqueueUpdate(component).then(() => {
         for (const key of Object.keys(newProps)) {
           release((oldProps as any)[key]);
         }
       });
     },
     updateText: (id, newText) => {
-      const text = this.attached.get(id) as RemoteTextSerialization;
+      const text = attachedNodes.get(id) as Text;
       text.text = newText;
-      this.enqueueUpdate(text);
+      text.version += 1;
+      enqueueUpdate(text);
     },
   });
 
-  private attached = new Map<string | typeof ROOT_ID, Attachable>([
-    [ROOT_ID, this.root],
-  ]);
+  return {
+    get state() {
+      return state;
+    },
+    receive,
+    attached: {
+      root,
+      get({id}) {
+        return (attachedNodes.get(id) as any) ?? null;
+      },
+      subscribe({id}, subscriber) {
+        let subscribers = attachmentSubscribers.get(id);
 
-  private timeout: Promise<void> | null = null;
-  private queuedUpdates = new Set<Attachable>();
-
-  private readonly listeners = new Map<
-    string | typeof ROOT_ID,
-    Set<UpdateListener<any>>
-  >();
-
-  get<T extends Attachable>({id}: T): T | null {
-    return (this.attached.get(id) as T | undefined) ?? null;
-  }
-
-  listen<T extends Attachable>({id}: T, listener: UpdateListener<T>) {
-    let listeners: Set<UpdateListener<any>>;
-    if (this.listeners.has(id)) {
-      listeners = this.listeners.get(id)!;
-    } else {
-      listeners = new Set();
-      this.listeners.set(id, listeners);
-    }
-    listeners.add(listener);
-
-    return () => {
-      const listeners = this.listeners.get(id);
-      if (listeners) {
-        listeners.delete(listener);
-        if (listeners.size) {
-          this.listeners.set(id, listeners);
-        } else {
-          this.listeners.delete(id);
+        if (subscribers == null) {
+          subscribers = new Set();
+          attachmentSubscribers.set(id, subscribers);
         }
+
+        subscribers.add(subscriber as any);
+
+        return () => {
+          const subscribers = attachmentSubscribers.get(id);
+
+          if (subscribers) {
+            subscribers.delete(subscriber as any);
+
+            if (subscribers.size === 0) {
+              attachmentSubscribers.delete(id);
+            }
+          }
+        };
+      },
+    },
+    flush,
+    on(event, listener) {
+      let listenersForEvent = listeners.get(event);
+
+      if (listenersForEvent == null) {
+        listenersForEvent = new Set();
+        listeners.set(event, listenersForEvent);
       }
-    };
+
+      listenersForEvent.add(listener);
+
+      return () => {
+        const listenersForEvent = listeners.get(event);
+
+        if (listenersForEvent) {
+          listenersForEvent.delete(listener);
+
+          if (listenersForEvent.size === 0) {
+            listeners.delete(event);
+          }
+        }
+      };
+    },
+  };
+
+  function flush() {
+    return timeout ?? Promise.resolve();
   }
 
-  flush() {
-    return this.timeout ?? Promise.resolve();
-  }
-
-  private enqueueUpdate(attached: Attachable) {
-    this.timeout =
-      this.timeout ??
+  function enqueueUpdate(attached: Attachable) {
+    timeout =
+      timeout ??
       new Promise((resolve) => {
         setTimeout(() => {
-          const queuedUpdates = [...this.queuedUpdates];
+          const attachedToUpdate = [...queuedUpdates];
 
-          this.timeout = null;
-          this.queuedUpdates.clear();
+          timeout = null;
+          queuedUpdates.clear();
 
-          for (const attached of queuedUpdates) {
-            const listeners = this.listeners.get(
-              attached === this.root ? ROOT_ID : attached.id,
-            );
+          for (const attached of attachedToUpdate) {
+            const subscribers = attachmentSubscribers.get(attached.id);
 
-            if (listeners) {
-              for (const listener of listeners) {
-                listener(attached);
+            if (subscribers) {
+              for (const subscriber of subscribers) {
+                subscriber(attached);
               }
             }
           }
@@ -187,28 +259,33 @@ export class RemoteReceiver {
         }, 0);
       });
 
-    this.queuedUpdates.add(attached);
+    queuedUpdates.add(attached);
 
-    return this.timeout;
+    return timeout;
   }
 
-  private attach(child: Child) {
-    this.attached.set(child.id, child);
+  function attach(child: Child) {
+    attachedNodes.set(child.id, child);
 
     if ('children' in child) {
       for (const grandChild of child.children) {
-        this.attach(grandChild);
+        attach(grandChild);
       }
     }
   }
 
-  private detach(child: Child) {
-    this.attached.delete(child.id);
+  function detach(child: Child) {
+    attachedNodes.delete(child.id);
 
     if ('children' in child) {
       for (const grandChild of child.children) {
-        this.detach(grandChild);
+        detach(grandChild);
       }
     }
   }
+}
+
+function addVersion(value: any): Child {
+  (value as any).version = 0;
+  return value as any;
 }
