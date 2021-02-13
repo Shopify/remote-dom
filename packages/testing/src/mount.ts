@@ -112,7 +112,7 @@ export function mount<Root extends RemoteRoot<any, any> = RemoteRoot<any, any>>(
               );
             }
 
-            return (propValue as any)(...args);
+            return (propValue as any)(...(args as any[]));
           },
           {eager: true},
         ),

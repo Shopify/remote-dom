@@ -41,7 +41,6 @@ import {
   cloneElement,
   createFactory,
   unmountComponentAtNode,
-  // eslint-disable-next-line @typescript-eslint/camelcase
   unstable_batchedUpdates,
 } from './uncommon';
 import {React} from './react';
@@ -71,7 +70,6 @@ export {
   PureComponent,
   createFactory,
   unmountComponentAtNode,
-  // eslint-disable-next-line @typescript-eslint/camelcase
   unstable_batchedUpdates,
   useState,
   useReducer,

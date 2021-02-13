@@ -51,7 +51,6 @@ export function unmountComponentAtNode(container: RemoteParentNode) {
  * Deprecated way to control batched rendering inside the reconciler, but we
  * already schedule in batches inside our rendering code
  */
-// eslint-disable-next-line @typescript-eslint/camelcase
 export function unstable_batchedUpdates<T>(
   callback: (arg?: T) => void,
   arg?: T,

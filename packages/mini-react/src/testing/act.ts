@@ -1,5 +1,3 @@
-/* eslint @typescript-eslint/camelcase: off */
-
 import options from '../options';
 
 type OptionsTestExtensions = typeof options & {

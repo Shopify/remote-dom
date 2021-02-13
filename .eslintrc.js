@@ -13,6 +13,14 @@ module.exports = {
   ],
   rules: {
     'lines-around-comment': 'off',
+    // Needed a resolution to fix some TS 4.0 linting, these rules no longer exist
+    '@typescript-eslint/ban-ts-ignore': 'off',
+    '@typescript-eslint/camelcase': 'off',
+    '@typescript-eslint/class-name-casing': 'off',
+    // Buggy rules
+    'babel/no-unused-expressions': 'off',
+    // Should improve these but too many errors for now
+    '@typescript-eslint/ban-types': 'off',
   },
   overrides: [
     {

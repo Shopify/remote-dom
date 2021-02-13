@@ -1,15 +1,12 @@
 import * as path from 'path';
 import {getOptions} from 'loader-utils';
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
 import SingleEntryPlugin from 'webpack/lib/SingleEntryPlugin';
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
 import WebWorkerTemplatePlugin from 'webpack/lib/webworker/WebWorkerTemplatePlugin';
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
 import FetchCompileWasmTemplatePlugin from 'webpack/lib/web/FetchCompileWasmTemplatePlugin';
 
