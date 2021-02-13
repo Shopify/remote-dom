@@ -74,10 +74,7 @@ export interface RemoteReceiver {
   readonly receive: RemoteChannel;
   readonly attached: RemoteReceiverAttachment;
   readonly state: 'mounted' | 'unmounted';
-  on(
-    event: 'mount',
-    handler: (details: {children: readonly Child[]}) => void,
-  ): () => void;
+  on(event: 'mount', handler: () => void): () => void;
   flush(): Promise<void>;
 }
 
@@ -115,7 +112,10 @@ export function createRemoteReceiver(): RemoteReceiver {
         attach(child);
       }
 
-      enqueueUpdate(root);
+      // eslint-disable-next-line promise/catch-or-return
+      enqueueUpdate(root).then(() => {
+        emit('mount');
+      });
     },
     insertChild: (id, index, child) => {
       const normalizedChild = addVersion(child);
@@ -233,6 +233,16 @@ export function createRemoteReceiver(): RemoteReceiver {
 
   function flush() {
     return timeout ?? Promise.resolve();
+  }
+
+  function emit(event: 'mount') {
+    const listenersForEvent = listeners.get(event);
+
+    if (listenersForEvent) {
+      for (const listener of listenersForEvent) {
+        listener();
+      }
+    }
   }
 
   function enqueueUpdate(attached: Attachable) {
