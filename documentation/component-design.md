@@ -27,7 +27,7 @@ However, remote-ui has one important feature that can impact some component APIs
 - You can’t pass JSX or remote components as props to other remote components. This mistake is particularly common if you are coming from React, where you are probably familiar with APIs like `<Suspense fallback={<div>Loading...</div>} />`. While the following looks like it should work:
 
   ```tsx
-  import React, {ReactNode} from 'react';
+  import type {ReactNode} from 'react';
   import {createRemoteReactComponent} from '@remote-ui/react';
 
   interface Button {

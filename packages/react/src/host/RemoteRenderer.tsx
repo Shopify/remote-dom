@@ -1,4 +1,4 @@
-import React, {memo, Fragment, createElement} from 'react';
+import {memo, Fragment, createElement} from 'react';
 import {KIND_COMPONENT, KIND_TEXT, RemoteReceiver} from '@remote-ui/core';
 
 import type {Controller} from './controller';
