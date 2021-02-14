@@ -20,7 +20,7 @@ export const RemoteRenderer = defineComponent({
     controller: {type: Object as PropType<Props['controller']>, required: true},
   },
   setup({receiver, controller}) {
-    const attached = useAttached(receiver, receiver.root);
+    const attached = useAttached(receiver, receiver.attached.root);
 
     return () => {
       return attached.value!.children.map((child) => {

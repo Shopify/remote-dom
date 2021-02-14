@@ -1,5 +1,5 @@
 import {useState, useDebugValue, useContext, useEffect} from 'react';
-import type {RemoteReceiver} from '@remote-ui/core';
+import type {RemoteReceiver, RemoteReceiverAttachable} from '@remote-ui/core';
 
 import {ControllerContext, RemoteReceiverContext} from './context';
 
@@ -23,42 +23,43 @@ export function useRemoteReceiver() {
   return receiver;
 }
 
-type Attachable = Parameters<RemoteReceiver['listen']>[0];
-
-interface State<T extends Attachable> {
+interface State<T extends RemoteReceiverAttachable> {
   receiver: RemoteReceiver;
-  attached: T;
+  id: RemoteReceiverAttachable['id'];
+  version?: RemoteReceiverAttachable['version'];
   value: T | null;
 }
 
-export function useAttached<T extends Attachable>(
+export function useAttached<T extends RemoteReceiverAttachable>(
   receiver: RemoteReceiver,
   attached: T,
 ) {
   const [state, setState] = useState<State<T>>({
     receiver,
-    attached,
-    value: {...attached},
+    id: attached.id,
+    version: attached.version,
+    value: attached,
   });
 
   let returnValue: T | null = state.value;
 
   // If parameters have changed since our last render, schedule an update with its current value.
-  if (state.receiver !== receiver || state.attached.id !== attached.id) {
+  if (state.receiver !== receiver || state.id !== attached.id) {
     // When the consumer of this hook changes receiver or attached node, the node they switched
     // to might already be unmounted. We guard against that by making sure we don’t get null
     // back from the receiver, and storing the “attached” node in state whether it is actually
     // attached or not, so we have a paper trail of how we got here.
-    const updated = receiver.get(attached);
+    const updated = receiver.attached.get<T>(attached);
 
     // If the subscription has been updated, we'll schedule another update with React.
     // React will process this update immediately, so the old subscription value won't be committed.
     // It is still nice to avoid returning a mismatched value though, so let's override the return value.
-    returnValue = updated && {...updated};
+    returnValue = updated;
 
     setState({
       receiver,
-      attached,
+      id: attached.id,
+      version: attached.version,
       value: returnValue,
     });
   }
@@ -69,18 +70,19 @@ export function useAttached<T extends Attachable>(
     let didUnsubscribe = false;
 
     const checkForUpdates = () => {
-      if (didUnsubscribe) {
-        return;
-      }
+      if (didUnsubscribe) return;
 
       setState((previousState) => {
         const {
+          id: previousId,
+          version: previousVersion,
           receiver: previousReceiver,
-          value: previousValue,
         } = previousState;
 
+        const {id} = attached;
+
         // Ignore values from stale sources
-        if (previousReceiver !== receiver) {
+        if (previousReceiver !== receiver || previousId !== id) {
           return previousState;
         }
 
@@ -90,20 +92,20 @@ export function useAttached<T extends Attachable>(
         // and the effect, the component was removed from the remote tree. You’ll see that
         // the rest of this callback is careful to handle cases where the node is in this
         // state.
-        const current = receiver.get(attached);
-        const value = current && {...current};
+        const value = receiver.attached.get<T>(attached);
+        const version = value?.version;
 
         // If the value hasn't changed, no update is needed.
         // Return state as-is so React can bail out and avoid an unnecessary render.
-        if (shallowEqual(previousValue, value)) {
+        if (previousVersion === version) {
           return previousState;
         }
 
-        return {receiver, attached, value};
+        return {receiver, value, id, version};
       });
     };
 
-    const unsubscribe = receiver.listen(attached, checkForUpdates);
+    const unsubscribe = receiver.attached.subscribe(attached, checkForUpdates);
 
     // Passive effect, so we need to check if anything has changed
     checkForUpdates();
@@ -115,13 +117,4 @@ export function useAttached<T extends Attachable>(
   }, [receiver, attached]);
 
   return returnValue;
-}
-
-function shallowEqual<T>(one: T, two: T) {
-  if (one == null) return two == null;
-  if (two == null) return false;
-
-  return Object.keys(two).every(
-    (key) => (one as any)[key] === (two as any)[key],
-  );
 }

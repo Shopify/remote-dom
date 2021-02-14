@@ -1,4 +1,5 @@
-export {RemoteReceiver} from '@remote-ui/core';
+export type {RemoteReceiver} from '@remote-ui/core';
+export {createRemoteReceiver} from '@remote-ui/core';
 
 export {RemoteRenderer} from './RemoteRenderer';
 export {createController} from './controller';

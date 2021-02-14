@@ -2,9 +2,8 @@ import {memo, useEffect} from 'react';
 import type {ComponentType} from 'react';
 import {retain, release} from '@remote-ui/core';
 import type {
-  Serialized,
   RemoteReceiver,
-  RemoteComponent as RemoteComponentDescription,
+  RemoteReceiverAttachableComponent,
 } from '@remote-ui/core';
 
 import type {Controller} from './controller';
@@ -13,7 +12,7 @@ import {useAttached} from './hooks';
 
 interface Props {
   receiver: RemoteReceiver;
-  component: Serialized<RemoteComponentDescription<any, any>>;
+  component: RemoteReceiverAttachableComponent;
   controller: Controller;
   // Type override allows components to bypass default wrapping behavior, specifically in Argo Admin which uses Polaris to render on the host. Ex: Stack, ResourceList...
   // See https://github.com/Shopify/app-extension-libs/issues/996#issuecomment-710437088

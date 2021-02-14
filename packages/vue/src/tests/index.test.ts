@@ -2,7 +2,7 @@ import {h, createApp} from 'vue';
 import {createRemoteRoot} from '@remote-ui/core';
 
 import {createRenderer} from '..';
-import {RemoteReceiver, RemoteRenderer, createController} from '../host';
+import {createRemoteReceiver, RemoteRenderer, createController} from '../host';
 
 import Remote from './components/Remote.vue';
 import Button from './components/Button.vue';
@@ -20,7 +20,7 @@ describe('vue', () => {
   });
 
   it('mirrors components from a remote root', async () => {
-    const receiver = new RemoteReceiver();
+    const receiver = createRemoteReceiver();
     const root = createRemoteRoot(receiver.receive);
 
     const controller = createController({

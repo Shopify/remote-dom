@@ -22,7 +22,7 @@ npm install @remote-ui/core --save
 
 ## Usage
 
-`@remote-ui/core` provides two main exports. You’ll use [`createRemoteRoot`](#createremoteroot) in the “remote” environment — where the source of truth for your UI will live — to construct a tree of UI components. If you are writing an application that will “host” these remote contexts, you’ll also use [`RemoteReceiver`](#remotereceiver) in that application to respond to updates from the remote context.
+`@remote-ui/core` provides two main exports. You’ll use [`createRemoteRoot`](#createremoteroot) in the “remote” environment — where the source of truth for your UI will live — to construct a tree of UI components. If you are writing an application that will “host” these remote contexts, you’ll also use [`createRemoteReceiver`](#createremotereceiver) in that application to respond to updates from the remote context.
 
 ### `createRemoteRoot()`
 
@@ -34,9 +34,9 @@ This function accepts two arguments:
 - `options` is an optional options object. There is currently one supported option: `strict`, which is enabled by default. When enabled, all `props` and `children` for remote components will be frozen (with `Object.freeze()`) in order to prevent direct mutation of those values (to prevent unexpected behavior, all mutations to these values should be done with the [`RemoteComponent`](#remotecomponent) API). The default `strict`ness also prevents potentially-untrusted code from adding properties or children that it is not supposed to. However, `Object.freeze` does have a small runtime cost, so if you are comfortable without this safety, you can disable it by passing `strict: false`:
 
 ```ts
-import {createRemoteRoot, RemoteReceiver} from '@remote-ui/core';
+import {createRemoteRoot, createRemoteReceiver} from '@remote-ui/core';
 
-const receiver = new RemoteReceiver();
+const receiver = createRemoteReceiver();
 
 const root = createRemoteRoot(receiver.receive, {
   strict: false,
@@ -219,60 +219,93 @@ if (LOCALE === 'fr') {
 }
 ```
 
-### `RemoteReceiver`
+### `createRemoteReceiver()`
+
+#### `RemoteReceiver`
 
 The opposite side of a `RemoteRoot` is a `RemoteReceiver`. This object can accept the UI updates from the remote context and reconstruct them into an observable tree on the host. This tree can then be used to render the components to their native representation in the host (in a web application, this representation is the DOM).
 
 ```ts
-import {RemoteReceiver} from '@remote-ui/core';
+import {createRemoteReceiver} from '@remote-ui/core';
 
-const receiver = new RemoteReceiver();
+const receiver = createRemoteReceiver();
 ```
 
 The `RemoteReceiver` instance has a number of properties and methods to connect it to a remote root, and to allow other objects to subscribe to updates. The full API is documented below.
 
-#### `RemoteReceiver#root`
-
-The `root` property is a readonly representation of the state of the remote root. You can use this property to get the initial set of components that are children of the root.
-
-```ts
-import {RemoteReceiver} from '@remote-ui/core';
-
-const receiver = new RemoteReceiver();
-
-for (const child of receiver.root.children) {
-  console.log(child);
-}
-```
-
-#### `RemoteReceiver#receive()`
+##### `RemoteReceiver#receive()`
 
 The `receive` method is a function that can be used as the first argument to the `createRemoteRoot` function. Passing this function to the remote root will cause all updates from that root to be reflected in the `RemoteReceiver`.
 
 ```ts
 import {RemoteReceiver, createRemoteRoot} from '@remote-ui/core';
 
-const receiver = new RemoteReceiver();
+const receiver = createRemoteReceiver();
 const root = createRemoteRoot(receiver.receive);
 ```
 
-#### `RemoteReceiver#listen()`
+##### `RemoteReceiver#state`
 
-The `listen` method registers a listener to run whenever a component in the tree changes, including the addition or removal of children, the changing of component properties, and the changing of remote text values. The first argument is the element to listen for, and the second is a function that will be invoked every time that element changes for any reason. This method returns a function that can be called to stop listening for updates.
+The `state` property tells you whether the remote root has mounted or not.
 
 ```ts
-import {RemoteReceiver} from '@remote-ui/core';
+import {createRemoteReceiver} from '@remote-ui/core';
 
-const receiver = new RemoteReceiver();
+const receiver = createRemoteReceiver();
+
+// logs `unmounted`
+console.log(receiver.state);
+```
+
+##### `RemoteReceiver#on()`
+
+The `on` method lets you subscribe to events on the remote root. Currently, there is only one event, `mount`, which is called when the `mount` message is received from the remote context. This method returns a function that can be called to remove the listener.
+
+```ts
+import {createRemoteReceiver} from '@remote-ui/core';
+
+const receiver = createRemoteReceiver();
+
+receiver.on('mount', () => {
+  console.log('Mounted!');
+});
+```
+
+##### `RemoteReceiver#attached`
+
+A `RemoteReceiverAttachment` object that provides access to the nodes that have been received from the remote context.
+
+###### `RemoteReceiverAttachment#root`
+
+The `root` property is a readonly representation of the state of the remote root. You can use this property to get the initial set of components that are children of the root.
+
+```ts
+import {createRemoteReceiver} from '@remote-ui/core';
+
+const receiver = createRemoteReceiver();
+
+for (const child of receiver.root.children) {
+  console.log(child);
+}
+```
+
+###### `RemoteReceiverAttachment#subscribe()`
+
+The `subscribe` method registers a subscriber to run whenever a component in the tree changes, including the addition or removal of children, the changing of component properties, and the changing of remote text values. The first argument is the element to subscribe for, and the second is a function that will be invoked every time that element changes for any reason. This method returns a function that can be called to stop subscribing to updates.
+
+```ts
+import {createRemoteReceiver} from '@remote-ui/core';
+
+const {attached} = createRemoteReceiver();
 const seen = new WeakMap();
 
-receiver.listen(receiver.root, (root) => {
+attached.subscribe(attached.root, (root) => {
   console.log('Root changed!');
 
   for (const child of root.children) {
     if (seen.has(child)) continue;
 
-    receiver.listen(child, (child) => {
+    attached.subscribe(child, (child) => {
       console.log('A root child changed!');
     });
   }

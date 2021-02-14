@@ -1,14 +1,13 @@
 import {memo} from 'react';
 import type {
-  Serialized,
   RemoteReceiver,
-  RemoteText as RemoteTextDescription,
+  RemoteReceiverAttachableText,
 } from '@remote-ui/core';
 
 import {useAttached} from './hooks';
 
 interface Props {
-  text: Serialized<RemoteTextDescription<any>>;
+  text: RemoteReceiverAttachableText;
   receiver: RemoteReceiver;
 }
 
