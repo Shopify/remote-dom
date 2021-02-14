@@ -3,9 +3,8 @@ import type {Ref, DefineComponent, PropType} from 'vue';
 
 import {retain, release} from '@remote-ui/core';
 import type {
-  Serialized,
   RemoteReceiver,
-  RemoteComponent as RemoteComponentDescription,
+  RemoteReceiverAttachableComponent,
 } from '@remote-ui/core';
 
 import type {Controller} from './controller';
@@ -14,7 +13,7 @@ import {useAttached} from './shared';
 
 interface Props {
   receiver: RemoteReceiver;
-  component: Serialized<RemoteComponentDescription<any, any>>;
+  component: RemoteReceiverAttachableComponent;
   controller: Controller;
 }
 

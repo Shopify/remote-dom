@@ -2,7 +2,7 @@ import {useEffect, useContext, createContext} from 'react';
 import {render as domRender} from 'react-dom';
 import {act as domAct} from 'react-dom/test-utils';
 
-import {createRemoteRoot, RemoteReceiver} from '@remote-ui/core';
+import {createRemoteRoot, createRemoteReceiver} from '@remote-ui/core';
 
 import {RemoteRenderer, createController} from '../host';
 import {
@@ -58,7 +58,7 @@ describe('@remote-ui/react', () => {
   it('renders a simple component across a remote bridge', () => {
     const name = 'Winston';
 
-    const receiver = new RemoteReceiver();
+    const receiver = createRemoteReceiver();
     const remoteRoot = createRemoteRoot(receiver.receive, {
       components: [RemoteHelloWorld],
     });
@@ -88,7 +88,7 @@ describe('@remote-ui/react', () => {
     const person = {name: 'Luna'};
     const spy = jest.fn();
 
-    const receiver = new RemoteReceiver();
+    const receiver = createRemoteReceiver();
     const remoteRoot = createRemoteRoot(receiver.receive, {
       components: [RemoteWithPerson],
     });

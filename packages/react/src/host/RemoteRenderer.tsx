@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const RemoteRenderer = memo(({controller, receiver}: Props) => {
-  const {children} = useAttached(receiver, receiver.root)!;
+  const {children} = useAttached(receiver, receiver.attached.root)!;
 
   return (
     <>

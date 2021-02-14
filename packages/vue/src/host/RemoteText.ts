@@ -1,15 +1,14 @@
 import {defineComponent} from 'vue';
 import type {PropType} from 'vue';
 import type {
-  Serialized,
   RemoteReceiver,
-  RemoteText as RemoteTextDescription,
+  RemoteReceiverAttachableText,
 } from '@remote-ui/core';
 
 import {useAttached} from './shared';
 
 interface Props {
-  text: Serialized<RemoteTextDescription<any>>;
+  text: RemoteReceiverAttachableText;
   receiver: RemoteReceiver;
 }
 

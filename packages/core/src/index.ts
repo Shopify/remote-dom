@@ -30,5 +30,14 @@ export type {
   RemoteComponentSerialization,
 } from './types';
 export {createRemoteRoot} from './root';
-export {RemoteReceiver, createRemoteChannel} from './receiver';
+export {createRemoteReceiver, createRemoteChannel} from './receiver';
+export type {
+  RemoteReceiver,
+  RemoteReceiverAttachment,
+  RemoteReceiverAttachable,
+  RemoteReceiverAttachableChild,
+  RemoteReceiverAttachableRoot,
+  RemoteReceiverAttachableComponent,
+  RemoteReceiverAttachableText,
+} from './receiver';
 export {isRemoteComponent, isRemoteText} from './utilities';

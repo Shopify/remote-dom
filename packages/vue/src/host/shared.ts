@@ -1,9 +1,7 @@
 import {ref, shallowRef, watch, onMounted, onUnmounted} from 'vue';
-import type {RemoteReceiver} from '@remote-ui/core';
+import type {RemoteReceiver, RemoteReceiverAttachable} from '@remote-ui/core';
 
-type Attachable = Parameters<RemoteReceiver['listen']>[0];
-
-export function useAttached<T extends Attachable>(
+export function useAttached<T extends RemoteReceiverAttachable>(
   receiver: RemoteReceiver,
   attachable: T,
 ) {
@@ -13,10 +11,17 @@ export function useAttached<T extends Attachable>(
   const attached = shallowRef<T | null>({...attachable});
 
   const updateAttached = () => {
-    const newAttached = receiverRef.value.get(attachableRef.value) as T | null;
+    const newAttached = receiverRef.value.attached.get(
+      attachableRef.value,
+    ) as T | null;
 
-    if (!shallowEqual(newAttached, attached.value as any)) {
-      attached.value = newAttached && ({...newAttached} as any);
+    const {value: currentAttached} = attached;
+
+    if (
+      newAttached?.id !== currentAttached?.id ||
+      newAttached?.version !== currentAttached?.version
+    ) {
+      attached.value = newAttached && {...newAttached};
     }
   };
 
@@ -24,7 +29,7 @@ export function useAttached<T extends Attachable>(
 
   const updateListener = () => {
     stopListeningRef.value?.();
-    stopListeningRef.value = receiverRef.value.listen(
+    stopListeningRef.value = receiverRef.value.attached.subscribe(
       attachableRef.value,
       updateAttached,
     );
@@ -45,13 +50,4 @@ export function useAttached<T extends Attachable>(
   });
 
   return attached;
-}
-
-function shallowEqual<T>(one: T, two: T) {
-  if (one == null) return two == null;
-  if (two == null) return false;
-
-  return Object.keys(two).every(
-    (key) => (one as any)[key] === (two as any)[key],
-  );
 }

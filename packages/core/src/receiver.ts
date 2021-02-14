@@ -15,25 +15,29 @@ import type {
 
 export const ROOT_ID = Symbol('RootId');
 
-export interface Text extends RemoteTextSerialization {
+export interface RemoteReceiverAttachableText extends RemoteTextSerialization {
   version: number;
 }
 
-export interface Component
+export interface RemoteReceiverAttachableComponent
   extends Omit<RemoteComponentSerialization<any>, 'children'> {
-  children: Child[];
+  children: RemoteReceiverAttachableChild[];
   version: number;
 }
 
-type Child = Text | Component;
-
-interface Root {
+export interface RemoteReceiverAttachableRoot {
   id: typeof ROOT_ID;
-  children: Child[];
+  children: RemoteReceiverAttachableChild[];
   version: number;
 }
 
-type Attachable = Child | Root;
+export type RemoteReceiverAttachableChild =
+  | RemoteReceiverAttachableText
+  | RemoteReceiverAttachableComponent;
+
+export type RemoteReceiverAttachable =
+  | RemoteReceiverAttachableChild
+  | RemoteReceiverAttachableRoot;
 
 interface RemoteChannelRunner {
   mount(...args: ActionArgumentMap[typeof ACTION_MOUNT]): void;
@@ -62,9 +66,9 @@ export function createRemoteChannel({
 }
 
 export interface RemoteReceiverAttachment {
-  readonly root: Root;
-  get<T extends Attachable>(attachable: Pick<T, 'id'>): T | null;
-  subscribe<T extends Attachable>(
+  readonly root: RemoteReceiverAttachableRoot;
+  get<T extends RemoteReceiverAttachable>(attachable: Pick<T, 'id'>): T | null;
+  subscribe<T extends RemoteReceiverAttachable>(
     {id}: T,
     subscriber: (value: T) => void,
   ): () => void;
@@ -79,7 +83,7 @@ export interface RemoteReceiver {
 }
 
 export function createRemoteReceiver(): RemoteReceiver {
-  const queuedUpdates = new Set<Attachable>();
+  const queuedUpdates = new Set<RemoteReceiverAttachable>();
   const listeners = new Map<
     Parameters<RemoteReceiver['on']>[0],
     Set<Parameters<RemoteReceiver['on']>[1]>
@@ -87,20 +91,26 @@ export function createRemoteReceiver(): RemoteReceiver {
 
   const attachmentSubscribers = new Map<
     string | typeof ROOT_ID,
-    Set<(value: Attachable) => void>
+    Set<(value: RemoteReceiverAttachable) => void>
   >();
 
   let timeout: Promise<void> | null = null;
   const state: RemoteReceiver['state'] = 'unmounted';
 
-  const root: Root = {id: ROOT_ID, children: [], version: 0};
-  const attachedNodes = new Map<string | typeof ROOT_ID, Attachable>([
-    [ROOT_ID, root],
-  ]);
+  const root: RemoteReceiverAttachableRoot = {
+    id: ROOT_ID,
+    children: [],
+    version: 0,
+  };
+
+  const attachedNodes = new Map<
+    string | typeof ROOT_ID,
+    RemoteReceiverAttachable
+  >([[ROOT_ID, root]]);
 
   const receive = createRemoteChannel({
     mount: (children) => {
-      const root = attachedNodes.get(ROOT_ID) as Root;
+      const root = attachedNodes.get(ROOT_ID) as RemoteReceiverAttachableRoot;
 
       const normalizedChildren = children.map(addVersion);
 
@@ -122,7 +132,10 @@ export function createRemoteReceiver(): RemoteReceiver {
       retain(normalizedChild);
       attach(normalizedChild);
 
-      const attached = attachedNodes.get(id ?? ROOT_ID) as Root;
+      const attached = attachedNodes.get(
+        id ?? ROOT_ID,
+      ) as RemoteReceiverAttachableRoot;
+
       const {children} = attached;
 
       if (index === children.length) {
@@ -136,7 +149,9 @@ export function createRemoteReceiver(): RemoteReceiver {
       enqueueUpdate(attached);
     },
     removeChild: (id, index) => {
-      const attached = attachedNodes.get(id ?? ROOT_ID) as Root;
+      const attached = attachedNodes.get(
+        id ?? ROOT_ID,
+      ) as RemoteReceiverAttachableRoot;
       const {children} = attached;
 
       const [removed] = children.splice(index, 1);
@@ -150,7 +165,9 @@ export function createRemoteReceiver(): RemoteReceiver {
       });
     },
     updateProps: (id, newProps) => {
-      const component = attachedNodes.get(id) as Component;
+      const component = attachedNodes.get(
+        id,
+      ) as RemoteReceiverAttachableComponent;
       const oldProps = {...(component.props as any)};
 
       retain(newProps);
@@ -166,7 +183,7 @@ export function createRemoteReceiver(): RemoteReceiver {
       });
     },
     updateText: (id, newText) => {
-      const text = attachedNodes.get(id) as Text;
+      const text = attachedNodes.get(id) as RemoteReceiverAttachableText;
       text.text = newText;
       text.version += 1;
       enqueueUpdate(text);
@@ -245,7 +262,7 @@ export function createRemoteReceiver(): RemoteReceiver {
     }
   }
 
-  function enqueueUpdate(attached: Attachable) {
+  function enqueueUpdate(attached: RemoteReceiverAttachable) {
     timeout =
       timeout ??
       new Promise((resolve) => {
@@ -274,7 +291,7 @@ export function createRemoteReceiver(): RemoteReceiver {
     return timeout;
   }
 
-  function attach(child: Child) {
+  function attach(child: RemoteReceiverAttachableChild) {
     attachedNodes.set(child.id, child);
 
     if ('children' in child) {
@@ -284,7 +301,7 @@ export function createRemoteReceiver(): RemoteReceiver {
     }
   }
 
-  function detach(child: Child) {
+  function detach(child: RemoteReceiverAttachableChild) {
     attachedNodes.delete(child.id);
 
     if ('children' in child) {
@@ -295,7 +312,7 @@ export function createRemoteReceiver(): RemoteReceiver {
   }
 }
 
-function addVersion(value: any): Child {
+function addVersion(value: any): RemoteReceiverAttachableChild {
   (value as any).version = 0;
   return value as any;
 }
