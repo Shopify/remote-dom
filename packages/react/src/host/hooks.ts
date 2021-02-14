@@ -25,7 +25,8 @@ export function useRemoteReceiver() {
 
 interface State<T extends RemoteReceiverAttachable> {
   receiver: RemoteReceiver;
-  attached: T;
+  id: RemoteReceiverAttachable['id'];
+  version?: RemoteReceiverAttachable['version'];
   value: T | null;
 }
 
@@ -35,14 +36,15 @@ export function useAttached<T extends RemoteReceiverAttachable>(
 ) {
   const [state, setState] = useState<State<T>>({
     receiver,
-    attached,
+    id: attached.id,
+    version: attached.version,
     value: attached,
   });
 
   let returnValue: T | null = state.value;
 
   // If parameters have changed since our last render, schedule an update with its current value.
-  if (state.receiver !== receiver || state.attached.id !== attached.id) {
+  if (state.receiver !== receiver || state.id !== attached.id) {
     // When the consumer of this hook changes receiver or attached node, the node they switched
     // to might already be unmounted. We guard against that by making sure we don’t get null
     // back from the receiver, and storing the “attached” node in state whether it is actually
@@ -56,7 +58,8 @@ export function useAttached<T extends RemoteReceiverAttachable>(
 
     setState({
       receiver,
-      attached,
+      id: attached.id,
+      version: attached.version,
       value: returnValue,
     });
   }
@@ -71,12 +74,15 @@ export function useAttached<T extends RemoteReceiverAttachable>(
 
       setState((previousState) => {
         const {
+          id: previousId,
+          version: previousVersion,
           receiver: previousReceiver,
-          value: previousValue,
         } = previousState;
 
+        const {id} = attached;
+
         // Ignore values from stale sources
-        if (previousReceiver !== receiver) {
+        if (previousReceiver !== receiver || previousId !== id) {
           return previousState;
         }
 
@@ -87,17 +93,15 @@ export function useAttached<T extends RemoteReceiverAttachable>(
         // the rest of this callback is careful to handle cases where the node is in this
         // state.
         const value = receiver.attached.get<T>(attached);
+        const version = value?.version;
 
         // If the value hasn't changed, no update is needed.
         // Return state as-is so React can bail out and avoid an unnecessary render.
-        if (
-          previousValue?.id === value?.id &&
-          previousValue?.version === value?.version
-        ) {
+        if (previousVersion === version) {
           return previousState;
         }
 
-        return {receiver, attached, value};
+        return {receiver, value, id, version};
       });
     };
 
