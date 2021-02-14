@@ -165,12 +165,12 @@ In addition to the `controller`, we need to create a [`RemoteReceiver` object](.
 
 ```tsx
 import {defineComponent} from 'vue';
-import {createController, RemoteReceiver} from '@remote-ui/vue/host';
+import {createController, createRemoteReceiver} from '@remote-ui/vue/host';
 
 const controller = createController({
   Button,
 });
-const receiver = new RemoteReceiver();
+const receiver = createRemoteReceiver();
 const root = createRemoteRoot(receiver.receive);
 
 const App = defineComponent({

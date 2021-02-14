@@ -179,7 +179,7 @@ The [`@remote-ui/react`](../packages/react) library has a couple of utilities we
 
 import {useMemo, useEffect, ReactNode} from 'react';
 import {
-  RemoteReceiver,
+  createRemoteReceiver,
   RemoteRenderer,
   useWorker,
   createController,
@@ -192,7 +192,7 @@ const CONTROLLER = createController({Card, Button});
 const THIRD_PARTY_SCRIPT = 'https://third-party.com/remote-app.js';
 
 export function WorkerRenderer() {
-  const receiver = useMemo(() => new RemoteReceiver());
+  const receiver = useMemo(() => createRemoteReceiver());
   const worker = useWorker(createWorker);
 
   useEffect(() => {
@@ -429,7 +429,7 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
 
    import {useMemo, useEffect, ReactNode} from 'react';
    import {
-     RemoteReceiver,
+     createRemoteReceiver,
      RemoteRenderer,
      useWorker,
      createController,
@@ -442,7 +442,7 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
    const THIRD_PARTY_SCRIPT = 'https://third-party.com/remote-app.js';
 
    export function WorkerRenderer() {
-     const receiver = useMemo(() => new RemoteReceiver());
+     const receiver = useMemo(() => createRemoteReceiver());
      const worker = useWorker(createWorker);
 
      useEffect(() => {
@@ -485,7 +485,11 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
      renderCallback = callback;
    };
 
-   export function run(script: string, receiver: RemoteReceiver, user: User) {
+   export function run(
+     script: string,
+     receiver: createRemoteReceiver,
+     user: User,
+   ) {
      // Functions you get from the UI thread that you want to "keep alive"
      // outside the scope of the function in which they were received need
      // to be manually retained. See @remote-ui/rpc documentation for details.
@@ -508,7 +512,7 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
 
    import {useMemo, useEffect, ReactNode} from 'react';
    import {
-     RemoteReceiver,
+     createRemoteReceiver,
      RemoteRenderer,
      useWorker,
      createController,
@@ -521,7 +525,7 @@ So far, the remote scripts we’ve seen have been very simple pieces of UI, doin
    const THIRD_PARTY_SCRIPT = 'https://third-party.com/remote-app.js';
 
    export function WorkerRenderer() {
-     const receiver = useMemo(() => new RemoteReceiver());
+     const receiver = useMemo(() => createRemoteReceiver());
      const worker = useWorker(createWorker);
 
      useEffect(() => {

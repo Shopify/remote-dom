@@ -110,13 +110,13 @@ In addition to the `controller`, we need to create a [`RemoteReceiver` object](.
 
 ```tsx
 import {useMemo, useEffect} from 'react';
-import {createController, RemoteReceiver} from '@remote-ui/react/host';
+import {createController, createRemoteReceiver} from '@remote-ui/react/host';
 
 import {Button} from './Button';
 
 function MyRemoteRenderer() {
   const controller = useMemo(() => createController({Button}), []);
-  const receiver = useMemo(() => new RemoteReceiver(), []);
+  const receiver = useMemo(() => createRemoteReceiver(), []);
 
   useEffect(() => {
     // You’ll usually send the receiver.receive function to the remote
@@ -135,7 +135,7 @@ Finally, you can pass these two objects to the `RemoteRenderer` component provid
 import {useMemo, useEffect} from 'react';
 import {
   createController,
-  RemoteReceiver,
+  createRemoteReceiver,
   RemoteRenderer,
 } from '@remote-ui/react/host';
 
@@ -143,7 +143,7 @@ import {Button} from './Button';
 
 function MyRemoteRenderer() {
   const controller = useMemo(() => createController({Button}), []);
-  const receiver = useMemo(() => new RemoteReceiver(), []);
+  const receiver = useMemo(() => createRemoteReceiver(), []);
 
   useEffect(() => {
     sendReceiverToRemoteContext(receiver.receive);
