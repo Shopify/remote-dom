@@ -45,15 +45,21 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@quilted/react-testing": "^0.2.3",
     "@remote-ui/core": "^2.0.0",
     "htm": "^3.0.0"
   },
+  "devDependencies": {
+    "@quilted/react-testing": "^0.3.0"
+  },
   "peerDependencies": {
-    "@remote-ui/async-subscription": "^1.0.17"
+    "@remote-ui/async-subscription": "^2.0.0",
+    "@quilted/react-testing": "^0.3.0"
   },
   "peerDependenciesMeta": {
     "@remote-ui/async-subscription": {
+      "optional": true
+    },
+    "@quilted/react-testing": {
       "optional": true
     }
   }
