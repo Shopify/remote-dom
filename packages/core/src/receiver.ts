@@ -95,7 +95,7 @@ export function createRemoteReceiver(): RemoteReceiver {
   >();
 
   let timeout: Promise<void> | null = null;
-  const state: RemoteReceiver['state'] = 'unmounted';
+  let state: RemoteReceiver['state'] = 'unmounted';
 
   const root: RemoteReceiverAttachableRoot = {
     id: ROOT_ID,
@@ -116,6 +116,8 @@ export function createRemoteReceiver(): RemoteReceiver {
 
       root.version += 1;
       root.children = normalizedChildren;
+
+      state = 'mounted';
 
       for (const child of normalizedChildren) {
         retain(child);
