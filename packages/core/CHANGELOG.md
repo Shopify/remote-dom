@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2020-03-10
+
+- Fixed an issue where `RemoteReceiver#state` would not update correctly ([pull request](https://github.com/Shopify/remote-ui/pull/68)).
+
 ## [2.0.0] - 2020-02-13
 
 - **Breaking:** changed `RemoteReceiver` to only be a type, and now export `createRemoteReceiver` for creating these objects. The new `RemoteReceiver` supports listening for mounting events ([pull request](https://github.com/Shopify/remote-ui/pull/66)).
