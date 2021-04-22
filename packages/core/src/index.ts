@@ -22,6 +22,7 @@ export type {
   RemoteRoot,
   RemoteChannel,
   RemoteComponent,
+  RemoteFragment,
   RemoteText,
   RemoteChild,
   Serialized,

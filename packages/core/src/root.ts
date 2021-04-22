@@ -8,6 +8,8 @@ import {
   KIND_ROOT,
   KIND_COMPONENT,
   KIND_TEXT,
+  RemoteFragment,
+  KIND_FRAGMENT,
 } from './types';
 import type {
   Serialized,
@@ -18,8 +20,14 @@ import type {
   RemoteRootOptions,
 } from './types';
 
-type AnyChild = RemoteText<any> | RemoteComponent<any, any>;
-type AnyParent = RemoteRoot<any, any> | RemoteComponent<any, any>;
+type AnyChild =
+  | RemoteText<any>
+  | RemoteComponent<any, any>
+  | RemoteFragment<any, any>;
+type AnyParent =
+  | RemoteRoot<any, any>
+  | RemoteComponent<any, any>
+  | RemoteFragment<any, any>;
 
 interface RootInternals {
   strict: boolean;
@@ -37,7 +45,11 @@ interface ComponentInternals {
   children: readonly AnyChild[];
 }
 
-type ParentInternals = RootInternals | ComponentInternals;
+interface FragmentInternals {
+  children: readonly AnyChild[];
+}
+
+type ParentInternals = RootInternals | ComponentInternals | FragmentInternals;
 
 interface TextInternals {
   text: string;
@@ -109,6 +121,7 @@ export function createRemoteRoot<
           // with an object that can handle being mutated.
           if (key === 'children') continue;
 
+          // log
           normalizedInternalProps[key] = makeValueHotSwappable(
             initialProps[key],
           );
@@ -214,6 +227,43 @@ export function createRemoteRoot<
       makeRemote(text, id, remoteRoot);
 
       return text;
+    },
+    createFragment() {
+      const id = `${currentId++}`;
+
+      const internals: FragmentInternals = {
+        children: strict ? Object.freeze([]) : [],
+      };
+
+      const fragment: RemoteFragment<
+        AllowedComponents,
+        AllowedChildrenTypes
+      > = {
+        kind: KIND_FRAGMENT,
+        get children() {
+          return internals.children;
+        },
+        appendChild: (child) =>
+          appendChild(
+            fragment,
+            normalizeChild(child, remoteRoot),
+            internals,
+            rootInternals,
+          ),
+        removeChild: (child) =>
+          removeChild(fragment, child, internals, rootInternals),
+        insertChildBefore: (child, before) =>
+          insertChildBefore(fragment, child, before, internals, rootInternals),
+
+        // Just satisfying the type definition, since we need to write
+        // some properties manually.
+        ...EMPTY_OBJECT,
+      };
+
+      makePartOfTree(fragment, rootInternals);
+      makeRemote(fragment, id, remoteRoot);
+
+      return fragment;
     },
     appendChild: (child) =>
       appendChild(
@@ -671,19 +721,34 @@ function makePartOfTree(node: AnyChild, {parents, tops, nodes}: RootInternals) {
 }
 
 function serialize(value: AnyChild): Serialized<typeof value> {
-  return value.kind === KIND_TEXT
-    ? {id: value.id, kind: value.kind, text: value.text}
-    : {
-        id: value.id,
-        kind: value.kind,
-        type: value.type,
-        props: value.remoteProps,
-        children: value.children.map((child) => serialize(child as any)),
-      };
+  if (value.kind === KIND_TEXT) {
+    return {
+      id: value.id,
+      kind: value.kind,
+      text: value.text,
+    };
+  }
+  if (value.kind === KIND_FRAGMENT) {
+    return {
+      id: value.id,
+      kind: value.kind,
+      children: value.children.map((child) => serialize(child as any)) as any,
+    };
+  }
+  return {
+    id: value.id,
+    kind: value.kind,
+    type: value.type,
+    props: value.remoteProps,
+    children: value.children.map((child) => serialize(child as any)) as any,
+  };
 }
 
 function makeRemote<Root extends RemoteRoot<any, any>>(
-  value: RemoteText<Root> | RemoteComponent<any, Root>,
+  value:
+    | RemoteText<Root>
+    | RemoteComponent<any, Root>
+    | RemoteFragment<any, any>,
   id: string,
   root: Root,
 ) {
