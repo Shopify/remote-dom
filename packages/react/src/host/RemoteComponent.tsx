@@ -1,6 +1,6 @@
 import {memo, useEffect} from 'react';
 import type {ComponentType} from 'react';
-import {retain, release} from '@remote-ui/core';
+import {retain, release, isRemoteFragmentSerialization} from '@remote-ui/core';
 import type {
   RemoteReceiver,
   RemoteReceiverAttachableComponent,
@@ -8,6 +8,8 @@ import type {
 
 import type {Controller} from './controller';
 import {RemoteText} from './RemoteText';
+// eslint-disable-next-line import/no-cycle
+import {RemoteFragment} from './RemoteFragment';
 import {useAttached} from './hooks';
 
 interface Props {
@@ -27,19 +29,44 @@ export const RemoteComponent = memo(
     const props = attached?.props;
 
     useEffect(() => {
-      retain(props);
+      if (props === null || typeof props !== 'object') return;
+      const noFragmentProps = Object.keys(props as any).reduce((acc, key) => {
+        const prop = (props as any)[key];
+        if (isRemoteFragmentSerialization(prop)) return acc;
+        return {
+          ...acc,
+          [key]: prop,
+        };
+      }, {} as any);
+
+      retain(noFragmentProps);
 
       return () => {
-        release(props);
+        release(noFragmentProps);
       };
     }, [props]);
+
+    const fragmentProps = Object.keys(props as any).reduce((acc, key) => {
+      const prop = (props as any)[key];
+      if (!isRemoteFragmentSerialization(prop)) return acc;
+      return {
+        ...acc,
+        [key]: (
+          <RemoteFragment
+            receiver={receiver}
+            component={prop}
+            controller={controller}
+          />
+        ),
+      };
+    }, {} as any);
 
     if (attached == null) return null;
 
     const {children} = attached;
 
     return (
-      <Implementation {...props}>
+      <Implementation {...props} {...fragmentProps}>
         {[...children].map((child) => {
           if ('children' in child) {
             return (
