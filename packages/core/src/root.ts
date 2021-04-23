@@ -520,7 +520,11 @@ function tryHotSwappingValues(
     return tryHotSwappingArrayValues(currentValue, newValue);
   }
 
-  if (typeof currentValue === 'object' && currentValue != null) {
+  if (
+    typeof currentValue === 'object' &&
+    currentValue != null &&
+    !isRemoteFragment(currentValue)
+  ) {
     return tryHotSwappingObjectValues(currentValue, newValue);
   }
 
