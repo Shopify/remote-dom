@@ -7,6 +7,7 @@ import {
   KIND_COMPONENT,
   KIND_TEXT,
   KIND_FRAGMENT,
+  RemoteFragmentSerialization,
 } from './types';
 
 export function isRemoteComponent<
@@ -26,4 +27,15 @@ export function isRemoteFragment<
   Root extends RemoteRoot<any, any> = RemoteRoot<any, any>
 >(object: unknown): object is RemoteFragment<Root> {
   return object != null && (object as any).kind === KIND_FRAGMENT;
+}
+
+export function isRemoteFragmentSerialization(
+  object: unknown,
+): object is RemoteFragmentSerialization {
+  return (
+    object != null &&
+    (object as any).kind === KIND_FRAGMENT &&
+    Boolean((object as any).id) &&
+    Array.isArray((object as any).children)
+  );
 }

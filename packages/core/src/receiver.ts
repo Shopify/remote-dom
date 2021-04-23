@@ -80,7 +80,7 @@ export interface RemoteReceiver {
   readonly state: 'mounted' | 'unmounted';
   on(event: 'mount', handler: () => void): () => void;
   flush(): Promise<void>;
-  addSubReceiver(receiver: RemoteReceiver): () => void;
+  addChildReceiver(receiver: RemoteReceiver): () => void;
 }
 
 export function createRemoteReceiver(): RemoteReceiver {
@@ -109,15 +109,16 @@ export function createRemoteReceiver(): RemoteReceiver {
     RemoteReceiverAttachable
   >([[ROOT_ID, root]]);
 
-  const subReceivers = new Set<RemoteReceiver>();
-  const addSubReceiver: RemoteReceiver['addSubReceiver'] = (receiver) => {
-    subReceivers.add(receiver);
-    return () => {
-      subReceivers.delete(receiver);
-    };
+  const childReceivers = new Set<RemoteReceiver>();
+  const addChildReceiver: RemoteReceiver['addChildReceiver'] = (receiver) => {
+    childReceivers.add(receiver);
+    return () => childReceivers.delete(receiver);
   };
-  const forwardToSubReceiver: RemoteReceiver['receive'] = (type, ...args) => {
-    subReceivers.forEach((receiver) => receiver.receive(type, ...args));
+  const forwardToChildReceivers: RemoteReceiver['receive'] = (
+    type,
+    ...args
+  ) => {
+    childReceivers.forEach((receiver) => receiver.receive(type, ...args));
   };
 
   const receive = createRemoteChannel({
@@ -146,7 +147,7 @@ export function createRemoteReceiver(): RemoteReceiver {
         id ?? ROOT_ID,
       ) as RemoteReceiverAttachableRoot;
       if (!attached) {
-        forwardToSubReceiver(ACTION_INSERT_CHILD, id, index, child);
+        forwardToChildReceivers(ACTION_INSERT_CHILD, id, index, child);
         return;
       }
 
@@ -171,7 +172,7 @@ export function createRemoteReceiver(): RemoteReceiver {
         id ?? ROOT_ID,
       ) as RemoteReceiverAttachableRoot;
       if (!attached) {
-        forwardToSubReceiver(ACTION_REMOVE_CHILD, id, index);
+        forwardToChildReceivers(ACTION_REMOVE_CHILD, id, index);
         return;
       }
 
@@ -192,7 +193,7 @@ export function createRemoteReceiver(): RemoteReceiver {
         id,
       ) as RemoteReceiverAttachableComponent;
       if (!component) {
-        forwardToSubReceiver(ACTION_UPDATE_PROPS, id, newProps);
+        forwardToChildReceivers(ACTION_UPDATE_PROPS, id, newProps);
         return;
       }
 
@@ -213,7 +214,7 @@ export function createRemoteReceiver(): RemoteReceiver {
     updateText: (id, newText) => {
       const text = attachedNodes.get(id) as RemoteReceiverAttachableText;
       if (!text) {
-        forwardToSubReceiver(ACTION_UPDATE_TEXT, id, newText);
+        forwardToChildReceivers(ACTION_UPDATE_TEXT, id, newText);
         return;
       }
 
@@ -228,7 +229,7 @@ export function createRemoteReceiver(): RemoteReceiver {
       return state;
     },
     receive,
-    addSubReceiver,
+    addChildReceiver,
     attached: {
       root,
       get({id}) {

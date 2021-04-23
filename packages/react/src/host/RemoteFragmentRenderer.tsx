@@ -2,9 +2,9 @@ import {memo, useEffect, useMemo} from 'react';
 import {
   RemoteFragment,
   RemoteReceiver,
-  isRemoteFragment,
   createRemoteReceiver,
   ACTION_MOUNT,
+  isRemoteFragmentSerialization,
 } from '@remote-ui/core';
 
 import {RemoteRenderer, useRemoteRender} from './RemoteRenderer';
@@ -24,17 +24,19 @@ export const RemoteFragmentRenderer = memo(
       [fragment],
     );
     const receiver = externalReceiver ?? defaultReceiver;
-    const shouldRenderFragment = fragment && isRemoteFragment(fragment);
 
     useEffect(() => {
-      if (!shouldRenderFragment) {
+      return parentReceiver.addChildReceiver(receiver);
+    }, [parentReceiver, receiver]);
+
+    useEffect(() => {
+      if (!isRemoteFragmentSerialization(fragment)) {
         return;
       }
-      receiver.receive(ACTION_MOUNT, fragment?.children as any);
-      parentReceiver.addSubReceiver(receiver);
-    }, [receiver, fragment, shouldRenderFragment]);
+      receiver.receive(ACTION_MOUNT, fragment.children);
+    }, [receiver, fragment]);
 
-    if (!shouldRenderFragment) {
+    if (!isRemoteFragmentSerialization(fragment)) {
       return null;
     }
 

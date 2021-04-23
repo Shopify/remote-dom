@@ -30,6 +30,7 @@ export type {
   ActionArgumentMap,
   RemoteTextSerialization,
   RemoteComponentSerialization,
+  RemoteFragmentSerialization,
 } from './types';
 export {createRemoteRoot} from './root';
 export {createRemoteReceiver, createRemoteChannel} from './receiver';
@@ -42,4 +43,9 @@ export type {
   RemoteReceiverAttachableComponent,
   RemoteReceiverAttachableText,
 } from './receiver';
-export {isRemoteComponent, isRemoteText, isRemoteFragment} from './utilities';
+export {
+  isRemoteComponent,
+  isRemoteText,
+  isRemoteFragment,
+  isRemoteFragmentSerialization,
+} from './utilities';
