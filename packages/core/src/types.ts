@@ -26,6 +26,7 @@ export const UPDATE_REMOVE = 1;
 export const KIND_ROOT = 0;
 export const KIND_COMPONENT = 1;
 export const KIND_TEXT = 2;
+export const KIND_FRAGMENT = 3;
 
 export type Id = string;
 
@@ -164,6 +165,9 @@ export interface RemoteRoot<
   createText(
     text?: string,
   ): RemoteText<RemoteRoot<AllowedComponents, AllowedChildrenTypes>>;
+  createFragment(): RemoteFragment<
+    RemoteRoot<AllowedComponents, AllowedChildrenTypes>
+  >;
   mount(): Promise<void>;
 }
 
@@ -192,6 +196,27 @@ export interface RemoteComponent<
   insertChildBefore(
     child: AllowedChildren<ExtractChildren<Type>, Root>,
     before: AllowedChildren<ExtractChildren<Type>, Root>,
+  ): void | Promise<void>;
+}
+
+export interface RemoteFragment<
+  Root extends RemoteRoot<any, any> = RemoteRoot<any, any>
+> {
+  readonly kind: typeof KIND_FRAGMENT;
+  readonly id: string;
+  readonly children: readonly AllowedChildren<ExtractChildren<any>, Root>[];
+  readonly root: Root;
+  readonly top: RemoteComponent<any, Root> | Root | null;
+  readonly parent: RemoteComponent<any, Root> | Root | null;
+  appendChild(
+    child: AllowedChildren<ExtractChildren<any>, Root, true>,
+  ): void | Promise<void>;
+  removeChild(
+    child: AllowedChildren<ExtractChildren<any>, Root>,
+  ): void | Promise<void>;
+  insertChildBefore(
+    child: AllowedChildren<ExtractChildren<any>, Root>,
+    before: AllowedChildren<ExtractChildren<any>, Root>,
   ): void | Promise<void>;
 }
 
@@ -225,6 +250,12 @@ export type RemoteComponentSerialization<
 
 export type RemoteTextSerialization = {
   -readonly [K in 'id' | 'text' | 'kind']: RemoteText<any>[K];
+};
+
+export type RemoteFragmentSerialization = {
+  -readonly [K in 'id' | 'kind']: RemoteFragment<any>[K];
+} & {
+  children: (RemoteComponentSerialization | RemoteTextSerialization)[];
 };
 
 export type Serialized<T> = T extends RemoteComponent<infer Type, any>

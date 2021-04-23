@@ -8,6 +8,9 @@ import {
   KIND_ROOT,
   KIND_COMPONENT,
   KIND_TEXT,
+  RemoteFragment,
+  KIND_FRAGMENT,
+  RemoteFragmentSerialization,
 } from './types';
 import type {
   Serialized,
@@ -17,9 +20,16 @@ import type {
   RemoteComponent,
   RemoteRootOptions,
 } from './types';
+import {isRemoteFragment} from './utilities';
 
-type AnyChild = RemoteText<any> | RemoteComponent<any, any>;
-type AnyParent = RemoteRoot<any, any> | RemoteComponent<any, any>;
+type AnyChild =
+  | RemoteText<any>
+  | RemoteComponent<any, any>
+  | RemoteFragment<any>;
+type AnyParent =
+  | RemoteRoot<any, any>
+  | RemoteComponent<any, any>
+  | RemoteFragment<any>;
 
 interface RootInternals {
   strict: boolean;
@@ -37,7 +47,11 @@ interface ComponentInternals {
   children: readonly AnyChild[];
 }
 
-type ParentInternals = RootInternals | ComponentInternals;
+interface FragmentInternals {
+  children: readonly AnyChild[];
+}
+
+type ParentInternals = RootInternals | ComponentInternals | FragmentInternals;
 
 interface TextInternals {
   text: string;
@@ -215,6 +229,40 @@ export function createRemoteRoot<
 
       return text;
     },
+    createFragment() {
+      const id = `${currentId++}`;
+
+      const internals: FragmentInternals = {
+        children: strict ? Object.freeze([]) : [],
+      };
+
+      const fragment: RemoteFragment<Root> = {
+        kind: KIND_FRAGMENT,
+        get children() {
+          return internals.children;
+        },
+        appendChild: (child) =>
+          appendChild(
+            fragment,
+            normalizeChild(child, remoteRoot),
+            internals,
+            rootInternals,
+          ),
+        removeChild: (child) =>
+          removeChild(fragment, child, internals, rootInternals),
+        insertChildBefore: (child, before) =>
+          insertChildBefore(fragment, child, before, internals, rootInternals),
+
+        // Just satisfying the type definition, since we need to write
+        // some properties manually.
+        ...EMPTY_OBJECT,
+      };
+
+      makePartOfTree(fragment, rootInternals);
+      makeRemote(fragment, id, remoteRoot);
+
+      return fragment;
+    },
     appendChild: (child) =>
       appendChild(
         remoteRoot,
@@ -237,7 +285,7 @@ export function createRemoteRoot<
 
       rootInternals.mounted = true;
       return Promise.resolve(
-        channel(ACTION_MOUNT, rootInternals.children.map(serialize)),
+        channel(ACTION_MOUNT, rootInternals.children.map(serializeChild)),
       );
     },
   };
@@ -359,7 +407,11 @@ function updateProps(
   return perform(component, rootInternals, {
     remote: (channel) => {
       if (hasRemoteChange) {
-        channel(ACTION_UPDATE_PROPS, component.id, normalizedNewProps);
+        channel(
+          ACTION_UPDATE_PROPS,
+          component.id,
+          serializeProps(normalizedNewProps),
+        );
       }
     },
     local: () => {
@@ -476,6 +528,9 @@ function tryHotSwappingValues(
 }
 
 function makeValueHotSwappable(value: unknown): unknown {
+  if (isRemoteFragment(value)) {
+    return value;
+  }
   if (typeof value === 'function') {
     const wrappedFunction: HotSwappableFunction<any> = ((...args: any[]) => {
       return wrappedFunction[FUNCTION_CURRENT_IMPLEMENTATION_KEY](...args);
@@ -546,7 +601,7 @@ function appendChild(
         ACTION_INSERT_CHILD,
         (container as any).id,
         container.children.length,
-        serialize(child),
+        serializeChild(child),
       ),
     local: () => {
       moveChildToContainer(container, child, rootInternals);
@@ -581,7 +636,7 @@ function removeChild(
       channel(
         ACTION_REMOVE_CHILD,
         (container as any).id,
-        container.children.indexOf(child),
+        container.children.indexOf(child as any),
       ),
     local: () => {
       parents.delete(child);
@@ -618,7 +673,7 @@ function insertChildBefore(
         ACTION_INSERT_CHILD,
         (container as any).id,
         container.children.indexOf(before as any),
-        serialize(child),
+        serializeChild(child),
       ),
     local: () => {
       moveChildToContainer(container, child, rootInternals);
@@ -640,14 +695,36 @@ function normalizeChild(
 function moveChildToContainer(
   container: AnyParent,
   child: AnyChild,
-  {tops, parents}: RootInternals,
+  rootInternals: RootInternals,
 ) {
+  const {tops, parents} = rootInternals;
   const newTop =
     container.kind === KIND_ROOT ? container : tops.get(container)!;
 
   tops.set(child, newTop);
   parents.set(child, container);
+
   allDescendants(child, (descendant) => tops.set(descendant, newTop));
+
+  moveFragmentToContainer(newTop, child, rootInternals);
+}
+
+function moveFragmentToContainer(
+  top: AnyParent,
+  child: AnyChild,
+  rootInternals: RootInternals,
+) {
+  if (child.kind !== KIND_COMPONENT) return;
+  const {tops} = rootInternals;
+  const props = child.remoteProps as any;
+  for (const key of Object.keys(props ?? {})) {
+    const prop = props[key];
+    if (!isRemoteFragment(prop)) continue;
+    tops.set(prop, top);
+    prop.children.forEach((child) =>
+      moveChildToContainer(prop, child, rootInternals),
+    );
+  }
 }
 
 function makePartOfTree(node: AnyChild, {parents, tops, nodes}: RootInternals) {
@@ -670,20 +747,45 @@ function makePartOfTree(node: AnyChild, {parents, tops, nodes}: RootInternals) {
   });
 }
 
-function serialize(value: AnyChild): Serialized<typeof value> {
+function serializeChild(value: AnyChild): Serialized<typeof value> {
+  if (value.kind === KIND_FRAGMENT) {
+    throw new Error('Fragment cannot be a child');
+  }
   return value.kind === KIND_TEXT
     ? {id: value.id, kind: value.kind, text: value.text}
     : {
         id: value.id,
         kind: value.kind,
         type: value.type,
-        props: value.remoteProps,
-        children: value.children.map((child) => serialize(child as any)),
+        props: serializeProps(value.remoteProps),
+        children: value.children.map((child) => serializeChild(child as any)),
       };
 }
 
+function serializeProps<Props>(props: Props): Props {
+  const object = props as any;
+  if (!object) return object;
+  return Object.keys(object).reduce((acc, key) => {
+    const prop = object[key];
+    return {
+      ...acc,
+      [key]: isRemoteFragment(prop) ? serializeFragment(prop) : prop,
+    };
+  }, {} as any);
+}
+
+function serializeFragment(
+  value: RemoteFragment<any>,
+): RemoteFragmentSerialization {
+  return {
+    id: value.id,
+    kind: value.kind,
+    children: value.children.map((child) => serializeChild(child as any)),
+  };
+}
+
 function makeRemote<Root extends RemoteRoot<any, any>>(
-  value: RemoteText<Root> | RemoteComponent<any, Root>,
+  value: RemoteText<Root> | RemoteComponent<any, Root> | RemoteFragment<Root>,
   id: string,
   root: Root,
 ) {
