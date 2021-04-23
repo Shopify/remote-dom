@@ -11,16 +11,20 @@ interface Props {
   controller: Controller;
 }
 
-const RemoteRendererContext = createContext<Pick<Props, 'controller'>>(
-  {} as any,
-);
+const RemoteRendererContext = createContext<Props>({} as any);
 
-export function useController() {
-  return useContext(RemoteRendererContext).controller;
+export function useRemoteRender() {
+  return useContext(RemoteRendererContext);
 }
 
 export const RemoteRenderer = memo(({controller, receiver}: Props) => {
-  const value = useMemo(() => ({controller}), [controller]);
+  const value = useMemo<Props>(
+    () => ({
+      controller,
+      receiver,
+    }),
+    [controller],
+  );
   const {children} = useAttached(receiver, receiver.attached.root)!;
 
   return (

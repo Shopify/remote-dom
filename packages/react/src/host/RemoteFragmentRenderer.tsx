@@ -7,7 +7,7 @@ import {
   ACTION_MOUNT,
 } from '@remote-ui/core';
 
-import {RemoteRenderer, useController} from './RemoteRenderer';
+import {RemoteRenderer, useRemoteRender} from './RemoteRenderer';
 
 interface Props {
   fragment?: RemoteFragment;
@@ -16,7 +16,7 @@ interface Props {
 
 export const RemoteFragmentRenderer = memo(
   ({fragment, receiver: externalReceiver}: Props) => {
-    const controller = useController();
+    const {controller, receiver: parentReceiver} = useRemoteRender();
     const defaultReceiver = useMemo(
       () => createRemoteReceiver(),
       // A new receiver must be created for each fragment so they can
@@ -27,10 +27,11 @@ export const RemoteFragmentRenderer = memo(
     const shouldRenderFragment = fragment && isRemoteFragment(fragment);
 
     useEffect(() => {
-      if (!fragment || !shouldRenderFragment) {
+      if (!shouldRenderFragment) {
         return;
       }
-      receiver.receive(ACTION_MOUNT, fragment.children as any);
+      receiver.receive(ACTION_MOUNT, fragment?.children as any);
+      parentReceiver.addSubReceiver(receiver);
     }, [receiver, fragment, shouldRenderFragment]);
 
     if (!shouldRenderFragment) {
