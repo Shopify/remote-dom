@@ -1,10 +1,5 @@
 import {retain, release} from '@remote-ui/rpc';
-import type {
-  Subscriber,
-  RemoteSubscribable,
-  RemoteSubscribeResult,
-  StatefulRemoteSubscribable,
-} from './types';
+import type {RemoteSubscribable, StatefulRemoteSubscribable} from './types';
 
 export function makeStatefulSubscribable<T>(
   subscription: RemoteSubscribable<T>,
@@ -14,46 +9,26 @@ export function makeStatefulSubscribable<T>(
   // for unsubscribe callbacks received from subscription.subscribe().
   retain(subscription);
 
-  let current = subscription.initial;
-  let listening = true;
-
-  const subscribers = new Set<Subscriber<T>>();
-
-  const subscriptionResult = Promise.resolve<RemoteSubscribeResult<T>>(
-    subscription.subscribe(listener),
-  ).then((result) => {
-    listener(result[1]);
-    return result;
-  });
+  const current = subscription.initial;
 
   return {
     get current() {
       return current;
     },
     subscribe(subscriber) {
-      subscribers.add(subscriber);
+      const subscriptionResult = Promise.resolve(
+        subscription.subscribe((value) => {
+          subscriber(value);
+        }),
+      ).then((result) => {
+        subscriber(result[1]);
+        return result;
+      });
 
-      return () => {
-        subscribers.delete(subscriber);
-      };
+      return () => subscriptionResult.then(([unsubscribe]) => unsubscribe());
     },
     async destroy() {
-      listening = false;
-      subscribers.clear();
-
-      const [unsubscribe] = await subscriptionResult;
-      unsubscribe();
       release(subscription);
     },
   };
-
-  function listener(value: T) {
-    if (!listening || current === value) return;
-
-    current = value;
-
-    for (const subscriber of subscribers) {
-      subscriber(current);
-    }
-  }
 }
