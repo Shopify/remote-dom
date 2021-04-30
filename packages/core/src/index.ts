@@ -42,10 +42,6 @@ export type {
   RemoteReceiverAttachableRoot,
   RemoteReceiverAttachableComponent,
   RemoteReceiverAttachableText,
+  RemoteReceiverAttachableFragment,
 } from './receiver';
-export {
-  isRemoteComponent,
-  isRemoteText,
-  isRemoteFragment,
-  isRemoteFragmentSerialization,
-} from './utilities';
+export {isRemoteComponent, isRemoteText, isRemoteFragment} from './utilities';

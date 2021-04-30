@@ -1,16 +1,27 @@
 import {memo, useEffect} from 'react';
 import type {ComponentType} from 'react';
-import {retain, release, isRemoteFragmentSerialization} from '@remote-ui/core';
+import {
+  retain,
+  release,
+  isRemoteFragment,
+  RemoteReceiverAttachableChild,
+} from '@remote-ui/core';
 import type {
   RemoteReceiver,
   RemoteReceiverAttachableComponent,
+  RemoteReceiverAttachableFragment,
+  RemoteFragmentSerialization,
 } from '@remote-ui/core';
 
 import type {Controller} from './controller';
 import {RemoteText} from './RemoteText';
-// eslint-disable-next-line import/no-cycle
-import {RemoteFragment} from './RemoteFragment';
 import {useAttached} from './hooks';
+
+interface RemoteFragmentProps {
+  receiver: RemoteReceiver;
+  component: RemoteReceiverAttachableFragment;
+  controller: Controller;
+}
 
 interface Props {
   receiver: RemoteReceiver;
@@ -54,7 +65,7 @@ export const RemoteComponent = memo(
         [key]: (
           <RemoteFragment
             receiver={receiver}
-            component={prop}
+            component={prop as any}
             controller={controller}
           />
         ),
@@ -67,24 +78,44 @@ export const RemoteComponent = memo(
 
     return (
       <Implementation {...props} {...fragmentProps}>
-        {[...children].map((child) => {
-          if ('children' in child) {
-            return (
-              <RemoteComponent
-                key={child.id}
-                receiver={receiver}
-                component={child}
-                controller={controller}
-                __type__={(controller.get(child.type) as any)?.__type__}
-              />
-            );
-          } else {
-            return (
-              <RemoteText key={child.id} text={child} receiver={receiver} />
-            );
-          }
-        })}
+        {renderChildren(receiver, controller, children)}
       </Implementation>
     );
   },
 );
+
+const RemoteFragment = memo(
+  ({receiver, component, controller}: RemoteFragmentProps) => {
+    const {children} = useAttached(receiver, component) ?? {};
+    if (!children) return null;
+    return <>{renderChildren(receiver, controller, children)}</>;
+  },
+);
+
+function renderChildren(
+  receiver: RemoteReceiver,
+  controller: Controller,
+  children: RemoteReceiverAttachableChild[],
+) {
+  return [...children].map((child) => {
+    if ('children' in child) {
+      return (
+        <RemoteComponent
+          key={child.id}
+          receiver={receiver}
+          component={child}
+          controller={controller}
+          __type__={(controller.get(child.type) as any)?.__type__}
+        />
+      );
+    } else {
+      return <RemoteText key={child.id} text={child} receiver={receiver} />;
+    }
+  });
+}
+
+function isRemoteFragmentSerialization(
+  object: unknown,
+): object is RemoteFragmentSerialization {
+  return isRemoteFragment(object);
+}
