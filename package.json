@@ -7,10 +7,10 @@
     "./packages/*"
   ],
   "scripts": {
-    "test": "sk test",
-    "lint": "sk lint",
-    "type-check": "sk type-check",
-    "build": "sk build",
+    "test": "skn test",
+    "lint": "skn lint",
+    "type-check": "skn type-check",
+    "build": "skn build",
     "version-bump": "lerna version --no-push --include-merged-tags",
     "deploy": "lerna publish from-package --yes"
   },
