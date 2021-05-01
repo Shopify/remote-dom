@@ -1,6 +1,6 @@
 {
   "name": "@remote-ui/web-workers",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "",
   "publishConfig": {
     "access": "public",
@@ -62,18 +62,18 @@
     "koa-static": "^5.0.0",
     "loader-utils": "^2.0.0",
     "puppeteer": "^5.3.0",
-    "webpack-virtual-modules": "^0.4.0",
-    "webpack": ">=4 <5"
+    "webpack": ">=4 <5",
+    "webpack-virtual-modules": "^0.4.0"
   },
   "peerDependencies": {
     "@babel/core": "^7.0.0",
-    "@sewing-kit/plugins": "^0.1.0",
     "@sewing-kit/plugin-javascript": "^0.3.0",
     "@sewing-kit/plugin-webpack": "^0.1.0",
+    "@sewing-kit/plugins": "^0.1.0",
     "@types/webpack": ">=4 <5",
     "loader-utils": "^2.0.0",
-    "webpack-virtual-modules": "^0.4.0",
-    "webpack": ">=4 <5"
+    "webpack": ">=4 <5",
+    "webpack-virtual-modules": "^0.4.0"
   },
   "peerDependenciesMeta": {
     "@babel/core": {
