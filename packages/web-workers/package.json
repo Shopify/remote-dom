@@ -53,7 +53,7 @@
     "@types/koa-static": "^4.0.1",
     "@types/loader-utils": "^2.0.0",
     "@types/puppeteer": "^3.0.0",
-    "@types/webpack": ">=4 <6",
+    "@types/webpack": ">=4 <5",
     "@types/webpack-virtual-modules": "^0.1.0",
     "fs-extra": "^9.0.0",
     "get-port": "^5.1.0",
