@@ -41,13 +41,11 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@remote-ui/rpc": "^1.0.17",
-    "@sewing-kit/plugins": "^0.1.0",
-    "@types/webpack": "^4.41.12",
-    "loader-utils": "^2.0.0",
-    "webpack-virtual-modules": "^0.3.0"
+    "@remote-ui/rpc": "^1.0.17"
   },
   "devDependencies": {
+    "@sewing-kit/plugin-javascript": "^0.3.0",
+    "@sewing-kit/plugin-webpack": "^0.1.0",
     "@types/fs-extra": "^9.0.1",
     "@types/get-port": "^4.2.0",
     "@types/koa": "^2.11.3",
@@ -55,18 +53,52 @@
     "@types/koa-static": "^4.0.1",
     "@types/loader-utils": "^2.0.0",
     "@types/puppeteer": "^3.0.0",
+    "@types/webpack": ">=4 <5",
     "@types/webpack-virtual-modules": "^0.1.0",
     "fs-extra": "^9.0.0",
     "get-port": "^5.1.0",
     "koa": "^2.11.0",
     "koa-mount": "^4.0.0",
     "koa-static": "^5.0.0",
-    "puppeteer": "^5.3.0"
+    "loader-utils": "^2.0.0",
+    "puppeteer": "^5.3.0",
+    "webpack-virtual-modules": "^0.4.0",
+    "webpack": ">=4 <5"
   },
-  "optionalDependencies": {
-    "@babel/core": "^7.9.0",
-    "@sewing-kit/plugin-javascript": "^0.2.0",
+  "peerDependencies": {
+    "@babel/core": "^7.0.0",
+    "@sewing-kit/plugins": "^0.1.0",
+    "@sewing-kit/plugin-javascript": "^0.3.0",
     "@sewing-kit/plugin-webpack": "^0.1.0",
-    "webpack": "^4.43.0"
+    "@types/webpack": ">=4 <5",
+    "loader-utils": "^2.0.0",
+    "webpack-virtual-modules": "^0.4.0",
+    "webpack": ">=4 <5"
+  },
+  "peerDependenciesMeta": {
+    "@babel/core": {
+      "optional": true
+    },
+    "@sewing-kit/plugins": {
+      "optional": true
+    },
+    "@sewing-kit/plugin-javascript": {
+      "optional": true
+    },
+    "@sewing-kit/plugin-webpack": {
+      "optional": true
+    },
+    "@types/webpack": {
+      "optional": true
+    },
+    "loader-utils": {
+      "optional": true
+    },
+    "webpack-virtual-modules": {
+      "optional": true
+    },
+    "webpack": {
+      "optional": true
+    }
   }
 }
