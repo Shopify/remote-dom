@@ -415,6 +415,17 @@ function updateProps(
       }
     },
     local: () => {
+      const {attaches, detaches} = extractFragmentProps(
+        internals.internalProps,
+        normalizedNewProps,
+      );
+      attaches.forEach((fragment) =>
+        moveChildToContainer(component, fragment, rootInternals),
+      );
+      detaches.forEach((fragment) =>
+        removeFragmentFromContainer(fragment, rootInternals),
+      );
+
       const mergedExternalProps = {
         ...internals.externalProps,
         ...newProps,
@@ -431,14 +442,6 @@ function updateProps(
 
       for (const [hotSwappable, newValue] of hotSwapFunctions) {
         hotSwappable[FUNCTION_CURRENT_IMPLEMENTATION_KEY] = newValue;
-      }
-
-      const props = internals.internalProps;
-      for (const key of Object.keys(props ?? {})) {
-        const prop = props[key];
-        if (!isRemoteFragment(prop)) continue;
-
-        moveChildToContainer(component, prop, rootInternals);
       }
     },
   });
@@ -641,7 +644,7 @@ function removeChild(
   internals: ParentInternals,
   rootInternals: RootInternals,
 ) {
-  const {strict, tops, parents} = rootInternals;
+  const {strict} = rootInternals;
 
   return perform(container, rootInternals, {
     remote: (channel) =>
@@ -651,12 +654,7 @@ function removeChild(
         container.children.indexOf(child as any),
       ),
     local: () => {
-      // TODO: extract to a function so that it removes fragment too
-      parents.delete(child);
-
-      if (child.kind === KIND_COMPONENT) {
-        allDescendants(child, (descendant) => tops.set(descendant, child));
-      }
+      removeChildFromContainer(child, rootInternals);
 
       const newChildren = [...internals.children];
       newChildren.splice(newChildren.indexOf(child), 1);
@@ -723,17 +721,46 @@ function moveChildToContainer(
 }
 
 function moveFragmentToContainer(
-  component: AnyChild,
+  child: AnyChild,
   rootInternals: RootInternals,
 ) {
-  if (component.kind !== KIND_COMPONENT) return;
+  if (child.kind !== KIND_COMPONENT) return;
 
-  const props = component.remoteProps as any;
+  const props = child.remoteProps as any;
   for (const key of Object.keys(props ?? {})) {
     const prop = props[key];
     if (!isRemoteFragment(prop)) continue;
 
-    moveChildToContainer(component, prop, rootInternals);
+    moveChildToContainer(child, prop, rootInternals);
+  }
+}
+
+function removeChildFromContainer(
+  child: AnyChild,
+  rootInternals: RootInternals,
+) {
+  const {tops, parents} = rootInternals;
+
+  tops.delete(child);
+  parents.delete(child);
+
+  allDescendants(child, (descendant) => tops.delete(descendant));
+
+  removeFragmentFromContainer(child, rootInternals);
+}
+
+function removeFragmentFromContainer(
+  child: AnyChild,
+  rootInternals: RootInternals,
+) {
+  if (child.kind !== KIND_COMPONENT) return;
+
+  const props = child.remoteProps as any;
+  for (const key of Object.keys(props ?? {})) {
+    const prop = props[key];
+    if (!isRemoteFragment(prop)) continue;
+
+    removeChildFromContainer(prop, rootInternals);
   }
 }
 
@@ -942,4 +969,22 @@ function tryHotSwappingArrayValues(
   }
 
   return [hasChanged ? normalizedNewValue : IGNORE, hotSwaps];
+}
+
+function extractFragmentProps(oldProps: any = {}, newProps: any = {}) {
+  const attaches: RemoteFragment[] = [];
+  const detaches: RemoteFragment[] = [];
+  Object.keys(oldProps).forEach((key) => {
+    const oldProp = oldProps[key];
+    if (key in newProps && isRemoteFragment(oldProp)) {
+      detaches.push(oldProp);
+    }
+  });
+  Object.keys(newProps).forEach((key) => {
+    const newProp = newProps[key];
+    if (isRemoteFragment(newProp)) {
+      attaches.push(newProp);
+    }
+  });
+  return {attaches, detaches};
 }

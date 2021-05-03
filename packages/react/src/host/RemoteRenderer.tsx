@@ -1,4 +1,4 @@
-import {memo, useMemo, createContext, useContext} from 'react';
+import {memo} from 'react';
 import {KIND_COMPONENT, KIND_TEXT, RemoteReceiver} from '@remote-ui/core';
 
 import type {Controller} from './controller';
@@ -11,24 +11,11 @@ interface Props {
   controller: Controller;
 }
 
-const RemoteRendererContext = createContext<Props>({} as any);
-
-export function useRemoteRender() {
-  return useContext(RemoteRendererContext);
-}
-
 export const RemoteRenderer = memo(({controller, receiver}: Props) => {
-  const value = useMemo<Props>(
-    () => ({
-      controller,
-      receiver,
-    }),
-    [controller],
-  );
   const {children} = useAttached(receiver, receiver.attached.root)!;
 
   return (
-    <RemoteRendererContext.Provider value={value}>
+    <>
       {children.map((child) => {
         switch (child.kind) {
           case KIND_COMPONENT:
@@ -49,6 +36,6 @@ export const RemoteRenderer = memo(({controller, receiver}: Props) => {
             return null;
         }
       })}
-    </RemoteRendererContext.Provider>
+    </>
   );
 });
