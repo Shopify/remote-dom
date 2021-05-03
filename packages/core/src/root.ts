@@ -8,9 +8,7 @@ import {
   KIND_ROOT,
   KIND_COMPONENT,
   KIND_TEXT,
-  RemoteFragment,
   KIND_FRAGMENT,
-  RemoteFragmentSerialization,
 } from './types';
 import type {
   Serialized,
@@ -18,7 +16,9 @@ import type {
   RemoteText,
   RemoteChannel,
   RemoteComponent,
+  RemoteFragment,
   RemoteRootOptions,
+  RemoteFragmentSerialization,
 } from './types';
 import {isRemoteFragment} from './utilities';
 
@@ -432,6 +432,14 @@ function updateProps(
       for (const [hotSwappable, newValue] of hotSwapFunctions) {
         hotSwappable[FUNCTION_CURRENT_IMPLEMENTATION_KEY] = newValue;
       }
+
+      const props = internals.internalProps;
+      for (const key of Object.keys(props ?? {})) {
+        const prop = props[key];
+        if (!isRemoteFragment(prop)) continue;
+
+        moveChildToContainer(component, prop, rootInternals);
+      }
     },
   });
 }
@@ -643,6 +651,7 @@ function removeChild(
         container.children.indexOf(child as any),
       ),
     local: () => {
+      // TODO: extract to a function so that it removes fragment too
       parents.delete(child);
 
       if (child.kind === KIND_COMPONENT) {
@@ -710,24 +719,21 @@ function moveChildToContainer(
 
   allDescendants(child, (descendant) => tops.set(descendant, newTop));
 
-  moveFragmentToContainer(newTop, child, rootInternals);
+  moveFragmentToContainer(child, rootInternals);
 }
 
 function moveFragmentToContainer(
-  top: AnyParent,
-  child: AnyChild,
+  component: AnyChild,
   rootInternals: RootInternals,
 ) {
-  if (child.kind !== KIND_COMPONENT) return;
-  const {tops} = rootInternals;
-  const props = child.remoteProps as any;
+  if (component.kind !== KIND_COMPONENT) return;
+
+  const props = component.remoteProps as any;
   for (const key of Object.keys(props ?? {})) {
     const prop = props[key];
     if (!isRemoteFragment(prop)) continue;
-    tops.set(prop, top);
-    prop.children.forEach((child) =>
-      moveChildToContainer(prop, child, rootInternals),
-    );
+
+    moveChildToContainer(component, prop, rootInternals);
   }
 }
 

@@ -1,10 +1,13 @@
+import {isValidElement} from 'react';
 import reactReconciler from 'react-reconciler';
 
-import type {
+import {
   RemoteRoot,
   RemoteText,
   RemoteComponent,
   RemoteComponentType,
+  RemoteFragment,
+  KIND_FRAGMENT,
 } from '@remote-ui/core';
 
 const reconciler = reactReconciler<
@@ -59,21 +62,20 @@ const reconciler = reactReconciler<
   },
 
   // Instances
-  createTextInstance(text, fragment) {
-    return fragment.createText(text);
+  createTextInstance(text, root) {
+    return root.createText(text);
   },
-  createInstance(type, allProps, fragment) {
+  createInstance(type, allProps, root) {
     const {children: _children, ...props} = allProps;
-    return fragment.createComponent(type, props as any);
+    return root.createComponent(type, normalizeProps(root, props));
   },
 
   // Updates
   commitTextUpdate(text, _oldText, newText) {
     text.updateText(newText);
   },
-  prepareUpdate(_instance, _type, oldProps, newProps) {
+  prepareUpdate(instance, _type, oldProps, newProps, root) {
     const updateProps: Record<string, unknown> = {};
-
     let needsUpdate = false;
 
     for (const key in oldProps) {
@@ -110,6 +112,24 @@ const reconciler = reactReconciler<
         needsUpdate = true;
         updateProps[key] = newProps[key];
       }
+    }
+
+    // eslint-disable-next-line guard-for-in
+    for (const key in updateProps) {
+      const element = updateProps[key] as any;
+      if (!isValidElement(element)) continue;
+
+      let fragmentContainer:
+        | FragmentContainer
+        | undefined = (instance.props as any)[key];
+      if (isFragmentContainer(fragmentContainer)) {
+        delete updateProps[key];
+      } else {
+        fragmentContainer = createFragmentContainer(root);
+        updateProps[key] = fragmentContainer;
+      }
+      const {container} = fragmentContainer;
+      reconciler.updateContainer(element, container, null, () => {});
     }
 
     return needsUpdate ? updateProps : null;
@@ -173,6 +193,60 @@ function handleErrorInNextTick(error: Error) {
 const {hasOwnProperty} = {};
 function has(object: object, property: string | number | symbol) {
   return hasOwnProperty.call(object, property);
+}
+
+function normalizeProps(root: RemoteRoot, props: unknown) {
+  if (props === null || typeof props !== 'object') return props;
+  return Object.keys(props as any).reduce((acc, key) => {
+    const element = (props as any)[key];
+    if (!isValidElement(element)) return {...acc, [key]: element};
+
+    const fragmentContainer = createFragmentContainer(root);
+    const {container} = fragmentContainer;
+    reconciler.updateContainer(element, container, null, () => {});
+    return {
+      ...acc,
+      [key]: fragmentContainer,
+    };
+  }, {} as any);
+}
+
+type FragmentContainer = RemoteFragment & {
+  container: ReturnType<typeof reconciler.createContainer>;
+};
+
+function isFragmentContainer(object: any): object is FragmentContainer {
+  return (
+    object !== null &&
+    typeof object === 'object' &&
+    (object as any).kind === KIND_FRAGMENT &&
+    'container' in object
+  );
+}
+
+function createFragmentContainer(root: RemoteRoot): FragmentContainer {
+  const fragment = root.createFragment();
+  const subTree: RemoteRoot = {
+    ...root,
+    get children() {
+      return fragment.children as any;
+    },
+    appendChild(child) {
+      return fragment.appendChild(child);
+    },
+    removeChild(child) {
+      return fragment.removeChild(child);
+    },
+    insertChildBefore(child, before) {
+      return fragment.insertChildBefore(child, before);
+    },
+    mount() {
+      return Promise.resolve();
+    },
+  };
+  const container = reconciler.createContainer(subTree, 0, false, null);
+  Object.assign(fragment, {container});
+  return fragment as any;
 }
 
 export default reconciler;

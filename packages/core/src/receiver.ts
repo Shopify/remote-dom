@@ -421,6 +421,9 @@ function extractFragmentProps(oldProps: any = {}, newProps: any = {}) {
   });
   Object.keys(newProps).forEach((key) => {
     const newProp = newProps[key];
+    if (isRemoteFragmentSerialization(newProp)) {
+      normalizeChild(newProp, addVersion);
+    }
     if (isRemoteReceiverAttachableFragment(newProp)) {
       attaches.push(newProp);
     }
