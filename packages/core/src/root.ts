@@ -404,6 +404,17 @@ function updateProps(
     normalizedNewProps[key] = value;
   }
 
+  const {attaches, detaches} = extractFragmentProps(
+    internals.internalProps,
+    normalizedNewProps,
+  );
+  attaches.forEach((fragment) =>
+    moveChildToContainer(component, fragment, rootInternals),
+  );
+  detaches.forEach((fragment) =>
+    removeChildFromContainer(fragment, rootInternals),
+  );
+
   return perform(component, rootInternals, {
     remote: (channel) => {
       if (hasRemoteChange) {
@@ -415,17 +426,6 @@ function updateProps(
       }
     },
     local: () => {
-      const {attaches, detaches} = extractFragmentProps(
-        internals.internalProps,
-        normalizedNewProps,
-      );
-      attaches.forEach((fragment) =>
-        moveChildToContainer(component, fragment, rootInternals),
-      );
-      detaches.forEach((fragment) =>
-        removeFragmentFromContainer(fragment, rootInternals),
-      );
-
       const mergedExternalProps = {
         ...internals.externalProps,
         ...newProps,
