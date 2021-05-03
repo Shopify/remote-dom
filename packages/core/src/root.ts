@@ -715,9 +715,12 @@ function moveChildToContainer(
   tops.set(child, newTop);
   parents.set(child, container);
 
-  allDescendants(child, (descendant) => tops.set(descendant, newTop));
-
   moveFragmentToContainer(child, rootInternals);
+
+  allDescendants(child, (descendant) => {
+    tops.set(descendant, newTop);
+    moveFragmentToContainer(descendant, rootInternals);
+  });
 }
 
 function moveFragmentToContainer(
@@ -744,7 +747,10 @@ function removeChildFromContainer(
   tops.delete(child);
   parents.delete(child);
 
-  allDescendants(child, (descendant) => tops.delete(descendant));
+  allDescendants(child, (descendant) => {
+    tops.delete(descendant);
+    removeFragmentFromContainer(descendant, rootInternals);
+  });
 
   removeFragmentFromContainer(child, rootInternals);
 }
