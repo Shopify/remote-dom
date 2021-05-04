@@ -19,7 +19,7 @@ import {useAttached} from './hooks';
 
 interface RemoteFragmentProps {
   receiver: RemoteReceiver;
-  component: RemoteReceiverAttachableFragment;
+  fragment: RemoteReceiverAttachableFragment;
   controller: Controller;
 }
 
@@ -65,7 +65,7 @@ export const RemoteComponent = memo(
         [key]: (
           <RemoteFragment
             receiver={receiver}
-            component={prop as any}
+            fragment={prop as any}
             controller={controller}
           />
         ),
@@ -85,7 +85,7 @@ export const RemoteComponent = memo(
 );
 
 const RemoteFragment = memo(
-  ({receiver, component, controller}: RemoteFragmentProps) => {
+  ({receiver, fragment: component, controller}: RemoteFragmentProps) => {
     const {children} = useAttached(receiver, component) ?? {};
     if (!children) return null;
     return <>{renderChildren(receiver, controller, children)}</>;

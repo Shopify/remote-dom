@@ -15,7 +15,7 @@ import type {
   RemoteComponentSerialization,
   RemoteFragmentSerialization,
 } from './types';
-import {isRemoteFragment} from './utilities';
+import {isRemoteFragment, reduceObject} from './utilities';
 
 export const ROOT_ID = Symbol('RootId');
 
@@ -124,7 +124,7 @@ export function createRemoteReceiver(): RemoteReceiver {
       const root = attachedNodes.get(ROOT_ID) as RemoteReceiverAttachableRoot;
 
       const normalizedChildren = children.map((child) =>
-        normalizeChild(child, addVersion),
+        normalizeNode(child, addVersion),
       );
 
       root.version += 1;
@@ -146,9 +146,8 @@ export function createRemoteReceiver(): RemoteReceiver {
       const attached = attachedNodes.get(
         id ?? ROOT_ID,
       ) as RemoteReceiverAttachableRoot;
-      if (!attached) return;
 
-      const normalizedChild = normalizeChild(child, addVersion);
+      const normalizedChild = normalizeNode(child, addVersion);
       retain(normalizedChild);
       attach(normalizedChild);
 
@@ -168,7 +167,6 @@ export function createRemoteReceiver(): RemoteReceiver {
       const attached = attachedNodes.get(
         id ?? ROOT_ID,
       ) as RemoteReceiverAttachableRoot;
-      if (!attached) return;
 
       const {children} = attached;
 
@@ -186,15 +184,17 @@ export function createRemoteReceiver(): RemoteReceiver {
       const component = attachedNodes.get(
         id,
       ) as RemoteReceiverAttachableComponent;
-      if (!component) return;
 
       const oldProps = {...(component.props as any)};
 
       retain(newProps);
 
-      const {attaches, detaches} = extractFragmentProps(oldProps, newProps);
-      attaches.forEach(attach);
-      detaches.forEach(detach);
+      reduceObject(newProps, isRemoteFragmentSerialization, addVersion);
+      reduceObject(newProps, isRemoteReceiverAttachableFragment, attach);
+      for (const key of Object.keys(newProps)) {
+        const oldProp = (oldProps as any)[key];
+        reduceObject(oldProp, isRemoteReceiverAttachableFragment, detach);
+      }
 
       Object.assign(component.props, newProps);
       component.version += 1;
@@ -208,7 +208,6 @@ export function createRemoteReceiver(): RemoteReceiver {
     },
     updateText: (id, newText) => {
       const text = attachedNodes.get(id) as RemoteReceiverAttachableText;
-      if (!text) return;
 
       text.text = newText;
       text.version += 1;
@@ -365,37 +364,30 @@ function addVersion(value: any): RemoteReceiverAttachableChild {
   return value as any;
 }
 
-function normalizeChild(
-  child:
+function normalizeNode(
+  node:
     | RemoteTextSerialization
     | RemoteComponentSerialization
     | RemoteFragmentSerialization,
   normalizer: (
-    child:
+    node:
       | RemoteTextSerialization
       | RemoteComponentSerialization
       | RemoteFragmentSerialization,
   ) => RemoteReceiverAttachableChild,
 ) {
-  if (child.kind === KIND_FRAGMENT || child.kind === KIND_COMPONENT) {
-    child.children = child.children.map((child) =>
-      normalizeChild(child, normalizer),
-    );
+  if (node.kind === KIND_FRAGMENT || node.kind === KIND_COMPONENT) {
+    node.children.forEach((child) => normalizeNode(child, normalizer));
   }
-  if (child.kind === KIND_COMPONENT) {
-    const {props = {}} = child;
-    child.props = Object.keys(props).reduce((acc, key) => {
-      let prop = props[key];
-      if (isRemoteFragmentSerialization(prop)) {
-        prop = normalizeChild(prop, normalizer);
-      }
-      return {
-        ...acc,
-        [key]: prop,
-      };
-    }, {} as any);
+  if (node.kind === KIND_COMPONENT && 'props' in node) {
+    const {props} = node;
+    for (const key of Object.keys(props)) {
+      const prop = props[key];
+      if (!isRemoteFragmentSerialization(prop)) continue;
+      props[key] = normalizeNode(prop, normalizer);
+    }
   }
-  return normalizer(child);
+  return normalizer(node);
 }
 
 function isRemoteFragmentSerialization(
@@ -408,25 +400,4 @@ function isRemoteReceiverAttachableFragment(
   object: unknown,
 ): object is RemoteReceiverAttachableFragment {
   return isRemoteFragment(object) && 'version' in object;
-}
-
-function extractFragmentProps(oldProps: any = {}, newProps: any = {}) {
-  const attaches: RemoteReceiverAttachableFragment[] = [];
-  const detaches: RemoteReceiverAttachableFragment[] = [];
-  Object.keys(oldProps).forEach((key) => {
-    const oldProp = oldProps[key];
-    if (key in newProps && isRemoteReceiverAttachableFragment(oldProp)) {
-      detaches.push(oldProp);
-    }
-  });
-  Object.keys(newProps).forEach((key) => {
-    const newProp = newProps[key];
-    if (isRemoteFragmentSerialization(newProp)) {
-      normalizeChild(newProp, addVersion);
-    }
-    if (isRemoteReceiverAttachableFragment(newProp)) {
-      attaches.push(newProp);
-    }
-  });
-  return {attaches, detaches};
 }

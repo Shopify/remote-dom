@@ -27,3 +27,26 @@ export function isRemoteFragment<
 >(object: unknown): object is RemoteFragment<Root> {
   return object != null && (object as any).kind === KIND_FRAGMENT;
 }
+
+export function reduceObject(
+  object: any,
+  validator: (object: any) => boolean,
+  callback: (object: any) => any,
+): any {
+  if (validator(object)) {
+    return callback(object);
+  }
+  if (Array.isArray(object)) {
+    return object.map((item) => reduceObject(item, validator, callback));
+  }
+  if (typeof object === 'object' && object !== null) {
+    return Object.keys(object).reduce((acc, key) => {
+      const item = (object as any)[key];
+      return {
+        ...acc,
+        [key]: reduceObject(item, validator, callback),
+      };
+    }, {});
+  }
+  return object;
+}
