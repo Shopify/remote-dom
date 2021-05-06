@@ -20,7 +20,7 @@ import type {
   RemoteRootOptions,
   RemoteFragmentSerialization,
 } from './types';
-import {isRemoteFragment, reduceObject} from './utilities';
+import {isRemoteFragment} from './utilities';
 
 type AnyChild = RemoteText<any> | RemoteComponent<any, any>;
 type AnyNode = AnyChild | RemoteFragment<any>;
@@ -407,12 +407,12 @@ function updateProps(
     hasRemoteChange = true;
     normalizedNewProps[key] = value;
 
-    reduceObject(newExternalValue, isRemoteFragment, (fragment) => {
-      moveNodeToContainer(component, fragment, rootInternals);
-    });
-    reduceObject(currentExternalValue, isRemoteFragment, (fragment) => {
-      removeNodeFromContainer(fragment, rootInternals);
-    });
+    if (isRemoteFragment(currentExternalValue)) {
+      removeNodeFromContainer(currentExternalValue, rootInternals);
+    }
+    if (isRemoteFragment(newExternalValue)) {
+      moveNodeToContainer(component, newExternalValue, rootInternals);
+    }
   }
 
   return perform(component, rootInternals, {
@@ -725,12 +725,10 @@ function moveFragmentToContainer(node: AnyNode, rootInternals: RootInternals) {
   const props = node.props as any;
   if (!props) return;
 
-  for (const key of Object.keys(props)) {
-    const prop = props[key];
-    if (!isRemoteFragment(prop)) continue;
-
+  Object.values(props).forEach((prop) => {
+    if (!isRemoteFragment(prop)) return;
     moveNodeToContainer(node, prop, rootInternals);
-  }
+  });
 }
 
 function removeNodeFromContainer(node: AnyNode, rootInternals: RootInternals) {
@@ -795,7 +793,10 @@ function serializeChild(value: AnyChild): Serialized<typeof value> {
 }
 
 function serializeProp(prop: any) {
-  return reduceObject(prop, isRemoteFragment, serializeFragment);
+  if (isRemoteFragment(prop)) {
+    return serializeFragment(prop);
+  }
+  return prop;
 }
 
 function serializeFragment(

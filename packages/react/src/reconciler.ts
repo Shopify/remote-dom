@@ -120,16 +120,15 @@ const reconciler = reactReconciler<
       if (!isValidElement(element)) continue;
 
       let fragmentContainer:
-        | FragmentContainer
+        | RemoteReactFragment
         | undefined = (instance.props as any)[key];
-      if (isFragmentContainer(fragmentContainer)) {
+      if (isRemoteReactFragment(fragmentContainer)) {
         delete updateProps[key];
       } else {
-        fragmentContainer = createFragmentContainer(root);
+        fragmentContainer = createRemoteReactFragment(root);
         updateProps[key] = fragmentContainer;
       }
-      const {container} = fragmentContainer;
-      reconciler.updateContainer(element, container, null, () => {});
+      fragmentContainer.render(element);
     }
 
     return needsUpdate ? updateProps : null;
@@ -201,9 +200,8 @@ function normalizeProps(root: RemoteRoot, props: unknown) {
     const element = (props as any)[key];
     if (!isValidElement(element)) return {...acc, [key]: element};
 
-    const fragmentContainer = createFragmentContainer(root);
-    const {container} = fragmentContainer;
-    reconciler.updateContainer(element, container, null, () => {});
+    const fragmentContainer = createRemoteReactFragment(root);
+    fragmentContainer.render(element);
     return {
       ...acc,
       [key]: fragmentContainer,
@@ -211,20 +209,20 @@ function normalizeProps(root: RemoteRoot, props: unknown) {
   }, {} as any);
 }
 
-type FragmentContainer = RemoteFragment & {
-  container: ReturnType<typeof reconciler.createContainer>;
+type RemoteReactFragment = RemoteFragment & {
+  render: (element: React.ReactElement) => void;
 };
 
-function isFragmentContainer(object: any): object is FragmentContainer {
+function isRemoteReactFragment(object: any): object is RemoteReactFragment {
   return (
     object !== null &&
     typeof object === 'object' &&
     (object as any).kind === KIND_FRAGMENT &&
-    'container' in object
+    'render' in object
   );
 }
 
-function createFragmentContainer(root: RemoteRoot): FragmentContainer {
+function createRemoteReactFragment(root: RemoteRoot): RemoteReactFragment {
   const fragment = root.createFragment();
   const subTree: RemoteRoot = {
     ...root,
@@ -245,7 +243,10 @@ function createFragmentContainer(root: RemoteRoot): FragmentContainer {
     },
   };
   const container = reconciler.createContainer(subTree, 0, false, null);
-  Object.assign(fragment, {container});
+  const render: RemoteReactFragment['render'] = (element) => {
+    reconciler.updateContainer(element, container, null, () => {});
+  };
+  Object.assign(fragment, {render});
   return fragment as any;
 }
 

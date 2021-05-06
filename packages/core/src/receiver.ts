@@ -15,7 +15,7 @@ import type {
   RemoteComponentSerialization,
   RemoteFragmentSerialization,
 } from './types';
-import {isRemoteFragment, reduceObject} from './utilities';
+import {isRemoteFragment} from './utilities';
 
 export const ROOT_ID = Symbol('RootId');
 
@@ -189,12 +189,19 @@ export function createRemoteReceiver(): RemoteReceiver {
 
       retain(newProps);
 
-      reduceObject(newProps, isRemoteFragmentSerialization, addVersion);
-      reduceObject(newProps, isRemoteReceiverAttachableFragment, attach);
-      for (const key of Object.keys(newProps)) {
+      Object.keys(newProps).forEach((key) => {
+        const newProp = (newProps as any)[key];
         const oldProp = (oldProps as any)[key];
-        reduceObject(oldProp, isRemoteReceiverAttachableFragment, detach);
-      }
+        if (isRemoteReceiverAttachableFragment(oldProp)) {
+          detach(oldProp);
+        }
+        if (isRemoteFragmentSerialization(newProp)) {
+          addVersion(newProp);
+        }
+        if (isRemoteReceiverAttachableFragment(newProp)) {
+          attach(newProp);
+        }
+      });
 
       Object.assign(component.props, newProps);
       component.version += 1;
@@ -323,8 +330,7 @@ export function createRemoteReceiver(): RemoteReceiver {
 
     if (child.kind === KIND_COMPONENT && 'props' in child) {
       const {props = {}} = child as any;
-      Object.keys(props).forEach((key) => {
-        const prop = props[key];
+      Object.values(props).forEach((prop) => {
         if (!isRemoteReceiverAttachableFragment(prop)) return;
         attach(prop);
       });
@@ -344,8 +350,7 @@ export function createRemoteReceiver(): RemoteReceiver {
 
     if (child.kind === KIND_COMPONENT && 'props' in child) {
       const {props = {}} = child as any;
-      Object.keys(props).forEach((key) => {
-        const prop = props[key];
+      Object.values(props).forEach((prop) => {
         if (!isRemoteReceiverAttachableFragment(prop)) return;
         detach(prop);
       });
