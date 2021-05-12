@@ -1,14 +1,14 @@
 import {isValidElement} from 'react';
 import reactReconciler from 'react-reconciler';
 
-import {
+import type {
   RemoteRoot,
   RemoteText,
   RemoteComponent,
   RemoteComponentType,
   RemoteFragment,
-  KIND_FRAGMENT,
 } from '@remote-ui/core';
+import {KIND_FRAGMENT} from '@remote-ui/core';
 
 const reconciler = reactReconciler<
   // type
@@ -67,7 +67,7 @@ const reconciler = reactReconciler<
   },
   createInstance(type, allProps, root) {
     const {children: _children, ...props} = allProps;
-    return root.createComponent(type, normalizeProps(root, props));
+    return root.createComponent(type, normalizeProps(props, root));
   },
 
   // Updates
@@ -194,7 +194,7 @@ function has(object: object, property: string | number | symbol) {
   return hasOwnProperty.call(object, property);
 }
 
-function normalizeProps(root: RemoteRoot, props: unknown) {
+function normalizeProps(props: unknown, root: RemoteRoot) {
   if (props === null || typeof props !== 'object') return props;
   return Object.keys(props as any).reduce((acc, key) => {
     const element = (props as any)[key];

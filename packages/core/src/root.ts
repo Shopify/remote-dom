@@ -182,7 +182,13 @@ export function createRemoteRoot<
         removeChild: (child) =>
           removeChild(component, child, internals, rootInternals),
         insertChildBefore: (child, before) =>
-          insertChildBefore(component, child, before, internals, rootInternals),
+          insertChildBefore(
+            component,
+            normalizeChild(child, remoteRoot),
+            before,
+            internals,
+            rootInternals,
+          ),
         // Just satisfying the type definition, since we need to write
         // some properties manually, which we do below. If we just `as any`
         // the whole object, we lose the implicit argument types for the
@@ -249,7 +255,13 @@ export function createRemoteRoot<
         removeChild: (child) =>
           removeChild(fragment, child, internals, rootInternals),
         insertChildBefore: (child, before) =>
-          insertChildBefore(fragment, child, before, internals, rootInternals),
+          insertChildBefore(
+            fragment,
+            normalizeChild(child, remoteRoot),
+            before,
+            internals,
+            rootInternals,
+          ),
 
         // Just satisfying the type definition, since we need to write
         // some properties manually.
@@ -273,7 +285,7 @@ export function createRemoteRoot<
     insertChildBefore: (child, before) =>
       insertChildBefore(
         remoteRoot,
-        child,
+        normalizeChild(child, remoteRoot),
         before,
         rootInternals,
         rootInternals,

@@ -330,7 +330,8 @@ export function createRemoteReceiver(): RemoteReceiver {
 
     if (child.kind === KIND_COMPONENT && 'props' in child) {
       const {props = {}} = child as any;
-      Object.values(props).forEach((prop) => {
+      Object.keys(props).forEach((key) => {
+        const prop = props[key];
         if (!isRemoteReceiverAttachableFragment(prop)) return;
         attach(prop);
       });
@@ -350,7 +351,8 @@ export function createRemoteReceiver(): RemoteReceiver {
 
     if (child.kind === KIND_COMPONENT && 'props' in child) {
       const {props = {}} = child as any;
-      Object.values(props).forEach((prop) => {
+      Object.keys(props).forEach((key) => {
+        const prop = props[key];
         if (!isRemoteReceiverAttachableFragment(prop)) return;
         detach(prop);
       });
