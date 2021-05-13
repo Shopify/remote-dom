@@ -1,4 +1,5 @@
-import {createContext} from 'react';
+import {createContext, ReactElement} from 'react';
+import type {RemoteComponentProps, RemoteTextProps} from './types';
 
 export const ControllerContext = createContext<
   import('./controller').Controller | null
@@ -7,3 +8,12 @@ export const ControllerContext = createContext<
 export const RemoteReceiverContext = createContext<
   import('@remote-ui/core').RemoteReceiver | null
 >(null);
+
+export interface RemoteRendererContextProps {
+  renderComponent: (props: RemoteComponentProps) => ReactElement;
+  renderText: (props: RemoteTextProps) => ReactElement;
+}
+
+export const RemoteRendererContext = createContext<RemoteRendererContextProps | null>(
+  null,
+);

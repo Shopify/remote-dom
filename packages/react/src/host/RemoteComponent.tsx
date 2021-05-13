@@ -34,7 +34,8 @@ interface Props {
 const emptyObject = {};
 
 export const RemoteComponent = memo(
-  ({receiver, component, controller}: Props) => {
+  ({receiver, component, controller}: RemoteComponentProps) => {
+    const {renderComponent, renderText} = useRemoteRenderer();
     const Implementation = controller.get(component.type)!;
 
     const attached = useAttached(receiver, component);
@@ -65,7 +66,29 @@ export const RemoteComponent = memo(
 
     return (
       <Implementation {...props}>
+<<<<<<< HEAD
         {renderChildren(children, receiver, controller)}
+=======
+        {[...children].map((child) => {
+          let element: ReactElement | null;
+          switch (child.kind) {
+            case KIND_COMPONENT:
+              element = renderComponent({
+                component: child,
+                receiver,
+                controller,
+              });
+              break;
+            case KIND_TEXT:
+              element = renderText({text: child, receiver});
+              break;
+            default:
+              element = null;
+              break;
+          }
+          return element ? cloneElement(element, {key: child.id}) : null;
+        })}
+>>>>>>> a2eb711 (Add the ability for consumers to render custom components)
       </Implementation>
     );
   },
