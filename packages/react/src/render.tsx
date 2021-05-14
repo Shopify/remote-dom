@@ -1,6 +1,7 @@
 import type {ReactElement} from 'react';
 
 import reconciler from './reconciler';
+import {ReconcilerContext, RootContext} from './context';
 
 export function render(
   element: ReactElement,
@@ -13,7 +14,16 @@ export function render(
 
   // callback is cast here because the typings do not mark that argument
   // as optional, even though it is.
-  reconciler.updateContainer(element, container, null, callback as any);
+  reconciler.updateContainer(
+    <RootContext.Provider value={root}>
+      <ReconcilerContext.Provider value={reconciler}>
+        {element}
+      </ReconcilerContext.Provider>
+    </RootContext.Provider>,
+    container,
+    null,
+    callback as any,
+  );
 
   // Did not work for me because (I think?) it is done by the worker
   // and therefore has an entirely different React.

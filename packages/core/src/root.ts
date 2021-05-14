@@ -817,7 +817,9 @@ function serializeFragment(
   return {
     id: value.id,
     kind: value.kind,
-    children: value.children.map((child) => serializeChild(child)),
+    get children() {
+      return value.children.map((child) => serializeChild(child));
+    },
   };
 }
 
