@@ -1,6 +1,6 @@
 export {retain, release} from '@remote-ui/rpc';
-export {createRemoteRoot, RemoteReceiver} from '@remote-ui/core';
-export type {RemoteRoot} from '@remote-ui/core';
+export {createRemoteRoot} from '@remote-ui/core';
+export type {RemoteRoot, RemoteReceiver} from '@remote-ui/core';
 export {render} from './render';
 export {createRemoteReactComponent} from './components';
 export {useRemoteSubscription} from './hooks';
