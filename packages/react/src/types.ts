@@ -9,8 +9,8 @@ type PropsForRemoteComponent<T> = T extends RemoteComponentType<
   ? {[K in keyof Props]: RemoteFragmentToReactElement<Props[K]>}
   : never;
 
-type RemoteFragmentToReactElement<T> = T extends RemoteFragment
-  ? ReactElement
+type RemoteFragmentToReactElement<T> = T extends RemoteFragment<infer R>
+  ? ReactElement | false | RemoteFragment<R>
   : T;
 
 export type ReactPropsFromRemoteComponentType<
