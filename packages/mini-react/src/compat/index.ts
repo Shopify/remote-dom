@@ -2,12 +2,8 @@
 // It is very similar to preact/compat, except that instead of also providing
 // a compatibility layer for react-dom, it provides one for @remote-ui/react.
 
-import {
-  retain,
-  release,
-  createRemoteRoot,
-  RemoteReceiver,
-} from '@remote-ui/core';
+import {retain, release, createRemoteRoot} from '@remote-ui/core';
+import type {RemoteReceiver} from '@remote-ui/core';
 
 import {createElement} from '../create-element';
 import {createRef} from '../create-ref';
@@ -45,12 +41,12 @@ import {
 } from './uncommon';
 import {React} from './react';
 
+export type {RemoteReceiver};
 export {
   // @remote-ui/react compatibility
   retain,
   release,
   createRemoteRoot,
-  RemoteReceiver,
   render,
   createRemoteReactComponent,
   useRemoteSubscription,
