@@ -1,10 +1,5 @@
-export {
-  retain,
-  release,
-  createRemoteRoot,
-  RemoteReceiver,
-} from '@remote-ui/core';
-export type {RemoteRoot} from '@remote-ui/core';
+export {retain, release, createRemoteRoot} from '@remote-ui/core';
+export type {RemoteRoot, RemoteReceiver} from '@remote-ui/core';
 
 export {cloneElement} from './clone-element';
 export {createElement, createElement as h} from './create-element';
