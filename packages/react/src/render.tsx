@@ -1,7 +1,7 @@
 import type {ReactElement} from 'react';
 
 import reconciler from './reconciler';
-import {ReconcilerContext, RootContext} from './context';
+import {RenderContext} from './context';
 
 export function render(
   element: ReactElement,
@@ -11,15 +11,14 @@ export function render(
   // @see https://github.com/facebook/react/blob/993ca533b42756811731f6b7791ae06a35ee6b4d/packages/react-reconciler/src/ReactRootTags.js
   // I think we are a legacy root?
   const container = reconciler.createContainer(root, 0, false, null);
+  const renderContextValue = {root, reconciler};
 
   // callback is cast here because the typings do not mark that argument
   // as optional, even though it is.
   reconciler.updateContainer(
-    <RootContext.Provider value={root}>
-      <ReconcilerContext.Provider value={reconciler}>
-        {element}
-      </ReconcilerContext.Provider>
-    </RootContext.Provider>,
+    <RenderContext.Provider value={renderContextValue}>
+      {element}
+    </RenderContext.Provider>,
     container,
     null,
     callback as any,

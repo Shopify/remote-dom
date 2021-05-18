@@ -1,13 +1,11 @@
 import type {RemoteComponentType} from '@remote-ui/types';
-import {
+import type {
   RemoteRoot,
   RemoteComponent,
   RemoteText,
   RemoteFragment,
-  KIND_COMPONENT,
-  KIND_TEXT,
-  KIND_FRAGMENT,
 } from './types';
+import {KIND_COMPONENT, KIND_TEXT, KIND_FRAGMENT} from './types';
 
 export function isRemoteComponent<
   Type extends RemoteComponentType<string, any, any> = any,

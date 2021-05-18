@@ -33,7 +33,12 @@ export type {
   RemoteFragmentSerialization,
 } from './types';
 export {createRemoteRoot} from './root';
-export {createRemoteReceiver, createRemoteChannel} from './receiver';
+export {
+  createRemoteReceiver,
+  createRemoteChannel,
+  isRemoteFragmentSerialization,
+  isRemoteReceiverAttachableFragment,
+} from './receiver';
 export type {
   RemoteReceiver,
   RemoteReceiverAttachment,

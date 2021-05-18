@@ -1,12 +1,15 @@
 import {memo, useMemo} from 'react';
 import type {ComponentType} from 'react';
-import {KIND_FRAGMENT, KIND_COMPONENT, KIND_TEXT} from '@remote-ui/core';
+import {
+  KIND_COMPONENT,
+  KIND_TEXT,
+  isRemoteReceiverAttachableFragment,
+} from '@remote-ui/core';
 import type {
   RemoteReceiver,
   RemoteReceiverAttachableComponent,
   RemoteReceiverAttachableFragment,
   RemoteReceiverAttachableChild,
-  RemoteFragmentSerialization,
 } from '@remote-ui/core';
 
 import type {Controller} from './controller';
@@ -28,38 +31,41 @@ interface Props {
   __type__?: ComponentType;
 }
 
+const emptyObject = {};
+
 export const RemoteComponent = memo(
   ({receiver, component, controller}: Props) => {
     const Implementation = controller.get(component.type)!;
 
     const attached = useAttached(receiver, component);
-    const props = attached?.props;
 
-    const fragmentProps = useMemo(
-      () =>
-        Object.keys(props as any).reduce((acc, key) => {
-          const prop = (props as any)[key];
-          if (!isRemoteFragmentSerialization(prop)) return acc;
-          return {
-            ...acc,
-            [key]: (
-              <RemoteFragment
-                receiver={receiver}
-                fragment={prop as any}
-                controller={controller}
-              />
-            ),
-          };
-        }, {} as any),
-      [receiver, controller, props, component.version],
-    );
+    const props = useMemo(() => {
+      const props = attached?.props as any;
+      if (!props) return emptyObject;
+
+      return Object.keys(props).reduce((acc, key) => {
+        const prop = props[key];
+        return {
+          ...acc,
+          [key]: isRemoteReceiverAttachableFragment(prop) ? (
+            <RemoteFragment
+              receiver={receiver}
+              fragment={prop}
+              controller={controller}
+            />
+          ) : (
+            prop
+          ),
+        };
+      }, {} as any);
+    }, [receiver, controller, attached?.props, component.version]);
 
     if (attached == null) return null;
 
     const {children} = attached;
 
     return (
-      <Implementation {...props} {...fragmentProps}>
+      <Implementation {...props}>
         {renderChildren(receiver, controller, children)}
       </Implementation>
     );
@@ -97,10 +103,4 @@ function renderChildren(
         return null;
     }
   });
-}
-
-function isRemoteFragmentSerialization(
-  object: unknown,
-): object is RemoteFragmentSerialization {
-  return object != null && (object as any).kind === KIND_FRAGMENT;
 }

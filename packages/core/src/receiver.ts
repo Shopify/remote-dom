@@ -397,14 +397,14 @@ function normalizeNode(
   return normalizer(node);
 }
 
-function isRemoteFragmentSerialization(
+export function isRemoteFragmentSerialization(
   object: unknown,
 ): object is RemoteFragmentSerialization {
-  return isRemoteFragment(object);
+  return isRemoteFragment(object) && 'id' in object && 'children' in object;
 }
 
-function isRemoteReceiverAttachableFragment(
+export function isRemoteReceiverAttachableFragment(
   object: unknown,
 ): object is RemoteReceiverAttachableFragment {
-  return isRemoteFragment(object) && 'version' in object;
+  return isRemoteFragmentSerialization(object) && 'version' in object;
 }
