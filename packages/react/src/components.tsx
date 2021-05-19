@@ -30,7 +30,7 @@ function createComponentWrapper<T>(componentType: T): T {
   const Component: ComponentType = componentType as any;
 
   return memo(function ComponentWrapper({
-    children: externalChildren,
+    children: externalChildren = [],
     ...externalProps
   }: any) {
     const [fragments] = useState<any>({});

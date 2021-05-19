@@ -15,7 +15,7 @@ import {
 const RemoteHelloWorld = createRemoteReactComponent<
   'HelloWorld',
   {name: string | RemoteFragment}
->('HelloWorld');
+>('HelloWorld', {hasFragmentProps: true});
 
 const RemoteWithPerson = createRemoteReactComponent<
   'WithPerson',
@@ -93,8 +93,19 @@ describe('@remote-ui/react', () => {
       components: ['HelloWorld'],
     });
 
-    function RemoteApp() {
+    const NameContext = createContext('');
+
+    function ActualApp() {
+      const name = useContext(NameContext);
       return <RemoteHelloWorld name={<RemoteHelloWorld name={name} />} />;
+    }
+
+    function RemoteApp() {
+      return (
+        <NameContext.Provider value={name}>
+          <ActualApp />
+        </NameContext.Provider>
+      );
     }
 
     const controller = createController({HelloWorld: HostHelloWorld});
