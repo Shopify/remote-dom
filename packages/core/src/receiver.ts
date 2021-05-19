@@ -196,10 +196,8 @@ export function createRemoteReceiver(): RemoteReceiver {
           detach(oldProp);
         }
         if (isRemoteFragmentSerialization(newProp)) {
-          addVersion(newProp);
-        }
-        if (isRemoteReceiverAttachableFragment(newProp)) {
-          attach(newProp);
+          const attachableNewProp = addVersion(newProp);
+          attach(attachableNewProp);
         }
       });
 
@@ -366,32 +364,37 @@ export function createRemoteReceiver(): RemoteReceiver {
   }
 }
 
-function addVersion(value: any): RemoteReceiverAttachableChild {
+function addVersion<T>(
+  value: T,
+): T extends RemoteTextSerialization
+  ? RemoteReceiverAttachableText
+  : T extends RemoteComponentSerialization
+  ? RemoteReceiverAttachableChild
+  : T extends RemoteFragmentSerialization
+  ? RemoteReceiverAttachableFragment
+  : never {
   (value as any).version = 0;
   return value as any;
 }
 
-function normalizeNode(
-  node:
+function normalizeNode<
+  T extends
     | RemoteTextSerialization
     | RemoteComponentSerialization
     | RemoteFragmentSerialization,
-  normalizer: (
-    node:
-      | RemoteTextSerialization
-      | RemoteComponentSerialization
-      | RemoteFragmentSerialization,
-  ) => RemoteReceiverAttachableChild,
-) {
+  R
+>(node: T, normalizer: (node: T) => R) {
   if (node.kind === KIND_FRAGMENT || node.kind === KIND_COMPONENT) {
-    node.children.forEach((child) => normalizeNode(child, normalizer));
+    (node as any).children.forEach((child: T) =>
+      normalizeNode(child, normalizer),
+    );
   }
   if (node.kind === KIND_COMPONENT && 'props' in node) {
-    const {props} = node;
+    const {props} = node as any;
     for (const key of Object.keys(props)) {
       const prop = props[key];
       if (!isRemoteFragmentSerialization(prop)) continue;
-      props[key] = normalizeNode(prop, normalizer);
+      props[key] = normalizeNode(prop as any, normalizer);
     }
   }
   return normalizer(node);
