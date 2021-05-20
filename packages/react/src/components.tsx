@@ -1,6 +1,8 @@
 import {isValidElement, memo, useMemo, useRef} from 'react';
 import type {ComponentType} from 'react';
-import {isRemoteFragment, RemoteComponentType} from '@remote-ui/core';
+import {isRemoteFragment} from '@remote-ui/core';
+import type {RemoteComponentType, RemoteFragment} from '@remote-ui/core';
+
 import type {ReactComponentTypeFromRemoteComponentType} from './types';
 
 import {useRender} from './hooks';
@@ -20,20 +22,25 @@ export function createRemoteReactComponent<
   ReactComponentTypeFromRemoteComponentType<
     RemoteComponentType<Type, Props, AllowedChildren>
   > {
-  if (fragmentProps?.length) {
-    return createComponentWrapper(componentType) as any;
+  if (!fragmentProps || !fragmentProps.length) {
+    return componentType as any;
   }
-  return componentType as any;
+  const wrapper = createComponentWrapper(componentType, fragmentProps) as any;
+  wrapper.displayName = componentType;
+  return wrapper;
 }
 
-function createComponentWrapper<T>(componentType: T): T {
+function createComponentWrapper<T, P>(
+  componentType: T,
+  fragmentProps: (keyof P)[],
+): T {
   const Component: ComponentType = componentType as any;
 
   return memo(function ComponentWrapper({
     children: externalChildren = [],
     ...externalProps
   }: any) {
-    const fragments = useRef<any>({});
+    const fragments = useRef<{[key in string]: RemoteFragment}>({});
     const {root, reconciler} = useRender();
 
     const {props, children} = useMemo(() => {
@@ -45,7 +52,7 @@ function createComponentWrapper<T>(componentType: T): T {
 
       for (const key of Object.keys(externalProps)) {
         const element = externalProps[key];
-        if (isValidElement(element)) {
+        if (fragmentProps.includes(key as any) && isValidElement(element)) {
           const currentFragment = fragments.current[key];
           const fragment = isRemoteFragment(currentFragment)
             ? currentFragment
@@ -67,7 +74,7 @@ function createComponentWrapper<T>(componentType: T): T {
           props[key] = fragment;
         } else {
           props[key] = element;
-          fragments.current[key] = undefined;
+          delete fragments.current[key];
         }
       }
 

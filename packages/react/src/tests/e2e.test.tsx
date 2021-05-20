@@ -16,7 +16,6 @@ const RemoteHelloWorld = createRemoteReactComponent<
   'HelloWorld',
   {name: string | RemoteFragment}
 >('HelloWorld', {fragmentProps: ['name']});
-RemoteHelloWorld.displayName = 'HelloWorld';
 
 const RemoteWithPerson = createRemoteReactComponent<
   'WithPerson',
