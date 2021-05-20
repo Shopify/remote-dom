@@ -1,8 +1,9 @@
 import {createContext} from 'react';
+import type {RemoteRoot} from '@remote-ui/core';
 
 import type reconciler from './reconciler';
 
 export const RenderContext = createContext<{
-  root: import('@remote-ui/core').RemoteRoot;
+  root: RemoteRoot;
   reconciler: typeof reconciler;
 } | null>(null);

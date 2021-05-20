@@ -15,7 +15,8 @@ import {
 const RemoteHelloWorld = createRemoteReactComponent<
   'HelloWorld',
   {name: string | RemoteFragment}
->('HelloWorld', {hasFragmentProps: true});
+>('HelloWorld', {fragmentProps: ['name']});
+RemoteHelloWorld.displayName = 'HelloWorld';
 
 const RemoteWithPerson = createRemoteReactComponent<
   'WithPerson',
@@ -61,7 +62,7 @@ describe('@remote-ui/react', () => {
 
     const receiver = createRemoteReceiver();
     const remoteRoot = createRemoteRoot(receiver.receive, {
-      components: ['HelloWorld'],
+      components: [RemoteHelloWorld.displayName!],
     });
 
     function RemoteApp() {
@@ -90,7 +91,7 @@ describe('@remote-ui/react', () => {
 
     const receiver = createRemoteReceiver();
     const remoteRoot = createRemoteRoot(receiver.receive, {
-      components: ['HelloWorld'],
+      components: [RemoteHelloWorld.displayName!],
     });
 
     const NameContext = createContext('');
@@ -133,7 +134,7 @@ describe('@remote-ui/react', () => {
 
     const receiver = createRemoteReceiver();
     const remoteRoot = createRemoteRoot(receiver.receive, {
-      components: ['WithPerson'],
+      components: [RemoteWithPerson],
     });
 
     function RemoteApp() {

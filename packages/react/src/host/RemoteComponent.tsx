@@ -43,21 +43,20 @@ export const RemoteComponent = memo(
       const props = attached?.props as any;
       if (!props) return emptyObject;
 
-      return Object.keys(props).reduce((acc, key) => {
+      const newProps: typeof props = {};
+      for (const key of Object.keys(props)) {
         const prop = props[key];
-        return {
-          ...acc,
-          [key]: isRemoteReceiverAttachableFragment(prop) ? (
-            <RemoteFragment
-              receiver={receiver}
-              fragment={prop}
-              controller={controller}
-            />
-          ) : (
-            prop
-          ),
-        };
-      }, {} as any);
+        newProps[key] = isRemoteReceiverAttachableFragment(prop) ? (
+          <RemoteFragment
+            receiver={receiver}
+            fragment={prop}
+            controller={controller}
+          />
+        ) : (
+          prop
+        );
+      }
+      return newProps;
     }, [receiver, controller, attached?.props, component.version]);
 
     if (attached == null) return null;
@@ -66,7 +65,7 @@ export const RemoteComponent = memo(
 
     return (
       <Implementation {...props}>
-        {renderChildren(receiver, controller, children)}
+        {renderChildren(children, receiver, controller)}
       </Implementation>
     );
   },
@@ -76,14 +75,14 @@ const RemoteFragment = memo(
   ({receiver, fragment, controller}: RemoteFragmentProps) => {
     const {children} = useAttached(receiver, fragment) ?? {};
     if (!children) return null;
-    return <>{renderChildren(receiver, controller, children)}</>;
+    return <>{renderChildren(children, receiver, controller)}</>;
   },
 );
 
 function renderChildren(
+  children: RemoteReceiverAttachableChild[],
   receiver: RemoteReceiver,
   controller: Controller,
-  children: RemoteReceiverAttachableChild[],
 ) {
   return [...children].map((child) => {
     switch (child.kind) {

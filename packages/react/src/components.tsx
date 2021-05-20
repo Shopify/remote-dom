@@ -1,12 +1,12 @@
-import {isValidElement, memo, useMemo, useState} from 'react';
+import {isValidElement, memo, useMemo, useRef} from 'react';
 import type {ComponentType} from 'react';
 import {isRemoteFragment, RemoteComponentType} from '@remote-ui/core';
 import type {ReactComponentTypeFromRemoteComponentType} from './types';
 
 import {useRender} from './hooks';
 
-interface Options {
-  hasFragmentProps?: boolean;
+interface Options<Props> {
+  fragmentProps?: (keyof Props)[];
 }
 
 export function createRemoteReactComponent<
@@ -15,12 +15,12 @@ export function createRemoteReactComponent<
   AllowedChildren extends RemoteComponentType<string, any> | boolean = true
 >(
   componentType: Type | RemoteComponentType<Type, Props, AllowedChildren>,
-  {hasFragmentProps}: Options = {},
+  {fragmentProps}: Options<Props> = {},
 ): RemoteComponentType<Type, Props, AllowedChildren> &
   ReactComponentTypeFromRemoteComponentType<
     RemoteComponentType<Type, Props, AllowedChildren>
   > {
-  if (hasFragmentProps) {
+  if (fragmentProps?.length) {
     return createComponentWrapper(componentType) as any;
   }
   return componentType as any;
@@ -33,31 +33,27 @@ function createComponentWrapper<T>(componentType: T): T {
     children: externalChildren = [],
     ...externalProps
   }: any) {
-    const [fragments] = useState<any>({});
+    const fragments = useRef<any>({});
     const {root, reconciler} = useRender();
 
     const {props, children} = useMemo(() => {
-      /**
-       * React portals need to be attached to the tree after intialize in order to render.
-       * It's usually done by appending them as children of a parent node.
-       * @see https://reactjs.org/docs/portals.html
-       */
+      // React portals need to be attached to the tree after intialize in order to render.
+      // It's usually done by appending them as children of a parent node.
+      // @see https://reactjs.org/docs/portals.html
       const portals = [];
       const props: any = {};
 
       for (const key of Object.keys(externalProps)) {
         const element = externalProps[key];
         if (isValidElement(element)) {
-          const currentFragment = fragments[key];
+          const currentFragment = fragments.current[key];
           const fragment = isRemoteFragment(currentFragment)
             ? currentFragment
             : root.createFragment();
-          fragments[key] = fragment;
+          fragments.current[key] = fragment;
 
-          /**
-           * Assign createText and createComponent to fragment
-           * so that it can become a React container to render the portal
-           */
+          // Assign createText and createComponent to fragment
+          // so that it can become a React container to render the portal
           Object.assign(fragment, {
             createText(...args: any[]) {
               return root.createText(...args);
@@ -71,7 +67,7 @@ function createComponentWrapper<T>(componentType: T): T {
           props[key] = fragment;
         } else {
           props[key] = element;
-          fragments[key] = undefined;
+          fragments.current[key] = undefined;
         }
       }
 
