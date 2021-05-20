@@ -59,12 +59,12 @@ const reconciler = reactReconciler<
   },
 
   // Instances
-  createTextInstance(text, fragment) {
-    return fragment.createText(text);
+  createTextInstance(text, root) {
+    return root.createText(text);
   },
-  createInstance(type, allProps, fragment) {
+  createInstance(type, allProps, root) {
     const {children: _children, ...props} = allProps;
-    return fragment.createComponent(type, props as any);
+    return root.createComponent(type, props);
   },
 
   // Updates
@@ -73,7 +73,6 @@ const reconciler = reactReconciler<
   },
   prepareUpdate(_instance, _type, oldProps, newProps) {
     const updateProps: Record<string, unknown> = {};
-
     let needsUpdate = false;
 
     for (const key in oldProps) {

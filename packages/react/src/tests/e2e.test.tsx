@@ -3,6 +3,7 @@ import {render as domRender} from 'react-dom';
 import {act as domAct} from 'react-dom/test-utils';
 
 import {createRemoteRoot, createRemoteReceiver} from '@remote-ui/core';
+import type {RemoteFragment} from '@remote-ui/core';
 
 import {RemoteRenderer, createController} from '../host';
 import {
@@ -13,8 +14,8 @@ import {
 
 const RemoteHelloWorld = createRemoteReactComponent<
   'HelloWorld',
-  {name: string}
->('HelloWorld');
+  {name: string | RemoteFragment}
+>('HelloWorld', {fragmentProps: ['name']});
 
 const RemoteWithPerson = createRemoteReactComponent<
   'WithPerson',
@@ -60,7 +61,7 @@ describe('@remote-ui/react', () => {
 
     const receiver = createRemoteReceiver();
     const remoteRoot = createRemoteRoot(receiver.receive, {
-      components: [RemoteHelloWorld],
+      components: [RemoteHelloWorld.displayName!],
     });
 
     function RemoteApp() {
@@ -82,6 +83,48 @@ describe('@remote-ui/react', () => {
     });
 
     expect(appElement.innerHTML).toBe(`<div>Hello, ${name}</div>`);
+  });
+
+  it('renders component with fragment as prop across a remote bridge', () => {
+    const name = 'Winston';
+
+    const receiver = createRemoteReceiver();
+    const remoteRoot = createRemoteRoot(receiver.receive, {
+      components: [RemoteHelloWorld.displayName!],
+    });
+
+    const NameContext = createContext('');
+
+    function ActualApp() {
+      const name = useContext(NameContext);
+      return <RemoteHelloWorld name={<RemoteHelloWorld name={name} />} />;
+    }
+
+    function RemoteApp() {
+      return (
+        <NameContext.Provider value={name}>
+          <ActualApp />
+        </NameContext.Provider>
+      );
+    }
+
+    const controller = createController({HelloWorld: HostHelloWorld});
+
+    function HostApp() {
+      return <RemoteRenderer controller={controller} receiver={receiver} />;
+    }
+
+    domAct(() => {
+      domRender(<HostApp />, appElement);
+      render(<RemoteApp />, remoteRoot, () => {
+        remoteRoot.mount();
+      });
+      jest.runAllTimers();
+    });
+
+    expect(appElement.innerHTML).toBe(
+      `<div>Hello, <div>Hello, ${name}</div></div>`,
+    );
   });
 
   it('handles function props on remote components', () => {

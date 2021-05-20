@@ -1,14 +1,26 @@
-import {memo, useEffect} from 'react';
+import {memo, useMemo} from 'react';
 import type {ComponentType} from 'react';
-import {retain, release} from '@remote-ui/core';
+import {
+  KIND_COMPONENT,
+  KIND_TEXT,
+  isRemoteReceiverAttachableFragment,
+} from '@remote-ui/core';
 import type {
   RemoteReceiver,
   RemoteReceiverAttachableComponent,
+  RemoteReceiverAttachableFragment,
+  RemoteReceiverAttachableChild,
 } from '@remote-ui/core';
 
 import type {Controller} from './controller';
 import {RemoteText} from './RemoteText';
 import {useAttached} from './hooks';
+
+interface RemoteFragmentProps {
+  receiver: RemoteReceiver;
+  fragment: RemoteReceiverAttachableFragment;
+  controller: Controller;
+}
 
 interface Props {
   receiver: RemoteReceiver;
@@ -19,20 +31,33 @@ interface Props {
   __type__?: ComponentType;
 }
 
+const emptyObject = {};
+
 export const RemoteComponent = memo(
   ({receiver, component, controller}: Props) => {
     const Implementation = controller.get(component.type)!;
 
     const attached = useAttached(receiver, component);
-    const props = attached?.props;
 
-    useEffect(() => {
-      retain(props);
+    const props = useMemo(() => {
+      const props = attached?.props as any;
+      if (!props) return emptyObject;
 
-      return () => {
-        release(props);
-      };
-    }, [props]);
+      const newProps: typeof props = {};
+      for (const key of Object.keys(props)) {
+        const prop = props[key];
+        newProps[key] = isRemoteReceiverAttachableFragment(prop) ? (
+          <RemoteFragment
+            receiver={receiver}
+            fragment={prop}
+            controller={controller}
+          />
+        ) : (
+          prop
+        );
+      }
+      return newProps;
+    }, [receiver, controller, attached?.props, component.version]);
 
     if (attached == null) return null;
 
@@ -40,24 +65,41 @@ export const RemoteComponent = memo(
 
     return (
       <Implementation {...props}>
-        {[...children].map((child) => {
-          if ('children' in child) {
-            return (
-              <RemoteComponent
-                key={child.id}
-                receiver={receiver}
-                component={child}
-                controller={controller}
-                __type__={(controller.get(child.type) as any)?.__type__}
-              />
-            );
-          } else {
-            return (
-              <RemoteText key={child.id} text={child} receiver={receiver} />
-            );
-          }
-        })}
+        {renderChildren(children, receiver, controller)}
       </Implementation>
     );
   },
 );
+
+const RemoteFragment = memo(
+  ({receiver, fragment, controller}: RemoteFragmentProps) => {
+    const {children} = useAttached(receiver, fragment) ?? {};
+    if (!children) return null;
+    return <>{renderChildren(children, receiver, controller)}</>;
+  },
+);
+
+function renderChildren(
+  children: RemoteReceiverAttachableChild[],
+  receiver: RemoteReceiver,
+  controller: Controller,
+) {
+  return [...children].map((child) => {
+    switch (child.kind) {
+      case KIND_COMPONENT:
+        return (
+          <RemoteComponent
+            key={child.id}
+            receiver={receiver}
+            component={child}
+            controller={controller}
+            __type__={(controller.get(child.type) as any)?.__type__}
+          />
+        );
+      case KIND_TEXT:
+        return <RemoteText key={child.id} text={child} receiver={receiver} />;
+      default:
+        return null;
+    }
+  });
+}

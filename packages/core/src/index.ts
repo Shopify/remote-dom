@@ -17,6 +17,7 @@ export {
   KIND_ROOT,
   KIND_COMPONENT,
   KIND_TEXT,
+  KIND_FRAGMENT,
 } from './types';
 export type {
   RemoteRoot,
@@ -24,13 +25,20 @@ export type {
   RemoteComponent,
   RemoteText,
   RemoteChild,
+  RemoteFragment,
   Serialized,
   ActionArgumentMap,
   RemoteTextSerialization,
   RemoteComponentSerialization,
+  RemoteFragmentSerialization,
 } from './types';
 export {createRemoteRoot} from './root';
-export {createRemoteReceiver, createRemoteChannel} from './receiver';
+export {
+  createRemoteReceiver,
+  createRemoteChannel,
+  isRemoteFragmentSerialization,
+  isRemoteReceiverAttachableFragment,
+} from './receiver';
 export type {
   RemoteReceiver,
   RemoteReceiverAttachment,
@@ -39,5 +47,6 @@ export type {
   RemoteReceiverAttachableRoot,
   RemoteReceiverAttachableComponent,
   RemoteReceiverAttachableText,
+  RemoteReceiverAttachableFragment,
 } from './receiver';
-export {isRemoteComponent, isRemoteText} from './utilities';
+export {isRemoteComponent, isRemoteText, isRemoteFragment} from './utilities';
