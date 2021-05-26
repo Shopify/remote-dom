@@ -44,8 +44,8 @@
     "@remote-ui/rpc": "^1.0.17"
   },
   "devDependencies": {
-    "@sewing-kit/plugin-javascript": "^0.3.0",
-    "@sewing-kit/plugin-webpack": "^0.1.0",
+    "@sewing-kit/plugin-javascript": "^0.4.0",
+    "@sewing-kit/plugin-webpack": "^0.2.0",
     "@types/fs-extra": "^9.0.1",
     "@types/get-port": "^4.2.0",
     "@types/koa": "^2.11.3",

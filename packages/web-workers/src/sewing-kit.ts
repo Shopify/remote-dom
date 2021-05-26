@@ -101,7 +101,10 @@ function createBabelConfigUpdater(
       ...babelConfig,
       plugins: [
         ...(babelConfig.plugins ?? []),
-        [require.resolve('./babel-plugin'), {noop, packages} as BabelOptions],
+        [
+          require.resolve('./babel-plugin'),
+          ({noop, packages} as BabelOptions) as Record<string, unknown>,
+        ],
       ],
     };
   };
