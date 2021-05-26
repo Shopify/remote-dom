@@ -46,7 +46,7 @@ export function runWebpack(
                     presets: [
                       [
                         '@babel/preset-env',
-                        {targets: {node: true}, modules: false},
+                        {targets: {node: true}, modules: false, loose: true},
                       ],
                       '@babel/preset-typescript',
                     ],
