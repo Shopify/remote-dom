@@ -6,7 +6,7 @@ import {
 import {javascript, updateBabelPreset} from '@sewing-kit/plugin-javascript';
 import {typescript} from '@sewing-kit/plugin-typescript';
 import {react} from '@sewing-kit/plugin-react';
-import {buildFlexibleOutputs} from '@sewing-kit/plugin-package-flexible-outputs';
+import {packageBuild} from '@sewing-kit/plugin-package-build';
 
 import type {} from '@sewing-kit/plugin-jest';
 
@@ -22,7 +22,7 @@ export function defaultProjectPlugin() {
     javascript(),
     typescript(),
     react(),
-    buildFlexibleOutputs(),
+    packageBuild({browserTargets: 'defaults', nodeTargets: 'defaults'}),
     createProjectPlugin(PLUGIN, ({tasks: {test, build, dev}}) => {
       test.hook(({hooks}) => {
         hooks.configure.hook((configure) => {
