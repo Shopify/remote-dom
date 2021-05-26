@@ -76,6 +76,32 @@ const ReactButton = createRemoteReactComponent(Button);
 const button = <Button>Save</Button>;
 ```
 
+#### `RemoteFragment`
+
+In the example above, in order to have icon component as a prop for Button component, you can use `RemoteFragment`
+
+```tsx
+import {RemoteFragment} from '@remote-ui/core';
+import {createRemoteReactComponent} from '@remote-ui/react';
+
+interface IconProps {
+  src: string;
+}
+const Icon = createRemoteReactComponent<'Icon', IconProps>('Icon');
+
+interface ButtonProps {
+  icon: RemoteFragment;
+  onPress(): void;
+}
+const Button = createRemoteReactComponent<'Button', ButtonProps>('Button');
+
+const button = (
+  <Button icon={<Icon src="icon-src" />} onPress={() => {}}>
+    Save
+  </Button>
+);
+```
+
 ### Host environment
 
 This package provides a second entrypoint, `@remote-ui/react/host`, with a collection of utilities for implementing the host side of a remote-ui environment in a React application. These utilities work for any React renderer, but will most commonly be used in applications that use `react-dom` or `react-native`. These host utilities take care of receiving the patch updates from a remote context, and maps the resulting component tree to a set of React components you provide.

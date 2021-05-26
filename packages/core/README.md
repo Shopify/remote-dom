@@ -90,6 +90,21 @@ root.appendChild(
 );
 ```
 
+##### `RemoteRoot#createFragment()`
+
+`createFragment` creates a [`RemoteFragment` instance](#remotefragment). These objects can be used as props in any `RemoteComponent` or `RemoteText`. They can hold a sub tree and behave similar to `RemoteComponent`.
+
+```ts
+const fragment = root.createFragment();
+const icon = root.createComponent('Icon');
+const header = root.createText('Hello world!');
+fragment.appendChild(text);
+const card = root.createComponent('Card', {
+  icon,
+  header,
+});
+```
+
 ##### `RemoteRoot#appendChild()`
 
 This method appends a `RemoteComponent` or `RemoteText` to the remote root as the last child. This method returns a promise for when the update has been applied in the host.
@@ -195,19 +210,19 @@ Just like [`RemoteRoot#removeChild`](#remoterootremovechild), but removing a chi
 
 A `RemoteText` object represents a text element being rendered to the host UI. It has the following properties and methods:
 
-##### `RemoteComponent#text`
+##### `RemoteText#text`
 
 The current text content of the element. This representation is not mutable, so changing any value on this object will have no effect (use `updateText` instead)
 
-##### `RemoteComponent#root`
+##### `RemoteText#root`
 
 A readonly reference to the root that constructed this component.
 
-##### `RemoteComponent#parent`
+##### `RemoteText#parent`
 
 A readonly reference to the parent of this component in the tree (or `null`, if it has no parent).
 
-##### `RemoteComponent#updateText()`
+##### `RemoteText#updateText()`
 
 Updates the text content.
 
@@ -218,6 +233,38 @@ if (LOCALE === 'fr') {
   text.updateText('Bonjour');
 }
 ```
+
+#### `RemoteFragment`
+
+The `Root#createFragment` method creates a sub tree that can be used as a prop of any `RemoteComponent`. `RemoteFragment` does not any props.
+
+##### `RemoteFragment#type`
+
+The type of the fragment. This is a string, and must be one of the allowed components for the `RemoteRoot` that constructed the fragment.
+
+##### `RemoteFragment#children`
+
+A readonly array of `RemoteComponent` and `RemoteText` objects that are direct children of this fragment.
+
+##### `RemoteFragment#root`
+
+A readonly reference to the root that constructed this fragment.
+
+##### `RemoteFragment#parent`
+
+A readonly reference to the parent of this fragment in the tree (or `null`, if it has no parent).
+
+##### `RemoteFragment#appendChild()`
+
+Just like [`RemoteRoot#appendChild`](#remoterootappendchild), but appending a child for a single fragment rather than the root.
+
+##### `RemoteFragment#insertChildBefore()`
+
+Just like [`RemoteRoot#insertChildBefore`](#remoterootinsertchildbefore), but inserting a child for a single fragment rather than the root.
+
+##### `RemoteFragment#removeChild()`
+
+Just like [`RemoteRoot#removeChild`](#remoterootremovechild), but removing a child for a single fragment rather than the root.
 
 ### `createRemoteReceiver()`
 
