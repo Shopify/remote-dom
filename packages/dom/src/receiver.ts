@@ -84,7 +84,7 @@ export class DomReceiver {
           type: node[REMOTE_TYPE],
           element: node as HTMLElement,
           property: key,
-          value: (oldProps as any)[key],
+          value: (newProps as any)[key],
         });
         release((oldProps as any)[key]);
       }
