@@ -78,7 +78,7 @@ const button = <Button>Save</Button>;
 
 #### `RemoteFragment`
 
-In the example above, in order to have icon component as a prop for Button component, you can use `RemoteFragment`
+In the example above, in order to have icon component as a prop for the Button component, you can use a `RemoteFragment`:
 
 ```tsx
 import {RemoteFragment} from '@remote-ui/core';
