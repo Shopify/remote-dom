@@ -81,24 +81,66 @@ const button = <Button>Save</Button>;
 In the example above, in order to have icon component as a prop for the Button component, you can use a `RemoteFragment`:
 
 ```tsx
-import {RemoteFragment} from '@remote-ui/core';
+import {createRemoteComponent, RemoteFragment} from '@remote-ui/core';
 import {createRemoteReactComponent} from '@remote-ui/react';
 
 interface IconProps {
   src: string;
 }
-const Icon = createRemoteReactComponent<'Icon', IconProps>('Icon');
+const Icon = createRemoteComponent<'Icon', IconProps>('Icon');
+const ReactIcon = createRemoteReactComponent(Icon);
 
 interface ButtonProps {
   icon: RemoteFragment;
   onPress(): void;
 }
-const Button = createRemoteReactComponent<'Button', ButtonProps>('Button');
+const Button = createRemoteComponent<'Button', ButtonProps>('Button');
+const ReactButton = createRemoteReactComponent(Button);
 
 const button = (
-  <Button icon={<Icon src="icon-src" />} onPress={() => {}}>
+  <ReactButton icon={<ReactIcon src="icon-src" />} onPress={() => {}}>
     Save
-  </Button>
+  </ReactButton>
+);
+```
+
+`icon` prop in `ReactButton` is automatically converted to a ReactElement. If you want to have explict type of ReactButtonProps, you can use `ReactPropsFromRemoteComponentType` as follow:
+
+```tsx
+import {ReactPropsFromRemoteComponentType} from '@remote-ui/react';
+
+type ReactButtonProps = ReactPropsFromRemoteComponentType<typeof Button>;
+```
+
+You can also mix RemoteFragment with other primitive types like below:
+
+```tsx
+import {createRemoteComponent, RemoteFragment} from '@remote-ui/core';
+import {createRemoteReactComponent} from '@remote-ui/react';
+
+interface IconProps {
+  src: string;
+}
+const Icon = createRemoteComponent<'Icon', IconProps>('Icon');
+const ReactIcon = createRemoteReactComponent(Icon);
+
+interface ButtonProps {
+  icon: string | RemoteFragment;
+  onPress(): void;
+}
+const Button = createRemoteComponent<'Button', ButtonProps>('Button');
+const ReactButton = createRemoteReactComponent(Button);
+
+const button1 = (
+  <ReactButton icon="icon-src" onPress={() => {}}>
+    Save
+  </ReactButton>
+);
+
+const button2 = (
+  <ReactButton icon={<ReactIcon src="icon-src" />} onPress={() => {}}>
+    Save
+  </ReactButton>
 );
 ```
 
