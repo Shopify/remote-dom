@@ -76,6 +76,78 @@ const ReactButton = createRemoteReactComponent(Button);
 const button = <Button>Save</Button>;
 ```
 
+#### `RemoteFragment`
+
+In the example above, in order to have icon component as a prop for the Button component, you can use a `RemoteFragment`:
+
+```tsx
+import {createRemoteComponent, RemoteFragment} from '@remote-ui/core';
+import {createRemoteReactComponent} from '@remote-ui/react';
+
+interface IconProps {
+  src: string;
+}
+const Icon = createRemoteComponent<'Icon', IconProps>('Icon');
+const ReactIcon = createRemoteReactComponent(Icon);
+
+interface ButtonProps {
+  icon: RemoteFragment;
+  onPress(): void;
+}
+const Button = createRemoteComponent<'Button', ButtonProps>('Button');
+const ReactButton = createRemoteReactComponent(Button, {
+  fragmentProps: ['icon'],
+});
+
+const button = (
+  <ReactButton icon={<ReactIcon src="icon-src" />} onPress={() => {}}>
+    Save
+  </ReactButton>
+);
+```
+
+`icon` prop in `ReactButton` is automatically converted to a ReactElement. If you want to have explict type of ReactButtonProps, you can use `ReactPropsFromRemoteComponentType` as follow:
+
+```tsx
+import {ReactPropsFromRemoteComponentType} from '@remote-ui/react';
+
+type ReactButtonProps = ReactPropsFromRemoteComponentType<typeof Button>;
+```
+
+You can also mix RemoteFragment with other primitive types like below:
+
+```tsx
+import {createRemoteComponent, RemoteFragment} from '@remote-ui/core';
+import {createRemoteReactComponent} from '@remote-ui/react';
+
+interface IconProps {
+  src: string;
+}
+const Icon = createRemoteComponent<'Icon', IconProps>('Icon');
+const ReactIcon = createRemoteReactComponent(Icon);
+
+interface ButtonProps {
+  icon: string | RemoteFragment;
+  onPress(): void;
+}
+const Button = createRemoteComponent<'Button', ButtonProps>('Button');
+const ReactButton = createRemoteReactComponent(Button, {
+  fragmentProps: ['icon'],
+});
+
+const button1 = (
+  <ReactButton icon="icon-src" onPress={() => {}}>
+    Save
+  </ReactButton>
+);
+
+const button2 = (
+  <ReactButton icon={<ReactIcon src="icon-src" />} onPress={() => {}}>
+    Save
+  </ReactButton>
+);
+```
+
 ### Host environment
 
 This package provides a second entrypoint, `@remote-ui/react/host`, with a collection of utilities for implementing the host side of a remote-ui environment in a React application. These utilities work for any React renderer, but will most commonly be used in applications that use `react-dom` or `react-native`. These host utilities take care of receiving the patch updates from a remote context, and maps the resulting component tree to a set of React components you provide.
