@@ -95,7 +95,9 @@ interface ButtonProps {
   onPress(): void;
 }
 const Button = createRemoteComponent<'Button', ButtonProps>('Button');
-const ReactButton = createRemoteReactComponent(Button);
+const ReactButton = createRemoteReactComponent(Button, {
+  fragmentProps: ['icon'],
+});
 
 const button = (
   <ReactButton icon={<ReactIcon src="icon-src" />} onPress={() => {}}>
@@ -129,7 +131,9 @@ interface ButtonProps {
   onPress(): void;
 }
 const Button = createRemoteComponent<'Button', ButtonProps>('Button');
-const ReactButton = createRemoteReactComponent(Button);
+const ReactButton = createRemoteReactComponent(Button, {
+  fragmentProps: ['icon'],
+});
 
 const button1 = (
   <ReactButton icon="icon-src" onPress={() => {}}>

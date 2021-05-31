@@ -92,7 +92,7 @@ root.appendChild(
 
 ##### `RemoteRoot#createFragment()`
 
-`createFragment` creates a [`RemoteFragment` instance](#remotefragment). These objects can be used as props in any `RemoteComponent` or `RemoteText`. They can hold a sub tree and behave similar to `RemoteComponent`.
+`createFragment` creates a [`RemoteFragment` instance](#remotefragment). These objects can be used as props in any `RemoteComponent`. They can hold a sub tree and behave similar to `RemoteComponent`.
 
 ```ts
 const iconFragment = root.createFragment();
