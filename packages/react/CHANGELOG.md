@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.0] - 2021-05-31
+
+- Add `RemoteFragment` to support component props as sub tree ([39be759](https://github.com/Shopify/remote-ui/commit/39be75999895aeee418c1ddced71819ad544c967)).
+
 ## [4.0.0] - 2020-02-13
 
 - **Breaking:** now uses the `jsx-runtime` transform, and therefore requires React `^17.0.0` ([pull request](https://github.com/Shopify/remote-ui/pull/65)).
