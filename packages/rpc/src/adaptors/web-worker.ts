@@ -1,4 +1,4 @@
-import {MessageEndpoint} from '../types';
+import type {MessageEndpoint} from '../types';
 
 export function fromWebWorker(worker: Worker): MessageEndpoint {
   return worker;
