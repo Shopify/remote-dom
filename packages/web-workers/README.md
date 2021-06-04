@@ -20,7 +20,7 @@ npm install @remote-ui/web-workers --save
 
 This library contains three parts that must be used together:
 
-1. The public API of the package provided by `@remote-ui/web-worker`
+1. The public API of the package provided by `@remote-ui/web-workers`
 1. A babel plugin provided by `@shopify/remote-ui/babel` that identifies uses of `createWorkerFactory` that need to be processed
 1. A webpack plugin provided by `@shopify/remote-ui/webpack` that outputs the worker as a dedicated chunk
 
@@ -99,10 +99,10 @@ This library implements the calling of functions on a worker using [`@remote-ui/
 
 ### Tooling
 
-This library only works if your application is bundled with webpack. When configuring webpack, include the Babel plugin this library provides for any modules that might contain a call to `createWorkerFactory()`, and include the `WebWorkerPlugin` exported by `@remote-ui/web-worker/webpack`:
+This library only works if your application is bundled with webpack. When configuring webpack, include the Babel plugin this library provides for any modules that might contain a call to `createWorkerFactory()`, and include the `WebWorkerPlugin` exported by `@remote-ui/web-workers/webpack`:
 
 ```js
-import {WebWorkerPlugin} from '@remote-ui/web-worker/webpack';
+import {WebWorkerPlugin} from '@remote-ui/web-workers/webpack';
 
 const webpackConfig = {
   // rest of webpack config...
@@ -117,7 +117,7 @@ const webpackConfig = {
             loader: 'babel-loader',
             options: {
               babelrc: false,
-              plugins: [require.resolve('@remote-ui/web-worker/babel')],
+              plugins: [require.resolve('@remote-ui/web-workers/babel')],
             },
           },
         ],
@@ -240,7 +240,7 @@ Because you are interacting with the worker directly in this mode, most other fe
 
 ## How does it work?
 
-The `@remote-ui/web-worker/babel` Babel plugin looks for any calls of `createWorkerFactory`. For each one, it looks for the nested `import()` call, and then for the imported path (e.g., `./worker`). It then replaces the first argument to `createWorkerFactory` with an import for the worker module that references a custom Webpack loader:
+The `@remote-ui/web-workers/babel` Babel plugin looks for any calls of `createWorkerFactory`. For each one, it looks for the nested `import()` call, and then for the imported path (e.g., `./worker`). It then replaces the first argument to `createWorkerFactory` with an import for the worker module that references a custom Webpack loader:
 
 ```ts
 import {createWorkerFactory} from '@remote-ui/web-workers';
@@ -248,7 +248,7 @@ createWorkerFactory(() => import('./worker'));
 
 // becomes something like:
 import {createWorkerFactory} from '@remote-ui/web-workers';
-import workerStuff from '@remote-ui/web-worker/webpack-loader!./worker';
+import workerStuff from '@remote-ui/web-workers/webpack-loader!./worker';
 
 createWorkerFactory(workerStuff);
 ```
