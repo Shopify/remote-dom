@@ -323,3 +323,50 @@ This excludes many types, but of particular note are the following restrictions:
 - No `ArrayBuffer` or typed arrays
 - No `URL` or `RegExp`
 - Instances of classes will transfer, but only their own properties — that is, properties on their prototype chain **will not** be transferred (additionally, no effort is made to preserve `instanceof` or similar checks on the transferred value)
+
+## Adaptors
+
+This library also provides a collection of adaptors that transform common `postMessage`-related objects into an `Endpoint`. You can of course write your own adaptor for these (and may need to, if you have complex needs), but these adaptors can be a helpful starting point:
+
+- `fromWebWorker()` allows you to create an `Endpoint` from a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers):
+
+  ```ts
+  import {fromWebWorker} from '@remote-ui/rpc';
+
+  const worker = new Worker('./worker.js', import.meta.url);
+  const endpoint = fromWebWorker(worker);
+  ```
+
+- `fromMessagePort()` allows you to create an `Endpoint` from a [`MessagePort` object](https://developer.mozilla.org/en-US/docs/Web/API/MessagePort)
+
+  ```ts
+  import {fromMessagePort} from '@remote-ui/rpc';
+
+  const channel = new MessageChannel();
+  const endpoint = fromWebWorker(channel.port2);
+  ```
+
+- `fromIframe()` allows you to create an `Endpoint` from a browser window by connecting it to a child `iframe`:
+
+  ```ts
+  import {fromIframe} from '@remote-ui/rpc';
+
+  const iframe = document.createElement('iframe');
+  iframe.setAttribute('src', '/my-iframe-page');
+  document.appendChild(iframe);
+
+  const endpoint = fromIframe(iframe);
+
+  // Optionally, you can pass {terminate: false} to prevent the iframe from being
+  // removed from the DOM when the endpoint is terminated:
+  const endpoint2 = fromIframe(iframe, {terminate: false});
+  ```
+
+- `fromInsideIframe()` allows you to create an `Endpoint` from a parent browser window, from _within_ a child `iframe`:
+
+  ```ts
+  // Can only be run from inside an iframe, where `self.parent` is available
+  import {fromInsideIframe} from '@remote-ui/rpc';
+
+  const endpoint = fromInsideIframe();
+  ```

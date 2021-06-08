@@ -1,7 +1,12 @@
 export {createEndpoint} from './endpoint';
 export type {Endpoint, CreateEndpointOptions} from './endpoint';
 export {createBasicEncoder} from './encoding';
-export {fromMessagePort, fromWebWorker} from './adaptors';
+export {
+  fromMessagePort,
+  fromWebWorker,
+  fromIframe,
+  fromInsideIframe,
+} from './adaptors';
 export {
   retain,
   release,
