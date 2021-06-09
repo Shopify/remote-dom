@@ -23,7 +23,7 @@ export function fromInsideIframe(): MessageEndpoint {
     },
     addEventListener(event, listener) {
       const wrappedListener = (event: MessageEvent) => {
-        if (event.target !== parent) return;
+        if (event.source !== parent) return;
         listener(event);
       };
 

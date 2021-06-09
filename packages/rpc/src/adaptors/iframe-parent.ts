@@ -41,7 +41,7 @@ export function fromIframe(
     },
     addEventListener(event, listener) {
       const wrappedListener = (event: MessageEvent) => {
-        if (event.target !== target) return;
+        if (event.source !== target.contentWindow) return;
         listener(event);
       };
 

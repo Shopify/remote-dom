@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2021-06-09
+
+- Fixed an issue where `fromIframe` and `fromInsideIframe` were checking `event.target` instead of `event.source` to ensure messages were coming from the other endpoint.
+
 ## [1.2.0] - 2021-06-08
 
 - Adds additional adaptors for converting `iframe` elements into `Endpoint` objects [[#97](https://github.com/Shopify/remote-ui/pull/97)]
