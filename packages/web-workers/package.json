@@ -1,6 +1,6 @@
 {
   "name": "@remote-ui/web-workers",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "",
   "publishConfig": {
     "access": "public",
@@ -41,7 +41,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@remote-ui/rpc": "^1.2.0"
+    "@remote-ui/rpc": "^1.2.1"
   },
   "devDependencies": {
     "@sewing-kit/plugin-javascript": "^0.4.0",
