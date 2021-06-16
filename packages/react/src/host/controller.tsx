@@ -1,15 +1,17 @@
 import type {ComponentType} from 'react';
-import type {RemoteComponentType} from '@remote-ui/core';
+import type {Controller, Renderer} from './types';
+
+import {renderComponent} from './RemoteComponent';
+import {renderText} from './RemoteText';
 
 export interface ComponentMapping {
   [key: string]: ComponentType<any>;
 }
 
-export interface Controller {
-  get(type: string | RemoteComponentType<string, any, any>): ComponentType<any>;
-}
-
-export function createController(components: ComponentMapping): Controller {
+export function createController(
+  components: ComponentMapping,
+  renderer: Partial<Renderer> = {},
+): Controller {
   const registry = new Map(Object.entries(components));
 
   return {
@@ -19,6 +21,11 @@ export function createController(components: ComponentMapping): Controller {
         throw new Error(`Unknown component: ${type}`);
       }
       return value;
+    },
+    renderer: {
+      renderComponent,
+      renderText,
+      ...renderer,
     },
   };
 }

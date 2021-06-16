@@ -6,7 +6,7 @@ export type {RemoteRendererProps} from './RemoteRenderer';
 export {RemoteComponent} from './RemoteComponent';
 export {RemoteText} from './RemoteText';
 export {createController} from './controller';
-export type {Controller, ComponentMapping} from './controller';
+export type {ComponentMapping} from './controller';
 export type {
   ReactPropsFromRemoteComponentType,
   ReactComponentTypeFromRemoteComponentType,
@@ -14,4 +14,4 @@ export type {
 export {RemoteReceiverContext, ControllerContext} from './context';
 export {useRemoteReceiver, useAttached} from './hooks';
 export {useWorker} from './workers';
-export type {RemoteComponentProps, RemoteTextProps} from './types';
+export type {Controller, RemoteComponentProps, RemoteTextProps} from './types';

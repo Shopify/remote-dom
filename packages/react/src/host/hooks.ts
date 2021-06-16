@@ -1,7 +1,7 @@
 import {useState, useDebugValue, useContext, useEffect} from 'react';
 import type {RemoteReceiver, RemoteReceiverAttachable} from '@remote-ui/core';
 
-import {ControllerContext, RemoteReceiverContext, RemoteRendererContext} from './context';
+import {ControllerContext, RemoteReceiverContext} from './context';
 
 export function useController() {
   const controller = useContext(ControllerContext);
@@ -21,16 +21,6 @@ export function useRemoteReceiver() {
   }
 
   return receiver;
-}
-
-export function useRemoteRenderer() {
-  const renderer = useContext(RemoteRendererContext);
-
-  if (renderer == null) {
-    throw new Error('No remote-ui Renderer instance found in context');
-  }
-
-  return renderer;
 }
 
 interface State<T extends RemoteReceiverAttachable> {
