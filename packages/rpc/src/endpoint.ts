@@ -186,6 +186,7 @@ export function createEndpoint<T>(
         } catch (error) {
           const {name, message, stack} = error;
           send(RESULT, [id, {name, message, stack}]);
+          throw error;
         } finally {
           stackFrame.release();
         }
@@ -229,6 +230,7 @@ export function createEndpoint<T>(
         } catch (error) {
           const {name, message, stack} = error;
           send(FUNCTION_RESULT, [callId, {name, message, stack}]);
+          throw error;
         }
 
         break;
