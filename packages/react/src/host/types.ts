@@ -4,16 +4,25 @@ import type {
   RemoteReceiverAttachableComponent,
   RemoteReceiverAttachableText,
   RemoteComponentType,
+  RemoteReceiverAttachableFragment,
 } from '@remote-ui/core';
 
 export interface RemoteTextProps {
   text: RemoteReceiverAttachableText;
   receiver: RemoteReceiver;
+  key?: string | number;
 }
 
 export interface RemoteComponentProps {
   receiver: RemoteReceiver;
   component: RemoteReceiverAttachableComponent;
+  controller: Controller;
+  key?: string | number;
+}
+
+export interface RemoteFragmentProps {
+  receiver: RemoteReceiver;
+  fragment: RemoteReceiverAttachableFragment;
   controller: Controller;
 }
 

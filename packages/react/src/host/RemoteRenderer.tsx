@@ -23,13 +23,13 @@ export const RemoteRenderer = memo(
                 component: child,
                 receiver,
                 controller,
-                ...({key: child.id} as any),
+                key: child.id,
               });
             case KIND_TEXT:
               return renderText({
                 text: child,
                 receiver,
-                ...({key: child.id} as any),
+                key: child.id,
               });
             default:
               return null;

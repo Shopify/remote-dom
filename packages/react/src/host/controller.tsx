@@ -1,16 +1,25 @@
 import type {ComponentType} from 'react';
 import type {Controller, Renderer} from './types';
 
-import {renderComponent} from './RemoteComponent';
-import {renderText} from './RemoteText';
+import {renderComponent as defaultRenderComponent} from './RemoteComponent';
+import {renderText as defaultRenderText} from './RemoteText';
 
 export interface ComponentMapping {
   [key: string]: ComponentType<any>;
 }
 
+interface RendererFactory {
+  componentRenderer: (
+    defaultRenderer: Renderer['renderComponent'],
+  ) => Renderer['renderComponent'];
+  textRenderer: (
+    defaultRenderer: Renderer['renderText'],
+  ) => Renderer['renderText'];
+}
+
 export function createController(
   components: ComponentMapping,
-  renderer: Partial<Renderer> = {},
+  {componentRenderer, textRenderer}: Partial<RendererFactory> = {},
 ): Controller {
   const registry = new Map(Object.entries(components));
 
@@ -23,9 +32,9 @@ export function createController(
       return value;
     },
     renderer: {
-      renderComponent,
-      renderText,
-      ...renderer,
+      renderComponent:
+        componentRenderer?.(defaultRenderComponent) ?? defaultRenderComponent,
+      renderText: textRenderer?.(defaultRenderText) ?? defaultRenderText,
     },
   };
 }

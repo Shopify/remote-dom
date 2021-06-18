@@ -6,18 +6,15 @@ import {
 } from '@remote-ui/core';
 import type {
   RemoteReceiver,
-  RemoteReceiverAttachableFragment,
   RemoteReceiverAttachableChild,
 } from '@remote-ui/core';
 
 import {useAttached} from './hooks';
-import type {Controller, RemoteComponentProps} from './types';
-
-interface RemoteFragmentProps {
-  receiver: RemoteReceiver;
-  fragment: RemoteReceiverAttachableFragment;
-  controller: Controller;
-}
+import type {
+  Controller,
+  RemoteComponentProps,
+  RemoteFragmentProps,
+} from './types';
 
 const emptyObject = {};
 
@@ -94,13 +91,13 @@ function renderChildren(
           component: child,
           receiver,
           controller,
-          ...({key: child.id} as any),
+          key: child.id,
         });
       case KIND_TEXT:
         return renderText({
           text: child,
           receiver,
-          ...({key: child.id} as any),
+          key: child.id,
         });
       default:
         return null;
