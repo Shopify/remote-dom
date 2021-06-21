@@ -1,4 +1,4 @@
-import {memo, useMemo} from 'react';
+import {memo, useMemo, Fragment} from 'react';
 import {
   KIND_COMPONENT,
   KIND_TEXT,
@@ -87,18 +87,24 @@ function renderChildren(
   return [...children].map((child) => {
     switch (child.kind) {
       case KIND_COMPONENT:
-        return renderComponent({
-          component: child,
-          receiver,
-          controller,
-          key: child.id,
-        });
+        return (
+          <Fragment key={child.id}>
+            {renderComponent({
+              component: child,
+              receiver,
+              controller,
+            })}
+          </Fragment>
+        );
       case KIND_TEXT:
-        return renderText({
-          text: child,
-          receiver,
-          key: child.id,
-        });
+        return (
+          <Fragment key={child.id}>
+            {renderText({
+              text: child,
+              receiver,
+            })}
+          </Fragment>
+        );
       default:
         return null;
     }

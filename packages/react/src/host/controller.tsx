@@ -1,5 +1,12 @@
-import type {ComponentType} from 'react';
-import type {Controller, Renderer} from './types';
+import type {ComponentType, ReactElement} from 'react';
+import type {
+  Controller,
+  RemoteComponentProps,
+  RemoteTextProps,
+  RenderComponentOptions,
+  Renderer,
+  RenderTextOptions,
+} from './types';
 
 import {renderComponent as defaultRenderComponent} from './RemoteComponent';
 import {renderText as defaultRenderText} from './RemoteText';
@@ -9,19 +16,30 @@ export interface ComponentMapping {
 }
 
 interface RendererFactory {
-  componentRenderer: (
-    defaultRenderer: Renderer['renderComponent'],
-  ) => Renderer['renderComponent'];
-  textRenderer: (
-    defaultRenderer: Renderer['renderText'],
-  ) => Renderer['renderText'];
+  renderComponent(
+    props: RemoteComponentProps,
+    options: RenderComponentOptions,
+  ): ReactElement;
+  renderText(props: RemoteTextProps, options: RenderTextOptions): ReactElement;
 }
+
+const renderComponentOptions = {renderDefault: defaultRenderComponent};
+const renderTextOptions = {renderDefault: defaultRenderText};
 
 export function createController(
   components: ComponentMapping,
-  {componentRenderer, textRenderer}: Partial<RendererFactory> = {},
+  {
+    renderComponent: externalRenderComponent,
+    renderText: externalRenderText,
+  }: Partial<RendererFactory> = {},
 ): Controller {
   const registry = new Map(Object.entries(components));
+  const renderComponent: Renderer['renderComponent'] = externalRenderComponent
+    ? (component) => externalRenderComponent(component, renderComponentOptions)
+    : defaultRenderComponent;
+  const renderText: Renderer['renderText'] = externalRenderText
+    ? (component) => externalRenderText(component, renderTextOptions)
+    : defaultRenderText;
 
   return {
     get(type) {
@@ -32,9 +50,8 @@ export function createController(
       return value;
     },
     renderer: {
-      renderComponent:
-        componentRenderer?.(defaultRenderComponent) ?? defaultRenderComponent,
-      renderText: textRenderer?.(defaultRenderText) ?? defaultRenderText,
+      renderComponent,
+      renderText,
     },
   };
 }

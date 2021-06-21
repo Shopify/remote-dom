@@ -32,6 +32,14 @@ export interface Controller {
 }
 
 export interface Renderer {
-  renderComponent: (props: RemoteComponentProps) => ReactElement;
-  renderText: (props: RemoteTextProps) => ReactElement;
+  renderComponent(props: RemoteComponentProps): ReactElement;
+  renderText(props: RemoteTextProps): ReactElement;
+}
+
+export interface RenderComponentOptions {
+  renderDefault: Renderer['renderComponent'];
+}
+
+export interface RenderTextOptions {
+  renderDefault: Renderer['renderText'];
 }
