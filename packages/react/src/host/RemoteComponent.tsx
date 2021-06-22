@@ -1,4 +1,4 @@
-import {memo, useMemo, Fragment} from 'react';
+import {memo, useMemo} from 'react';
 import {
   KIND_COMPONENT,
   KIND_TEXT,
@@ -22,12 +22,14 @@ export function renderComponent({
   component,
   controller,
   receiver,
+  key,
 }: RemoteComponentProps) {
   return (
     <RemoteComponent
       receiver={receiver}
       component={component}
       controller={controller}
+      key={key}
     />
   );
 }
@@ -87,24 +89,18 @@ function renderChildren(
   return [...children].map((child) => {
     switch (child.kind) {
       case KIND_COMPONENT:
-        return (
-          <Fragment key={child.id}>
-            {renderComponent({
-              component: child,
-              receiver,
-              controller,
-            })}
-          </Fragment>
-        );
+        return renderComponent({
+          component: child,
+          receiver,
+          controller,
+          key: child.id,
+        });
       case KIND_TEXT:
-        return (
-          <Fragment key={child.id}>
-            {renderText({
-              text: child,
-              receiver,
-            })}
-          </Fragment>
-        );
+        return renderText({
+          text: child,
+          receiver,
+          key: child.id,
+        });
       default:
         return null;
     }

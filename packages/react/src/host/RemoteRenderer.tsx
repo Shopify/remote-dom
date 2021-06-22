@@ -1,4 +1,4 @@
-import {Fragment, memo} from 'react';
+import {memo} from 'react';
 import {KIND_COMPONENT, KIND_TEXT, RemoteReceiver} from '@remote-ui/core';
 
 import type {Controller} from './types';
@@ -19,24 +19,18 @@ export const RemoteRenderer = memo(
         {children.map((child) => {
           switch (child.kind) {
             case KIND_COMPONENT:
-              return (
-                <Fragment key={child.id}>
-                  {renderComponent({
-                    component: child,
-                    receiver,
-                    controller,
-                  })}
-                </Fragment>
-              );
+              return renderComponent({
+                component: child,
+                receiver,
+                controller,
+                key: child.id,
+              });
             case KIND_TEXT:
-              return (
-                <Fragment key={child.id}>
-                  {renderText({
-                    text: child,
-                    receiver,
-                  })}
-                </Fragment>
-              );
+              return renderText({
+                text: child,
+                receiver,
+                key: child.id,
+              });
             default:
               return null;
           }

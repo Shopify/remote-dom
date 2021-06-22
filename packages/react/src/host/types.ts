@@ -10,14 +10,14 @@ import type {
 export interface RemoteTextProps {
   text: RemoteReceiverAttachableText;
   receiver: RemoteReceiver;
-  key?: string | number;
+  key: string | number;
 }
 
 export interface RemoteComponentProps {
   receiver: RemoteReceiver;
   component: RemoteReceiverAttachableComponent;
   controller: Controller;
-  key?: string | number;
+  key: string | number;
 }
 
 export interface RemoteFragmentProps {
