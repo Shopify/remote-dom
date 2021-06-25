@@ -6,7 +6,7 @@ export default createPackage((pkg) => {
   pkg.entry({root: './src/index'});
   pkg.entry({root: './src/worker', name: 'worker'});
   pkg.entry({
-    root: './src/webpack-parts',
+    root: './src/webpack-parts/index',
     name: 'webpack',
     runtime: Runtime.Node,
   });
