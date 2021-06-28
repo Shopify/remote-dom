@@ -25,7 +25,8 @@
     "@sewing-kit/plugin-react": "^0.2.0",
     "@sewing-kit/plugin-typescript": "^0.2.0",
     "@types/execa": "^0.9.0",
-    "lerna": "^3.22.1"
+    "lerna": "^3.22.1",
+    "rollup-plugin-copy": "^3.4.0"
   },
   "dependencies": {},
   "resolutions": {
