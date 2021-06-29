@@ -34,10 +34,8 @@
     "@remote-ui/core": "^2.1.3",
     "@remote-ui/rpc": "^1.2.2",
     "@remote-ui/web-workers": "^1.5.4",
+    "@types/react": ">=17.0.0 <18.0.0",
     "@types/react-reconciler": "^0.26.0",
     "react-reconciler": ">=0.26.0 <1.0.0"
-  },
-  "peerDependencies": {
-    "@types/react": ">=17.0.0 <18.0.0"
   }
 }
