@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.5] - 2021-06-29
+
+- Fix types dependency ([pull request](https://github.com/Shopify/remote-ui/pull/108)).
+
 ## [4.1.4] - 2021-06-28
 
 - Fix worker webpack build ([pull request](https://github.com/Shopify/remote-ui/pull/105)).
