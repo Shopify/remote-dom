@@ -2,7 +2,7 @@ import type {MessageEndpoint} from '../types';
 
 export function fromIframe(
   target: HTMLIFrameElement,
-  {terminate: shouldTerminate = true} = {},
+  {terminate: shouldTerminate = true, targetOrigin = '*'} = {},
 ): MessageEndpoint {
   if (typeof window === 'undefined') {
     throw new Error(
@@ -33,11 +33,7 @@ export function fromIframe(
         await iframeLoadPromise;
       }
 
-      target.contentWindow!.postMessage(
-        message,
-        target.contentWindow!.location.origin,
-        transfer,
-      );
+      target.contentWindow!.postMessage(message, targetOrigin, transfer);
     },
     addEventListener(event, listener) {
       const wrappedListener = (event: MessageEvent) => {

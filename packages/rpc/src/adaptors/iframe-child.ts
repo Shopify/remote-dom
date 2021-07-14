@@ -1,6 +1,6 @@
 import type {MessageEndpoint} from '../types';
 
-export function fromInsideIframe(): MessageEndpoint {
+export function fromInsideIframe({targetOrigin = '*'} = {}): MessageEndpoint {
   if (typeof self === 'undefined' || self.parent == null) {
     throw new Error(
       `This does not appear to be a child iframe, because there is no parent window.`,
@@ -19,7 +19,7 @@ export function fromInsideIframe(): MessageEndpoint {
 
   return {
     postMessage(message, transfer) {
-      parent.postMessage(message, parent.location.origin, transfer);
+      parent.postMessage(message, targetOrigin, transfer);
     },
     addEventListener(event, listener) {
       const wrappedListener = (event: MessageEvent) => {
