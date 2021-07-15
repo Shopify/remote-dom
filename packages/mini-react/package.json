@@ -1,6 +1,6 @@
 {
   "name": "@remote-ui/mini-react",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
@@ -45,7 +45,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@remote-ui/core": "^2.1.3",
+    "@remote-ui/core": "^2.1.4",
     "htm": "^3.0.0"
   },
   "devDependencies": {
