@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.3] - 2021-07-15
+
+- Fixed an error thrown by the `fromIframe` and `fromInsideIframe` helpers when used on cross-origin iframes ([pull request](https://github.com/Shopify/remote-ui/pull/110)).
+
 ## [1.2.2] - 2021-06-21
 
 - Fixed error handling in RPC layer by rethrowing exceptions ([pull request](https://github.com/Shopify/remote-ui/pull/103)).
