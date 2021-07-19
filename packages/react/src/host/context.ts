@@ -1,7 +1,7 @@
 import {createContext} from 'react';
 
 export const ControllerContext = createContext<
-  import('./controller').Controller | null
+  import('./types').Controller | null
 >(null);
 
 export const RemoteReceiverContext = createContext<

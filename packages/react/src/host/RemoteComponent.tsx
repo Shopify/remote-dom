@@ -1,5 +1,4 @@
 import {memo, useMemo} from 'react';
-import type {ComponentType} from 'react';
 import {
   KIND_COMPONENT,
   KIND_TEXT,
@@ -7,34 +6,36 @@ import {
 } from '@remote-ui/core';
 import type {
   RemoteReceiver,
-  RemoteReceiverAttachableComponent,
-  RemoteReceiverAttachableFragment,
   RemoteReceiverAttachableChild,
 } from '@remote-ui/core';
 
-import type {Controller} from './controller';
-import {RemoteText} from './RemoteText';
 import {useAttached} from './hooks';
-
-interface RemoteFragmentProps {
-  receiver: RemoteReceiver;
-  fragment: RemoteReceiverAttachableFragment;
-  controller: Controller;
-}
-
-interface Props {
-  receiver: RemoteReceiver;
-  component: RemoteReceiverAttachableComponent;
-  controller: Controller;
-  // Type override allows components to bypass default wrapping behavior, specifically in Argo Admin which uses Polaris to render on the host. Ex: Stack, ResourceList...
-  // See https://github.com/Shopify/app-extension-libs/issues/996#issuecomment-710437088
-  __type__?: ComponentType;
-}
+import type {
+  Controller,
+  RemoteComponentProps,
+  RemoteFragmentProps,
+} from './types';
 
 const emptyObject = {};
 
+export function renderComponent({
+  component,
+  controller,
+  receiver,
+  key,
+}: RemoteComponentProps) {
+  return (
+    <RemoteComponent
+      receiver={receiver}
+      component={component}
+      controller={controller}
+      key={key}
+    />
+  );
+}
+
 export const RemoteComponent = memo(
-  ({receiver, component, controller}: Props) => {
+  ({receiver, component, controller}: RemoteComponentProps) => {
     const Implementation = controller.get(component.type)!;
 
     const attached = useAttached(receiver, component);
@@ -84,20 +85,22 @@ function renderChildren(
   receiver: RemoteReceiver,
   controller: Controller,
 ) {
+  const {renderComponent, renderText} = controller.renderer;
   return [...children].map((child) => {
     switch (child.kind) {
       case KIND_COMPONENT:
-        return (
-          <RemoteComponent
-            key={child.id}
-            receiver={receiver}
-            component={child}
-            controller={controller}
-            __type__={(controller.get(child.type) as any)?.__type__}
-          />
-        );
+        return renderComponent({
+          component: child,
+          receiver,
+          controller,
+          key: child.id,
+        });
       case KIND_TEXT:
-        return <RemoteText key={child.id} text={child} receiver={receiver} />;
+        return renderText({
+          text: child,
+          receiver,
+          key: child.id,
+        });
       default:
         return null;
     }

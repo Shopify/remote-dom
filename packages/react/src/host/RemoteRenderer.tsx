@@ -1,41 +1,41 @@
 import {memo} from 'react';
 import {KIND_COMPONENT, KIND_TEXT, RemoteReceiver} from '@remote-ui/core';
 
-import type {Controller} from './controller';
+import type {Controller} from './types';
 import {useAttached} from './hooks';
-import {RemoteText} from './RemoteText';
-import {RemoteComponent} from './RemoteComponent';
 
-interface Props {
+export interface RemoteRendererProps {
   receiver: RemoteReceiver;
   controller: Controller;
 }
 
-export const RemoteRenderer = memo(({controller, receiver}: Props) => {
-  const {children} = useAttached(receiver, receiver.attached.root)!;
+export const RemoteRenderer = memo(
+  ({controller, receiver}: RemoteRendererProps) => {
+    const {children} = useAttached(receiver, receiver.attached.root)!;
+    const {renderComponent, renderText} = controller.renderer;
 
-  return (
-    <>
-      {children.map((child) => {
-        switch (child.kind) {
-          case KIND_COMPONENT:
-            return (
-              <RemoteComponent
-                key={child.id}
-                component={child}
-                receiver={receiver}
-                controller={controller}
-                __type__={(controller.get(child.type) as any)?.__type__}
-              />
-            );
-          case KIND_TEXT:
-            return (
-              <RemoteText key={child.id} text={child} receiver={receiver} />
-            );
-          default:
-            return null;
-        }
-      })}
-    </>
-  );
-});
+    return (
+      <>
+        {children.map((child) => {
+          switch (child.kind) {
+            case KIND_COMPONENT:
+              return renderComponent({
+                component: child,
+                receiver,
+                controller,
+                key: child.id,
+              });
+            case KIND_TEXT:
+              return renderText({
+                text: child,
+                receiver,
+                key: child.id,
+              });
+            default:
+              return null;
+          }
+        })}
+      </>
+    );
+  },
+);
