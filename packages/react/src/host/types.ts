@@ -1,4 +1,4 @@
-import type {ComponentType, ReactElement} from 'react';
+import type {ComponentType, ReactNode} from 'react';
 import type {
   RemoteReceiver,
   RemoteReceiverAttachableComponent,
@@ -32,8 +32,8 @@ export interface Controller {
 }
 
 export interface Renderer {
-  renderComponent(props: RemoteComponentProps): ReactElement;
-  renderText(props: RemoteTextProps): ReactElement;
+  renderComponent(props: RemoteComponentProps): ReactNode;
+  renderText(props: RemoteTextProps): ReactNode;
 }
 
 export interface RenderComponentOptions {

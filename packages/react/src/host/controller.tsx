@@ -1,4 +1,4 @@
-import type {ComponentType, ReactElement} from 'react';
+import type {ComponentType, ReactNode} from 'react';
 import type {
   Controller,
   RemoteComponentProps,
@@ -19,8 +19,8 @@ interface RendererFactory {
   renderComponent(
     props: RemoteComponentProps,
     options: RenderComponentOptions,
-  ): ReactElement;
-  renderText(props: RemoteTextProps, options: RenderTextOptions): ReactElement;
+  ): ReactNode;
+  renderText(props: RemoteTextProps, options: RenderTextOptions): ReactNode;
 }
 
 const renderComponentOptions = {renderDefault: defaultRenderComponent};
@@ -38,7 +38,7 @@ export function createController(
     ? (component) => externalRenderComponent(component, renderComponentOptions)
     : defaultRenderComponent;
   const renderText: Renderer['renderText'] = externalRenderText
-    ? (component) => externalRenderText(component, renderTextOptions)
+    ? (text) => externalRenderText(text, renderTextOptions)
     : defaultRenderText;
 
   return {
