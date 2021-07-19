@@ -37,9 +37,9 @@ export interface Renderer {
 }
 
 export interface RenderComponentOptions {
-  renderDefault: Renderer['renderComponent'];
+  renderDefault(): ReactNode;
 }
 
 export interface RenderTextOptions {
-  renderDefault: Renderer['renderText'];
+  renderDefault(): ReactNode;
 }

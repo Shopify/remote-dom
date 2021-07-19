@@ -23,9 +23,6 @@ interface RendererFactory {
   renderText(props: RemoteTextProps, options: RenderTextOptions): ReactNode;
 }
 
-const renderComponentOptions = {renderDefault: defaultRenderComponent};
-const renderTextOptions = {renderDefault: defaultRenderText};
-
 export function createController(
   components: ComponentMapping,
   {
@@ -35,10 +32,20 @@ export function createController(
 ): Controller {
   const registry = new Map(Object.entries(components));
   const renderComponent: Renderer['renderComponent'] = externalRenderComponent
-    ? (component) => externalRenderComponent(component, renderComponentOptions)
+    ? (componentProps) =>
+        externalRenderComponent(componentProps, {
+          renderDefault() {
+            return defaultRenderComponent(componentProps);
+          },
+        })
     : defaultRenderComponent;
   const renderText: Renderer['renderText'] = externalRenderText
-    ? (text) => externalRenderText(text, renderTextOptions)
+    ? (textProps) =>
+        externalRenderText(textProps, {
+          renderDefault() {
+            return defaultRenderText(textProps);
+          },
+        })
     : defaultRenderText;
 
   return {
