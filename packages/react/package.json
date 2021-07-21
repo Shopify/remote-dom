@@ -1,6 +1,6 @@
 {
   "name": "@remote-ui/react",
-  "version": "4.1.6",
+  "version": "4.2.0",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
