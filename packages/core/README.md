@@ -334,7 +334,7 @@ import {createRemoteReceiver} from '@remote-ui/core';
 
 const receiver = createRemoteReceiver();
 
-for (const child of receiver.root.children) {
+for (const child of receiver.attached.root.children) {
   console.log(child);
 }
 ```
