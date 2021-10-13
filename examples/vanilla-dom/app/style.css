@@ -4,6 +4,7 @@
 
 html {
   font-size: 1.25em;
+  height: -webkit-fill-available;
 }
 
 body {

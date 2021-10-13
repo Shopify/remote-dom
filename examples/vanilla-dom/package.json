@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "http-server ./app -c-1"
+    "start": "http-server ./app -c-1 --cors"
   },
   "devDependencies": {
     "http-server": "*"
