@@ -22,6 +22,8 @@ const RemoteWithPerson = createRemoteReactComponent<
   {run(person: {name: string}): void | Promise<void>}
 >('WithPerson');
 
+const RemoteImage = createRemoteReactComponent<'Image', {src: string}>('Image');
+
 const PersonContext = createContext({name: 'Mollie'});
 
 function HostHelloWorld({
@@ -40,6 +42,12 @@ function HostWithPerson({
   }, [run]);
 
   return null;
+}
+
+function HostImage(
+  props: ReactPropsFromRemoteComponentType<typeof RemoteImage>,
+) {
+  return <img {...props} />;
 }
 
 describe('@remote-ui/react', () => {
@@ -162,5 +170,33 @@ describe('@remote-ui/react', () => {
     });
 
     expect(spy).toHaveBeenCalledWith(person);
+  });
+
+  it('does not render children when none was provided', () => {
+    const receiver = createRemoteReceiver();
+    const remoteRoot = createRemoteRoot(receiver.receive, {
+      components: [RemoteImage],
+    });
+
+    function RemoteApp() {
+      return <RemoteImage src={'https://shopify.com'} />;
+    }
+
+    const controller = createController({
+      Image: HostImage,
+    });
+
+    function HostApp() {
+      return <RemoteRenderer controller={controller} receiver={receiver} />;
+    }
+
+    domAct(() => {
+      domRender(<HostApp />, appElement);
+      render(<RemoteApp />, remoteRoot, () => {
+        remoteRoot.mount();
+      });
+      jest.runAllTimers();
+    });
+    expect(appElement.innerHTML).toBe(`<img src="https://shopify.com">`);
   });
 });
