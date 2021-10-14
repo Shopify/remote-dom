@@ -16,13 +16,18 @@ export function makeStatefulSubscribable<T>(
 
   let current = subscription.initial;
   let listening = true;
+  let hasUpdated = false;
 
   const subscribers = new Set<Subscriber<T>>();
 
   const subscriptionResult = Promise.resolve<RemoteSubscribeResult<T>>(
     subscription.subscribe(listener),
   ).then((result) => {
-    listener(result[1]);
+    // Because of the async nature of receiving the result, we may have
+    // already started receiving updates from the subscriber before this
+    // code has been reached. In that case, we do not want to apply the
+    // value we received on subscribing, because it is already out of date.
+    if (!hasUpdated) listener(result[1]);
     return result;
   });
 
@@ -48,6 +53,8 @@ export function makeStatefulSubscribable<T>(
   };
 
   function listener(value: T) {
+    hasUpdated = true;
+
     if (!listening || current === value) return;
 
     current = value;
