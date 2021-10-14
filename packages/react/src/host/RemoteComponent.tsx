@@ -64,6 +64,10 @@ export const RemoteComponent = memo(
 
     const {children} = attached;
 
+    if (children.length === 0) {
+      return <Implementation {...props} />;
+    }
+
     return (
       <Implementation {...props}>
         {renderChildren(children, receiver, controller)}
