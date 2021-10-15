@@ -50,15 +50,35 @@ describe('makeStatefulSubscribable()', () => {
 
   it('updates the current value when the value has changed before subscription', async () => {
     const subscription = createRemoteSubscribable('abc');
+
+    const newValue = 'xyz';
+    subscription.update(newValue);
+
+    const statefulSubscription = makeStatefulSubscribable(subscription);
+    const subscriber = jest.fn();
+
+    statefulSubscription.subscribe(subscriber);
+    await subscription.resolve();
+
+    expect(subscriber).toHaveBeenCalledWith(newValue);
+    expect(statefulSubscription.current).toBe(newValue);
+  });
+
+  it('does not overwrite the current value with the subscription result if it has changed between when the subscription started and when the subscription result is received', async () => {
+    const subscription = createRemoteSubscribable('abc');
     const statefulSubscription = makeStatefulSubscribable(subscription);
     const subscriber = jest.fn();
     statefulSubscription.subscribe(subscriber);
 
+    // A change happens to the source subscribable, but the stateful subscribable
+    // has not yet received its subscription result (which will contain the value
+    // at the time of subscription, in this case 'abc').
     const newValue = 'xyz';
     subscription.update(newValue);
 
     await subscription.resolve();
 
+    expect(subscriber).toHaveBeenCalledTimes(1);
     expect(subscriber).toHaveBeenCalledWith(newValue);
     expect(statefulSubscription.current).toBe(newValue);
   });
@@ -79,11 +99,12 @@ describe('makeStatefulSubscribable()', () => {
     const subscriber = jest.fn();
     statefulSubscription.subscribe(subscriber);
 
+    await subscription.resolve();
+
+    await statefulSubscription.destroy();
+
     const newValue = 'xyz';
     subscription.update(newValue);
-
-    statefulSubscription.destroy();
-    await subscription.resolve();
 
     expect(release).toHaveBeenCalledWith(subscription);
     expect(subscriber).not.toHaveBeenCalled();
@@ -95,7 +116,6 @@ function createRemoteSubscribable<T>(
   initial: T,
 ): RemoteSubscribable<T> & {update(value: T): void; resolve(): Promise<void>} {
   let current = initial;
-  let resolved = false;
   const subscribers = new Set<
     Parameters<RemoteSubscribable<T>['subscribe']>[0]
   >();
@@ -106,20 +126,19 @@ function createRemoteSubscribable<T>(
     update(value) {
       current = value;
 
-      if (!resolved) return;
-
       for (const subscriber of subscribers) {
         subscriber(value);
       }
     },
     async resolve() {
       await Promise.all([...promises]);
-      resolved = true;
     },
     subscribe(subscriber) {
       subscribers.add(subscriber);
+
+      const value = current;
       const result = Promise.resolve().then(
-        () => [jest.fn(() => subscribers.delete(subscriber)), current] as any,
+        () => [jest.fn(() => subscribers.delete(subscriber)), value] as any,
       );
 
       promises.add(result);
