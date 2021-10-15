@@ -1,8 +1,6 @@
-import {createPackage, Runtime} from '@sewing-kit/config';
-import {createProjectBuildPlugin} from '@sewing-kit/plugins';
-import {defaultProjectPlugin} from '../../config/sewing-kit';
+import {createPackage, createProjectBuildPlugin, Runtime} from '@shopify/loom';
 
-import type {} from '@sewing-kit/plugin-rollup';
+import {defaultProjectPlugin} from '../../config/loom';
 
 export default createPackage((pkg) => {
   pkg.runtimes(Runtime.Node, Runtime.Browser);
@@ -14,11 +12,6 @@ export default createPackage((pkg) => {
     runtime: Runtime.Node,
   });
   pkg.entry({root: './src/babel-plugin', name: 'babel', runtime: Runtime.Node});
-  pkg.entry({
-    root: './src/sewing-kit',
-    name: 'sewing-kit',
-    runtime: Runtime.Node,
-  });
   pkg.use(defaultProjectPlugin());
 
   // The library references the worker "wrapper" files as relative paths from

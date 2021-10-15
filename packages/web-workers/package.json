@@ -10,7 +10,20 @@
   "main": "index.js",
   "module": "index.mjs",
   "esnext": "index.esnext",
-  "types": "index.d.ts",
+  "types": "./build/ts/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "babel": [
+        "./build/ts/babel-plugin.d.ts"
+      ],
+      "webpack": [
+        "./build/ts/webpack-parts/index.d.ts"
+      ],
+      "worker": [
+        "./build/ts/worker.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "esnext": "./index.esnext",
@@ -22,11 +35,6 @@
       "esnext": "./babel.esnext",
       "import": "./babel.mjs",
       "require": "./babel.js"
-    },
-    "./sewing-kit": {
-      "esnext": "./sewing-kit.esnext",
-      "import": "./sewing-kit.mjs",
-      "require": "./sewing-kit.js"
     },
     "./webpack": {
       "esnext": "./webpack.esnext",
@@ -55,6 +63,7 @@
     "@types/puppeteer": "^3.0.0",
     "@types/webpack": ">=4 <5",
     "@types/webpack-virtual-modules": "^0.1.0",
+    "babel-loader": "^8.2.0",
     "fs-extra": "^9.0.0",
     "get-port": "^5.1.0",
     "koa": "^2.11.0",
@@ -67,9 +76,6 @@
   },
   "peerDependencies": {
     "@babel/core": "^7.0.0",
-    "@sewing-kit/plugin-javascript": "^0.3.0",
-    "@sewing-kit/plugin-webpack": "^0.1.0",
-    "@sewing-kit/plugins": "^0.1.0",
     "@types/webpack": ">=4 <5",
     "loader-utils": "^2.0.0",
     "webpack": ">=4 <5",
@@ -77,15 +83,6 @@
   },
   "peerDependenciesMeta": {
     "@babel/core": {
-      "optional": true
-    },
-    "@sewing-kit/plugins": {
-      "optional": true
-    },
-    "@sewing-kit/plugin-javascript": {
-      "optional": true
-    },
-    "@sewing-kit/plugin-webpack": {
       "optional": true
     },
     "@types/webpack": {

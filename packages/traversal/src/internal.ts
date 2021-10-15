@@ -1,4 +1,5 @@
 import {KIND_COMPONENT, KIND_ROOT} from '@remote-ui/core';
+
 import type {RemoteElement, RemoteComponent} from './types';
 
 export function eachComponent(

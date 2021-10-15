@@ -1,7 +1,6 @@
 import {useEffect, useContext, createContext} from 'react';
 import {render as domRender} from 'react-dom';
 import {act as domAct} from 'react-dom/test-utils';
-
 import {createRemoteRoot, createRemoteReceiver} from '@remote-ui/core';
 import type {RemoteFragment} from '@remote-ui/core';
 
@@ -29,7 +28,7 @@ const PersonContext = createContext({name: 'Mollie'});
 function HostHelloWorld({
   name,
 }: ReactPropsFromRemoteComponentType<typeof RemoteHelloWorld>) {
-  return <div>Hello, {name}</div>;
+  return <>Hello, {name}</>;
 }
 
 function HostWithPerson({
@@ -39,7 +38,7 @@ function HostWithPerson({
 
   useEffect(() => {
     run(person);
-  }, [run]);
+  }, [run, person]);
 
   return null;
 }
@@ -90,7 +89,7 @@ describe('@remote-ui/react', () => {
       jest.runAllTimers();
     });
 
-    expect(appElement.innerHTML).toBe(`<div>Hello, ${name}</div>`);
+    expect(appElement.innerHTML).toBe(`Hello, ${name}`);
   });
 
   it('renders component with fragment as prop across a remote bridge', () => {
@@ -130,9 +129,7 @@ describe('@remote-ui/react', () => {
       jest.runAllTimers();
     });
 
-    expect(appElement.innerHTML).toBe(
-      `<div>Hello, <div>Hello, ${name}</div></div>`,
-    );
+    expect(appElement.innerHTML).toBe(`Hello, Hello, ${name}`);
   });
 
   it('handles function props on remote components', () => {

@@ -4,7 +4,6 @@ import {isRemoteFragment} from '@remote-ui/core';
 import type {RemoteComponentType, RemoteFragment} from '@remote-ui/core';
 
 import type {ReactComponentTypeFromRemoteComponentType} from './types';
-
 import {useRender} from './hooks';
 
 interface Options<Props> {
@@ -13,8 +12,8 @@ interface Options<Props> {
 
 export function createRemoteReactComponent<
   Type extends string,
-  Props = {},
-  AllowedChildren extends RemoteComponentType<string, any> | boolean = true
+  Props = Record<string, never>,
+  AllowedChildren extends RemoteComponentType<string, any> | boolean = true,
 >(
   componentType: Type | RemoteComponentType<Type, Props, AllowedChildren>,
   {fragmentProps}: Options<Props> = {},

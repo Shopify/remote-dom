@@ -7,7 +7,10 @@ export function renderText({text, receiver, key}: RemoteTextProps) {
   return <RemoteText key={key} text={text} receiver={receiver} />;
 }
 
-export const RemoteText = memo(({text, receiver}: RemoteTextProps) => {
+export const RemoteText = memo(function RemoteText({
+  text,
+  receiver,
+}: RemoteTextProps) {
   const attached = useAttached(receiver, text);
   return attached ? <>{attached.text}</> : null;
 });

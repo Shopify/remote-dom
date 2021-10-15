@@ -1,6 +1,7 @@
 import {createElement} from '../create-element';
 import {Component} from '../Component';
 import type {FunctionComponent, ComponentProps} from '../types';
+
 import {shallowDiffers} from './utilities';
 
 /**
@@ -46,5 +47,5 @@ export function memo<C extends FunctionComponent<any>>(
     }
   }
 
-  return (Memoed as any) as C;
+  return Memoed as any as C;
 }

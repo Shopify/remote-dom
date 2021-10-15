@@ -6,7 +6,7 @@ type Plugin = import('webpack').Plugin;
 
 interface Options {
   globalObject?: string;
-  plugins?: readonly Plugin[];
+  plugins?: ReadonlyArray<Plugin>;
   filename?: string;
 }
 

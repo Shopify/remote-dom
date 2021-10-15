@@ -4,7 +4,9 @@ import {
   MessageEndpoint,
   CreateEndpointOptions,
 } from '@remote-ui/rpc';
+
 import {createWorkerMessenger} from '../messenger';
+
 import {createScriptUrl, FileOrModuleResolver} from './utilities';
 
 export interface CreateWorkerOptions<T> extends CreateEndpointOptions<T> {
@@ -87,7 +89,7 @@ export function createWorkerFactory<T = unknown>(
 
 export function expose(
   caller: any,
-  api: {[key: string]: Function | undefined},
+  api: Record<string, (...args: any[]) => any>,
 ) {
   const endpoint = getEndpoint(caller);
 

@@ -2,6 +2,7 @@ import type {
   PropsForRemoteComponent,
   RemoteComponentType,
 } from '@remote-ui/core';
+
 import type {RemoteElement, RemoteComponent} from './types';
 import {eachComponent, objectContains} from './internal';
 
@@ -20,6 +21,8 @@ export function find<Type extends RemoteComponentType<string, any, any>>(
       match = component;
       return false;
     }
+
+    return true;
   });
 
   return match;

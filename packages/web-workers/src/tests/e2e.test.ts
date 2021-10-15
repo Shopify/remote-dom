@@ -698,6 +698,7 @@ describe('web-worker', () => {
   });
 
   // This test is flaky, but I can’t for the life of me figure out why...
+  // eslint-disable-next-line jest/no-disabled-tests
   it.skip('terminates the worker from the main thread', async () => {
     const testId = 'WorkerResult';
     const terminateId = 'Terminate';
@@ -1070,6 +1071,7 @@ describe('web-worker', () => {
           return;
         }
 
+        // eslint-disable-next-line consistent-return
         return next();
       });
 
@@ -1148,8 +1150,8 @@ function runWebpack(
     webpackConfig = {},
   }: {
     webpackPlugin?: WebWorkerPlugin;
-    webpackConfig?: object;
-    babelPluginOptions?: object;
+    webpackConfig?: Record<string, unknown>;
+    babelPluginOptions?: Record<string, unknown>;
   } = {},
 ) {
   return runWebpackBase(context, {

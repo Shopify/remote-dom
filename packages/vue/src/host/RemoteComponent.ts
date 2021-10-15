@@ -1,6 +1,5 @@
 import {defineComponent, h, watch, computed} from 'vue';
 import type {Ref, DefineComponent, PropType} from 'vue';
-
 import {retain, release} from '@remote-ui/core';
 import type {
   RemoteReceiver,
@@ -30,7 +29,7 @@ export const RemoteComponent: DefineComponent<{
   },
   setup({receiver, component, controller}) {
     const attached = useAttached(receiver, component);
-    const propsRef: Ref<object | undefined> = computed(
+    const propsRef: Ref<Record<string, unknown> | undefined> = computed(
       () => attached.value?.props as any,
     );
 

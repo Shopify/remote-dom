@@ -49,7 +49,7 @@ export class Component<P = {}, S = {}> implements ComponentInstance<P, S> {
       | (Pick<S, K> | Partial<S> | null),
     callback?: () => void,
   ) {
-    const internalThis = (this as any) as ComponentInternal<P, S>;
+    const internalThis = this as any as ComponentInternal<P, S>;
 
     // only clone state when copying to nextState the first time.
     let state: S | undefined;
@@ -82,7 +82,7 @@ export class Component<P = {}, S = {}> implements ComponentInstance<P, S> {
   }
 
   forceUpdate(callback?: () => void) {
-    const internalThis = (this as any) as ComponentInternal<P, S>;
+    const internalThis = this as any as ComponentInternal<P, S>;
 
     if (internalThis._vnode) {
       // Set render mode so that we can differentiate where the render request

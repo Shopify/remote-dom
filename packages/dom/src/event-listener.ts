@@ -8,6 +8,7 @@ interface Options {
    * will be treated as an event listener.
    */
   test?: RegExp | ((prop: string, component: string) => boolean);
+
   /**
    * The options to use when attaching event listeners. Can either be a static set of
    * options that will be applied to all event listeners, or a function that returns
@@ -16,6 +17,7 @@ interface Options {
   eventListenerOptions?:
     | EventListenerOptions
     | ((prop: string, component: string) => EventListenerOptions | undefined);
+
   /**
    * How to turn the prop name into the event name, which will be passed to
    * `addEventListener`.

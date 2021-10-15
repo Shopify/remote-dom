@@ -20,7 +20,7 @@ import {
 } from './utilities';
 
 export function toContainRemoteComponent<
-  Type extends RemoteComponentType<string, any, any>
+  Type extends RemoteComponentType<string, any, any>,
 >(
   this: jest.MatcherUtils,
   node: Node<unknown>,
@@ -84,7 +84,7 @@ export function toContainRemoteComponent<
 }
 
 export function toContainRemoteComponentTimes<
-  Type extends RemoteComponentType<string, any, any>
+  Type extends RemoteComponentType<string, any, any>,
 >(
   this: jest.MatcherUtils,
   node: Node<unknown>,

@@ -1,6 +1,6 @@
-import {createPackage, Runtime} from '@sewing-kit/config';
-import {createProjectTestPlugin} from '@sewing-kit/plugins';
-import {defaultProjectPlugin} from '../../config/sewing-kit';
+import {createPackage, Runtime, createProjectTestPlugin} from '@shopify/loom';
+
+import {defaultProjectPlugin} from '../../config/loom';
 
 export default createPackage((pkg) => {
   pkg.runtimes(Runtime.Node, Runtime.Browser);
@@ -12,7 +12,7 @@ export default createPackage((pkg) => {
       hooks.configure.hook(({jestTransforms}) => {
         jestTransforms?.hook((transforms) => ({
           ...transforms,
-          '^.+\\.vue$': 'vue-jest',
+          '^.+\\.vue$': '@vue/vue3-jest',
         }));
       });
     }),

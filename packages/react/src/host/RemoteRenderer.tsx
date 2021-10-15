@@ -9,33 +9,34 @@ export interface RemoteRendererProps {
   controller: Controller;
 }
 
-export const RemoteRenderer = memo(
-  ({controller, receiver}: RemoteRendererProps) => {
-    const {children} = useAttached(receiver, receiver.attached.root)!;
-    const {renderComponent, renderText} = controller.renderer;
+export const RemoteRenderer = memo(function RemoteRenderer({
+  controller,
+  receiver,
+}: RemoteRendererProps) {
+  const {children} = useAttached(receiver, receiver.attached.root)!;
+  const {renderComponent, renderText} = controller.renderer;
 
-    return (
-      <>
-        {children.map((child) => {
-          switch (child.kind) {
-            case KIND_COMPONENT:
-              return renderComponent({
-                component: child,
-                receiver,
-                controller,
-                key: child.id,
-              });
-            case KIND_TEXT:
-              return renderText({
-                text: child,
-                receiver,
-                key: child.id,
-              });
-            default:
-              return null;
-          }
-        })}
-      </>
-    );
-  },
-);
+  return (
+    <>
+      {children.map((child) => {
+        switch (child.kind) {
+          case KIND_COMPONENT:
+            return renderComponent({
+              component: child,
+              receiver,
+              controller,
+              key: child.id,
+            });
+          case KIND_TEXT:
+            return renderText({
+              text: child,
+              receiver,
+              key: child.id,
+            });
+          default:
+            return null;
+        }
+      })}
+    </>
+  );
+});

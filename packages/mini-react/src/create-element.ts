@@ -1,7 +1,6 @@
 import type {RemoteComponentType} from '@remote-ui/core';
 
 import options from './options';
-
 import type {
   VNode,
   ComponentType,
@@ -19,7 +18,7 @@ export function createElement<P>(
   props?: (P & CommonProps) | null,
   ...children: ComponentChildren[]
 ): VNode<P> {
-  const normalizedProps: Record<string, any> = {};
+  const normalizedProps: Record<string, unknown> = {};
   let prop: string;
 
   let key: Key | undefined;
@@ -55,7 +54,7 @@ export function createElement<P>(
  */
 export function createVNode(
   type: VNode<any>['type'] | null,
-  props: Record<string, any> | string | number | null,
+  props: Record<string, unknown> | string | number | null,
   key: Key | undefined,
   ref: Ref<unknown> | undefined,
   original: VNode<unknown>['_original'] | null,

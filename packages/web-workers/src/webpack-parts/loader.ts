@@ -1,13 +1,8 @@
 import * as path from 'path';
+
 import {getOptions} from 'loader-utils';
-
-// @ts-ignore
 import SingleEntryPlugin from 'webpack/lib/SingleEntryPlugin';
-
-// @ts-ignore
 import WebWorkerTemplatePlugin from 'webpack/lib/webworker/WebWorkerTemplatePlugin';
-
-// @ts-ignore
 import FetchCompileWasmTemplatePlugin from 'webpack/lib/web/FetchCompileWasmTemplatePlugin';
 
 import {WebWorkerPlugin} from './plugin';
@@ -36,11 +31,12 @@ export function pitch(
   } = this;
 
   if (compiler.options.output!.globalObject !== 'self') {
-    return callback!(
+    callback!(
       new Error(
         'webpackConfig.output.globalObject is not set to "self", which will cause chunk loading in the worker to fail. Please change the value to "self" for any builds targeting the browser, or set the {noop: true} option on the @remote-ui/web-workers babel plugin.',
       ),
     );
+    return;
   }
 
   const plugin: WebWorkerPlugin = (compiler.options.plugins || []).find(
@@ -96,11 +92,8 @@ export function pitch(
     globalObject: (plugin && plugin.options.globalObject) || 'self',
   };
 
-  const workerCompiler: import('webpack').Compiler = compilation.createChildCompiler(
-    NAME,
-    workerOptions,
-    [],
-  );
+  const workerCompiler: import('webpack').Compiler =
+    compilation.createChildCompiler(NAME, workerOptions, []);
 
   (workerCompiler as any).context = (compiler as any).context;
 

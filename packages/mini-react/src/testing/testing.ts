@@ -1,6 +1,5 @@
 import {createRemoteRoot} from '@remote-ui/core';
 import type {RemoteRoot} from '@remote-ui/core';
-
 import {createEnvironment} from '@quilted/react-testing/environment';
 import type {
   CustomMount,

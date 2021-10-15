@@ -3,7 +3,7 @@ import {IFRAME_RUN_IDENTIFIER} from './constants';
 
 export function createNullOriginIframeMessenger(url: URL) {
   return createIframeWorkerMessenger(url, (iframe) => {
-    const IFRAME_SOURCE = `
+    const iframeSource = `
     <html>
       <body>
         <script>
@@ -24,6 +24,6 @@ export function createNullOriginIframeMessenger(url: URL) {
   `;
 
     iframe.setAttribute('sandbox', 'allow-scripts');
-    iframe.srcdoc = IFRAME_SOURCE;
+    iframe.srcdoc = iframeSource;
   });
 }

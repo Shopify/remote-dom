@@ -1,4 +1,5 @@
 import {retain, release} from '@remote-ui/rpc';
+
 import {
   ACTION_MOUNT,
   ACTION_INSERT_CHILD,
@@ -65,7 +66,7 @@ export function createRemoteChannel({
   updateProps,
   updateText,
 }: RemoteChannelRunner): RemoteChannel {
-  const messageMap = new Map<number, Function>([
+  const messageMap = new Map<keyof ActionArgumentMap, (...args: any[]) => any>([
     [ACTION_MOUNT, mount],
     [ACTION_REMOVE_CHILD, removeChild],
     [ACTION_INSERT_CHILD, insertChild],
@@ -73,7 +74,7 @@ export function createRemoteChannel({
     [ACTION_UPDATE_TEXT, updateText],
   ]);
 
-  return (type, ...args) => (messageMap.get(type) as any)(...args);
+  return (type, ...args) => messageMap.get(type)!(...args);
 }
 
 export interface RemoteReceiverAttachment {
@@ -382,7 +383,7 @@ function normalizeNode<
     | RemoteTextSerialization
     | RemoteComponentSerialization
     | RemoteFragmentSerialization,
-  R
+  R,
 >(node: T, normalizer: (node: T) => R) {
   if (node.kind === KIND_FRAGMENT || node.kind === KIND_COMPONENT) {
     (node as any).children.forEach((child: T) =>

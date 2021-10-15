@@ -1,5 +1,4 @@
 import {createRenderer as createVueRenderer} from '@vue/runtime-core';
-
 import {isRemoteText, isRemoteComponent} from '@remote-ui/core';
 import type {RemoteRoot, RemoteText, RemoteComponent} from '@remote-ui/core';
 

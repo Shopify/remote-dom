@@ -148,7 +148,7 @@ export interface FunctionComponent<P = {}> {
 export type ComponentType<P = {}> = ComponentClass<P> | FunctionComponent<P>;
 
 export type ComponentProps<
-  C extends ComponentType<any> | RemoteComponentType<any>
+  C extends ComponentType<any> | RemoteComponentType<any>,
 > = C extends ComponentType<infer P>
   ? P
   : C extends RemoteComponentType<infer P>
@@ -159,6 +159,7 @@ export interface VNode<P = {}> {
   type: ComponentType<P> | string | null;
   props: P & {children?: ComponentChildren};
   key: Key;
+
   /**
    * ref is not guaranteed by React.ReactElement, for compatibility reasons
    * with popular react libs we define it as optional too
@@ -168,10 +169,12 @@ export interface VNode<P = {}> {
   _children: (VNode<any> | null | undefined)[] | null;
   _parent: VNode<any> | null;
   _depth: number;
+
   /**
    * The first (for Fragments) remote child of a VNode
    */
   _remoteNode?: RemoteChildNode | null;
+
   /**
    * The last remote child of a Fragment, or components that return a Fragment
    */
@@ -180,6 +183,10 @@ export interface VNode<P = {}> {
   constructor: any;
   _original: VNode<any> | string | number | null;
 }
+
+// This object is meant to match an object in Preact’s implementation
+// that uses camelcase keys.
+/* eslint-disable @shopify/typescript/prefer-pascal-case-enums */
 
 export enum HookType {
   useState = 1,
@@ -196,11 +203,15 @@ export enum HookType {
   useDebugvalue = 11,
 }
 
+/* eslint-enable @shopify/typescript/prefer-pascal-case-enums */
+
 export interface Options {
   /** Attach a hook that is invoked whenever a VNode is created. */
   vnode?(vnode: VNode<any>): void;
+
   /** Attach a hook that is invoked immediately before a vnode is unmounted. */
   unmount?(vnode: VNode<any>): void;
+
   /** Attach a hook that is invoked after a vnode has rendered. */
   diffed?(vnode: VNode<any>): void;
   event?(e: Event): any;
@@ -215,16 +226,22 @@ export interface Options {
 
   /** Attach a hook that is invoked before render, mainly to check the arguments. */
   _root?(vnode: ComponentChild, parent: RemoteNode): void;
+
   /** Attach a hook that is invoked before a vnode is diffed. */
   _diff?(vnode: VNode<any>): void;
+
   /** Attach a hook that is invoked after a tree was mounted or was updated. */
   _commit?(vnode: VNode<any>, commitQueue: ComponentInternal<any>[]): void;
+
   /** Attach a hook that is invoked before a vnode has rendered. */
   _render?(vnode: VNode<any>): void;
+
   /** Attach a hook that is invoked before a hook's state is queried. */
   _hook?(component: Component, index: number, type: HookType): void;
+
   /** Bypass effect execution. Currenty only used in devtools for hooks inspection */
   _skipEffects?: boolean;
+
   /** Attach a hook that is invoked after an error is caught in a component but before calling lifecycle hooks */
   _catchError(error: any, vnode: VNode<any>, oldVNode?: VNode<any>): void;
 }
@@ -249,9 +266,9 @@ export interface ContextInternal<T> extends Context<T> {
 }
 
 export type ReactPropsFromRemoteComponentType<
-  Type extends RemoteComponentType<string, any, any>
+  Type extends RemoteComponentType<string, any, any>,
 > = PropsForRemoteComponent<Type> & {children?: ComponentChildren};
 
 export type ReactComponentTypeFromRemoteComponentType<
-  Type extends RemoteComponentType<string, any, any>
+  Type extends RemoteComponentType<string, any, any>,
 > = ComponentType<ReactPropsFromRemoteComponentType<Type>>;

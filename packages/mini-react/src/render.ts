@@ -4,7 +4,6 @@ import {commitRoot, diff} from './diff';
 import {createElement} from './create-element';
 import {Fragment} from './Fragment';
 import options from './options';
-
 import type {
   ComponentChild,
   RemoteParentNode,

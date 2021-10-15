@@ -38,7 +38,7 @@ export default function workerBabelPlugin({
   types: typeof import('@babel/core').types;
   template: typeof import('@babel/template').default;
 }): import('@babel/core').PluginObj<State> {
-  const noopBinding = (template(
+  const noopBinding = template(
     `() => (
       new Proxy(
         {},
@@ -52,7 +52,7 @@ export default function workerBabelPlugin({
       )
     );`,
     {sourceType: 'module'},
-  ) as unknown) as () => import('@babel/core').types.ArrowFunctionExpression;
+  ) as unknown as () => import('@babel/core').types.ArrowFunctionExpression;
 
   return {
     visitor: {
@@ -122,7 +122,8 @@ export default function workerBabelPlugin({
     >;
 
     for (const referencePath of callingReferences) {
-      const callExpression: CallExpressionNodePath = referencePath.parentPath as any;
+      const callExpression: CallExpressionNodePath =
+        referencePath.parentPath as any;
       const dynamicImports = new Set<CallExpressionNodePath>();
 
       const firstArgument = callExpression.get('arguments')[0];
@@ -188,7 +189,7 @@ type LoaderOptions = import('./webpack-parts/loader').Options;
 const webpackCommentRegExp = new RegExp(/(^|\W)webpack[A-Z]{1,}[A-Za-z]{1,}:/);
 
 function getLoaderOptions(
-  comments: readonly import('@babel/types').Comment[],
+  comments: ReadonlyArray<import('@babel/types').Comment>,
 ): LoaderOptions {
   return comments.reduce<LoaderOptions>((options, comment) => {
     const {value} = comment;

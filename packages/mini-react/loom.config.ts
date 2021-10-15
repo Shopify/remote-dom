@@ -1,6 +1,6 @@
-import {createPackage, Runtime} from '@sewing-kit/config';
-import {createProjectTestPlugin} from '@sewing-kit/plugins';
-import {defaultProjectPlugin} from '../../config/sewing-kit';
+import {createPackage, createProjectTestPlugin, Runtime} from '@shopify/loom';
+
+import {defaultProjectPlugin} from '../../config/loom';
 
 export default createPackage((pkg) => {
   pkg.runtimes(Runtime.Node, Runtime.Browser);
@@ -11,7 +11,7 @@ export default createPackage((pkg) => {
   pkg.entry({name: 'jsx-dev-runtime', root: './src/jsx-runtime'});
   pkg.entry({name: 'testing', root: './src/testing', runtime: Runtime.Node});
   pkg.use(
-    defaultProjectPlugin(),
+    defaultProjectPlugin({react: true}),
     createProjectTestPlugin('AliasRUIReactTesting', ({hooks}) => {
       hooks.configure.hook((configuration) => {
         configuration.jestModuleMapper?.hook((moduleMapper) => {

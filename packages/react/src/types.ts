@@ -14,11 +14,11 @@ type RemoteFragmentToReactElement<T> = T extends RemoteFragment<infer R>
   : T;
 
 export type ReactPropsFromRemoteComponentType<
-  Type extends RemoteComponentType<string, any, any>
+  Type extends RemoteComponentType<string, any, any>,
 > = PropsForRemoteComponent<Type> & {
   children?: ReactNode;
 };
 
 export type ReactComponentTypeFromRemoteComponentType<
-  Type extends RemoteComponentType<string, any, any>
+  Type extends RemoteComponentType<string, any, any>,
 > = ComponentType<ReactPropsFromRemoteComponentType<Type>>;

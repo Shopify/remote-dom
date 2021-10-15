@@ -40,6 +40,8 @@ export const RemoteRenderer = defineComponent({
               receiver,
             });
           }
+          default:
+            return null;
         }
       });
     };

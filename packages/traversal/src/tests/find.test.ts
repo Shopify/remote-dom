@@ -2,7 +2,7 @@ import {createRemoteRoot, createRemoteComponent} from '@remote-ui/core';
 
 import {find, findAll} from '../find';
 
-const Target = createRemoteComponent('Target');
+const Target = createRemoteComponent<'Target', {disabled?: boolean}>('Target');
 const RedHerring = createRemoteComponent('RedHerring');
 
 describe('find()', () => {
@@ -16,7 +16,7 @@ describe('find()', () => {
   it('returns null when no matching element is found', () => {
     const root = createRemoteRoot(() => {});
     root.appendChild(root.createComponent(RedHerring));
-    expect(find(root, Target)).toBe(null);
+    expect(find(root, Target)).toBeNull();
   });
 
   it('returns the first element when multiple are found', () => {
