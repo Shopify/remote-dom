@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.6] - 2021-10-15
+
+- Fixed a potential timing issue when using the `makeStatefulSubscribable()` function ([pull request](https://github.com/Shopify/remote-ui/pull/128))
+
 ## [2.0.0] - 2021-02-08
 
 ### Changed
