@@ -46,6 +46,7 @@ function HostWithPerson({
 function HostImage(
   props: ReactPropsFromRemoteComponentType<typeof RemoteImage>,
 ) {
+  // eslint-disable-next-line jsx-a11y/alt-text
   return <img {...props} />;
 }
 
@@ -176,7 +177,7 @@ describe('@remote-ui/react', () => {
     });
 
     function RemoteApp() {
-      return <RemoteImage src={'https://shopify.com'} />;
+      return <RemoteImage src="https://shopify.com" />;
     }
 
     const controller = createController({
