@@ -4,7 +4,8 @@
   "private": true,
   "repository": "https://github.com/Shopify/remote-ui.git",
   "workspaces": [
-    "./packages/*"
+    "./packages/*",
+    "./examples/*"
   ],
   "scripts": {
     "test": "loom test",
@@ -12,7 +13,8 @@
     "type-check": "loom type-check",
     "build": "loom build",
     "version-bump": "lerna version --no-push --include-merged-tags",
-    "deploy": "lerna publish from-package --yes"
+    "deploy": "lerna publish from-package --yes",
+    "example:vanilla-dom": "yarn workspace example-vanilla-dom start"
   },
   "devDependencies": {
     "@shopify/babel-preset": "^24.1.0",
