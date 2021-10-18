@@ -1,6 +1,6 @@
 {
   "name": "@remote-ui/vue",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
@@ -32,8 +32,8 @@
     }
   },
   "dependencies": {
-    "@remote-ui/core": "^2.1.5",
-    "@remote-ui/rpc": "^1.2.4",
+    "@remote-ui/core": "^2.1.6",
+    "@remote-ui/rpc": "^1.2.5",
     "@vue/runtime-core": ">=3.0.0 <4.0.0"
   },
   "devDependencies": {
