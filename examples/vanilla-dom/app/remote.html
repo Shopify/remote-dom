@@ -5,23 +5,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>remote-ui vanilla example (remote environment)</title>
-    <link rel="icon" href="https://fav.farm/🛰️" />
   </head>
   <body>
     <!--
-      The ES modules version of remote-ui tries to support the lowest-common
-      denominator, and so transpiles away async functions. It of course distributes
-      a version that preserves these language features so you can compile it to
-      match your own browser support, but the version the CDN uses requires us
-      to have the regenerator global available, so we import that here.
-    -->
-    <script
-      type="module"
-      src="https://cdn.skypack.dev/regenerator-runtime"
-    ></script>
-
-    <!--
-      This JavaScript will will generate UI and communicate it to the host,
+      This JavaScript will generate UI and communicate it to the host,
       which in this case is the parent window.
     -->
     <script type="module" src="./remote.js" crossorigin="anonymous"></script>

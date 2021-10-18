@@ -48,18 +48,6 @@
     ></iframe>
 
     <!--
-      The ES modules version of remote-ui tries to support the lowest-common
-      denominator, and so transpiles away async functions. It of course distributes
-      a version that preserves these language features so you can compile it to
-      match your own browser support, but the version the CDN uses requires us
-      to have the regenerator global available, so we import that here.
-    -->
-    <script
-      type="module"
-      src="https://cdn.skypack.dev/regenerator-runtime"
-    ></script>
-
-    <!--
       This JavaScript will connect to the iframe, and begin propagating UI updates
       into the UI element above.
     -->
