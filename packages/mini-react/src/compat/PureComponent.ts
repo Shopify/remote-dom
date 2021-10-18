@@ -1,5 +1,9 @@
 import {Component} from '../Component';
+
 import {shallowDiffers} from './utilities';
+
+// Gets tripped up by us *creating* React instead of *using* React.
+/* eslint-disable @shopify/react-initialize-state */
 
 /**
  * Component class with a predefined `shouldComponentUpdate` implementation
@@ -14,3 +18,5 @@ export class PureComponent<P = {}, S = {}> extends Component<P, S> {
     );
   }
 }
+
+/* eslint-enable @shopify/react-initialize-state */

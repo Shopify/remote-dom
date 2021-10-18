@@ -34,55 +34,60 @@ export function renderComponent({
   );
 }
 
-export const RemoteComponent = memo(
-  ({receiver, component, controller}: RemoteComponentProps) => {
-    const Implementation = controller.get(component.type)!;
+export const RemoteComponent = memo(function RemoteComponent({
+  receiver,
+  component,
+  controller,
+}: RemoteComponentProps) {
+  const Implementation = controller.get(component.type)!;
 
-    const attached = useAttached(receiver, component);
+  const attached = useAttached(receiver, component);
 
-    const props = useMemo(() => {
-      const props = attached?.props as any;
-      if (!props) return emptyObject;
+  const props = useMemo(() => {
+    const props = attached?.props as any;
+    if (!props) return emptyObject;
 
-      const newProps: typeof props = {};
-      for (const key of Object.keys(props)) {
-        const prop = props[key];
-        newProps[key] = isRemoteReceiverAttachableFragment(prop) ? (
-          <RemoteFragment
-            receiver={receiver}
-            fragment={prop}
-            controller={controller}
-          />
-        ) : (
-          prop
-        );
-      }
-      return newProps;
-    }, [receiver, controller, attached?.props, component.version]);
-
-    if (attached == null) return null;
-
-    const {children} = attached;
-
-    if (children.length === 0) {
-      return <Implementation {...props} />;
+    const newProps: typeof props = {};
+    for (const key of Object.keys(props)) {
+      const prop = props[key];
+      newProps[key] = isRemoteReceiverAttachableFragment(prop) ? (
+        <RemoteFragment
+          receiver={receiver}
+          fragment={prop}
+          controller={controller}
+        />
+      ) : (
+        prop
+      );
     }
+    return newProps;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [receiver, controller, attached?.props, component.version]);
 
-    return (
-      <Implementation {...props}>
-        {renderChildren(children, receiver, controller)}
-      </Implementation>
-    );
-  },
-);
+  if (attached == null) return null;
 
-const RemoteFragment = memo(
-  ({receiver, fragment, controller}: RemoteFragmentProps) => {
-    const {children} = useAttached(receiver, fragment) ?? {};
-    if (!children) return null;
-    return <>{renderChildren(children, receiver, controller)}</>;
-  },
-);
+  const {children} = attached;
+
+  if (children.length === 0) {
+    return <Implementation {...props} />;
+  }
+
+  return (
+    <Implementation {...props}>
+      {renderChildren(children, receiver, controller)}
+    </Implementation>
+  );
+});
+
+const RemoteFragment = memo(function RemoteFragment({
+  receiver,
+  fragment,
+  controller,
+}: RemoteFragmentProps) {
+  const {children} = useAttached(receiver, fragment) ?? {};
+  if (!children) return null;
+  return <>{renderChildren(children, receiver, controller)}</>;
+});
 
 function renderChildren(
   children: RemoteReceiverAttachableChild[],

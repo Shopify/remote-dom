@@ -3,6 +3,7 @@ import {
   createRemoteComponent,
   RemoteComponent,
 } from '@remote-ui/core';
+
 import {createHtm, append} from './render';
 
 const Button = createRemoteComponent('Button');

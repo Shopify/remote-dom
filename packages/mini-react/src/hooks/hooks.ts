@@ -244,6 +244,7 @@ export function useRef<T = unknown>(): PropRef<T>;
 
 export function useRef(initialValue?: any): any {
   currentHook = 5;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => ({current: initialValue}), []);
 }
 
@@ -267,6 +268,7 @@ export function useImperativeHandle<T, R extends T>(
         ref.current = create();
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     inputs == null ? inputs : [...inputs, ref],
   );
 }
@@ -295,6 +297,7 @@ export function useCallback<T extends Function>(
   inputs: Inputs,
 ): T {
   currentHook = 8;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => callback, inputs);
 }
 
@@ -407,8 +410,8 @@ function invokeEffect(hook: EffectHookState) {
 }
 
 function argsChanged(
-  oldArgs: any[] | readonly any[] | undefined,
-  newArgs: any[] | readonly any[],
+  oldArgs: any[] | ReadonlyArray<any> | undefined,
+  newArgs: any[] | ReadonlyArray<any>,
 ) {
   return (
     !oldArgs ||

@@ -168,8 +168,8 @@ const iframe = {};
 
 const createWorker = createWorkerFactory(() => import('./worker'));
 const worker = createWorker({
-	  createMessenger(url) {
-	    const {port1, port2} = new MessageChannel();
+  createMessenger(url) {
+    const {port1, port2} = new MessageChannel();
     iframe.createWorker(url).postMessage({__replace: port2}, [port2]);
 
     // In a real example, you'd want to also clean up the worker
@@ -206,8 +206,8 @@ import {createWorkerFactory, terminate} from '@remote-ui/web-workers';
 
 // Note: only webpackChunkName is currently supported. Don’t try to use
 // other magic webpack comments.
-const createWorker = createWorkerFactory(() =>
-  import(/* webpackChunkName: 'myWorker' */ './worker'),
+const createWorker = createWorkerFactory(
+  () => import(/* webpackChunkName: 'myWorker' */ './worker'),
 );
 ```
 
@@ -216,8 +216,8 @@ This name will be used as the prefix for the worker file. The worker will always
 ```ts
 import {createWorkerFactory, terminate} from '@remote-ui/web-workers';
 
-const createWorker = createWorkerFactory(() =>
-  import(/* webpackChunkName: 'myWorker' */ './worker'),
+const createWorker = createWorkerFactory(
+  () => import(/* webpackChunkName: 'myWorker' */ './worker'),
 );
 
 // Something like `new URL(__webpack_public_path__ + 'myWorker.worker.js')`

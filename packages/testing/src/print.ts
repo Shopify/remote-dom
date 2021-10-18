@@ -1,4 +1,5 @@
 import {stringify} from 'jest-matcher-utils';
+
 import type {Node, DebugOptions} from './types';
 
 export function nodeName(node: Node<unknown>): string {

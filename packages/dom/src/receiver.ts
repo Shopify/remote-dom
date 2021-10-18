@@ -3,6 +3,7 @@ import type {
   RemoteTextSerialization,
   RemoteComponentSerialization,
 } from '@remote-ui/core';
+
 import {PropertyApply, PropertyApplyOptions} from './types';
 
 const REMOTE_ID = Symbol.for('RemoteUi::Dom::Id');
@@ -71,7 +72,7 @@ export class DomReceiver {
     updateProps: (id, newProps) => {
       const node = this.nodes.get(id) as HTMLElement & {
         [REMOTE_TYPE]: string;
-        [REMOTE_PROPS]: object;
+        [REMOTE_PROPS]: Record<string, unknown>;
       };
       const oldProps = {...node[REMOTE_PROPS]};
 

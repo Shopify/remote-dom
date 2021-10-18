@@ -4,6 +4,7 @@ import {
   RemoteText,
   KIND_COMPONENT,
 } from '@remote-ui/core';
+
 import type {RemoteComponent} from './types';
 import {objectContains} from './internal';
 

@@ -5,7 +5,6 @@ import type {
   EncodingStrategy,
   EncodingStrategyApi,
 } from './types';
-
 import {StackFrame} from './memory';
 import type {Retainer} from './memory';
 
@@ -15,6 +14,8 @@ const TERMINATE = 2;
 const RELEASE = 3;
 const FUNCTION_APPLY = 5;
 const FUNCTION_RESULT = 6;
+
+type AnyFunction = (...args: any[]) => any;
 
 interface MessageMap {
   [CALL]: [string, string | number, any];
@@ -34,7 +35,7 @@ export interface CreateEndpointOptions<T = unknown> {
 export interface Endpoint<T> {
   readonly call: RemoteCallable<T>;
   replace(messenger: MessageEndpoint): void;
-  expose(api: {[key: string]: Function | undefined}): void;
+  expose(api: Record<string, AnyFunction | undefined>): void;
   callable(...methods: string[]): void;
   terminate(): void;
 }
@@ -73,7 +74,7 @@ export function createEndpoint<T>(
   let terminated = false;
   let messenger = initialMessenger;
 
-  const activeApi = new Map<string | number, Function>();
+  const activeApi = new Map<string | number, AnyFunction>();
   const callIdsToResolver = new Map<
     string,
     (
@@ -184,7 +185,7 @@ export function createEndpoint<T>(
 
           send(RESULT, [id, undefined, encoded], transferables);
         } catch (error) {
-          const {name, message, stack} = error;
+          const {name, message, stack} = error as Error;
           send(RESULT, [id, {name, message, stack}]);
           throw error;
         } finally {
@@ -217,18 +218,15 @@ export function createEndpoint<T>(
         break;
       }
       case FUNCTION_APPLY: {
-        const [
-          callId,
-          funcId,
-          args,
-        ] = data[1] as MessageMap[typeof FUNCTION_APPLY];
+        const [callId, funcId, args] =
+          data[1] as MessageMap[typeof FUNCTION_APPLY];
 
         try {
           const result = await encoder.call(funcId, args);
           const [encoded, transferables] = encoder.encode(result);
           send(FUNCTION_RESULT, [callId, undefined, encoded], transferables);
         } catch (error) {
-          const {name, message, stack} = error;
+          const {name, message, stack} = error as Error;
           send(FUNCTION_RESULT, [callId, {name, message, stack}]);
           throw error;
         }
@@ -294,7 +292,9 @@ function uuidSegment() {
 }
 
 function createCallable<T>(
-  handlerForCall: (property: string | number | symbol) => Function | undefined,
+  handlerForCall: (
+    property: string | number | symbol,
+  ) => AnyFunction | undefined,
   callable?: (keyof T)[],
 ): RemoteCallable<T> {
   let call: any;
@@ -306,7 +306,7 @@ function createCallable<T>(
       );
     }
 
-    const cache = new Map<string | number | symbol, Function | undefined>();
+    const cache = new Map<string | number | symbol, AnyFunction | undefined>();
 
     call = new Proxy(
       {},

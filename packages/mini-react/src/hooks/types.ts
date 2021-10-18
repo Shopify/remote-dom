@@ -1,6 +1,6 @@
 import type {HookType, ComponentInternal} from '../types';
 
-export type Inputs = readonly unknown[];
+export type Inputs = ReadonlyArray<unknown>;
 
 export type StateUpdater<S> = (value: S | ((prevState: S) => S)) => void;
 export type Reducer<S, A> = (prevState: S, action: A) => S;
@@ -36,6 +36,7 @@ export type Hook = (...args: HookArgs[]) => HookReturnValue;
 export interface ComponentHooks {
   /** The list of hooks a component uses */
   _list: HookState[];
+
   /** List of Effects to be invoked after the next frame is rendered */
   _pendingEffects: EffectHookState[];
 }
@@ -57,13 +58,13 @@ export type Cleanup = () => void;
 
 export interface EffectHookState {
   _value?: Effect;
-  _args?: readonly any[];
+  _args?: ReadonlyArray<any>;
   _cleanup?: Cleanup;
 }
 
 export interface MemoHookState {
   _value?: any;
-  _args?: readonly any[];
+  _args?: ReadonlyArray<any>;
   _factory?: () => any;
 }
 

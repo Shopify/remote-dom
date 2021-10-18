@@ -8,9 +8,14 @@ type NonOptionalKeys<T> = {
   [K in keyof T]-?: undefined extends T[K] ? never : K;
 }[keyof T];
 
-type IfAllOptionalKeys<Obj, If, Else = never> = NonOptionalKeys<Obj> extends {
-  length: 0;
-}
+type IfAllOptionalKeys<Obj, If, Else = never> = Obj extends Record<
+  string,
+  never
+>
+  ? If
+  : NonOptionalKeys<Obj> extends {
+      length: 0;
+    }
   ? If
   : Else;
 
@@ -39,7 +44,7 @@ export interface ActionArgumentMap {
   ];
   [ACTION_REMOVE_CHILD]: [Id | undefined, number];
   [ACTION_UPDATE_TEXT]: [Id, string];
-  [ACTION_UPDATE_PROPS]: [Id, object];
+  [ACTION_UPDATE_PROPS]: [Id, Record<string, unknown>];
 }
 
 export interface RemoteChannel {
@@ -51,7 +56,7 @@ export interface RemoteChannel {
 
 type AllowedRemoteChildren<
   Children,
-  Root extends RemoteRoot<any, any>
+  Root extends RemoteRoot<any, any>,
 > = Children extends RemoteComponentType<string, any, any>
   ? RemoteComponent<Children, Root>
   : never;
@@ -67,7 +72,7 @@ type ExtractChildren<Type> = Type extends RemoteComponentType<
 type AllowedChildren<
   Children extends RemoteComponentType<string, any> | boolean,
   Root extends RemoteRoot<any, any>,
-  AllowString extends boolean = false
+  AllowString extends boolean = false,
 > = Children extends true
   ? RemoteComponent<any, Root> | AllowedTextChildren<Root, AllowString>
   : Children extends false
@@ -78,14 +83,14 @@ type AllowedChildren<
 
 type AllowedTextChildren<
   Root extends RemoteRoot<any, any>,
-  AllowString extends boolean = false
+  AllowString extends boolean = false,
 > = AllowString extends true ? RemoteText<Root> | string : RemoteText<Root>;
 
 export interface RemoteRootOptions<
-  AllowedComponents extends RemoteComponentType<string, any>
+  AllowedComponents extends RemoteComponentType<string, any>,
 > {
   readonly strict?: boolean;
-  readonly components?: readonly AllowedComponents[];
+  readonly components?: ReadonlyArray<AllowedComponents>;
 }
 
 export interface RemoteRoot<
@@ -93,13 +98,17 @@ export interface RemoteRoot<
     string,
     any
   > = RemoteComponentType<any, any>,
-  AllowedChildrenTypes extends RemoteComponentType<string, any> | boolean = true
+  AllowedChildrenTypes extends
+    | RemoteComponentType<string, any>
+    | boolean = true,
 > {
   readonly kind: typeof KIND_ROOT;
-  readonly children: readonly AllowedChildren<
-    AllowedChildrenTypes,
-    RemoteRoot<AllowedComponents, AllowedChildrenTypes>
-  >[];
+  readonly children: ReadonlyArray<
+    AllowedChildren<
+      AllowedChildrenTypes,
+      RemoteRoot<AllowedComponents, AllowedChildrenTypes>
+    >
+  >;
   readonly options: RemoteRootOptions<AllowedComponents>;
   appendChild(
     child: AllowedChildren<
@@ -173,14 +182,16 @@ export interface RemoteRoot<
 
 export interface RemoteComponent<
   Type extends RemoteComponentType<string, any>,
-  Root extends RemoteRoot<any, any>
+  Root extends RemoteRoot<any, any>,
 > {
   readonly kind: typeof KIND_COMPONENT;
   readonly id: string;
   readonly type: IdentifierForRemoteComponent<Type>;
   readonly props: PropsForRemoteComponent<Type>;
   readonly remoteProps: PropsForRemoteComponent<Type>;
-  readonly children: readonly AllowedChildren<ExtractChildren<Type>, Root>[];
+  readonly children: ReadonlyArray<
+    AllowedChildren<ExtractChildren<Type>, Root>
+  >;
   readonly root: Root;
   readonly top: RemoteComponent<any, Root> | Root | null;
   readonly parent: RemoteComponent<any, Root> | Root | null;
@@ -200,11 +211,11 @@ export interface RemoteComponent<
 }
 
 export interface RemoteFragment<
-  Root extends RemoteRoot<any, any> = RemoteRoot<any, any>
+  Root extends RemoteRoot<any, any> = RemoteRoot<any, any>,
 > {
   readonly kind: typeof KIND_FRAGMENT;
   readonly id: string;
-  readonly children: readonly AllowedChildren<ExtractChildren<any>, Root>[];
+  readonly children: ReadonlyArray<AllowedChildren<ExtractChildren<any>, Root>>;
   readonly root: Root;
   readonly top: RemoteComponent<any, Root> | Root | null;
   readonly parent: RemoteComponent<any, Root> | Root | null;
@@ -238,7 +249,7 @@ export type RemoteComponentSerialization<
   Type extends RemoteComponentType<string, any> = RemoteComponentType<
     string,
     any
-  >
+  >,
 > = {
   -readonly [K in 'id' | 'type' | 'kind' | 'props']: RemoteComponent<
     Type,

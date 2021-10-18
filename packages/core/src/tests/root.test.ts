@@ -9,7 +9,7 @@ describe('root', () => {
 
       expect(() => {
         root.createComponent('Card');
-      }).not.toThrowError();
+      }).not.toThrow();
     });
 
     it('does not throw error for allowed components', () => {
@@ -18,7 +18,7 @@ describe('root', () => {
 
       expect(() => {
         root.createComponent('Card');
-      }).not.toThrowError();
+      }).not.toThrow();
     });
 
     it('throws error for not allowed components', () => {
@@ -27,7 +27,7 @@ describe('root', () => {
 
       expect(() => {
         root.createComponent('Button');
-      }).toThrowError();
+      }).toThrow('Unsupported component: Button');
     });
 
     it('throws error when empty components is set', () => {
@@ -36,7 +36,7 @@ describe('root', () => {
 
       expect(() => {
         root.createComponent('Button');
-      }).toThrowError();
+      }).toThrow('Unsupported component: Button');
     });
   });
 
@@ -47,7 +47,7 @@ describe('root', () => {
 
       expect(() => {
         root.createText();
-      }).not.toThrowError();
+      }).not.toThrow();
     });
   });
 
@@ -58,7 +58,7 @@ describe('root', () => {
       expect(() => {
         const card = root.createComponent('Card');
         root.appendChild(card);
-      }).not.toThrowError();
+      }).not.toThrow();
     });
 
     it('throws error when appending a child not created by the remote root', () => {
@@ -67,7 +67,9 @@ describe('root', () => {
       expect(() => {
         const card = {} as any;
         root.appendChild(card);
-      }).toThrowError();
+      }).toThrow(
+        'Cannot append a node that was not created by this remote root',
+      );
     });
   });
 
@@ -80,7 +82,7 @@ describe('root', () => {
         const image = root.createComponent('Image');
         root.appendChild(image);
         root.insertChildBefore(card, image);
-      }).not.toThrowError();
+      }).not.toThrow();
     });
 
     it('throws error when calling insertChildBefore for a component not created by the remote root', () => {
@@ -91,7 +93,9 @@ describe('root', () => {
         const button = {} as any;
         root.appendChild(card);
         root.insertChildBefore(button, card);
-      }).toThrowError();
+      }).toThrow(
+        'Cannot insert a node that was not created by this remote root',
+      );
     });
   });
 

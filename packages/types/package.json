@@ -9,7 +9,7 @@
   "main": "index.js",
   "module": "index.mjs",
   "esnext": "index.esnext",
-  "types": "index.d.ts",
+  "types": "./build/ts/index.d.ts",
   "exports": {
     ".": {
       "esnext": "./index.esnext",

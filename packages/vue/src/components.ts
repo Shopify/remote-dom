@@ -15,8 +15,8 @@ interface Options<Props> {
 
 export function createRemoteVueComponent<
   Type extends string,
-  Props = {},
-  AllowedChildren extends RemoteComponentType<string, any> | boolean = true
+  Props = Record<string, never>,
+  AllowedChildren extends RemoteComponentType<string, any> | boolean = true,
 >(
   componentType: Type | RemoteComponentType<Type, Props, AllowedChildren>,
   {emits: emitMap}: Options<Props> = {},
@@ -26,24 +26,30 @@ export function createRemoteVueComponent<
   const emits = emitMap ? Object.keys(emitMap) : undefined;
   const emitMethods =
     emits && emits.length > 0
-      ? emits.reduce<{[key: string]: Function}>((methods, eventName) => {
-          const propName = emitMap![eventName as keyof typeof emitMap];
-          methods[`emitter_${propName}`] = function (...args: any[]) {
-            this.$emit(eventName, ...args);
-          };
-          return methods;
-        }, {})
+      ? emits.reduce<Record<string, (...args: any[]) => any>>(
+          (methods, eventName) => {
+            const propName = emitMap![eventName as keyof typeof emitMap];
+            methods[`emitter_${propName}`] = function (...args: any[]) {
+              this.$emit(eventName, ...args);
+            };
+            return methods;
+          },
+          {},
+        )
       : undefined;
 
   const props = (instance: any) => {
     return emits && emits.length > 0
       ? {
           ...instance.$attrs,
-          ...emits.reduce<{[key: string]: Function}>((emitProps, eventName) => {
-            const propName = emitMap![eventName as keyof typeof emitMap];
-            emitProps[propName as string] = instance[`emitter_${propName}`];
-            return emitProps;
-          }, {}),
+          ...emits.reduce<Record<string, (...args: any[]) => any>>(
+            (emitProps, eventName) => {
+              const propName = emitMap![eventName as keyof typeof emitMap];
+              emitProps[propName as string] = instance[`emitter_${propName}`];
+              return emitProps;
+            },
+            {},
+          ),
         }
       : instance.$attrs;
   };

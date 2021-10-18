@@ -9,7 +9,7 @@ export function cloneElement<P>(
   props: Partial<P>,
   ...children: ComponentChildren[]
 ): VNode<P> {
-  const normalizedProps: Record<string, any> = {...vnode.props};
+  const normalizedProps: Record<string, unknown> = {...vnode.props};
   let key: Key | undefined;
   let ref: Ref<unknown> | undefined;
   let prop: string;

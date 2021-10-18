@@ -1,5 +1,6 @@
-import {createPackage, Runtime} from '@sewing-kit/config';
-import {defaultProjectPlugin} from '../../config/sewing-kit';
+import {createPackage, Runtime} from '@shopify/loom';
+
+import {defaultProjectPlugin} from '../../config/loom';
 
 export default createPackage((pkg) => {
   pkg.runtimes(Runtime.Node, Runtime.Browser);

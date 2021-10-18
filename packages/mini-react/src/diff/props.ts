@@ -1,4 +1,5 @@
 import {KIND_COMPONENT} from '@remote-ui/core';
+
 import type {RemoteNode} from '../types';
 
 export function diffProps(

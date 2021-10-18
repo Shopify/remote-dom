@@ -1,4 +1,5 @@
 import type {ComponentType, ReactNode} from 'react';
+
 import type {
   Controller,
   RemoteComponentProps,
@@ -7,7 +8,6 @@ import type {
   Renderer,
   RenderTextOptions,
 } from './types';
-
 import {renderComponent as defaultRenderComponent} from './RemoteComponent';
 import {renderText as defaultRenderText} from './RemoteText';
 

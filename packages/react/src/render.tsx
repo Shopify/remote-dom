@@ -11,6 +11,10 @@ export function render(
   // @see https://github.com/facebook/react/blob/993ca533b42756811731f6b7791ae06a35ee6b4d/packages/react-reconciler/src/ReactRootTags.js
   // I think we are a legacy root?
   const container = reconciler.createContainer(root, 0, false, null);
+
+  // Rule thinks we are in a React component, but we’re in a context that
+  // only creates this value once instead.
+  // eslint-disable-next-line react/jsx-no-constructed-context-values
   const renderContextValue = {root, reconciler};
 
   // callback is cast here because the typings do not mark that argument

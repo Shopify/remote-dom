@@ -17,16 +17,17 @@ type PropsFromNode<T> = NonNullable<T> extends Node<infer U> ? U : never;
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
+    // eslint-disable-next-line @typescript-eslint/ban-types
     interface Matchers<R, T = {}> {
       toHaveRemoteProps(props: Partial<PropsFromNode<T>>): void;
       toContainRemoteComponent<
-        Type extends RemoteComponentType<string, any, any>
+        Type extends RemoteComponentType<string, any, any>,
       >(
         type: Type,
         props?: Partial<PropsForRemoteComponent<Type>>,
       ): void;
       toContainRemoteComponentTimes<
-        Type extends RemoteComponentType<string, any, any>
+        Type extends RemoteComponentType<string, any, any>,
       >(
         type: Type,
         times: number,

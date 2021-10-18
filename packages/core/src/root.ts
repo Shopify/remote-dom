@@ -1,4 +1,5 @@
 import {RemoteComponentType} from '@remote-ui/types';
+
 import {
   ACTION_MOUNT,
   ACTION_INSERT_CHILD,
@@ -36,17 +37,17 @@ interface RootInternals {
   nodes: WeakSet<AnyNode>;
   tops: WeakMap<AnyNode, AnyParent>;
   parents: WeakMap<AnyNode, AnyParent>;
-  children: readonly AnyChild[];
+  children: ReadonlyArray<AnyChild>;
 }
 
 interface ComponentInternals {
   externalProps: {readonly [key: string]: any};
   internalProps: {readonly [key: string]: any};
-  children: readonly AnyChild[];
+  children: ReadonlyArray<AnyChild>;
 }
 
 interface FragmentInternals {
-  children: readonly AnyChild[];
+  children: ReadonlyArray<AnyChild>;
 }
 
 type ParentInternals = RootInternals | ComponentInternals | FragmentInternals;
@@ -60,7 +61,7 @@ const FUNCTION_CURRENT_IMPLEMENTATION_KEY = '__current';
 const EMPTY_OBJECT = {} as any;
 const EMPTY_ARRAY: any[] = [];
 
-type HotSwappableFunction<T extends Function> = T & {
+type HotSwappableFunction<T extends (...args: any[]) => any> = T & {
   [FUNCTION_CURRENT_IMPLEMENTATION_KEY]: any;
 };
 
@@ -69,7 +70,7 @@ export function createRemoteRoot<
     string,
     any
   > = RemoteComponentType<any, any>,
-  AllowedChildrenTypes extends AllowedComponents | boolean = true
+  AllowedChildrenTypes extends AllowedComponents | boolean = true,
 >(
   channel: RemoteChannel,
   {strict = true, components}: RemoteRootOptions<AllowedComponents> = {},
@@ -381,10 +382,8 @@ function updateProps(
   rootInternals: RootInternals,
 ) {
   const {strict} = rootInternals;
-  const {
-    internalProps: currentProps,
-    externalProps: currentExternalProps,
-  } = internals;
+  const {internalProps: currentProps, externalProps: currentExternalProps} =
+    internals;
 
   const normalizedNewProps: {[key: string]: any} = {};
   const hotSwapFunctions: HotSwapRecord[] = [];
@@ -583,6 +582,7 @@ function makeValueHotSwappable(value: unknown): unknown {
   return value;
 }
 
+// eslint-disable-next-line consistent-return
 function collectNestedHotSwappableValues(
   value: unknown,
 ): HotSwappableFunction<any>[] | undefined {
@@ -614,7 +614,7 @@ function appendChild(
 
   if (!nodes.has(child)) {
     throw new Error(
-      `Cannot append a node that was not created by this Remote Root`,
+      `Cannot append a node that was not created by this remote root`,
     );
   }
 
@@ -682,7 +682,7 @@ function insertChildBefore(
 
   if (!nodes.has(child)) {
     throw new Error(
-      `Cannot insert a node that was not created by this Remote Root`,
+      `Cannot insert a node that was not created by this remote root`,
     );
   }
 
@@ -844,6 +844,7 @@ function makeRemote<Root extends RemoteRoot<any, any>>(
 }
 
 function tryHotSwappingObjectValues(
+  // eslint-disable-next-line @typescript-eslint/ban-types
   currentValue: object,
   newValue: unknown,
 ): [any, HotSwapRecord[]?] {
@@ -868,9 +869,8 @@ function tryHotSwappingObjectValues(
     if (!(key in newValue)) {
       hasChanged = true;
 
-      const nestedHotSwappables = collectNestedHotSwappableValues(
-        currentObjectValue,
-      );
+      const nestedHotSwappables =
+        collectNestedHotSwappableValues(currentObjectValue);
 
       if (nestedHotSwappables) {
         hotSwaps.push(
@@ -956,9 +956,8 @@ function tryHotSwappingArrayValues(
     } else {
       hasChanged = true;
 
-      const nestedHotSwappables = collectNestedHotSwappableValues(
-        currentArrayValue,
-      );
+      const nestedHotSwappables =
+        collectNestedHotSwappableValues(currentArrayValue);
 
       if (nestedHotSwappables) {
         hotSwaps.push(

@@ -45,9 +45,10 @@ export function mount<Root extends RemoteRoot<any, any> = RemoteRoot<any, any>>(
     props,
     instance,
     children,
-  }: Pick<Node<Props>, 'type' | 'props' | 'instance' | 'children'>): Node<
-    Props
-  > {
+  }: Pick<
+    Node<Props>,
+    'type' | 'props' | 'instance' | 'children'
+  >): Node<Props> {
     const descendants = children.flatMap(getDescendants);
 
     function getDescendants(child: typeof children[number]): typeof children {
@@ -64,7 +65,8 @@ export function mount<Root extends RemoteRoot<any, any> = RemoteRoot<any, any>>(
         (element) =>
           isNode(element) &&
           element.type === type &&
-          (props == null || equalSubset(props, element.props as object)),
+          (props == null ||
+            equalSubset(props, element.props as Record<string, unknown>)),
       ) as any) ?? null;
 
     const node: Node<Props> & {[IS_NODE]: true} = {
@@ -88,7 +90,8 @@ export function mount<Root extends RemoteRoot<any, any> = RemoteRoot<any, any>>(
           (element) =>
             isNode(element) &&
             element.type === type &&
-            (props == null || equalSubset(props, element.props as object)),
+            (props == null ||
+              equalSubset(props, element.props as Record<string, unknown>)),
         ) as any,
 
       findWhere: (predicate) =>
@@ -250,9 +253,12 @@ function isPromise<T>(promise: unknown): promise is Promise<T> {
   return typeof (promise as any)?.then === 'function';
 }
 
-function equalSubset(subset: object, full: object) {
+function equalSubset(
+  subset: Record<string, unknown>,
+  full: Record<string, unknown>,
+) {
   return Object.keys(subset).every(
-    (key) => key in full && (full as any)[key] === (subset as any)[key],
+    (key) => key in full && full[key] === subset[key],
   );
 }
 

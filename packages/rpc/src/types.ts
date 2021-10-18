@@ -29,9 +29,10 @@ type AlwaysAsync<T> = T extends Promise<any>
   ? (...args: Args) => AlwaysAsync<TypeReturned>
   : T extends (infer ArrayElement)[]
   ? AlwaysAsync<ArrayElement>[]
-  : T extends readonly (infer ArrayElement)[]
-  ? readonly AlwaysAsync<ArrayElement>[]
-  : T extends object
+  : T extends ReadonlyArray<infer ArrayElement>
+  ? ReadonlyArray<AlwaysAsync<ArrayElement>>
+  : // eslint-disable-next-line @typescript-eslint/ban-types
+  T extends object
   ? {[K in keyof T]: AlwaysAsync<T[K]>}
   : T;
 
@@ -43,9 +44,10 @@ export type SafeRpcArgument<T> = T extends (
     : (...args: Args) => TypeReturned | Promise<TypeReturned>
   : T extends (infer ArrayElement)[]
   ? SafeRpcArgument<ArrayElement>[]
-  : T extends readonly (infer ArrayElement)[]
-  ? readonly SafeRpcArgument<ArrayElement>[]
-  : T extends object
+  : T extends ReadonlyArray<infer ArrayElement>
+  ? ReadonlyArray<SafeRpcArgument<ArrayElement>>
+  : // eslint-disable-next-line @typescript-eslint/ban-types
+  T extends object
   ? {[K in keyof T]: SafeRpcArgument<T[K]>}
   : T;
 

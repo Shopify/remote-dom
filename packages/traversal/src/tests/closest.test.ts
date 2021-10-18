@@ -2,7 +2,7 @@ import {createRemoteRoot, createRemoteComponent} from '@remote-ui/core';
 
 import {closest} from '../closest';
 
-const Target = createRemoteComponent('Target');
+const Target = createRemoteComponent<'Target', {disabled?: boolean}>('Target');
 const Descendant = createRemoteComponent('Descendant');
 
 describe('closest()', () => {
@@ -16,7 +16,7 @@ describe('closest()', () => {
     const root = createRemoteRoot(() => {});
     const descendant = root.createComponent(Descendant);
     root.appendChild(descendant);
-    expect(closest(descendant, Target)).toBe(null);
+    expect(closest(descendant, Target)).toBeNull();
   });
 
   it('returns the nearest matching ancestor', () => {

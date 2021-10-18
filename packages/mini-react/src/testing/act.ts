@@ -79,7 +79,7 @@ export function act(cb: () => void | Promise<void>) {
       teardown();
     } catch (currentError) {
       if (!error) {
-        error = currentError;
+        error = currentError as Error;
       }
     }
 
@@ -90,7 +90,7 @@ export function act(cb: () => void | Promise<void>) {
   try {
     result = cb();
   } catch (currentError) {
-    error = currentError;
+    error = currentError as Error;
   }
 
   if (isThenable(result)) {

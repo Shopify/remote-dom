@@ -1,4 +1,5 @@
 import htm from 'htm';
+
 import {h} from '.';
 
 export * from '.';

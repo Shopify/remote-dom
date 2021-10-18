@@ -8,12 +8,14 @@ import {
 import type {Retainer} from '../memory';
 import {StackFrame, isMemoryManageable} from '../memory';
 
+type AnyFunction = (...args: any[]) => any;
+
 const FUNCTION = '_@f';
 
 export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
-  const functionsToId = new Map<Function, string>();
-  const idsToFunction = new Map<string, Function>();
-  const idsToProxy = new Map<string, Function>();
+  const functionsToId = new Map<AnyFunction, string>();
+  const idsToFunction = new Map<string, AnyFunction>();
+  const idsToProxy = new Map<string, AnyFunction>();
 
   return {
     encode,
@@ -83,15 +85,15 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
     }
 
     if (typeof value === 'function') {
-      if (functionsToId.has(value)) {
-        const id = functionsToId.get(value)!;
+      if (functionsToId.has(value as AnyFunction)) {
+        const id = functionsToId.get(value as AnyFunction)!;
         return [{[FUNCTION]: id}];
       }
 
       const id = api.uuid();
 
-      functionsToId.set(value, id);
-      idsToFunction.set(id, value);
+      functionsToId.set(value as AnyFunction, id);
+      idsToFunction.set(id, value as AnyFunction);
 
       return [{[FUNCTION]: id}];
     }
