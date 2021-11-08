@@ -7,5 +7,6 @@
     "@remote-ui:registry": "https://registry.npmjs.org"
   },
   "license": "MIT",
-  "sideEffects": false
+  "sideEffects": false,
+  "files": []
 }
