@@ -13,5 +13,4 @@ export type {
 } from '../types';
 export {RemoteReceiverContext, ControllerContext} from './context';
 export {useRemoteReceiver, useAttached} from './hooks';
-export {useWorker} from './workers';
 export type {Controller, RemoteComponentProps, RemoteTextProps} from './types';

@@ -40,7 +40,6 @@
     "@remote-ui/async-subscription": "^2.1.7",
     "@remote-ui/core": "^2.1.6",
     "@remote-ui/rpc": "^1.2.5",
-    "@remote-ui/web-workers": "^1.5.7",
     "@types/react": ">=17.0.0 <18.0.0",
     "@types/react-reconciler": "^0.26.0",
     "react-reconciler": ">=0.26.0 <1.0.0"
