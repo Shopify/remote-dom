@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.3.0] - 2021-11-08
+
+### Breaking Change
+
+- The `useWorker()` export was removed from `@remote-ui/react/host`. If you want the same API, you can use [`@shopify/react-web-worker`](https://github.com/Shopify/quilt/tree/main/packages/react-web-worker) instead. This change was made as a result of [deprecating `@remote-ui/web-workers`](../web-workers).
+
 ## [4.2.2] - 2021-10-15
 
 - Prevented `children` from being rendered unnecessarily in React when a remote node does not have any children ([pull request](https://github.com/Shopify/remote-ui/pull/129))
