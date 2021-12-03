@@ -1,17 +1,21 @@
 import type {ReactElement} from 'react';
+import type {RemoteRoot} from '@remote-ui/core';
 
 import reconciler from './reconciler';
 import {RenderContext} from './context';
 
-export function render(
-  element: ReactElement,
-  root: import('@remote-ui/core').RemoteRoot<any, any>,
-  callback?: () => void,
-) {
+export function createContainer(root: RemoteRoot<any, any>) {
   // @see https://github.com/facebook/react/blob/993ca533b42756811731f6b7791ae06a35ee6b4d/packages/react-reconciler/src/ReactRootTags.js
   // I think we are a legacy root?
-  const container = reconciler.createContainer(root, 0, false, null);
+  return reconciler.createContainer(root, 0, false, null);
+}
 
+export function render(
+  element: ReactElement,
+  root: RemoteRoot<any, any>,
+  callback?: () => void,
+  container = createContainer(root),
+) {
   // Rule thinks we are in a React component, but we’re in a context that
   // only creates this value once instead.
   // eslint-disable-next-line react/jsx-no-constructed-context-values
