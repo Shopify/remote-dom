@@ -1,4 +1,4 @@
-import reactReconciler from 'react-reconciler';
+import reactReconciler, {Reconciler as ReactReconciler} from 'react-reconciler';
 import type {
   RemoteRoot,
   RemoteText,
@@ -6,33 +6,41 @@ import type {
   RemoteComponentType,
 } from '@remote-ui/core';
 
-const reconciler = reactReconciler<
-  // type
-  RemoteComponentType<string, any>,
-  // props
-  Record<string, unknown>,
-  // root container
+type Type = RemoteComponentType<string, any>;
+type Props = Record<string, unknown>;
+type ViewInstance = RemoteComponent<any, any>;
+type TextInstance = RemoteText<any>;
+type HostContext = Record<string, never>;
+type UpdatePayload = Record<string, unknown>;
+type SuspenseInstance = never;
+type PublicInstance = unknown;
+type HydratableInstance = unknown;
+type ChildSet = unknown;
+type TimeoutHandle = unknown;
+type NoTimeout = unknown;
+
+export type Reconciler = ReactReconciler<
   RemoteRoot,
-  // view instance
-  RemoteComponent<any, any>,
-  // text instance
-  RemoteText<any>,
-  // suspense instance
-  never,
-  // hydratable instance
-  unknown,
-  // public instance
-  unknown,
-  // host context
-  Record<string, never>,
-  // update payload
-  Record<string, unknown>,
-  // child set
-  unknown,
-  // timeout handle
-  unknown,
-  // notimeout
-  unknown
+  ViewInstance,
+  TextInstance,
+  SuspenseInstance,
+  PublicInstance
+>;
+
+export const reconciler = reactReconciler<
+  Type,
+  Props,
+  RemoteRoot,
+  ViewInstance,
+  TextInstance,
+  SuspenseInstance,
+  HydratableInstance,
+  PublicInstance,
+  HostContext,
+  UpdatePayload,
+  ChildSet,
+  TimeoutHandle,
+  NoTimeout
 >({
   now: Date.now,
 
@@ -173,5 +181,3 @@ const {hasOwnProperty} = {};
 function has(object: object, property: string | number | symbol) {
   return hasOwnProperty.call(object, property);
 }
-
-export default reconciler;

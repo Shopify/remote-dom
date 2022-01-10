@@ -48,6 +48,42 @@ render(<App />, remoteRoot);
 
 As you add, remove, and update host components in your React tree, this renderer will output those operations to the `RemoteRoot`. Since remote components are just a combination of a name and allowed properties, they map exactly to React components, which behave the same way.
 
+Updating the the root React element for a given remote root can be done by calling the `render()` function again. For example, the root React element can be updated in an effect to receive updated props when they change:
+
+```tsx
+import {useEffect, useMemo} from 'react';
+import {render, createRemoteRoot} from '@remote-ui/react';
+
+// A remote component
+const Button = createRemoteReactComponent<'Button', {onPress(): void}>(
+  'Button',
+);
+
+function App({count, onPress}: {count: number; onPress(): void}) {
+  return <Button onPress={onPress}>I was clicked {count} time(s)</Button>;
+}
+
+function MyRemoteRenderer() {
+  const remoteRoot = useMemo(() => {
+    // Assuming we get a function that will communicate with the host...
+    const channel = () => {};
+
+    return createRemoteRoot(channel, {
+      components: [Button],
+    });
+  }, []);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    // We update the root component by calling `render` whenever `count` changes
+    render(
+      <App count={count} onPress={() => setCount((count) => count + 1)} />,
+      remoteRoot,
+    );
+  }, [count, remoteRoot]);
+}
+```
+
 #### `createRemoteReactComponent()`
 
 In the example above, our `Button` component was not strongly typed. Like with [`@remote-ui/core`’s `createRemoteComponent`](../core#createremotecomponent), We can use the `createRemoteReactComponent` function from this library to create a strongly typed component to use. `@remote-ui/react`’s API is the exact same as `createRemoteComponent` (including the same type arguments), but the value returned is both a `RemoteComponentType` _and_ a `ReactComponentType`, both with appropriate prop types.
