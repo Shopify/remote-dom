@@ -1,6 +1,6 @@
 # Polyfills
 
-The default builds of packages in this repo (the ones you’d get if you `require('@remote-ui/x')` or `import {} from '@remote-ui/x'`) include the polyfills necessary for that code to run. This is done to prevent accidentally shipping a feature based on remote-ui that fails in older browsers, which do not have some of the globals (like `WeakSet` or `Symbol`) that the libraries use internally. The polyfills are inlined with Babel.
+The default builds of packages in this repo (the ones you’d get if you `require('@remote-ui/x')` or `import {} from '@remote-ui/x'`) include the polyfills necessary for that code to run. This is done to prevent accidentally shipping a feature based on remote-ui that fails in older browsers, which do not have some of the globals (like `WeakSet`, `WeakMap`, or `Symbol`) that the libraries use internally. The polyfills are inlined with Babel.
 
 Some projects will have an existing conditional polyfilling setup that they may prefer to use. For example, at Shopify, we render multiple versions of our apps, targeting different browser groups, and we want all code (including as many of our apps’ dependencies as possible) to only have the minimal number of language features transpiled, and polyfills imported, for that browser support.
 
