@@ -10,23 +10,11 @@ jobs:
       - uses: actions/checkout@v1
         name: Checkout
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         name: Setup node.js and yarn
         with:
-          node-version: 12.16.3
-
-      - name: Get yarn cache directory
-        id: yarn-cache-get-dir
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - uses: actions/cache@v1
-        id: yarn-cache
-        name: Restore yarn cache
-        with:
-          path: ${{ steps.yarn-cache-get-dir.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          cache: yarn
+          node-version-file: '.nvmrc'
 
       - name: Yarn install
         run: yarn install --frozen-lockfile
@@ -50,23 +38,11 @@ jobs:
       - uses: actions/checkout@v1
         name: Checkout
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         name: Setup node.js and yarn
         with:
-          node-version: 12.16.3
-
-      - name: Get yarn cache directory
-        id: yarn-cache-get-dir
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - uses: actions/cache@v1
-        id: yarn-cache
-        name: Restore yarn cache
-        with:
-          path: ${{ steps.yarn-cache-get-dir.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          cache: yarn
+          node-version-file: '.nvmrc'
 
       - name: Yarn install
         run: yarn install --frozen-lockfile
@@ -90,23 +66,11 @@ jobs:
       - uses: actions/checkout@v1
         name: Checkout
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         name: Setup node.js and yarn
         with:
-          node-version: 12.16.3
-
-      - name: Get yarn cache directory
-        id: yarn-cache-get-dir
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - uses: actions/cache@v1
-        id: yarn-cache
-        name: Restore yarn cache
-        with:
-          path: ${{ steps.yarn-cache-get-dir.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          cache: yarn
+          node-version-file: '.nvmrc'
 
       - name: Yarn install
         run: yarn install --frozen-lockfile
