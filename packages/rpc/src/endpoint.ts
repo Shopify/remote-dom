@@ -187,7 +187,6 @@ export function createEndpoint<T>(
         } catch (error) {
           const {name, message, stack} = error as Error;
           send(RESULT, [id, {name, message, stack}]);
-          throw error;
         } finally {
           stackFrame.release();
         }
@@ -228,7 +227,6 @@ export function createEndpoint<T>(
         } catch (error) {
           const {name, message, stack} = error as Error;
           send(FUNCTION_RESULT, [callId, {name, message, stack}]);
-          throw error;
         }
 
         break;
@@ -239,14 +237,18 @@ export function createEndpoint<T>(
   function handlerForCall(property: string | number | symbol) {
     return (...args: any[]) => {
       if (terminated) {
-        throw new Error(
-          'You attempted to call a function on a terminated web worker.',
+        return Promise.reject(
+          new Error(
+            'You attempted to call a function on a terminated web worker.',
+          ),
         );
       }
 
       if (typeof property !== 'string' && typeof property !== 'number') {
-        throw new Error(
-          `Can’t call a symbol method on a remote endpoint: ${property.toString()}`,
+        return Promise.reject(
+          new Error(
+            `Can’t call a symbol method on a remote endpoint: ${property.toString()}`,
+          ),
         );
       }
 

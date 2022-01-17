@@ -6,9 +6,11 @@ const PLUGIN = 'RemoteUi.DefaultProject';
 export function defaultProjectPlugin({react = false} = {}) {
   return createComposedProjectPlugin<Package>(PLUGIN, [
     buildLibrary({
-      jestEnvironment: 'jsdom',
-      browserTargets: 'extends @shopify/browserslist-config',
-      nodeTargets: 'node 12.13',
+      commonjs: true,
+      esmodules: true,
+      esnext: true,
+      targets: 'extends @shopify/browserslist-config, node 12.13',
+      jestTestEnvironment: 'jsdom',
     }),
     babel({
       config: {

@@ -152,7 +152,7 @@ describe('root', () => {
       const queryValue = receivedResourceList.props.filterControl.queryValue;
       receivedResourceList.props.filterControl.onQueryChange();
 
-      expect(queryValue).toStrictEqual('bar');
+      expect(queryValue).toBe('bar');
       expect(funcOne).not.toHaveBeenCalled();
       expect(funcTwo).toHaveBeenCalled();
     });

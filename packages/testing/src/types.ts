@@ -59,8 +59,7 @@ type DeepPartial<T> = T extends (infer U)[]
   ? DeepPartial<U>[]
   : T extends ReadonlyArray<infer U>
   ? ReadonlyArray<DeepPartial<U>>
-  : // eslint-disable-next-line @typescript-eslint/ban-types
-  T extends object
+  : T extends object
   ? {
       [K in keyof T]?: DeepPartial<T[K]>;
     }
