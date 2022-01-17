@@ -10,7 +10,11 @@ export default createPackage((pkg) => {
   pkg.entry({name: 'htm', root: './src/htm-binding.ts'});
   pkg.entry({name: 'jsx-runtime', root: './src/jsx-runtime.ts'});
   pkg.entry({name: 'jsx-dev-runtime', root: './src/jsx-runtime.ts'});
-  pkg.entry({name: 'testing', root: './src/testing/index.ts', runtime: Runtime.Node});
+  pkg.entry({
+    name: 'testing',
+    root: './src/testing/index.ts',
+    runtime: Runtime.Node,
+  });
   pkg.use(
     defaultProjectPlugin({react: true}),
     createProjectTestPlugin('AliasRUIReactTesting', ({hooks}) => {

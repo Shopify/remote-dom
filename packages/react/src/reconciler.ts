@@ -177,7 +177,7 @@ function handleErrorInNextTick(error: Error) {
 }
 
 const {hasOwnProperty} = {};
-// eslint-disable-next-line @typescript-eslint/ban-types
+
 function has(object: object, property: string | number | symbol) {
   return hasOwnProperty.call(object, property);
 }

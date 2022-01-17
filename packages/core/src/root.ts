@@ -844,7 +844,6 @@ function makeRemote<Root extends RemoteRoot<any, any>>(
 }
 
 function tryHotSwappingObjectValues(
-  // eslint-disable-next-line @typescript-eslint/ban-types
   currentValue: object,
   newValue: unknown,
 ): [any, HotSwapRecord[]?] {

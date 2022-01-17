@@ -91,7 +91,7 @@ describe('createEndpoint()', () => {
       expect(spy).toHaveBeenCalled();
     });
 
-    it('throws an error when calling a method on a terminated endpoint', () => {
+    it('throws an error when calling a method on a terminated endpoint', async () => {
       const {port1} = new MessageChannel();
       const endpoint = createEndpoint<{hello(): string}>(
         fromMessagePort(port1),
@@ -99,7 +99,9 @@ describe('createEndpoint()', () => {
 
       endpoint.terminate();
 
-      expect(() => endpoint.call.hello()).toThrow(/terminated/);
+      await expect(endpoint.call.hello()).rejects.toMatchObject({
+        message: expect.stringContaining('terminated'),
+      });
     });
   });
 });
