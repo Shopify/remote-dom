@@ -20,7 +20,7 @@ Clone this repo, then run `yarn install`. This repo uses [yarn](https://yarnpkg.
 
 ### Development tasks
 
-remote-ui uses [sewing-kit](https://github.com/lemonmade/sewing-kit), a work-in-progress extraction of some of Shopify’s front-end build tools, for all development tasks. You will see `sewing-kit.config.ts` files at the root of the repo, and for each package, which control the way those packages are built, tested, and more.
+remote-ui uses [loom](https://www.npmjs.com/package/@shopify/loom-cli), a work-in-progress extraction of some of Shopify’s front-end build tools, for all development tasks. You will see `loom.config.ts` files at the root of the repo, and for each package, which control the way those packages are built, tested, and more.
 
 #### Type check
 
@@ -36,7 +36,7 @@ Run `yarn lint`, which will run the entire codebase through [ESLint](https://esl
 
 Run `yarn test`, which will run all tests in the repo in [jest’s](https://jestjs.io) watch mode.
 
-Tests are currently a little sparse, focused mostly on ensuring good end-to-end behavior when using all the libraries together. Additional tests can be added for public APIs in each package by including files with a `.test.ts` or `.test.tsx` extension. Make sure you adhere to the structure of the other tests in the repo, and it would be extra appreciated if you understand a little about [Shopify’s approach to front-end testing](https://github.com/Shopify/web-foundation/blob/master/handbook/Best%20practices/Testing.md).
+Tests are currently a little sparse, focused mostly on ensuring good end-to-end behavior when using all the libraries together. Additional tests can be added for public APIs in each package by including files with a `.test.ts` or `.test.tsx` extension. Make sure you adhere to the structure of the other tests in the repo, and it would be extra appreciated if you understand a little about [Shopify’s approach to front-end testing (sorry to external contributors, this is an internal Shopify link)](https://github.com/Shopify/web-foundations/blob/main/handbook/Best%20Practices/Testing.md).
 
 #### Build
 
@@ -52,10 +52,10 @@ If you are fixing a minor issue, feel free to send a pull request directly. If y
 
 **Before submitting a pull request**, please:
 
-1. Fork the repository and create your branch from `master`
+1. Fork the repository and create your branch from `main`
 1. Run `yarn install` from the repository root
 1. Make sure your changes do not cause errors to be thrown when running `yarn test`, `yarn lint`, or `yarn type-check` (these will also be checked automatically when you open your pull request, as they run as part of remote-ui’s [GitHub Action-based CI](./.github/workflows/ci.yml))
-1. Add a description of your changes to the [consolidated changelog](./CHANGELOG.md)
+1. Add a description of your changes to package’s `CHANGELOG.md`
 1. If you haven’t already, [sign a Contributor License Agreement](https://cla.shopify.com/)
 
 #### Contributor License Agreement (CLA)
