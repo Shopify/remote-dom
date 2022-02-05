@@ -1,4 +1,4 @@
-import {useEffect, useContext, createContext} from 'react';
+import {useEffect, useContext, createContext, ReactNode, Fragment} from 'react';
 import {render as domRender} from 'react-dom';
 import {act as domAct} from 'react-dom/test-utils';
 import {createRemoteRoot, createRemoteReceiver} from '@remote-ui/core';
@@ -22,6 +22,11 @@ const RemoteWithPerson = createRemoteReactComponent<
 >('WithPerson');
 
 const RemoteImage = createRemoteReactComponent<'Image', {src: string}>('Image');
+
+const RemoteWithChild = createRemoteReactComponent<
+  'WithChild',
+  {title: string | RemoteFragment}
+>('WithChild', {fragmentProps: ['title']});
 
 const PersonContext = createContext({name: 'Mollie'});
 
@@ -48,6 +53,18 @@ function HostImage(
 ) {
   // eslint-disable-next-line jsx-a11y/alt-text
   return <img {...props} />;
+}
+
+function HostWithChild({
+  title,
+  children,
+}: ReactPropsFromRemoteComponentType<typeof RemoteWithChild>) {
+  return (
+    <>
+      {title}
+      {children}
+    </>
+  );
 }
 
 describe('@remote-ui/react', () => {
@@ -196,5 +213,33 @@ describe('@remote-ui/react', () => {
       jest.runAllTimers();
     });
     expect(appElement.innerHTML).toBe(`<img src="https://shopify.com">`);
+  });
+
+  it('renders a single child when there are fragment props', () => {
+    const receiver = createRemoteReceiver();
+    const remoteRoot = createRemoteRoot(receiver.receive, {
+      components: [RemoteWithChild.displayName!],
+    });
+
+    function RemoteApp() {
+      return <RemoteWithChild title="hello">{null}</RemoteWithChild>;
+    }
+
+    const controller = createController({
+      WithChild: HostWithChild,
+    });
+
+    function HostApp() {
+      return <RemoteRenderer controller={controller} receiver={receiver} />;
+    }
+
+    domAct(() => {
+      domRender(<HostApp />, appElement);
+      render(<RemoteApp />, remoteRoot, () => {
+        remoteRoot.mount();
+      });
+      jest.runAllTimers();
+    });
+    expect(appElement.innerHTML).toBe('hello');
   });
 });
