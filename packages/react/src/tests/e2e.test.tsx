@@ -23,10 +23,10 @@ const RemoteWithPerson = createRemoteReactComponent<
 
 const RemoteImage = createRemoteReactComponent<'Image', {src: string}>('Image');
 
-const RemoteWithChild = createRemoteReactComponent<
-  'WithChild',
+const RemoteWithFragment = createRemoteReactComponent<
+  'WithFragment',
   {title: string | RemoteFragment}
->('WithChild', {fragmentProps: ['title']});
+>('WithFragment', {fragmentProps: ['title']});
 
 const PersonContext = createContext({name: 'Mollie'});
 
@@ -55,10 +55,10 @@ function HostImage(
   return <img {...props} />;
 }
 
-function HostWithChild({
+function HostWithFragment({
   title,
   children,
-}: ReactPropsFromRemoteComponentType<typeof RemoteWithChild>) {
+}: ReactPropsFromRemoteComponentType<typeof RemoteWithFragment>) {
   return (
     <>
       {title}
@@ -218,15 +218,15 @@ describe('@remote-ui/react', () => {
   it('renders a single child when there are fragment props', () => {
     const receiver = createRemoteReceiver();
     const remoteRoot = createRemoteRoot(receiver.receive, {
-      components: [RemoteWithChild.displayName!],
+      components: [RemoteWithFragment.displayName!],
     });
 
     function RemoteApp() {
-      return <RemoteWithChild title="hello">{null}</RemoteWithChild>;
+      return <RemoteWithFragment title="hello">{null}</RemoteWithFragment>;
     }
 
     const controller = createController({
-      WithChild: HostWithChild,
+      WithFragment: HostWithFragment,
     });
 
     function HostApp() {
