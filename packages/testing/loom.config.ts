@@ -6,5 +6,5 @@ export default createPackage((pkg) => {
   pkg.runtimes(Runtime.Node);
   pkg.entry({root: './src/index.ts'});
   pkg.entry({name: 'matchers', root: './src/matchers/index.ts'});
-  pkg.use(defaultProjectPlugin());
+  pkg.use(defaultProjectPlugin({react: true}));
 });

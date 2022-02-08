@@ -60,11 +60,26 @@ export function mount<Root extends RemoteRoot<any, any> = RemoteRoot<any, any>>(
       ];
     }
 
+    const getTypeString = (type: any) => {
+      // Components that have fragment props are put into a ComponentWrapper which makes their
+      // `type` an object rather than a string. This function grabs the `displayName` string from
+      // that object so that `find` works.
+      if (
+        typeof type === 'object' &&
+        type?.type?.name === 'ComponentWrapper' &&
+        type?.type?.displayName
+      ) {
+        return type.type.displayName;
+      }
+
+      return type;
+    };
+
     const find: Node<Props>['find'] = (type, props) =>
       (descendants.find(
         (element) =>
           isNode(element) &&
-          element.type === type &&
+          element.type === getTypeString(type) &&
           (props == null ||
             equalSubset(props, element.props as Record<string, unknown>)),
       ) as any) ?? null;
@@ -89,7 +104,7 @@ export function mount<Root extends RemoteRoot<any, any> = RemoteRoot<any, any>>(
         descendants.filter(
           (element) =>
             isNode(element) &&
-            element.type === type &&
+            element.type === getTypeString(type) &&
             (props == null ||
               equalSubset(props, element.props as Record<string, unknown>)),
         ) as any,
