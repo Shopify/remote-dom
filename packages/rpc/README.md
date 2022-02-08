@@ -331,42 +331,42 @@ This library also provides a collection of adaptors that transform common `postM
 - `fromWebWorker()` allows you to create an `Endpoint` from a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers):
 
   ```ts
-  import {fromWebWorker} from '@remote-ui/rpc';
+  import {createEndpoint, fromWebWorker} from '@remote-ui/rpc';
 
   const worker = new Worker('./worker.js', import.meta.url);
-  const endpoint = fromWebWorker(worker);
+  const endpoint = createEndpoint(fromWebWorker(worker));
   ```
 
 - `fromMessagePort()` allows you to create an `Endpoint` from a [`MessagePort` object](https://developer.mozilla.org/en-US/docs/Web/API/MessagePort)
 
   ```ts
-  import {fromMessagePort} from '@remote-ui/rpc';
+  import {createEndpoint, fromMessagePort} from '@remote-ui/rpc';
 
   const channel = new MessageChannel();
-  const endpoint = fromWebWorker(channel.port2);
+  const endpoint = createEndpoint(fromWebWorker(channel.port2));
   ```
 
 - `fromIframe()` allows you to create an `Endpoint` from a browser window by connecting it to a child `iframe`:
 
   ```ts
-  import {fromIframe} from '@remote-ui/rpc';
+  import {createEndpoint, fromIframe} from '@remote-ui/rpc';
 
   const iframe = document.createElement('iframe');
   iframe.setAttribute('src', '/my-iframe-page');
   document.appendChild(iframe);
 
-  const endpoint = fromIframe(iframe);
+  const endpoint = createEndpoint(fromIframe(iframe));
 
   // Optionally, you can pass {terminate: false} to prevent the iframe from being
   // removed from the DOM when the endpoint is terminated:
-  const endpoint2 = fromIframe(iframe, {terminate: false});
+  const endpoint2 = createEndpoint(fromIframe(iframe, {terminate: false}));
   ```
 
 - `fromInsideIframe()` allows you to create an `Endpoint` from a parent browser window, from _within_ a child `iframe`:
 
   ```ts
   // Can only be run from inside an iframe, where `self.parent` is available
-  import {fromInsideIframe} from '@remote-ui/rpc';
+  import {createEndpoint, fromInsideIframe} from '@remote-ui/rpc';
 
-  const endpoint = fromInsideIframe();
+  const endpoint = createEndpoint(fromInsideIframe());
   ```
