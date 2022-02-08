@@ -1,4 +1,4 @@
-import {isValidElement, memo, useMemo, useRef} from 'react';
+import {isValidElement, memo, useMemo, useRef, Children} from 'react';
 import type {ComponentType} from 'react';
 import {isRemoteFragment} from '@remote-ui/core';
 import type {RemoteComponentType, RemoteFragment} from '@remote-ui/core';
@@ -77,7 +77,10 @@ function createComponentWrapper<T, P>(
         }
       }
 
-      return {props, children: [...externalChildren, ...portals]};
+      return {
+        props,
+        children: [...Children.toArray(externalChildren), ...portals],
+      };
     }, [externalChildren, externalProps, root, reconciler, fragments]);
 
     return <Component {...props}>{children}</Component>;

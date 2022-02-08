@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Fixed rendering a single child inside a component that takes `fragmentProps`.
+
 ## [4.4.0] - 2022-01-13
 
 - Calling `render()` multiple times with the same `RemoteRoot` now updates the root React element being rendered to the `RemoteRoot` ([pull request](https://github.com/Shopify/remote-ui/pull/134)).
