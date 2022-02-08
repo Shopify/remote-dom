@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Fixed rendering a single child inside a component that takes `fragmentProps`.
+## [4.4.2]
+
+- Fixed rendering a single child inside a component that takes `fragmentProps` ([pull request](https://github.com/Shopify/remote-ui/pull/138)).
 
 ## [4.4.0] - 2022-01-13
 
