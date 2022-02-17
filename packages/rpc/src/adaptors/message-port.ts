@@ -1,6 +1,7 @@
 import type {MessageEndpoint} from '../types';
 
 export function fromMessagePort(messagePort: MessagePort): MessageEndpoint {
+  messagePort.start();
   return {
     postMessage: (...args: [any, Transferable[]]) =>
       messagePort.postMessage(...args),

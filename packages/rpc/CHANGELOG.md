@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Ensure that the MessagePort is started when creating a new MessageEndpoint using `fromMessagePort`.
+
 ## [1.2.6] - 2022-01-25
 
 - Stopped throwing an error in some `postMessage` event handlers, which prevents unhandled promise rejection listeners from running unnecessarily.

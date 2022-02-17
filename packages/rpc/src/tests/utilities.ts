@@ -1,24 +1,36 @@
 class MessagePortPolyfill implements MessagePort {
-  onmessage: EventListener | null = null;
   onmessageerror: EventListener | null = null;
 
   otherPort!: MessagePortPolyfill;
   private listeners = new Set<EventListener>();
 
+  // MessagePort does not send messages unless it is started via start() or attaching .onmessage
+  // https://developer.mozilla.org/en-US/docs/Web/API/MessagePort/start
+  private started = false;
+  private _onmessage: EventListener | null = null;
+
+  public set onmessage(listener: EventListener | null) {
+    // setting onmessage will start the port, even if the listener is null.
+    this._onmessage = listener;
+    this.start();
+  }
+
   dispatchEvent(event: Event) {
-    if (this.onmessage) {
-      this.onmessage(event);
+    if (this._onmessage) {
+      this._onmessage(event);
     }
 
-    for (const listener of this.listeners) {
-      listener(event);
+    if (this.started) {
+      for (const listener of this.listeners) {
+        listener(event);
+      }
     }
 
     return true;
   }
 
   postMessage(message: any) {
-    if (!this.otherPort) {
+    if (!this.otherPort || !this.started) {
       return;
     }
 
@@ -41,8 +53,13 @@ class MessagePortPolyfill implements MessagePort {
     this.listeners.delete(listener);
   }
 
-  start() {}
-  close() {}
+  start() {
+    this.started = true;
+  }
+
+  close() {
+    this.started = false;
+  }
 }
 
 class MessageChannelPolyfill implements MessageChannel {
