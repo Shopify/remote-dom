@@ -16,14 +16,16 @@ class MessagePortPolyfill implements MessagePort {
   }
 
   dispatchEvent(event: Event) {
+    if (!this.started) {
+      return true;
+    }
+
     if (this._onmessage) {
       this._onmessage(event);
     }
 
-    if (this.started) {
-      for (const listener of this.listeners) {
-        listener(event);
-      }
+    for (const listener of this.listeners) {
+      listener(event);
     }
 
     return true;
