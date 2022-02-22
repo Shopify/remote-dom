@@ -1,27 +1,5 @@
-import {useState, useDebugValue, useContext, useEffect} from 'react';
+import {useState, useDebugValue, useEffect} from 'react';
 import type {RemoteReceiver, RemoteReceiverAttachable} from '@remote-ui/core';
-
-import {ControllerContext, RemoteReceiverContext} from './context';
-
-export function useController() {
-  const controller = useContext(ControllerContext);
-
-  if (controller == null) {
-    throw new Error('No remote-ui Controller instance found in context');
-  }
-
-  return controller;
-}
-
-export function useRemoteReceiver() {
-  const receiver = useContext(RemoteReceiverContext);
-
-  if (receiver == null) {
-    throw new Error('No remote-ui Receiver instance found in context');
-  }
-
-  return receiver;
-}
 
 interface State<T extends RemoteReceiverAttachable> {
   receiver: RemoteReceiver;
