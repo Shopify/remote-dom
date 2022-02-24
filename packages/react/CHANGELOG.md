@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.4.3]
+
+- Removed some unused hooks and context ([pull request](https://github.com/Shopify/remote-ui/pull/145))
+
 ## [4.4.2]
 
 - Fixed rendering a single child inside a component that takes `fragmentProps` ([pull request](https://github.com/Shopify/remote-ui/pull/138)).
