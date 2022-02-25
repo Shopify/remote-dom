@@ -45,7 +45,7 @@ const root = createRemoteRoot(receiver.receive, {
 
 #### `RemoteRoot`
 
-The output of `createRemoteRoot` is a `RemoteRoot`. This object has methods methods for mutating the tree:
+The output of `createRemoteRoot` is a `RemoteRoot`. This object has methods for mutating the tree:
 
 ##### `RemoteRoot#createText()`
 
