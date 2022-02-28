@@ -59,7 +59,7 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
 
   function encode(value: unknown): [any, Transferable[]?] {
     if (typeof value === 'object') {
-      if (value == null) {
+      if (value == null || value instanceof File) {
         return [value];
       }
 
@@ -105,6 +105,10 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
     if (typeof value === 'object') {
       if (value == null) {
         return value as any;
+      }
+
+      if (value instanceof File) {
+        return value;
       }
 
       if (Array.isArray(value)) {
