@@ -10,7 +10,7 @@ class MessagePortPolyfill implements MessagePort {
   private _onmessage: EventListener | null = null;
 
   // If the port is not yet started, messages will be queued for sending.
-  private messageQueue: Event[] = [];
+  private eventQueue: Event[] = [];
 
   get onmessage() {
     return this._onmessage;
@@ -24,7 +24,7 @@ class MessagePortPolyfill implements MessagePort {
 
   dispatchEvent(event: Event) {
     if (!this.started) {
-      this.messageQueue.push(event);
+      this.eventQueue.push(event);
       return true;
     }
 
@@ -65,8 +65,8 @@ class MessagePortPolyfill implements MessagePort {
 
   start() {
     this.started = true;
-    while (this.messageQueue.length > 0) {
-      const event = this.messageQueue.shift();
+    while (this.eventQueue.length > 0) {
+      const event = this.eventQueue.shift();
       if (event) {
         this.dispatchEvent(event);
       }
