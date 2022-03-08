@@ -63,6 +63,10 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
         return [value];
       }
 
+      if (value instanceof ArrayBuffer) {
+        return [value];
+      }
+
       const transferables: Transferable[] = [];
 
       if (Array.isArray(value)) {
@@ -105,6 +109,10 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
     if (typeof value === 'object') {
       if (value == null) {
         return value as any;
+      }
+
+      if (value instanceof ArrayBuffer) {
+        return value;
       }
 
       if (Array.isArray(value)) {
