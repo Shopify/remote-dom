@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Allow `ArrayBuffer` to be sent over the rpc layer ([pull request](https://github.com/Shopify/remote-ui/pull/147)).
+
 ## [1.2.6] - 2022-01-25
 
 - Stopped throwing an error in some `postMessage` event handlers, which prevents unhandled promise rejection listeners from running unnecessarily.
