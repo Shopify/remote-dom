@@ -38,6 +38,7 @@ export const RemoteComponent = memo(function RemoteComponent({
   receiver,
   component,
   controller,
+  ...otherProps
 }: RemoteComponentProps) {
   const Implementation = controller.get(component.type)!;
 
@@ -69,11 +70,11 @@ export const RemoteComponent = memo(function RemoteComponent({
   const {children} = attached;
 
   if (children.length === 0) {
-    return <Implementation {...props} />;
+    return <Implementation {...otherProps} {...props} />;
   }
 
   return (
-    <Implementation {...props}>
+    <Implementation {...otherProps} {...props}>
       {renderChildren(children, receiver, controller)}
     </Implementation>
   );
