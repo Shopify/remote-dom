@@ -6,6 +6,8 @@ import {MessageChannel} from './utilities';
 describe('createEndpoint()', () => {
   it('calls the exposed API of the paired endpoint', async () => {
     const {port1, port2} = new MessageChannel();
+    port1.start();
+    port2.start();
     const endpoint1 = createEndpoint<{hello(): string}>(fromMessagePort(port1));
     const endpoint2 = createEndpoint(fromMessagePort(port2));
 
@@ -18,6 +20,8 @@ describe('createEndpoint()', () => {
   describe('#replace()', () => {
     it('replaces the underlying messenger', async () => {
       const {port1, port2} = new MessageChannel();
+      port1.start();
+      port2.start();
 
       const endpoint1 = createEndpoint<{hello(): string}>(
         fromMessagePort(port1),
@@ -26,6 +30,8 @@ describe('createEndpoint()', () => {
       endpoint2.expose({hello: () => 'world'});
 
       const {port1: newPort1, port2: newPort2} = new MessageChannel();
+      newPort1.start();
+      newPort2.start();
       endpoint1.replace(fromMessagePort(newPort1));
       endpoint2.replace(fromMessagePort(newPort2));
 
@@ -36,6 +42,8 @@ describe('createEndpoint()', () => {
   describe('#expose()', () => {
     it('allows a new method to be called from the paired endpoint', async () => {
       const {port1, port2} = new MessageChannel();
+      port1.start();
+      port2.start();
 
       const endpoint1 = createEndpoint<{hello(): string}>(
         fromMessagePort(port1),
@@ -53,6 +61,8 @@ describe('createEndpoint()', () => {
 
     it('deletes an exposed value by passing undefined', async () => {
       const {port1, port2} = new MessageChannel();
+      port1.start();
+      port2.start();
 
       const endpoint1 = createEndpoint<{hello(): string}>(
         fromMessagePort(port1),
@@ -71,6 +81,7 @@ describe('createEndpoint()', () => {
   describe('#terminate()', () => {
     it('calls terminate on the message endpoint', () => {
       const {port1} = new MessageChannel();
+      port1.start();
       const messenger = fromMessagePort(port1);
       const endpoint = createEndpoint(messenger);
 
@@ -83,6 +94,7 @@ describe('createEndpoint()', () => {
     it('calls terminate on the encoding strategy', () => {
       const spy = jest.fn();
       const {port1} = new MessageChannel();
+      port1.start();
       const endpoint = createEndpoint(fromMessagePort(port1), {
         createEncoder: () => ({terminate: spy} as any),
       });
@@ -93,6 +105,7 @@ describe('createEndpoint()', () => {
 
     it('throws an error when calling a method on a terminated endpoint', async () => {
       const {port1} = new MessageChannel();
+      port1.start();
       const endpoint = createEndpoint<{hello(): string}>(
         fromMessagePort(port1),
       );
