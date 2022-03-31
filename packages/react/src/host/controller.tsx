@@ -8,8 +8,8 @@ import type {
   Renderer,
   RenderTextOptions,
 } from './types';
-import {renderComponent as defaultRenderComponent} from './RemoteComponent';
-import {renderText as defaultRenderText} from './RemoteText';
+import {RemoteComponent} from './RemoteComponent';
+import {RemoteText} from './RemoteText';
 
 export interface ComponentMapping {
   [key: string]: ComponentType<any>;
@@ -31,6 +31,25 @@ export function createController(
   }: Partial<RendererFactory> = {},
 ): Controller {
   const registry = new Map(Object.entries(components));
+
+  const defaultRenderComponent: Renderer['renderComponent'] = ({
+    parent,
+    component,
+    controller,
+    receiver,
+    key,
+  }) => {
+    return (
+      <RemoteComponent
+        parent={parent}
+        component={component}
+        controller={controller}
+        receiver={receiver}
+        key={key}
+      />
+    );
+  };
+
   const renderComponent: Renderer['renderComponent'] = externalRenderComponent
     ? (componentProps) =>
         externalRenderComponent(componentProps, {
@@ -39,6 +58,18 @@ export function createController(
           },
         })
     : defaultRenderComponent;
+
+  const defaultRenderText: Renderer['renderText'] = ({
+    key,
+    receiver,
+    text,
+    parent,
+  }) => {
+    return (
+      <RemoteText key={key} receiver={receiver} text={text} parent={parent} />
+    );
+  };
+
   const renderText: Renderer['renderText'] = externalRenderText
     ? (textProps) =>
         externalRenderText(textProps, {

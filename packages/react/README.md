@@ -261,6 +261,46 @@ function MyRemoteRenderer() {
 }
 ```
 
+#### Customizing host component rendering
+
+`createController` also allows for more fine-grained control of how individual remote components are rendered on the host. You can pass an object with a `renderComponent()` method as the second argument to `createController()`. This function will be called for each remote component, must return a `ReactNode`, and will include the following details:
+
+- The `component` being rendered
+- The `parent` of the component being rendered (either another component, or the “root”)
+- The `receiver` (`RemoteReceiver`) object that is tracking updates to the remote root
+- The `controller` object that is being created
+
+This function is also called with `renderDefault()` function that will perform the default logic of rendering the React component with a matching name that you provided as the first argument to `createController`.
+
+The following example shows how you can use this fine-grained control to only allow a `Modal` component at the “root” of a remote tree, but to allow all other components to be rendered lower in the tree:
+
+```tsx
+import {KIND_ROOT} from '@remote-ui/core';
+import {createController} from '@remote-ui/react/host';
+
+import {Button} from './Button';
+import {TextField} from './TextField';
+import {Modal} from './Modal';
+
+const controller = createController(
+  {Modal, TextField, Button},
+  {
+    renderComponent({component, parent}, {renderDefault}) {
+      // This component is being rendered to the “root”, so we will allow it
+      // to be a modal, but anything else will just be ignored.
+      if (parent.kind === KIND_ROOT) {
+        return component.type === 'Modal' ? renderDefault() : null;
+      }
+
+      // This component is being rendered anywhere other than the “root”, so we
+      // allow it to be any component *other* than a modal (which can only be
+      // rendered at the top level)
+      return component.type === 'Modal' ? null : renderDefault();
+    },
+  },
+);
+```
+
 ### Other exports
 
 This package exports a helper type for extracting information from components created by `createRemoteReactComponent`:

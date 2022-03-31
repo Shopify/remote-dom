@@ -1,6 +1,7 @@
 import type {ComponentType, ReactNode} from 'react';
 import type {
   RemoteReceiver,
+  RemoteReceiverAttachableRoot,
   RemoteReceiverAttachableComponent,
   RemoteReceiverAttachableText,
   RemoteComponentType,
@@ -8,6 +9,7 @@ import type {
 } from '@remote-ui/core';
 
 export interface RemoteTextProps {
+  parent: RemoteReceiverAttachableRoot | RemoteReceiverAttachableComponent;
   text: RemoteReceiverAttachableText;
   receiver: RemoteReceiver;
   key: string | number;
@@ -15,6 +17,7 @@ export interface RemoteTextProps {
 
 export interface RemoteComponentProps {
   receiver: RemoteReceiver;
+  parent: RemoteReceiverAttachableRoot | RemoteReceiverAttachableComponent;
   component: RemoteReceiverAttachableComponent;
   controller: Controller;
   key: string | number;
@@ -22,6 +25,7 @@ export interface RemoteComponentProps {
 
 export interface RemoteFragmentProps {
   receiver: RemoteReceiver;
+  parent: RemoteReceiverAttachableComponent;
   fragment: RemoteReceiverAttachableFragment;
   controller: Controller;
 }
