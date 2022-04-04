@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.4.5]
+
+- Pinned `react-reconciler` to `0.26.x` to prevent breaking React 17 projects ([pull request](https://github.com/Shopify/remote-ui/pull/151), thanks [@ericfrank-stripe](https://github.com/ericfrank-stripe)!)
+
 ## [4.4.3]
 
 - Removed some unused hooks and context ([pull request](https://github.com/Shopify/remote-ui/pull/145))
