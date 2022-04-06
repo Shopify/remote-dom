@@ -1,10 +1,15 @@
 import {useEffect, useContext, createContext} from 'react';
 import {render as domRender} from 'react-dom';
 import {act as domAct} from 'react-dom/test-utils';
-import {createRemoteRoot, createRemoteReceiver} from '@remote-ui/core';
-import type {RemoteFragment} from '@remote-ui/core';
+import {
+  KIND_ROOT,
+  createRemoteRoot,
+  createRemoteReceiver,
+} from '@remote-ui/core';
+import type {RemoteFragment, PropsForRemoteComponent} from '@remote-ui/core';
 
 import {RemoteRenderer, createController} from '../host';
+import type {ControllerOptions} from '../host';
 import {
   render,
   createRemoteReactComponent,
@@ -25,7 +30,7 @@ const RemoteImage = createRemoteReactComponent<'Image', {src: string}>('Image');
 
 const RemoteWithFragment = createRemoteReactComponent<
   'WithFragment',
-  {title: string | RemoteFragment}
+  {title?: string | RemoteFragment}
 >('WithFragment', {fragmentProps: ['title']});
 
 const PersonContext = createContext({name: 'Mollie'});
@@ -241,5 +246,149 @@ describe('@remote-ui/react', () => {
       jest.runAllTimers();
     });
     expect(appElement.innerHTML).toBe('hello');
+  });
+
+  it('allows customizing the rendering of individual remote components', () => {
+    const receiver = createRemoteReceiver();
+    const remoteRoot = createRemoteRoot(receiver.receive, {
+      components: [RemoteImage],
+    });
+
+    function RemoteApp() {
+      return (
+        <>
+          <RemoteImage src="/image.jpg" />
+          <RemoteImage src="/malicious.jpg" />
+        </>
+      );
+    }
+
+    // Our custom `renderComponent` will filter out images with a malicious source prop.
+    const renderComponent = jest.fn((({component}, {renderDefault}) => {
+      if (component.type !== RemoteImage) return renderDefault();
+
+      if (
+        (
+          component.props as PropsForRemoteComponent<typeof RemoteImage>
+        ).src.includes('malicious.jpg')
+      )
+        return null;
+
+      return renderDefault();
+    }) as ControllerOptions['renderComponent']);
+
+    const controller = createController(
+      {
+        Image: HostImage,
+      },
+      {
+        renderComponent,
+      },
+    );
+
+    function HostApp() {
+      return <RemoteRenderer controller={controller} receiver={receiver} />;
+    }
+
+    domAct(() => {
+      domRender(<HostApp />, appElement);
+      render(<RemoteApp />, remoteRoot, () => {
+        remoteRoot.mount();
+      });
+      jest.runAllTimers();
+    });
+
+    expect(renderComponent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        component: expect.objectContaining({
+          type: RemoteImage,
+          props: {src: '/image.jpg'},
+        }),
+      }),
+      expect.anything(),
+    );
+    expect(renderComponent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        component: expect.objectContaining({
+          type: RemoteImage,
+          props: {src: '/malicious.jpg'},
+        }),
+      }),
+      expect.anything(),
+    );
+    expect(appElement.innerHTML).toBe('<img src="/image.jpg">');
+  });
+
+  it('provides the parent container to the function for customizing the rendering of individual remote components', () => {
+    const receiver = createRemoteReceiver();
+    const remoteRoot = createRemoteRoot(receiver.receive, {
+      components: [RemoteImage, RemoteWithFragment.displayName!],
+    });
+
+    function RemoteApp() {
+      return (
+        <>
+          <RemoteImage src="/image1.jpg" />
+          <RemoteWithFragment>
+            <RemoteImage src="/image2.jpg" />
+          </RemoteWithFragment>
+        </>
+      );
+    }
+
+    // Our custom `renderComponent` will only allow images to be rendered if they are nested.
+    const renderComponent = jest.fn((({component, parent}, {renderDefault}) => {
+      if (component.type !== RemoteImage) return renderDefault();
+      if (parent.kind === KIND_ROOT) return null;
+      return renderDefault();
+    }) as ControllerOptions['renderComponent']);
+
+    const controller = createController(
+      {
+        Image: HostImage,
+        WithFragment: HostWithFragment,
+      },
+      {
+        renderComponent,
+      },
+    );
+
+    function HostApp() {
+      return <RemoteRenderer controller={controller} receiver={receiver} />;
+    }
+
+    domAct(() => {
+      domRender(<HostApp />, appElement);
+      render(<RemoteApp />, remoteRoot, () => {
+        remoteRoot.mount();
+      });
+      jest.runAllTimers();
+    });
+
+    expect(renderComponent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        parent: expect.objectContaining({
+          kind: KIND_ROOT,
+        }),
+        component: expect.objectContaining({
+          type: RemoteImage,
+          props: {src: '/image1.jpg'},
+        }),
+      }),
+      expect.anything(),
+    );
+    expect(renderComponent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        parent: expect.objectContaining({
+          type: RemoteWithFragment.displayName,
+        }),
+        component: expect.objectContaining({
+          type: RemoteImage,
+          props: {src: '/image2.jpg'},
+        }),
+      }),
+      expect.anything(),
+    );
+    expect(appElement.innerHTML).toBe('<img src="/image2.jpg">');
   });
 });

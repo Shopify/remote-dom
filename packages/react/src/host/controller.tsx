@@ -15,7 +15,7 @@ export interface ComponentMapping {
   [key: string]: ComponentType<any>;
 }
 
-interface RendererFactory {
+export interface ControllerOptions {
   renderComponent(
     props: RemoteComponentProps,
     options: RenderComponentOptions,
@@ -28,7 +28,7 @@ export function createController(
   {
     renderComponent: externalRenderComponent,
     renderText: externalRenderText,
-  }: Partial<RendererFactory> = {},
+  }: Partial<ControllerOptions> = {},
 ): Controller {
   const registry = new Map(Object.entries(components));
 
