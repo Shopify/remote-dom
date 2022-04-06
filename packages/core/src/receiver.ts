@@ -8,6 +8,7 @@ import {
   ACTION_UPDATE_TEXT,
   KIND_COMPONENT,
   KIND_FRAGMENT,
+  KIND_ROOT,
 } from './types';
 import type {
   ActionArgumentMap,
@@ -38,6 +39,7 @@ export interface RemoteReceiverAttachableFragment
 
 export interface RemoteReceiverAttachableRoot {
   id: typeof ROOT_ID;
+  kind: typeof KIND_ROOT;
   children: RemoteReceiverAttachableChild[];
   version: number;
 }
@@ -111,6 +113,7 @@ export function createRemoteReceiver(): RemoteReceiver {
 
   const root: RemoteReceiverAttachableRoot = {
     id: ROOT_ID,
+    kind: KIND_ROOT,
     children: [],
     version: 0,
   };

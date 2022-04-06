@@ -7,6 +7,7 @@ import {
 import type {
   RemoteReceiver,
   RemoteReceiverAttachableChild,
+  RemoteReceiverAttachableComponent,
 } from '@remote-ui/core';
 
 import {useAttached} from './hooks';
@@ -17,22 +18,6 @@ import type {
 } from './types';
 
 const emptyObject = {};
-
-export function renderComponent({
-  component,
-  controller,
-  receiver,
-  key,
-}: RemoteComponentProps) {
-  return (
-    <RemoteComponent
-      receiver={receiver}
-      component={component}
-      controller={controller}
-      key={key}
-    />
-  );
-}
 
 export const RemoteComponent = memo(function RemoteComponent({
   receiver,
@@ -52,6 +37,7 @@ export const RemoteComponent = memo(function RemoteComponent({
       const prop = props[key];
       newProps[key] = isRemoteReceiverAttachableFragment(prop) ? (
         <RemoteFragment
+          parent={component}
           receiver={receiver}
           fragment={prop}
           controller={controller}
@@ -74,22 +60,24 @@ export const RemoteComponent = memo(function RemoteComponent({
 
   return (
     <Implementation {...props}>
-      {renderChildren(children, receiver, controller)}
+      {renderChildren(component, children, receiver, controller)}
     </Implementation>
   );
 });
 
 const RemoteFragment = memo(function RemoteFragment({
+  parent,
   receiver,
   fragment,
   controller,
 }: RemoteFragmentProps) {
   const {children} = useAttached(receiver, fragment) ?? {};
   if (!children) return null;
-  return <>{renderChildren(children, receiver, controller)}</>;
+  return <>{renderChildren(parent, children, receiver, controller)}</>;
 });
 
 function renderChildren(
+  component: RemoteReceiverAttachableComponent,
   children: RemoteReceiverAttachableChild[],
   receiver: RemoteReceiver,
   controller: Controller,
@@ -99,6 +87,7 @@ function renderChildren(
     switch (child.kind) {
       case KIND_COMPONENT:
         return renderComponent({
+          parent: component,
           component: child,
           receiver,
           controller,
@@ -106,6 +95,7 @@ function renderChildren(
         });
       case KIND_TEXT:
         return renderText({
+          parent: component,
           text: child,
           receiver,
           key: child.id,
