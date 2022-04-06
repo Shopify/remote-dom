@@ -270,9 +270,9 @@ function MyRemoteRenderer() {
 - The `receiver` (`RemoteReceiver`) object that is tracking updates to the remote root
 - The `controller` object that is being created
 
-This function is also called with `renderDefault()` function that will perform the default logic of rendering the React component with a matching name that you provided as the first argument to `createController`.
+This function is also called with a `renderDefault()` function. That function will return the result of rendering the React component with a matching name that you provided as the first argument to `createController`. You can use this function to conditionally apply the “default” logic, while applying your special logic to other cases.
 
-The following example shows how you can use this fine-grained control to only allow a `Modal` component at the “root” of a remote tree, but to allow all other components to be rendered lower in the tree:
+The following example shows how you can use this fine-grained control. In this example, a `Modal` component is only allowed at the “root” of a remote tree, but all components _other_ than `Modal` can be rendered as nested components:
 
 ```tsx
 import {KIND_ROOT} from '@remote-ui/core';
