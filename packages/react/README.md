@@ -142,7 +142,7 @@ const button = (
 );
 ```
 
-`icon` prop in `ReactButton` is automatically converted to a ReactElement. If you want to have explict type of ReactButtonProps, you can use `ReactPropsFromRemoteComponentType` as follow:
+`icon` prop in `ReactButton` is automatically converted to a ReactElement. If you want to have explicit type of ReactButtonProps, you can use `ReactPropsFromRemoteComponentType` as follow:
 
 ```tsx
 import {ReactPropsFromRemoteComponentType} from '@remote-ui/react';
