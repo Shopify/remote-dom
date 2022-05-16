@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.5.1] - 2022-05-16
+
+- Fixed a missing `useAttached()` export in the `@shopify/remote-ui/host` entrypoint.
+
 ## [4.5.0]
 
 - Added a `parent` property to the `ControllerOptions#renderComponent()` method, which allows you to customize the host rendering of a component based on where it is in the UI component tree ([pull request](https://github.com/Shopify/remote-ui/pull/150))
