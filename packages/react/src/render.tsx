@@ -1,4 +1,5 @@
 import type {ReactElement} from 'react';
+import {version} from 'react';
 import type {RemoteRoot} from '@remote-ui/core';
 import type {RootTag} from 'react-reconciler';
 
@@ -15,8 +16,8 @@ const cache = new WeakMap<
   }
 >();
 
-// @see https://github.com/facebook/react/blob/993ca533b42756811731f6b7791ae06a35ee6b4d/packages/react-reconciler/src/ReactRootTags.js
-// I think we are a legacy root?
+// @see https://github.com/facebook/react/blob/fea6f8da6ab669469f2fa3f18bd3a831f00ab284/packages/react-reconciler/src/ReactRootTags.js#L12
+// We don't support concurrent rendering for now.
 const LEGACY_ROOT: RootTag = 0;
 
 export function render(
@@ -28,9 +29,26 @@ export function render(
   let cached = cache.get(root);
 
   if (!cached) {
+    const major = Number(version.split('.')?.[0] || 18);
+
     // Since we haven't created a container for this root yet, create a new one
     const value = {
-      container: reconciler.createContainer(root, LEGACY_ROOT, false, null),
+      container:
+        major >= 18
+          ? reconciler.createContainer(
+              root,
+              LEGACY_ROOT,
+              null,
+              false,
+              null,
+              // Might not be necessary
+              'r-ui',
+              () => null,
+              null,
+            )
+          : // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore - TS doesn't support multiple type versions of the same package
+            reconciler.createContainer(root, LEGACY_ROOT, false, null),
       // We also cache the render context to avoid re-creating it on subsequent render calls
       renderContext: {root, reconciler},
     };

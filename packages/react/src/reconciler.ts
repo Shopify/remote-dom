@@ -27,6 +27,11 @@ export type Reconciler = ReactReconciler<
   PublicInstance
 >;
 
+const scheduleMicrotask = (callback: () => void) =>
+  typeof queueMicrotask === 'function'
+    ? queueMicrotask
+    : Promise.resolve(null).then(callback).catch(handleErrorInNextTick);
+
 export const reconciler = reactReconciler<
   Type,
   Props,
@@ -48,9 +53,18 @@ export const reconciler = reactReconciler<
   scheduleTimeout: setTimeout,
   cancelTimeout: clearTimeout,
   noTimeout: false,
-  // @see https://github.com/facebook/react/blob/master/packages/react-dom/src/client/ReactDOMHostConfig.js#L408
-  queueMicrotask: (callback) =>
-    Promise.resolve(null).then(callback).catch(handleErrorInNextTick),
+
+  // Microtask scheduling
+  // @see https://github.com/facebook/react/blob/2c8a1452b82b9ec5ebfa3f370b31fda19610ae92/packages/react-dom/src/client/ReactDOMHostConfig.js#L391-L401
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore - types in `@types/react-reconciler` are outdated
+  supportsMicrotasks: true,
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore - types in `@types/react-reconciler` are outdated
+  scheduleMicrotask,
+
+  // Compat for React <= 17.x
+  queueMicrotask: scheduleMicrotask,
 
   isPrimaryRenderer: true,
   supportsMutation: true,
