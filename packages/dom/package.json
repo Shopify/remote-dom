@@ -22,7 +22,6 @@
       "import": "./index.mjs",
       "require": "./index.js"
     },
-    "./": "./",
     "./browser": {
       "esnext": "./browser.esnext",
       "import": "./browser.mjs",

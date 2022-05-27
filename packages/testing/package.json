@@ -23,7 +23,6 @@
       "import": "./index.mjs",
       "require": "./index.js"
     },
-    "./": "./",
     "./matchers": {
       "esnext": "./matchers.esnext",
       "import": "./matchers.mjs",
