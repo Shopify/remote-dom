@@ -24,7 +24,6 @@
       "import": "./index.mjs",
       "require": "./index.js"
     },
-    "./": "./",
     "./host": {
       "esnext": "./host.esnext",
       "import": "./host.mjs",
