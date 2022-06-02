@@ -1,6 +1,12 @@
-import {useEffect, useContext, createContext} from 'react';
+import {
+  useEffect,
+  useContext,
+  useState,
+  useCallback,
+  createContext,
+} from 'react';
 import {render as domRender} from 'react-dom';
-import {act as domAct} from 'react-dom/test-utils';
+import {act as domAct, Simulate} from 'react-dom/test-utils';
 import {
   KIND_ROOT,
   createRemoteRoot,
@@ -32,6 +38,11 @@ const RemoteWithFragment = createRemoteReactComponent<
   'WithFragment',
   {title?: string | RemoteFragment}
 >('WithFragment', {fragmentProps: ['title']});
+
+const RemoteBox = createRemoteReactComponent<
+  'Box',
+  {children?: any; id?: string; onClick?: () => void}
+>('Box');
 
 const PersonContext = createContext({name: 'Mollie'});
 
@@ -69,6 +80,19 @@ function HostWithFragment({
       {title}
       {children}
     </>
+  );
+}
+
+function HostBox({
+  children,
+  id,
+  onClick,
+}: ReactPropsFromRemoteComponentType<typeof RemoteBox>) {
+  return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+    <div id={id} onClick={onClick}>
+      {children}
+    </div>
   );
 }
 
@@ -390,5 +414,95 @@ describe('@remote-ui/react', () => {
       expect.anything(),
     );
     expect(appElement.innerHTML).toBe('<img src="/image2.jpg">');
+  });
+
+  describe('Remote tree updates', () => {
+    it('updates the remote tree when setting state with an array', () => {
+      const receiver = createRemoteReceiver();
+      const remoteRoot = createRemoteRoot(receiver.receive, {
+        components: [RemoteBox],
+      });
+
+      function RemoteApp() {
+        const [items, setItems] = useState(['a', 'b', 'c']);
+        const handleClick = useCallback(() => {
+          setItems((prev) => prev.reverse());
+        }, []);
+        return (
+          <RemoteBox id="click-target" onClick={handleClick}>
+            {items.map((item) => (
+              <RemoteBox key={item}>{item}</RemoteBox>
+            ))}
+          </RemoteBox>
+        );
+      }
+
+      const controller = createController({Box: HostBox});
+
+      function HostApp() {
+        return <RemoteRenderer controller={controller} receiver={receiver} />;
+      }
+
+      domAct(() => {
+        domRender(<HostApp />, appElement);
+        render(<RemoteApp />, remoteRoot, () => {
+          remoteRoot.mount();
+        });
+        jest.runAllTimers();
+        Simulate.click(appElement.querySelector('#click-target')!);
+        jest.runAllTimers();
+      });
+
+      const children = appElement.querySelector('#click-target')!.childNodes;
+      expect(children).toHaveLength(3);
+      expect(children[0].textContent).toBe('c');
+      expect(children[1].textContent).toBe('b');
+      expect(children[2].textContent).toBe('a');
+    });
+
+    it('renders the expected items after state updates', () => {
+      const receiver = createRemoteReceiver();
+      const remoteRoot = createRemoteRoot(receiver.receive, {
+        components: [RemoteBox],
+      });
+
+      function RemoteApp() {
+        const [items, setItems] = useState(['a', 'b', 'c']);
+        const [, setNum] = useState(0);
+        const handleClick = useCallback(() => {
+          setItems((prev) => prev.reverse());
+          setNum((prev) => prev + 1);
+        }, []);
+        return (
+          <RemoteBox id="click-target" onClick={handleClick}>
+            {items.map((item) => (
+              <RemoteBox key={item}>{item}</RemoteBox>
+            ))}
+          </RemoteBox>
+        );
+      }
+
+      const controller = createController({Box: HostBox});
+
+      function HostApp() {
+        return <RemoteRenderer controller={controller} receiver={receiver} />;
+      }
+
+      domAct(() => {
+        domRender(<HostApp />, appElement);
+        render(<RemoteApp />, remoteRoot, () => {
+          remoteRoot.mount();
+        });
+        jest.runAllTimers();
+        Simulate.click(appElement.querySelector('#click-target')!);
+        jest.runAllTimers();
+      });
+
+      const children = appElement.querySelector('#click-target')!.childNodes;
+      expect(children).toHaveLength(3);
+      expect(children[0].textContent).toBe('c');
+      expect(children[1].textContent).toBe('b');
+      expect(children[2].textContent).toBe('a');
+    });
   });
 });
