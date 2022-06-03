@@ -1,3 +1,5 @@
+/* eslint @shopify/jsx-no-hardcoded-content: off */
+
 import {useEffect, useContext, createContext, useState} from 'react';
 import {render as domRender} from 'react-dom';
 import {act as domAct, Simulate} from 'react-dom/test-utils';
@@ -262,7 +264,7 @@ describe('@remote-ui/react', () => {
     expect(appElement.innerHTML).toBe('hello');
   });
 
-  it('can re-order remote components in the tree', () => {
+  it('can re-order remote components at the root of the tree', () => {
     const receiver = createRemoteReceiver();
     const remoteRoot = createRemoteRoot(receiver.receive, {
       components: [RemoteButton, RemoteImage],
@@ -278,17 +280,83 @@ describe('@remote-ui/react', () => {
       const [images, setImages] = useState(initialImages);
 
       return (
-        <RemoteButton
-          onPress={() => setImages((images) => [...images].reverse())}
-        >
+        <>
+          <RemoteButton
+            onPress={() => setImages((images) => [...images].reverse())}
+          >
+            Reverse
+          </RemoteButton>
           {images.map((image) => (
             <RemoteImage src={image} key={image} />
           ))}
-        </RemoteButton>
+        </>
       );
     }
 
     const controller = createController({Button: HostButton, Image: HostImage});
+
+    function HostApp() {
+      return <RemoteRenderer controller={controller} receiver={receiver} />;
+    }
+
+    domAct(() => {
+      domRender(<HostApp />, appElement);
+      render(<RemoteApp />, remoteRoot, () => {
+        remoteRoot.mount();
+      });
+      jest.runAllTimers();
+    });
+
+    domAct(() => {
+      Simulate.click(appElement.querySelector('button')!);
+      jest.runAllTimers();
+    });
+
+    const children = appElement.querySelectorAll('img');
+    expect(children).toHaveLength(3);
+
+    const reversedImages = [...initialImages].reverse();
+    expect(children[0].src).toBe(reversedImages[0]);
+    expect(children[1].src).toBe(reversedImages[1]);
+    expect(children[2].src).toBe(reversedImages[2]);
+  });
+
+  it('can re-order remote components nested in the tree', () => {
+    const receiver = createRemoteReceiver();
+    const remoteRoot = createRemoteRoot(receiver.receive, {
+      components: [RemoteButton, RemoteImage, RemoteWithFragment.displayName!],
+    });
+
+    const initialImages = [
+      'https://pets.images/cat.png',
+      'https://pets.images/dog.png',
+      'https://pets.images/goldfish.png',
+    ];
+
+    function RemoteApp() {
+      const [images, setImages] = useState(initialImages);
+
+      return (
+        <>
+          <RemoteButton
+            onPress={() => setImages((images) => [...images].reverse())}
+          >
+            Reverse
+          </RemoteButton>
+          <RemoteWithFragment>
+            {images.map((image) => (
+              <RemoteImage src={image} key={image} />
+            ))}
+          </RemoteWithFragment>
+        </>
+      );
+    }
+
+    const controller = createController({
+      Button: HostButton,
+      Image: HostImage,
+      WithFragment: HostWithFragment,
+    });
 
     function HostApp() {
       return <RemoteRenderer controller={controller} receiver={receiver} />;

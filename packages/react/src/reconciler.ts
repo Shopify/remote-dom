@@ -126,9 +126,11 @@ export const reconciler = reactReconciler<
 
   // Update root
   appendChildToContainer(remoteRoot, child) {
+    if (child.parent === remoteRoot) remoteRoot.removeChild(child);
     remoteRoot.appendChild(child);
   },
   insertInContainerBefore(remoteRoot, child, beforeChild) {
+    if (child.parent === remoteRoot) remoteRoot.removeChild(child);
     remoteRoot.insertChildBefore(child, beforeChild);
   },
   removeChildFromContainer(remoteRoot, child) {
