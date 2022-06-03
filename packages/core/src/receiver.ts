@@ -19,7 +19,7 @@ import type {
 } from './types';
 import {isRemoteFragment} from './utilities';
 
-export const ROOT_ID = Symbol('RootId');
+export const ROOT_ID: symbol = Symbol.for('RemoteUi.Root');
 
 export interface RemoteReceiverAttachableText extends RemoteTextSerialization {
   version: number;

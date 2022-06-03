@@ -145,9 +145,11 @@ export const reconciler = reactReconciler<
     parent.appendChild(child);
   },
   appendChild(parent, child) {
+    if (child.parent === parent) parent.removeChild(child);
     parent.appendChild(child);
   },
   insertBefore(parent, newChild, beforeChild) {
+    if (newChild.parent === parent) parent.removeChild(newChild);
     parent.insertChildBefore(newChild, beforeChild);
   },
   removeChild(parent, child) {
