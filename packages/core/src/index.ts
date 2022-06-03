@@ -34,7 +34,6 @@ export type {
 } from './types';
 export {createRemoteRoot} from './root';
 export {
-  ROOT_ID,
   createRemoteReceiver,
   createRemoteChannel,
   isRemoteFragmentSerialization,
