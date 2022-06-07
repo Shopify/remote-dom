@@ -618,14 +618,22 @@ function appendChild(
     );
   }
 
+  const currentParent = child.parent;
+  const existingIndex = currentParent?.children.indexOf(child) ?? -1;
+
   return perform(container, rootInternals, {
-    remote: (channel) =>
+    remote: (channel) => {
+      if (existingIndex >= 0) {
+        channel(ACTION_REMOVE_CHILD, currentParent.id, existingIndex);
+      }
+
       channel(
         ACTION_INSERT_CHILD,
         (container as any).id,
         container.children.length,
         serializeChild(child),
-      ),
+      );
+    },
     local: () => {
       moveNodeToContainer(container, child, rootInternals);
 
@@ -686,14 +694,22 @@ function insertChildBefore(
     );
   }
 
+  const currentParent = child.parent;
+  const existingIndex = currentParent?.children.indexOf(child) ?? -1;
+
   return perform(container, rootInternals, {
-    remote: (channel) =>
+    remote: (channel) => {
+      if (existingIndex >= 0) {
+        channel(ACTION_REMOVE_CHILD, currentParent.id, existingIndex);
+      }
+
       channel(
         ACTION_INSERT_CHILD,
         (container as any).id,
         container.children.indexOf(before as any),
         serializeChild(child),
-      ),
+      );
+    },
     local: () => {
       moveNodeToContainer(container, child, rootInternals);
 
