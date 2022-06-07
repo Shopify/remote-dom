@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.10] - 2021-06-07
+
+- Fixed an issue where children were not removed from an existing parent before being appended to a new one ([pull request](https://github.com/Shopify/remote-ui/pull/160))
+
 ## [2.1.9] - 2021-04-06
 
 - Fixed an issue where the host representation of a remote root did not have a `kind` field ([pull request](https://github.com/Shopify/remote-ui/pull/150))
