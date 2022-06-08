@@ -28,6 +28,7 @@ const RemoteWithPerson = createRemoteReactComponent<
   {run(person: {name: string}): void | Promise<void>}
 >('WithPerson');
 
+const RemoteText = createRemoteReactComponent<'Text'>('Text');
 const RemoteImage = createRemoteReactComponent<'Image', {src: string}>('Image');
 const RemoteButton = createRemoteReactComponent<'Button', {onPress(): void}>(
   'Button',
@@ -63,6 +64,12 @@ function HostImage(
 ) {
   // eslint-disable-next-line jsx-a11y/alt-text
   return <img {...props} />;
+}
+
+function HostText({
+  children,
+}: ReactPropsFromRemoteComponentType<typeof RemoteText>) {
+  return <>{children}</>;
 }
 
 function HostButton({
@@ -267,33 +274,43 @@ describe('@remote-ui/react', () => {
   it('can re-order remote components at the root of the tree', () => {
     const receiver = createRemoteReceiver();
     const remoteRoot = createRemoteRoot(receiver.receive, {
-      components: [RemoteButton, RemoteImage],
+      components: [RemoteButton, RemoteText],
     });
 
-    const initialImages = [
-      'https://pets.images/cat.png',
-      'https://pets.images/dog.png',
-      'https://pets.images/goldfish.png',
+    const letterValues = [
+      ['a', 'b', 'c'],
+      // move a child to the end of the list
+      ['b', 'c', 'a'],
+      // re-order children in places not at the end of the list
+      ['c', 'b', 'a'],
     ];
 
     function RemoteApp() {
-      const [images, setImages] = useState(initialImages);
+      const [letters, setLetters] = useState(letterValues[0]);
 
       return (
         <>
           <RemoteButton
-            onPress={() => setImages((images) => [...images].reverse())}
+            onPress={() =>
+              setLetters(
+                (currentLetters) =>
+                  letterValues[letterValues.indexOf(currentLetters) + 1],
+              )
+            }
           >
-            Reverse
+            Reorder
           </RemoteButton>
-          {images.map((image) => (
-            <RemoteImage src={image} key={image} />
+          {letters.map((letter) => (
+            <RemoteText key={letter}>{letter}</RemoteText>
           ))}
         </>
       );
     }
 
-    const controller = createController({Button: HostButton, Image: HostImage});
+    const controller = createController({
+      Text: HostText,
+      Button: HostButton,
+    });
 
     function HostApp() {
       return <RemoteRenderer controller={controller} receiver={receiver} />;
@@ -307,54 +324,62 @@ describe('@remote-ui/react', () => {
       jest.runAllTimers();
     });
 
+    expect(appElement.innerHTML).toContain(letterValues[0].join(''));
+
     domAct(() => {
       Simulate.click(appElement.querySelector('button')!);
       jest.runAllTimers();
     });
 
-    const children = appElement.querySelectorAll('img');
-    expect(children).toHaveLength(3);
+    expect(appElement.innerHTML).toContain(letterValues[1].join(''));
 
-    const reversedImages = [...initialImages].reverse();
-    expect(children[0].src).toBe(reversedImages[0]);
-    expect(children[1].src).toBe(reversedImages[1]);
-    expect(children[2].src).toBe(reversedImages[2]);
+    domAct(() => {
+      Simulate.click(appElement.querySelector('button')!);
+      jest.runAllTimers();
+    });
+
+    expect(appElement.innerHTML).toContain(letterValues[2].join(''));
   });
 
   it('can re-order remote components nested in the tree', () => {
     const receiver = createRemoteReceiver();
     const remoteRoot = createRemoteRoot(receiver.receive, {
-      components: [RemoteButton, RemoteImage, RemoteWithFragment.displayName!],
+      components: [RemoteButton, RemoteText, RemoteWithFragment.displayName!],
     });
 
-    const initialImages = [
-      'https://pets.images/cat.png',
-      'https://pets.images/dog.png',
-      'https://pets.images/goldfish.png',
+    const letterValues = [
+      ['a', 'b', 'c'],
+      // move a child to the end of the list
+      ['b', 'c', 'a'],
+      // re-order children in places not at the end of the list
+      ['c', 'b', 'a'],
     ];
 
     function RemoteApp() {
-      const [images, setImages] = useState(initialImages);
+      const [letters, setLetters] = useState(letterValues[0]);
 
       return (
         <>
           <RemoteButton
-            onPress={() => setImages((images) => [...images].reverse())}
+            onPress={() =>
+              setLetters(
+                (currentLetters) =>
+                  letterValues[letterValues.indexOf(currentLetters) + 1],
+              )
+            }
           >
-            Reverse
+            Reorder
           </RemoteButton>
-          <RemoteWithFragment>
-            {images.map((image) => (
-              <RemoteImage src={image} key={image} />
-            ))}
-          </RemoteWithFragment>
+          {letters.map((letter) => (
+            <RemoteText key={letter}>{letter}</RemoteText>
+          ))}
         </>
       );
     }
 
     const controller = createController({
+      Text: HostText,
       Button: HostButton,
-      Image: HostImage,
       WithFragment: HostWithFragment,
     });
 
@@ -370,18 +395,21 @@ describe('@remote-ui/react', () => {
       jest.runAllTimers();
     });
 
+    expect(appElement.innerHTML).toContain(letterValues[0].join(''));
+
     domAct(() => {
       Simulate.click(appElement.querySelector('button')!);
       jest.runAllTimers();
     });
 
-    const children = appElement.querySelectorAll('img');
-    expect(children).toHaveLength(3);
+    expect(appElement.innerHTML).toContain(letterValues[1].join(''));
 
-    const reversedImages = [...initialImages].reverse();
-    expect(children[0].src).toBe(reversedImages[0]);
-    expect(children[1].src).toBe(reversedImages[1]);
-    expect(children[2].src).toBe(reversedImages[2]);
+    domAct(() => {
+      Simulate.click(appElement.querySelector('button')!);
+      jest.runAllTimers();
+    });
+
+    expect(appElement.innerHTML).toContain(letterValues[2].join(''));
   });
 
   it('allows customizing the rendering of individual remote components', () => {

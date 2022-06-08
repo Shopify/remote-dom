@@ -146,16 +146,46 @@ export function createRemoteReceiver(): RemoteReceiver {
         emit('mount');
       });
     },
-    insertChild: (id, index, child) => {
+    insertChild: (id, index, child, existingId) => {
       const attached = attachedNodes.get(
         id ?? ROOT_ID,
       ) as RemoteReceiverAttachableRoot;
-
-      const normalizedChild = normalizeNode(child, addVersion);
-      retain(normalizedChild);
-      attach(normalizedChild);
-
       const {children} = attached;
+
+      let existingAttached: RemoteReceiverAttachableRoot | undefined;
+      let normalizedChild: RemoteReceiverAttachableChild;
+
+      if (id === existingId) {
+        existingAttached = attached;
+      } else if (existingId !== false) {
+        existingAttached = attachedNodes.get(
+          existingId ?? ROOT_ID,
+        ) as RemoteReceiverAttachableRoot;
+      }
+
+      if (existingAttached) {
+        const childId = child.id;
+        const existingChildren = existingAttached.children;
+        const existingIndex = existingChildren.findIndex(
+          (child) => child.id === childId,
+        );
+
+        const [removed] = existingChildren.splice(existingIndex, 1);
+
+        normalizedChild = removed;
+
+        // If we are just moving the child to a different index in the same node,
+        // we don’t need to enqueue an update, because that will be done for this
+        // node below.
+        if (id !== existingId) {
+          existingAttached.version += 1;
+          enqueueUpdate(existingAttached);
+        }
+      } else {
+        normalizedChild = normalizeNode(child, addVersion);
+        retain(normalizedChild);
+        attach(normalizedChild);
+      }
 
       if (index === children.length) {
         children.push(normalizedChild);
@@ -164,7 +194,6 @@ export function createRemoteReceiver(): RemoteReceiver {
       }
 
       attached.version += 1;
-
       enqueueUpdate(attached);
     },
     removeChild: (id, index) => {

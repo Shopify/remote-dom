@@ -37,6 +37,7 @@ interface RootInternals {
   nodes: WeakSet<AnyNode>;
   tops: WeakMap<AnyNode, AnyParent>;
   parents: WeakMap<AnyNode, AnyParent>;
+  components: WeakMap<RemoteComponent<any, any>, ComponentInternals>;
   children: ReadonlyArray<AnyChild>;
 }
 
@@ -87,6 +88,7 @@ export function createRemoteRoot<
     nodes: new WeakSet(),
     parents: new WeakMap(),
     tops: new WeakMap(),
+    components: new WeakMap(),
   };
 
   if (strict) Object.freeze(components);
@@ -196,6 +198,8 @@ export function createRemoteRoot<
         // methods above.
         ...EMPTY_OBJECT,
       };
+
+      rootInternals.components.set(component, internals);
 
       Object.defineProperty(component, 'type', {
         value: type,
@@ -623,24 +627,45 @@ function appendChild(
 
   return perform(container, rootInternals, {
     remote: (channel) => {
-      if (existingIndex >= 0) {
-        channel(ACTION_REMOVE_CHILD, currentParent.id, existingIndex);
-      }
-
       channel(
         ACTION_INSERT_CHILD,
         (container as any).id,
-        container.children.length,
+        existingIndex >= 0
+          ? container.children.length
+          : container.children.length - 1,
         serializeChild(child),
+        currentParent ? currentParent.id : false,
       );
     },
     local: () => {
       moveNodeToContainer(container, child, rootInternals);
 
-      const mergedChildren = [...internals.children, child];
-      internals.children = strict
-        ? Object.freeze(mergedChildren)
-        : mergedChildren;
+      let newChildren: AnyChild[];
+
+      if (currentParent) {
+        const currentInternals =
+          currentParent.kind === KIND_ROOT
+            ? rootInternals
+            : rootInternals.components.get(currentParent)!;
+
+        const currentChildren = [...currentInternals.children];
+        currentChildren.splice(existingIndex, 1);
+
+        if (currentParent === container) {
+          newChildren = currentChildren;
+        } else {
+          currentInternals.children = strict
+            ? Object.freeze(currentChildren)
+            : currentChildren;
+
+          newChildren = [...internals.children];
+        }
+      } else {
+        newChildren = [...internals.children];
+      }
+
+      newChildren.push(child);
+      internals.children = strict ? Object.freeze(newChildren) : newChildren;
     },
   });
 }
@@ -699,21 +724,43 @@ function insertChildBefore(
 
   return perform(container, rootInternals, {
     remote: (channel) => {
-      if (existingIndex >= 0) {
-        channel(ACTION_REMOVE_CHILD, currentParent.id, existingIndex);
-      }
+      const beforeIndex = container.children.indexOf(before as any);
 
       channel(
         ACTION_INSERT_CHILD,
         (container as any).id,
-        container.children.indexOf(before as any),
+        beforeIndex < existingIndex ? beforeIndex : beforeIndex - 1,
         serializeChild(child),
+        currentParent ? currentParent.id : false,
       );
     },
     local: () => {
       moveNodeToContainer(container, child, rootInternals);
 
-      const newChildren = [...internals.children];
+      let newChildren: AnyChild[];
+
+      if (currentParent) {
+        const currentInternals =
+          currentParent.kind === KIND_ROOT
+            ? rootInternals
+            : rootInternals.components.get(currentParent)!;
+
+        const currentChildren = [...currentInternals.children];
+        currentChildren.splice(existingIndex, 1);
+
+        if (currentParent === container) {
+          newChildren = currentChildren;
+        } else {
+          currentInternals.children = strict
+            ? Object.freeze(currentChildren)
+            : currentChildren;
+
+          newChildren = [...internals.children];
+        }
+      } else {
+        newChildren = [...internals.children];
+      }
+
       newChildren.splice(newChildren.indexOf(before), 0, child);
       internals.children = strict ? Object.freeze(newChildren) : newChildren;
     },
