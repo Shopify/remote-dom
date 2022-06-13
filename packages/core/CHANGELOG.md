@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.11] - 2021-06-13
+
+- Fixed more issues with re-ordering children in remote components ([pull request](https://github.com/Shopify/remote-ui/pull/161))
+
 ## [2.1.10] - 2021-06-07
 
 - Fixed an issue where children were not removed from an existing parent before being appended to a new one ([pull request](https://github.com/Shopify/remote-ui/pull/160))
