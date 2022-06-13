@@ -6,7 +6,10 @@ type PropsForRemoteComponent<T> = T extends RemoteComponentType<
   infer Props,
   any
 >
-  ? {[K in keyof Props]: RemoteFragmentToReactElement<Props[K]>}
+  ? Props extends Record<string, never>
+    ? // eslint-disable-next-line @typescript-eslint/ban-types
+      {}
+    : {[K in keyof Props]: RemoteFragmentToReactElement<Props[K]>}
   : never;
 
 type RemoteFragmentToReactElement<T> = T extends RemoteFragment<infer R>

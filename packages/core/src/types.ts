@@ -41,6 +41,7 @@ export interface ActionArgumentMap {
     Id | undefined,
     number,
     RemoteTextSerialization | RemoteComponentSerialization,
+    Id | undefined | false,
   ];
   [ACTION_REMOVE_CHILD]: [Id | undefined, number];
   [ACTION_UPDATE_TEXT]: [Id, string];
