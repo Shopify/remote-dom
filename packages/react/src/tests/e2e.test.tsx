@@ -555,4 +555,75 @@ describe('@remote-ui/react', () => {
     );
     expect(appElement.innerHTML).toBe('<img src="/image2.jpg">');
   });
+
+  it('renders the expected items after state updates', () => {
+    const RemoteBox = createRemoteReactComponent<
+      'Box',
+      {children?: any; id?: string; onClick?: () => void}
+    >('Box');
+
+    const HostBox = ({
+      children,
+      id,
+      onClick,
+    }: ReactPropsFromRemoteComponentType<typeof RemoteBox>) => {
+      return (
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+        <div id={id} onClick={onClick}>
+          {children}
+        </div>
+      );
+    };
+
+    const receiver = createRemoteReceiver();
+    const remoteRoot = createRemoteRoot(receiver.receive, {
+      components: [RemoteBox],
+    });
+
+    function RemoteApp() {
+      const [isClicked, setIsClicked] = useState(false);
+      return (
+        <RemoteBox id="click-target" onClick={() => setIsClicked(!isClicked)}>
+          <RemoteBox>a</RemoteBox>
+          {isClicked && <RemoteBox>b</RemoteBox>}
+          <RemoteBox>c</RemoteBox>
+        </RemoteBox>
+      );
+    }
+
+    const controller = createController({Box: HostBox});
+
+    function HostApp() {
+      return <RemoteRenderer controller={controller} receiver={receiver} />;
+    }
+
+    domAct(() => {
+      domRender(<HostApp />, appElement);
+      render(<RemoteApp />, remoteRoot, () => {
+        remoteRoot.mount();
+      });
+      jest.runAllTimers();
+    });
+
+    let children = appElement.querySelector('#click-target')!.childNodes;
+    expect(children.length).toBe(2);
+    expect(children[0].textContent).toBe('a');
+    expect(children[1].textContent).toBe('c');
+
+    domAct(() => {
+      Simulate.click(appElement.querySelector('#click-target')!);
+      jest.runAllTimers();
+    });
+
+    children = appElement.querySelector('#click-target')!.childNodes;
+    expect(children.length).toBe(3);
+
+    children.forEach((node) => console.log(node.textContent));
+
+    // Fails here, element order is "b" "a" "c"
+    expect(children[0].textContent).toBe('a');
+
+    expect(children[1].textContent).toBe('b');
+    expect(children[2].textContent).toBe('c');
+  });
 });
