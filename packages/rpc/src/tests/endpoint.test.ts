@@ -1,5 +1,6 @@
-import {createEndpoint} from '../endpoint';
+import {createEndpoint, TERMINATE} from '../endpoint';
 import {fromMessagePort} from '../adaptors';
+import {release, retain} from '../memory';
 
 import {MessageChannel} from './utilities';
 
@@ -115,6 +116,49 @@ describe('createEndpoint()', () => {
       await expect(endpoint.call.hello()).rejects.toMatchObject({
         message: expect.stringContaining('terminated'),
       });
+    });
+
+    it('sends the terminate method between endpoints', async () => {
+      const {port1} = new MessageChannel();
+      port1.start();
+
+      const endpoint = createEndpoint<{callMe(): () => void}>(
+        fromMessagePort(port1),
+      );
+
+      const messageSpy = jest.spyOn(port1, 'postMessage');
+
+      endpoint.terminate();
+
+      expect(messageSpy).toHaveBeenCalledWith([TERMINATE], undefined);
+    });
+
+    it('does not send memory management messages to a terminated endpoint', async () => {
+      const {port1, port2} = new MessageChannel();
+      port1.start();
+      port2.start();
+
+      const endpoint1 = createEndpoint<{callMe(): () => void}>(
+        fromMessagePort(port1),
+      );
+
+      const endpoint2 = createEndpoint(fromMessagePort(port2));
+      endpoint2.expose({
+        callMe() {
+          return () => {};
+        },
+      });
+
+      const callMeBack = await endpoint1.call.callMe();
+      retain(callMeBack);
+
+      endpoint1.terminate();
+
+      const port1MessageSpy = jest.spyOn(port1, 'postMessage');
+
+      release(callMeBack);
+
+      expect(port1MessageSpy).not.toHaveBeenCalled();
     });
   });
 });

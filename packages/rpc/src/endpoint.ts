@@ -8,19 +8,19 @@ import type {
 import {StackFrame} from './memory';
 import type {Retainer} from './memory';
 
-const CALL = 0;
-const RESULT = 1;
-const TERMINATE = 2;
-const RELEASE = 3;
-const FUNCTION_APPLY = 5;
-const FUNCTION_RESULT = 6;
+export const CALL = 0;
+export const RESULT = 1;
+export const TERMINATE = 2;
+export const RELEASE = 3;
+export const FUNCTION_APPLY = 5;
+export const FUNCTION_RESULT = 6;
 
 type AnyFunction = (...args: any[]) => any;
 
 interface MessageMap {
   [CALL]: [string, string | number, any];
   [RESULT]: [string, Error?, any?];
-  [TERMINATE]: [];
+  [TERMINATE]: void;
   [RELEASE]: [string];
   [FUNCTION_APPLY]: [string, string, any];
   [FUNCTION_RESULT]: [string, Error?, any?];
@@ -137,12 +137,12 @@ export function createEndpoint<T>(
       }
     },
     terminate() {
+      send(TERMINATE, undefined);
+
       terminate();
 
       if (messenger.terminate) {
         messenger.terminate();
-      } else {
-        send(TERMINATE, []);
       }
     },
   };
@@ -152,7 +152,11 @@ export function createEndpoint<T>(
     args: MessageMap[Type],
     transferables?: Transferable[],
   ) {
-    messenger.postMessage([type, args], transferables);
+    if (terminated) {
+      return;
+    }
+
+    messenger.postMessage(args ? [type, args] : [type], transferables);
   }
 
   async function listener(event: MessageEvent) {
