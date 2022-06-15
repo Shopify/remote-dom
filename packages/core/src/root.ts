@@ -630,7 +630,7 @@ function appendChild(
       channel(
         ACTION_INSERT_CHILD,
         (container as any).id,
-        existingIndex >= 0
+        existingIndex < 0
           ? container.children.length
           : container.children.length - 1,
         serializeChild(child),
@@ -729,7 +729,9 @@ function insertChildBefore(
       channel(
         ACTION_INSERT_CHILD,
         (container as any).id,
-        beforeIndex < existingIndex ? beforeIndex : beforeIndex - 1,
+        beforeIndex < existingIndex || existingIndex < 0
+          ? beforeIndex
+          : beforeIndex - 1,
         serializeChild(child),
         currentParent ? currentParent.id : false,
       );
