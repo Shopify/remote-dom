@@ -22,21 +22,30 @@ export function nodeChildToString<Props>(
 
   const name = nodeName(node);
   const indent = '  '.repeat(level);
-  const props = Object.keys(node.props).reduce<string[]>((list, key) => {
-    if (!key) {
+  const props = Object.keys(node.props)
+    // filter out insigificiant properties unless all option is present
+    .filter((key) => {
+      if (options.all) {
+        return true;
+      }
+
+      return !/^(className)$|^(aria|data)-/.test(key);
+    })
+    .reduce<string[]>((list, key) => {
+      if (!key) {
+        return list;
+      }
+
+      const value = (node.props as any)[key];
+
+      if (value === undefined && !options.all) {
+        return list;
+      }
+
+      list.push(toPropString(key, value, options.verbosity));
+
       return list;
-    }
-
-    const value = (node.props as any)[key];
-
-    if (value === undefined && !options.all) {
-      return list;
-    }
-
-    list.push(toPropString(key, value, options.verbosity));
-
-    return list;
-  }, []);
+    }, []);
 
   const hasChildren = node.children.length > 0;
 
