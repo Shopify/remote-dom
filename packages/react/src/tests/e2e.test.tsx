@@ -741,4 +741,57 @@ describe('@remote-ui/react', () => {
     );
     expect(appElement.innerHTML).toBe('<img src="/image2.jpg">');
   });
+
+  it('can update and render nested fragment components', () => {
+    const receiver = createRemoteReceiver();
+    const remoteRoot = createRemoteRoot(receiver.receive, {
+      components: [RemoteWithFragment.displayName!, RemoteImage, RemoteButton],
+    });
+
+    function RemoteApp() {
+      const [show, setShow] = useState(false);
+      return (
+        <>
+          <RemoteWithFragment
+            title={
+              show && (
+                <RemoteWithFragment
+                  title={<RemoteImage src="https://shopify.com" />}
+                />
+              )
+            }
+          />
+          <RemoteButton onPress={() => setShow(true)}>Show</RemoteButton>
+        </>
+      );
+    }
+
+    const controller = createController({
+      WithFragment: HostWithFragment,
+      Image: HostImage,
+      Button: HostButton,
+    });
+
+    function HostApp() {
+      return <RemoteRenderer controller={controller} receiver={receiver} />;
+    }
+
+    domAct(() => {
+      domRender(<HostApp />, appElement);
+      render(<RemoteApp />, remoteRoot, () => {
+        remoteRoot.mount();
+      });
+      jest.runAllTimers();
+    });
+    expect(appElement.innerHTML).toBe(`<button type="button">Show</button>`);
+
+    domAct(() => {
+      Simulate.click(appElement.querySelector('button')!);
+      jest.runAllTimers();
+    });
+
+    expect(appElement.innerHTML).toBe(
+      `<img src="https://shopify.com"><button type="button">Show</button>`,
+    );
+  });
 });

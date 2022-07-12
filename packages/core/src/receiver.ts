@@ -229,7 +229,7 @@ export function createRemoteReceiver(): RemoteReceiver {
           detach(oldProp);
         }
         if (isRemoteFragmentSerialization(newProp)) {
-          const attachableNewProp = addVersion(newProp);
+          const attachableNewProp = normalizeNode(newProp, addVersion);
           attach(attachableNewProp);
         }
       });
