@@ -38,6 +38,7 @@ interface RootInternals {
   tops: WeakMap<AnyNode, AnyParent>;
   parents: WeakMap<AnyNode, AnyParent>;
   components: WeakMap<RemoteComponent<any, any>, ComponentInternals>;
+  fragments: WeakMap<RemoteFragment<any>, FragmentInternals>;
   children: ReadonlyArray<AnyChild>;
 }
 
@@ -89,6 +90,7 @@ export function createRemoteRoot<
     parents: new WeakMap(),
     tops: new WeakMap(),
     components: new WeakMap(),
+    fragments: new WeakMap(),
   };
 
   if (strict) Object.freeze(components);
@@ -272,6 +274,8 @@ export function createRemoteRoot<
         // some properties manually.
         ...EMPTY_OBJECT,
       };
+
+      rootInternals.fragments.set(fragment, internals);
 
       makePartOfTree(fragment, rootInternals);
       makeRemote(fragment, id, remoteRoot);
@@ -643,11 +647,10 @@ function appendChild(
       let newChildren: AnyChild[];
 
       if (currentParent) {
-        const currentInternals =
-          currentParent.kind === KIND_ROOT
-            ? rootInternals
-            : rootInternals.components.get(currentParent)!;
-
+        const currentInternals = getCurrentInternals(
+          currentParent,
+          rootInternals,
+        )!;
         const currentChildren = [...currentInternals.children];
         currentChildren.splice(existingIndex, 1);
 
@@ -742,10 +745,10 @@ function insertChildBefore(
       let newChildren: AnyChild[];
 
       if (currentParent) {
-        const currentInternals =
-          currentParent.kind === KIND_ROOT
-            ? rootInternals
-            : rootInternals.components.get(currentParent)!;
+        const currentInternals = getCurrentInternals(
+          currentParent,
+          rootInternals,
+        )!;
 
         const currentChildren = [...currentInternals.children];
         currentChildren.splice(existingIndex, 1);
@@ -886,6 +889,19 @@ function serializeFragment(
       return value.children.map((child) => serializeChild(child));
     },
   };
+}
+
+function getCurrentInternals(
+  currentParent: AnyChild['parent'],
+  rootInternals: RootInternals,
+): ParentInternals | undefined {
+  if (currentParent.kind === KIND_ROOT) {
+    return rootInternals;
+  }
+  if (currentParent.kind === KIND_FRAGMENT) {
+    return rootInternals.fragments.get(currentParent);
+  }
+  return rootInternals.components.get(currentParent);
 }
 
 function makeRemote<Root extends RemoteRoot<any, any>>(
