@@ -794,4 +794,57 @@ describe('@remote-ui/react', () => {
       `<img src="https://shopify.com"><button type="button">Show</button>`,
     );
   });
+
+  it('can reorder and render nested fragment components', () => {
+    const receiver = createRemoteReceiver();
+    const remoteRoot = createRemoteRoot(receiver.receive, {
+      components: [RemoteWithFragment.displayName!, RemoteText, RemoteButton],
+    });
+
+    function RemoteApp() {
+      const [letters, setLetters] = useState(['a', 'b', 'c']);
+
+      return (
+        <>
+          <RemoteWithFragment
+            title={
+              <>
+                {letters.map((letter) => (
+                  <RemoteText key={letter}>{letter}</RemoteText>
+                ))}
+              </>
+            }
+          />
+          <RemoteButton onPress={() => setLetters(['b', 'a', 'c'])}>
+            Reorder
+          </RemoteButton>
+        </>
+      );
+    }
+
+    const controller = createController({
+      Text: HostText,
+      Button: HostButton,
+      WithFragment: HostWithFragment,
+    });
+
+    function HostApp() {
+      return <RemoteRenderer controller={controller} receiver={receiver} />;
+    }
+
+    domAct(() => {
+      domRender(<HostApp />, appElement);
+      render(<RemoteApp />, remoteRoot, () => {
+        remoteRoot.mount();
+      });
+      jest.runAllTimers();
+    });
+
+    domAct(() => {
+      Simulate.click(appElement.querySelector('button')!);
+      jest.runAllTimers();
+    });
+
+    expect(appElement.innerHTML).toContain('bac');
+  });
 });
