@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.14] - 2021-07-14
+
+- Fixed a crash when mutating the children of a fragment ([pull request](https://github.com/Shopify/remote-ui/pull/170))
+
 ## [2.1.13] - 2021-07-12
 
 - Fixed a nested node prop rendering bug in the receiver ([pull request](https://github.com/Shopify/remote-ui/pull/168))
