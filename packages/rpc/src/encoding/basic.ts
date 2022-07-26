@@ -80,6 +80,18 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
       }
 
       const result = Object.keys(value).reduce((object, key) => {
+        const descriptor = Object.getOwnPropertyDescriptor(value, key);
+        if(descriptor && !descriptor.value) {
+          console.log('has get set');
+
+          const [getFunc, nestedGetTransferables = [] ] = encode(descriptor.get);
+          const [setFunc, nestedSetTransferables = []] = encode(descriptor.set);
+          
+          transferables.push(...nestedGetTransferables, ...nestedSetTransferables);
+
+          return {...object,[key+':get:set']: {get: getFunc, set: setFunc}};
+        }
+
         const [result, nestedTransferables = []] = encode((value as any)[key]);
         transferables.push(...nestedTransferables);
         return {...object, [key]: result};
@@ -177,10 +189,23 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
       }
 
       return Object.keys(value).reduce(
-        (object, key) => ({
-          ...object,
-          [key]: decode((value as any)[key], retainedBy),
-        }),
+        (object, key) => {
+          if(key.endsWith(":get:set")) {
+            console.log('decoding get set');
+            const keyName = key.replace(":get:set", "");
+            const newRef = {...object};
+             Object.defineProperty(newRef, keyName, {
+              get: decode((value as any)[key].get, retainedBy),
+              set: decode((value as any)[key].set, retainedBy),
+            });
+            return newRef;
+          }
+
+          return {
+            ...object,
+            [key]: decode((value as any)[key], retainedBy),
+          };
+        },
         {},
       ) as any;
     }
