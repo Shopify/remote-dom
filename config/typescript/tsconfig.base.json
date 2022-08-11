@@ -4,6 +4,7 @@
     "composite": true,
     "emitDeclarationOnly": true,
     "jsx": "react-jsx",
-    "typeRoots": ["../../node_modules/@types", "./typings"]
+    "typeRoots": ["../../node_modules/@types", "./typings"],
+    "target": "ESNext"
   }
 }
