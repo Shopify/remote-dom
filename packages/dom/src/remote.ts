@@ -245,7 +245,7 @@ function createBaseElement(
     removeChild(child) {
       assertIsRemote(child);
 
-      if (child.parentNode === ((elementNode as any) as Node)) {
+      if (child.parentNode === (elementNode as any as Node)) {
         (child as any).parentNode = null;
       }
 
