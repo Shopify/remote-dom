@@ -1,205 +1,267 @@
+import type {
+  RemoteRoot,
+  RemoteComponent,
+  RemoteText,
+  RemoteChild,
+} from '@remote-ui/core';
+
 const NODE_TYPE_ELEMENT = 1;
 const NODE_TYPE_TEXT = 3;
 
-function createElementFromRoot(
-  root: any,
+export const INTERNAL_ROOTS = Symbol.for('RemoteUi.Dom.Roots');
+export const INTERNAL_PROPS = Symbol.for('RemoteUi.Dom.Props');
+
+export interface NodeRemoteInternals<RemoteNode extends RemoteChild<any>> {
+  readonly [INTERNAL_ROOTS]: Map<RemoteRoot<any, any>, RemoteNode>;
+}
+
+export interface TextRemoteInternals
+  extends NodeRemoteInternals<RemoteText<any>> {}
+
+export interface ComponentElementRemoteInternals
+  extends NodeRemoteInternals<RemoteComponent<any, any>> {
+  readonly [INTERNAL_PROPS]: Record<string, unknown>;
+}
+
+interface ElementForRemote
+  extends Pick<
+    HTMLElement,
+    | 'nodeName'
+    | 'children'
+    | 'parentNode'
+    | 'nextSibling'
+    | 'appendChild'
+    | 'insertBefore'
+    | 'removeChild'
+  > {
+  nodeType: typeof NODE_TYPE_ELEMENT;
+}
+
+interface ComponentElementForRemote
+  extends ElementForRemote,
+    Pick<HTMLElement, 'setAttribute'>,
+    ComponentElementRemoteInternals {}
+
+interface TextForRemote
+  extends Pick<Text, 'nodeName' | 'data' | 'textContent'>,
+    TextRemoteInternals {
+  nodeType: typeof NODE_TYPE_TEXT;
+}
+
+export type {
+  TextForRemote as Text,
+  ElementForRemote as Element,
+  ComponentElementForRemote as ComponentElement,
+};
+
+export function createElementFromRoot(
+  root: RemoteRoot<any, any>,
   {
     elementToComponent = (name) => name,
   }: {elementToComponent?(element: string): string} = {},
 ) {
-  const children: any[] = [];
-
-  const rootNode: Pick<
-    Element,
-    | 'nodeName'
-    | 'nodeType'
-    | 'children'
-    | 'appendChild'
-    | 'insertBefore'
-    | 'removeChild'
-    | 'setAttribute'
-  > = {
-    nodeName: '#root',
-    nodeType: NODE_TYPE_ELEMENT,
-    get children() {
-      return children as any;
-    },
+  return createBaseElement('#root', {
     appendChild(child) {
-      const remoteChild = nodeToRemote(child);
-      root.appendChild(remoteChild);
-      (child as any).parentNode = rootNode;
-      children.push(child);
-
-      return child;
+      root.appendChild(nodeToRemote(child as any));
     },
-    insertBefore(childOne, childTwo) {
-      const remoteChildOne = nodeToRemote(childOne);
-      const remoteChildTwo = nodeToRemote(childTwo);
-      root.insertChildBefore(remoteChildOne, remoteChildTwo);
-      (childOne as any).parentNode = rootNode;
-      children.splice(children.indexOf(childTwo) - 1, 0, childOne);
-
-      return childOne;
+    insertBefore(child, beforeChild) {
+      root.insertChildBefore(
+        nodeToRemote(child as any),
+        nodeToRemote(beforeChild as any),
+      );
     },
     removeChild(child) {
-      const remoteChild = nodeToRemote(child);
-      root.removeChild(remoteChild);
-      children.splice(children.indexOf(child), 1);
-
-      if (child.parentNode === (rootNode as any as Node)) {
-        (child as any).parentNode = null;
-      }
-
-      return child;
+      root.removeChild(nodeToRemote(child as any));
     },
-    setAttribute(name, value) {
-      console.log(`root setAttribute`, name, value);
-    },
-  };
+  });
 
-  return rootNode;
+  function nodeToRemote(
+    node: ComponentElementForRemote | TextForRemote,
+  ): RemoteChild<any> {
+    assertIsRemote(node);
 
-  function nodeToRemote(node) {
-    let remoteChild = node.roots.get(root);
+    let remoteChild = node[INTERNAL_ROOTS].get(root);
 
     if (remoteChild == null) {
       if (node.nodeType === NODE_TYPE_ELEMENT) {
         remoteChild = root.createComponent(
           elementToComponent(node.nodeName),
-          node.props,
-          node.children.map(nodeToRemote),
+          node[INTERNAL_PROPS],
+          Array.from(node.children).map((child) => nodeToRemote(child as any)),
         );
       } else {
-        remoteChild = root.createText(node.textContent);
+        remoteChild = root.createText(node.textContent ?? '');
       }
 
-      node.roots.set(root, remoteChild);
+      node[INTERNAL_ROOTS].set(root, remoteChild as any);
     }
 
     return remoteChild;
   }
 }
 
-// @ts-ignore
-const document: Pick<Document, 'createElement' | 'createTextNode'> = {
-  createElement(type: string) {
-    const roots = new Map();
+export const document = {
+  createElement(type: string): ComponentElementForRemote {
+    const roots: ComponentElementForRemote[typeof INTERNAL_ROOTS] = new Map();
     const props = {};
-    const children: any[] = [];
 
-    const elementNode: Pick<
-      Element,
-      | 'nodeName'
-      | 'nodeType'
-      | 'children'
-      | 'parentNode'
-      | 'appendChild'
-      | 'insertBefore'
-      | 'removeChild'
-      | 'setAttribute'
-    > = {
-      nodeType: NODE_TYPE_ELEMENT,
-      nodeName: type,
-      get roots() {
-        return roots;
-      },
-      get children() {
-        return children as any;
-      },
-      get props() {
-        return props;
-      },
-      get nextSibling() {
-        const {parentNode} = elementNode;
-
-        if (parentNode == null) return null;
-
-        return parentNode.children[children.indexOf(elementNode) + 1] ?? null;
-      },
-      parentNode: null,
+    const baseElement = createBaseElement(type, {
       appendChild(child) {
-        for (const [root, remoteElement] of roots.entries()) {
-          const remoteChild = child.roots.get(root);
-          if (remoteChild) remoteElement.appendChild(remoteChild);
+        for (const [root, remoteComponent] of roots.entries()) {
+          const remoteChild = child[INTERNAL_ROOTS].get(root);
+          if (remoteChild) remoteComponent.appendChild(remoteChild);
         }
-
-        children.push(child);
-        (child as any).parentNode = elementNode;
-
-        return child;
       },
-      insertBefore(childOne, childTwo) {
-        for (const [root, remoteElement] of roots.entries()) {
-          const remoteChildOne = childOne.roots.get(root);
-          const remoteChildTwo = childTwo.roots.get(root);
-          if (remoteChildOne && remoteChildTwo) {
-            remoteElement.insertChildBefore(remoteChildOne, remoteChildTwo);
+      insertBefore(child, beforeChild) {
+        for (const [root, remoteComponent] of roots.entries()) {
+          const remoteChild = child[INTERNAL_ROOTS].get(root);
+          const remoteBeforeChild = beforeChild[INTERNAL_ROOTS].get(root);
+          if (remoteChild && remoteBeforeChild) {
+            remoteComponent.insertChildBefore(remoteChild, remoteBeforeChild);
           }
         }
-
-        children.splice(children.indexOf(childTwo) - 1, 0, childOne);
-        (childOne as any).parentNode = elementNode;
-
-        return childOne;
       },
       removeChild(child) {
-        for (const [root, remoteElement] of roots.entries()) {
-          const remoteChild = child.roots.get(root);
-          if (remoteChild) remoteElement.removeChild(remoteChild);
+        for (const [root, remoteComponent] of roots.entries()) {
+          const remoteChild = child[INTERNAL_ROOTS].get(root);
+          if (remoteChild) remoteComponent.removeChild(remoteChild);
         }
+      },
+    });
 
-        if (child.parentNode === (elementNode as any as Node)) {
-          (child as any).parentNode = null;
-        }
-
-        children.splice(children.indexOf(child), 1);
-
-        return child;
+    const additionalProperties: Omit<
+      ComponentElementForRemote,
+      keyof typeof baseElement
+    > = {
+      get [INTERNAL_ROOTS]() {
+        return roots;
+      },
+      get [INTERNAL_PROPS]() {
+        return props;
       },
       setAttribute(name, value) {
         const newProps = {[name]: value};
         Object.assign(props, newProps);
 
         for (const remoteElement of roots.values()) {
-          remoteElement.setProps(newProps);
+          remoteElement.updateProps(newProps);
         }
       },
     };
 
-    return elementNode as Element;
+    Object.defineProperties(
+      baseElement,
+      Object.getOwnPropertyDescriptors(additionalProperties),
+    );
+
+    return baseElement as ComponentElementForRemote;
   },
-  createTextNode(text) {
-    const currentText = text;
+  createTextNode(text: string): TextForRemote {
+    let currentText = text;
     const roots = new Map();
 
-    const textNode: Pick<Text, 'nodeType' | 'nodeName' | 'data' | 'textContent'> = {
+    const textNode: TextForRemote = {
       nodeType: NODE_TYPE_TEXT,
       nodeName: '#text',
-      get roots() {
+      get [INTERNAL_ROOTS]() {
         return roots;
+      },
+      get data() {
+        return currentText;
       },
       set data(content: string) {
         textNode.textContent = content;
+      },
+      get textContent() {
+        return currentText;
       },
       set textContent(content: string) {
         for (const remoteElement of roots.values()) {
           remoteElement.updateText(content);
         }
-      },
-      get textContent() {
-        return currentText;
+
+        currentText = content;
       },
     };
 
-    return textNode as Text;
-
-    // return new Proxy(textNode, {
-    //   set(target, key, value) {
-    //     console.log({target, key, value});
-    //     return true;
-    //   },
-    // });
+    return textNode;
   },
 };
 
 Reflect.defineProperty(globalThis, 'document', {value: document});
+
+function createBaseElement(
+  type: string,
+  {
+    appendChild,
+    insertBefore,
+    removeChild,
+  }: {
+    appendChild(node: NodeRemoteInternals<RemoteChild<any>>): void;
+    insertBefore(
+      node: NodeRemoteInternals<RemoteChild<any>>,
+      beforeNode: NodeRemoteInternals<RemoteChild<any>>,
+    ): void;
+    removeChild(node: NodeRemoteInternals<RemoteChild<any>>): void;
+  },
+) {
+  const children: any[] = [];
+
+  const elementNode: ElementForRemote = {
+    nodeType: NODE_TYPE_ELEMENT,
+    nodeName: type,
+    parentNode: null,
+    get children() {
+      return children as any;
+    },
+    get nextSibling() {
+      const {parentNode} = elementNode;
+
+      if (parentNode == null) return null;
+
+      return parentNode.children[children.indexOf(elementNode) + 1] ?? null;
+    },
+    appendChild(child) {
+      assertIsRemote(child);
+
+      children.push(child);
+      (child as any).parentNode = elementNode;
+
+      appendChild(child);
+
+      return child;
+    },
+    insertBefore(childOne, childTwo) {
+      assertIsRemote(childOne);
+      assertIsRemote(childTwo);
+
+      children.splice(children.indexOf(childTwo) - 1, 0, childOne);
+      (childOne as any).parentNode = elementNode;
+
+      insertBefore(childOne, childTwo);
+
+      return childOne;
+    },
+    removeChild(child) {
+      assertIsRemote(child);
+
+      if (child.parentNode === ((elementNode as any) as Node)) {
+        (child as any).parentNode = null;
+      }
+
+      children.splice(children.indexOf(child), 1);
+
+      removeChild(child);
+
+      return child;
+    },
+  };
+
+  return elementNode;
+}
+
+function assertIsRemote(node: any): asserts node is NodeRemoteInternals<any> {
+  if (node == null || !(INTERNAL_ROOTS in node)) {
+    throw new Error(`${node?.nodeType ?? node} is not a remote node`);
+  }
+}
