@@ -1,3 +1,4 @@
+import {MessageEndpoint} from '../types';
 import {createEndpoint, TERMINATE} from '../endpoint';
 import {fromMessagePort} from '../adaptors';
 import {release, retain} from '../memory';
@@ -49,7 +50,7 @@ describe('createEndpoint()', () => {
       const endpoint1 = createEndpoint<{hello(): string}>(
         fromMessagePort(port1),
       );
-      const endpoint2 = createEndpoint(fromMessagePort(port2));
+      const endpoint2 = createEndpoint(createCatchingMessageEndpoint(port2));
 
       await expect(endpoint1.call.hello()).rejects.toMatchObject({
         message: expect.stringContaining('hello'),
@@ -60,6 +61,39 @@ describe('createEndpoint()', () => {
       expect(await endpoint1.call.hello()).toBe('world');
     });
 
+    it('re-throws errors thrown in exposed methods', async () => {
+      expect.assertions(2);
+      const {port1, port2} = new MessageChannel();
+      port1.start();
+      port2.start();
+
+      const endpoint1 = createEndpoint<{hello(): string}>(
+        fromMessagePort(port1),
+      );
+
+      const messageEndpoint2 = fromMessagePort(port2);
+      const endpoint2 = createEndpoint({
+        ...messageEndpoint2,
+        addEventListener(event, listener) {
+          messageEndpoint2.addEventListener(event, async (...args) => {
+            await expect(listener(...args)).rejects.toMatchObject({
+              message: expect.stringContaining('this is broken'),
+            });
+          });
+        },
+      });
+
+      endpoint2.expose({
+        hello: () => {
+          throw new Error('this is broken');
+        },
+      });
+
+      await expect(endpoint1.call.hello()).rejects.toMatchObject({
+        message: expect.stringContaining('this is broken'),
+      });
+    });
+
     it('deletes an exposed value by passing undefined', async () => {
       const {port1, port2} = new MessageChannel();
       port1.start();
@@ -68,7 +102,7 @@ describe('createEndpoint()', () => {
       const endpoint1 = createEndpoint<{hello(): string}>(
         fromMessagePort(port1),
       );
-      const endpoint2 = createEndpoint(fromMessagePort(port2));
+      const endpoint2 = createEndpoint(createCatchingMessageEndpoint(port2));
 
       endpoint2.expose({hello: () => 'world'});
       endpoint2.expose({hello: undefined});
@@ -162,3 +196,21 @@ describe('createEndpoint()', () => {
     });
   });
 });
+
+function createCatchingMessageEndpoint(
+  messagePort: MessagePort,
+): MessageEndpoint {
+  const messageEndpoint = fromMessagePort(messagePort);
+
+  return {
+    ...messageEndpoint,
+    addEventListener: (event, listener) => {
+      messageEndpoint.addEventListener(event, async (...args) => {
+        try {
+          await listener(...args);
+          // eslint-disable-next-line no-empty
+        } catch {}
+      });
+    },
+  };
+}
