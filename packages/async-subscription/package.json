@@ -1,6 +1,6 @@
 {
   "name": "@remote-ui/async-subscription",
-  "version": "2.1.11",
+  "version": "2.1.12",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"
@@ -20,6 +20,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@remote-ui/rpc": "^1.3.2"
+    "@remote-ui/rpc": "^1.3.3"
   }
 }
