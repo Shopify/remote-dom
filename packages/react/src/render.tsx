@@ -15,6 +15,24 @@ const cache = new WeakMap<
   }
 >();
 
+// Make the react build believe that it is running in a page context,
+// otherwise react rendering errors won't be logged. See:
+// https://github.com/facebook/react/blob/4e6eec69be632c0c0177c5b1c8a70397d92ee181/packages/shared/invokeGuardedCallbackImpl.js#L53-L237
+if (!('window' in globalThis) && !('document' in globalThis)) {
+  class FakeDocument {
+    createEvent(type: string) {
+      return new Event(type);
+    }
+
+    createElement() {
+      return new EventTarget();
+    }
+  }
+
+  globalThis.window = globalThis as any;
+  globalThis.document = new FakeDocument() as any;
+}
+
 // @see https://github.com/facebook/react/blob/993ca533b42756811731f6b7791ae06a35ee6b4d/packages/react-reconciler/src/ReactRootTags.js
 // I think we are a legacy root?
 const LEGACY_ROOT: RootTag = 0;
