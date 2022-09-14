@@ -1,3 +1,4 @@
+import './error-polyfill';
 import type {ReactElement} from 'react';
 import type {RemoteRoot} from '@remote-ui/core';
 import type {RootTag} from 'react-reconciler';
