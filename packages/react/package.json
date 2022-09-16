@@ -29,6 +29,9 @@
       "require": "./host.js"
     }
   },
+  "sideEffects": [
+    "./src/error-polyfill.ts"
+  ],
   "devDependencies": {
     "@types/react-dom": "^17.0.0",
     "react": "^17.0.0",
