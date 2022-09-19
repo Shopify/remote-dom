@@ -30,6 +30,9 @@
     }
   },
   "sideEffects": [
+    "./build/cjs/error-polyfill.cjs",
+    "./build/esm/error-polyfill.mjs",
+    "./build/esnext/error-polyfill.esnext",
     "./src/error-polyfill.ts"
   ],
   "devDependencies": {
