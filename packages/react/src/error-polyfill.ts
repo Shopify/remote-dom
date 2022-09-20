@@ -6,7 +6,14 @@
 //
 // React logic we're working around:
 // https://github.com/facebook/react/blob/4e6eec69be632c0c0177c5b1c8a70397d92ee181/packages/shared/invokeGuardedCallbackImpl.js#L53-L237
-if (!('window' in globalThis) && !('document' in globalThis)) {
+//
+// On top of that we also need to ensure that we only patch it when
+// not running inside a worker
+if (
+  'importScripts' in globalThis &&
+  !('window' in globalThis) &&
+  !('document' in globalThis)
+) {
   class FakeDocument {
     createEvent(type: string) {
       return new Event(type);
