@@ -9,6 +9,20 @@ export function fromInsideIframe({targetOrigin = '*'} = {}): MessageEndpoint {
 
   const {parent} = self;
 
+  const ready = () => parent.postMessage('remote-ui::ready', targetOrigin);
+
+  // Listening to `readyState` in iframe, though the child iframe could probably
+  // send a `postMessage` that it is ready to receive messages sooner than that.
+  if (document.readyState === 'complete') {
+    ready();
+  } else {
+    document.addEventListener('readystatechange', () => {
+      if (document.readyState === 'complete') {
+        ready();
+      }
+    });
+  }
+
   // We need to store the listener, because we wrap it to do some origin checking. Ideally,
   // we’d instead store an `AbortController`, and use its signal to cancel the listeners,
   // but that isn’t widely supported.
