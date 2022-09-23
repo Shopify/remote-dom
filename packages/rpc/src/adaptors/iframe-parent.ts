@@ -20,7 +20,8 @@ export function fromIframe(
 
   const iframeReadyPromise = new Promise<void>((resolve) => {
     window.addEventListener('message', (event) => {
-      if ((event as MessageEvent).data === 'remote-ui::ready') {
+      if (event.source !== target.contentWindow) return;
+      if (event.data === 'remote-ui::ready') {
         resolve();
       }
     });
