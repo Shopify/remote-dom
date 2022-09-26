@@ -18,20 +18,18 @@ export function fromIframe(
     (event: MessageEvent) => void
   >();
 
-  const iframeLoadPromise =
-    target.contentDocument?.readyState === 'complete'
-      ? Promise.resolve()
-      : new Promise<void>((resolve) => {
-          target.addEventListener('load', () => resolve(), {
-            once: true,
-          });
-        });
+  const iframeReadyPromise = new Promise<void>((resolve) => {
+    window.addEventListener('message', (event) => {
+      if (event.source !== target.contentWindow) return;
+      if (event.data === 'remote-ui::ready') {
+        resolve();
+      }
+    });
+  });
 
   return {
     async postMessage(message, transfer) {
-      if (target.contentDocument?.readyState !== 'complete') {
-        await iframeLoadPromise;
-      }
+      await iframeReadyPromise;
 
       target.contentWindow!.postMessage(message, targetOrigin, transfer);
     },
