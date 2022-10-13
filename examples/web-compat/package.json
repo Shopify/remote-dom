@@ -1,0 +1,17 @@
+{
+  "name": "example-web-compat",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "vite"
+  },
+  "dependencies": {
+    "lit": "^2.3.1",
+    "preact": "^10.11.0",
+    "@preact/signals": "^1.1.1",
+    "vue": "^3.2.39"
+  },
+  "devDependencies": {
+    "vite": "^3.1.0"
+  }
+}

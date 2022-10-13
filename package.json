@@ -14,7 +14,8 @@
     "build": "loom build",
     "version-bump": "lerna version --no-push --include-merged-tags",
     "deploy": "lerna publish from-package --yes",
-    "example:vanilla-dom": "yarn workspace example-vanilla-dom start"
+    "example:vanilla-dom": "yarn workspace example-vanilla-dom start",
+    "example:web-compat": "yarn workspace example-web-compat start"
   },
   "devDependencies": {
     "@shopify/babel-preset": "^24.1.0",
