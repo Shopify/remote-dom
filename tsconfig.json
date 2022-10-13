@@ -12,6 +12,7 @@
     {"path": "./packages/rpc"},
     {"path": "./packages/testing"},
     {"path": "./packages/traversal"},
+    {"path": "./packages/webcompat"},
     {"path": "./packages/vue"}
   ]
 }
