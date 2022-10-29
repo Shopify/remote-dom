@@ -625,6 +625,8 @@ function tryHotSwappingValues(
   }
 
   if (Array.isArray(currentValue)) {
+    seen.set(currentValue, [IGNORE]);
+
     const result = tryHotSwappingArrayValues(currentValue, newValue, seen);
 
     seen.set(currentValue, result);
@@ -637,6 +639,8 @@ function tryHotSwappingValues(
     currentValue != null &&
     !isRemoteFragment(currentValue)
   ) {
+    seen.set(currentValue, [IGNORE]);
+
     const result = tryHotSwappingObjectValues(currentValue, newValue, seen);
 
     seen.set(currentValue, result);
@@ -647,10 +651,17 @@ function tryHotSwappingValues(
   return [currentValue === newValue ? IGNORE : newValue];
 }
 
-function makeValueHotSwappable(value: unknown): unknown {
+function makeValueHotSwappable(
+  value: unknown,
+  seen = new WeakMap<any, any>(),
+): unknown {
+  const seenValue = seen.get(value);
+  if (seenValue) return seenValue;
+
   if (isRemoteFragment(value)) {
     return value;
   }
+
   if (typeof value === 'function') {
     const wrappedFunction: HotSwappableFunction<any> = ((...args: any[]) => {
       return wrappedFunction[FUNCTION_CURRENT_IMPLEMENTATION_KEY](...args);
@@ -667,14 +678,27 @@ function makeValueHotSwappable(value: unknown): unknown {
       },
     );
 
+    seen.set(value, wrappedFunction);
+
     return wrappedFunction;
   } else if (Array.isArray(value)) {
-    return value.map(makeValueHotSwappable);
+    const result: any[] = [];
+    seen.set(value, result);
+
+    for (const nested of value) {
+      result.push(makeValueHotSwappable(nested, seen));
+    }
+
+    return result;
   } else if (typeof value === 'object' && value != null) {
-    return Object.keys(value).reduce<{[key: string]: any}>((newValue, key) => {
-      newValue[key] = makeValueHotSwappable((value as any)[key]);
-      return newValue;
-    }, {});
+    const result: Record<string, any> = {};
+    seen.set(value, result);
+
+    for (const key of Object.keys(value)) {
+      result[key] = makeValueHotSwappable((value as any)[key], seen);
+    }
+
+    return result;
   }
 
   return value;
