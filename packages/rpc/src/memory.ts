@@ -102,7 +102,7 @@ export function releaseInternal(
       seen.set(value, nestedCanRelease);
 
       return nestedCanRelease;
-    } else if (typeof value === 'object' && value != null) {
+    } else if (Object.getPrototypeOf(value) === Object.prototype) {
       const nestedCanRelease = Object.keys(value).reduce<boolean>(
         (canRelease, key) =>
           releaseInternal(value[key], deep, seen) || canRelease,
