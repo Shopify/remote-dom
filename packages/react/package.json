@@ -29,12 +29,7 @@
       "require": "./host.js"
     }
   },
-  "sideEffects": [
-    "./build/cjs/error-polyfill.cjs",
-    "./build/esm/error-polyfill.mjs",
-    "./build/esnext/error-polyfill.esnext",
-    "./src/error-polyfill.ts"
-  ],
+  "sideEffects": false,
   "devDependencies": {
     "@types/react-dom": "^17.0.0",
     "react": "^17.0.0",
