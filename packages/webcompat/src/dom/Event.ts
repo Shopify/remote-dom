@@ -1,5 +1,5 @@
 /* eslint-disable @shopify/typescript/prefer-pascal-case-enums */
-import {IS_TRUSTED, LISTENERS} from './constants';
+import {IS_TRUSTED, LISTENERS, RETURN_VALUES} from './constants';
 import type {EventTarget} from './EventTarget';
 
 export const enum EventPhase {
@@ -46,6 +46,7 @@ export class Event {
   // private inPassiveListener = false;
   data?: any;
   [IS_TRUSTED]!: boolean;
+  [RETURN_VALUES]?: unknown[];
 
   constructor(public type: string, options?: EventInit) {
     Object.defineProperty(this, IS_TRUSTED, {writable: true, value: false});
@@ -111,6 +112,7 @@ export function dispatchEvent<T extends object = Record<string, unknown>>(
     // ev[i] = event[i];
   }
   this.dispatchEvent(ev);
+  return ev;
 }
 
 export function fireEvent(
@@ -121,19 +123,27 @@ export function fireEvent(
   const listeners = target[LISTENERS];
   const list = listeners && listeners.get(event.type);
   if (!list) return false;
+  let returnValues = event[RETURN_VALUES];
   let defaultPrevented = false;
   for (const listener of Array.from(list)) {
     event.eventPhase = phase;
     event.currentTarget = target;
-    let ret;
+    let ret: unknown;
     try {
       if (typeof listener === 'object') {
-        listener.handleEvent(event);
+        ret = listener.handleEvent(event);
       } else {
-        listener.call(target, event);
+        ret = listener.call(target, event);
       }
     } catch (err) {
       setTimeout(thrower, 0, err);
+    }
+    if (ret !== undefined) {
+      if (!returnValues) {
+        returnValues = [];
+        event[RETURN_VALUES] = returnValues;
+      }
+      returnValues.push(ret);
     }
     if (ret === false) {
       event.defaultPrevented = true;

@@ -21,6 +21,7 @@ export const PROPERTIES = Symbol('properties');
 export const STYLE = Symbol('style');
 export const GENERATE_ID = Symbol('generate_id');
 export const CONTENT = Symbol('content');
+export const RETURN_VALUES = Symbol('return_values');
 
 // @TODO remove explicit values
 export const enum NodeType {

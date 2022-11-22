@@ -3,7 +3,8 @@ import type {RemoteRoot, RemoteComponent, RemoteText} from '@remote-ui/core';
 // import {PostMessageChannel} from './protocol';
 import type {AbstractChannel, NodeId} from './protocol';
 import {createDocument as createDomDocument, Document} from './dom';
-import {ID, GENERATE_ID} from './dom/constants';
+import {ID, GENERATE_ID, RETURN_VALUES} from './dom/constants';
+import type {Event} from './dom/Event';
 
 const ROOTS = new WeakMap();
 const rootsById = new Map();
@@ -136,7 +137,13 @@ class RemoteUiChannel implements AbstractChannel {
         nameLower: `on${type}`,
         listeners: [],
         proxy(ev: any) {
-          for (const fn of events!.listeners) fn(ev);
+          const returnValues = [];
+          for (const fn of events!.listeners) {
+            const event = fn(ev) as unknown as Event;
+            const rval = event[RETURN_VALUES];
+            if (rval) returnValues.push(...rval);
+          }
+          return returnValues;
         },
       };
       lists.set(type, events);
