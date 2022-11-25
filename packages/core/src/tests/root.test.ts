@@ -120,7 +120,7 @@ describe('root', () => {
         root.append(card);
         root.replaceChildren(button);
       }).toThrow(
-        'Cannot insert a node that was not created by this remote root',
+        'Cannot append a node that was not created by this remote root',
       );
     });
   });
