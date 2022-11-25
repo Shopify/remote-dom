@@ -30,13 +30,13 @@ export function isMemoryManageable(value: unknown): value is MemoryManageable {
 }
 
 export function retain(value: any, {deep = true} = {}): boolean {
-  return retainInternal(value, deep, new WeakMap());
+  return retainInternal(value, deep, new Map());
 }
 
 function retainInternal(
   value: unknown,
   deep: boolean,
-  seen: WeakMap<any, boolean>,
+  seen: Map<any, boolean>,
 ): boolean {
   const seenValue = seen.get(value);
   if (seenValue != null) return seenValue;
@@ -47,9 +47,9 @@ function retainInternal(
     value[RETAIN_METHOD]();
   }
 
-  if (deep && !canRetain && typeof value === 'object' && value != null) {
-    seen.set(value, false);
+  seen.set(value, canRetain);
 
+  if (deep) {
     if (Array.isArray(value)) {
       const nestedCanRetain = value.reduce(
         (canRetain, item) => retainInternal(item, deep, seen) || canRetain,
@@ -59,7 +59,9 @@ function retainInternal(
       seen.set(value, nestedCanRetain);
 
       return nestedCanRetain;
-    } else if (typeof value === 'object' && value != null) {
+    }
+
+    if (isBasicObject(value)) {
       const nestedCanRetain = Object.keys(value).reduce<boolean>(
         (canRetain, key) =>
           retainInternal((value as any)[key], deep, seen) || canRetain,
@@ -72,27 +74,32 @@ function retainInternal(
     }
   }
 
+  seen.set(value, canRetain);
+
   return canRetain;
 }
 
 export function release(value: any, {deep = true} = {}): boolean {
-  return releaseInternal(value, deep, new WeakMap());
+  return releaseInternal(value, deep, new Map());
 }
 
 export function releaseInternal(
   value: any,
   deep: boolean,
-  seen: WeakMap<any, boolean>,
+  seen: Map<any, boolean>,
 ): boolean {
+  const seenValue = seen.get(value);
+  if (seenValue != null) return seenValue;
+
   const canRelease = isMemoryManageable(value);
 
   if (canRelease) {
     value[RELEASE_METHOD]();
   }
 
-  if (deep && !canRelease && typeof value === 'object' && value != null) {
-    seen.set(value, false);
+  seen.set(value, canRelease);
 
+  if (deep) {
     if (Array.isArray(value)) {
       const nestedCanRelease = value.reduce(
         (canRelease, item) => releaseInternal(item, deep, seen) || canRelease,
@@ -102,10 +109,12 @@ export function releaseInternal(
       seen.set(value, nestedCanRelease);
 
       return nestedCanRelease;
-    } else if (Object.getPrototypeOf(value) === Object.prototype) {
+    }
+
+    if (isBasicObject(value)) {
       const nestedCanRelease = Object.keys(value).reduce<boolean>(
         (canRelease, key) =>
-          releaseInternal(value[key], deep, seen) || canRelease,
+          releaseInternal((value as any)[key], deep, seen) || canRelease,
         canRelease,
       );
 
@@ -116,4 +125,11 @@ export function releaseInternal(
   }
 
   return canRelease;
+}
+
+export function isBasicObject(value: unknown): value is object {
+  if (value == null || typeof value !== 'object') return false;
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype == null || prototype === Object.prototype;
 }

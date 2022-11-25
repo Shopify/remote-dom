@@ -290,7 +290,7 @@ describe('root', () => {
       expect(secondActionFuncOne).toHaveBeenCalled();
     });
 
-    it('can handle recursive hot swapping', async () => {
+    it.only('can handle recursive hot swapping', async () => {
       const funcOne = jest.fn();
       const objectOne = {func: funcOne};
       Reflect.defineProperty(objectOne, 'self', {
@@ -301,7 +301,7 @@ describe('root', () => {
       const funcTwo = jest.fn();
       const objectTwo = {func: funcTwo};
       Reflect.defineProperty(objectTwo, 'self', {
-        value: objectTwo,
+        value: [],
         enumerable: true,
       });
 
@@ -318,9 +318,13 @@ describe('root', () => {
       // After this, the receiver will have the initial Button component
       receiver.flush();
 
-      expect(
-        await button.updateProps({complexProp: objectTwo}),
-      ).toBeUndefined();
+      await button.updateProps({complexProp: objectTwo});
+
+      const currentProp = (receiver.children[0] as any).props.complexProp;
+      currentProp.func();
+
+      expect(funcOne).not.toHaveBeenCalled();
+      expect(funcTwo).toHaveBeenCalled();
     });
   });
 });

@@ -1,4 +1,5 @@
-import {RemoteComponentType} from '@remote-ui/types';
+import type {RemoteComponentType} from '@remote-ui/types';
+import {isBasicObject} from '@remote-ui/rpc';
 
 import {
   ACTION_MOUNT,
@@ -527,6 +528,7 @@ function updateProps(
       };
 
       for (const [hotSwappable, newValue] of hotSwapFunctions) {
+        console.log({hotSwappable, newValue});
         hotSwappable[FUNCTION_CURRENT_IMPLEMENTATION_KEY] = newValue;
       }
     },
@@ -604,10 +606,15 @@ type HotSwapResult = [any, HotSwapRecord[]?];
 function tryHotSwappingValues(
   currentValue: unknown,
   newValue: unknown,
-  seen: WeakMap<any, HotSwapResult> = new WeakMap(),
+  seenByValue = new Map<any, Map<any, HotSwapResult>>(),
 ): HotSwapResult {
-  const seenValue = seen.get(currentValue);
+  let seen = seenByValue.get(currentValue);
+  if (seen == null) {
+    seen = new Map();
+    seenByValue.set(currentValue, seen);
+  }
 
+  const seenValue = seen.get(newValue);
   if (seenValue) return seenValue;
 
   if (
@@ -619,47 +626,87 @@ function tryHotSwappingValues(
       [[currentValue as HotSwappableFunction<any>, newValue]],
     ];
 
-    seen.set(currentValue, result);
+    seen.set(newValue, result);
 
     return result;
   }
 
   if (Array.isArray(currentValue)) {
-    seen.set(currentValue, [IGNORE]);
+    seen.set(newValue, [IGNORE]);
 
-    const result = tryHotSwappingArrayValues(currentValue, newValue, seen);
+    const result = tryHotSwappingArrayValues(
+      currentValue,
+      newValue,
+      seenByValue,
+    );
 
-    seen.set(currentValue, result);
+    seen.set(newValue, result);
 
     return result;
   }
 
   if (isBasicObject(currentValue) && !isRemoteFragment(currentValue)) {
-    seen.set(currentValue, [IGNORE]);
+    seen.set(newValue, [IGNORE]);
 
-    const result = tryHotSwappingObjectValues(currentValue, newValue, seen);
+    const result = tryHotSwappingObjectValues(
+      currentValue,
+      newValue,
+      seenByValue,
+    );
 
-    seen.set(currentValue, result);
+    seen.set(newValue, result);
 
     return result;
   }
 
-  return [currentValue === newValue ? IGNORE : newValue];
+  const result: HotSwapResult = [currentValue === newValue ? IGNORE : newValue];
+  seen.set(newValue, result);
+
+  return result;
 }
 
 function makeValueHotSwappable(
   value: unknown,
-  seen = new WeakMap<any, any>(),
+  seen = new Map<any, any>(),
 ): unknown {
   const seenValue = seen.get(value);
   if (seenValue) return seenValue;
 
   if (isRemoteFragment(value)) {
+    seen.set(value, value);
     return value;
+  }
+
+  if (Array.isArray(value)) {
+    const result: any[] = [];
+    seen.set(value, result);
+
+    for (const nested of value) {
+      result.push(makeValueHotSwappable(nested, seen));
+    }
+
+    return result;
+  }
+
+  if (isBasicObject(value)) {
+    const result: Record<string, any> = {};
+    seen.set(value, result);
+
+    for (const key of Object.keys(value)) {
+      result[key] = makeValueHotSwappable((value as any)[key], seen);
+    }
+
+    return result;
   }
 
   if (typeof value === 'function') {
     const wrappedFunction: HotSwappableFunction<any> = ((...args: any[]) => {
+      console.log(
+        Object.getOwnPropertyDescriptor(
+          wrappedFunction,
+          FUNCTION_CURRENT_IMPLEMENTATION_KEY,
+        ),
+      );
       return wrappedFunction[FUNCTION_CURRENT_IMPLEMENTATION_KEY](...args);
     }) as any;
 
@@ -677,46 +724,28 @@ function makeValueHotSwappable(
     seen.set(value, wrappedFunction);
 
     return wrappedFunction;
-  } else if (Array.isArray(value)) {
-    const result: any[] = [];
-    seen.set(value, result);
-
-    for (const nested of value) {
-      result.push(makeValueHotSwappable(nested, seen));
-    }
-
-    return result;
-  } else if (isBasicObject(value)) {
-    const result: Record<string, any> = {};
-    seen.set(value, result);
-
-    for (const key of Object.keys(value)) {
-      result[key] = makeValueHotSwappable((value as any)[key], seen);
-    }
-
-    return result;
   }
+
+  seen.set(value, value);
 
   return value;
 }
 
 function collectNestedHotSwappableValues(
   value: unknown,
-  seen: WeakSet<any> = new WeakSet(),
+  seen: Set<any> = new Set(),
 ): HotSwappableFunction<any>[] | undefined {
   if (seen.has(value)) return undefined;
+  seen.add(value);
 
-  if (typeof value === 'function') {
-    seen.add(value);
-    if (FUNCTION_CURRENT_IMPLEMENTATION_KEY in value) return [value];
-  } else if (Array.isArray(value)) {
-    seen.add(value);
+  if (Array.isArray(value)) {
     return value.reduce<HotSwappableFunction<any>[]>((all, element) => {
       const nested = collectNestedHotSwappableValues(element, seen);
       return nested ? [...all, ...nested] : all;
     }, []);
-  } else if (typeof value === 'object' && value != null) {
-    seen.add(value);
+  }
+
+  if (isBasicObject(value)) {
     return Object.keys(value).reduce<HotSwappableFunction<any>[]>(
       (all, key) => {
         const nested = collectNestedHotSwappableValues(
@@ -727,6 +756,10 @@ function collectNestedHotSwappableValues(
       },
       [],
     );
+  }
+
+  if (typeof value === 'function') {
+    return FUNCTION_CURRENT_IMPLEMENTATION_KEY in value ? [value] : undefined;
   }
 
   return undefined;
@@ -1083,9 +1116,9 @@ function makeRemote<Root extends RemoteRoot<any, any>>(
 function tryHotSwappingObjectValues(
   currentValue: object,
   newValue: unknown,
-  seen: WeakMap<any, HotSwapResult>,
+  seenByValue: Map<any, Map<any, HotSwapResult>>,
 ): HotSwapResult {
-  if (!isBasicObject(newValue) || Array.isArray(newValue)) {
+  if (!isBasicObject(newValue)) {
     return [
       makeValueHotSwappable(newValue),
       collectNestedHotSwappableValues(currentValue)?.map(
@@ -1123,7 +1156,7 @@ function tryHotSwappingObjectValues(
     const [updatedValue, elementHotSwaps] = tryHotSwappingValues(
       currentObjectValue,
       newObjectValue,
-      seen,
+      seenByValue,
     );
 
     if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);
@@ -1147,7 +1180,7 @@ function tryHotSwappingObjectValues(
 function tryHotSwappingArrayValues(
   currentValue: unknown[],
   newValue: unknown,
-  seen: WeakMap<any, HotSwapResult>,
+  seenByValue: Map<any, Map<any, HotSwapResult>>,
 ): HotSwapResult {
   if (!Array.isArray(newValue)) {
     return [
@@ -1181,7 +1214,7 @@ function tryHotSwappingArrayValues(
       const [updatedValue, elementHotSwaps] = tryHotSwappingValues(
         currentArrayValue,
         newArrayValue,
-        seen,
+        seenByValue,
       );
 
       if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);
@@ -1210,12 +1243,4 @@ function tryHotSwappingArrayValues(
   }
 
   return [hasChanged ? normalizedNewValue : IGNORE, hotSwaps];
-}
-
-function isBasicObject(value: unknown): value is object {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    Object.getPrototypeOf(value) === Object.prototype
-  );
 }

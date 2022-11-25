@@ -11,6 +11,8 @@ export {
   retain,
   release,
   StackFrame,
+  isBasicObject,
+  isMemoryManageable,
   RELEASE_METHOD,
   RETAIN_METHOD,
   RETAINED_BY,
