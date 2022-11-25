@@ -2,7 +2,7 @@ import type {ReactElement} from 'react';
 import type {RemoteRoot} from '@remote-ui/core';
 import type {RootTag} from 'react-reconciler';
 
-import {reconciler} from './reconciler';
+import {createReconciler} from './reconciler';
 import type {Reconciler} from './reconciler';
 import {RenderContext} from './context';
 import type {RenderContextDescriptor} from './context';
@@ -18,11 +18,13 @@ const cache = new WeakMap<
 // @see https://github.com/facebook/react/blob/993ca533b42756811731f6b7791ae06a35ee6b4d/packages/react-reconciler/src/ReactRootTags.js
 // I think we are a legacy root?
 const LEGACY_ROOT: RootTag = 0;
+const defaultReconciler = createReconciler();
 
 export function render(
   element: ReactElement,
   root: RemoteRoot<any, any>,
   callback?: () => void,
+  reconciler: Reconciler = defaultReconciler,
 ) {
   // First, check if we've already cached a container and render context for this root
   let cached = cache.get(root);

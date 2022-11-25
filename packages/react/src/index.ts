@@ -8,3 +8,5 @@ export type {
   ReactPropsFromRemoteComponentType,
   ReactComponentTypeFromRemoteComponentType,
 } from './types';
+export {createReconciler} from './reconciler';
+export type {Reconciler} from './reconciler';
