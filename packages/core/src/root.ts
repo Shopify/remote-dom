@@ -274,6 +274,13 @@ export function createRemoteRoot<
         get children() {
           return internals.children;
         },
+        append: (...children) =>
+          append(
+            fragment,
+            children.map((child) => normalizeChild(child, remoteRoot)),
+            internals,
+            rootInternals,
+          ),
         appendChild: (child) =>
           appendChild(
             fragment,
@@ -283,6 +290,21 @@ export function createRemoteRoot<
           ),
         removeChild: (child) =>
           removeChild(fragment, child, internals, rootInternals),
+        replaceChildren: (...children) =>
+          replaceChildren(
+            fragment,
+            children.map((child) => normalizeChild(child, remoteRoot)),
+            internals,
+            rootInternals,
+          ),
+        insertBefore: (child, before) =>
+          insertBefore(
+            fragment,
+            normalizeChild(child, remoteRoot),
+            before,
+            internals,
+            rootInternals,
+          ),
         insertChildBefore: (child, before) =>
           insertBefore(
             fragment,

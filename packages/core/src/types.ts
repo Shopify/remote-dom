@@ -266,12 +266,28 @@ export interface RemoteFragment<
   readonly root: Root;
   readonly top: RemoteComponent<any, Root> | Root | null;
   readonly parent: RemoteComponent<any, Root> | Root | null;
+  append(
+    ...children: AllowedChildren<ExtractChildren<any>, Root, true>[]
+  ): void | Promise<void>;
+  /**
+   * @deprecated use `RemoteComponent.append` instead.
+   */
   appendChild(
     child: AllowedChildren<ExtractChildren<any>, Root, true>,
   ): void | Promise<void>;
   removeChild(
     child: AllowedChildren<ExtractChildren<any>, Root>,
   ): void | Promise<void>;
+  replaceChildren(
+    ...children: AllowedChildren<ExtractChildren<any>, Root, true>[]
+  ): void | Promise<void>;
+  insertBefore(
+    child: AllowedChildren<ExtractChildren<any>, Root>,
+    before?: AllowedChildren<ExtractChildren<any>, Root> | null,
+  ): void | Promise<void>;
+  /**
+   * @deprecated use `RemoteComponent.insertBefore` instead.
+   */
   insertChildBefore(
     child: AllowedChildren<ExtractChildren<any>, Root>,
     before: AllowedChildren<ExtractChildren<any>, Root>,
