@@ -34,7 +34,7 @@ endpoint.expose({
 
     const root = createRemoteRoot(receiver);
 
-    root.appendChild(
+    root.append(
       root.createComponent(
         'Button',
         {

@@ -25,8 +25,8 @@ import {mount} from '@remote-ui/testing';
 
 const tree = mount((root) => {
   const button = root.createComponent('Button');
-  button.appendChild('Submit');
-  root.appendChild(button);
+  button.append('Submit');
+  root.append(button);
 });
 ```
 
@@ -44,8 +44,8 @@ const tree = mount((root) => {
   const button = root.createComponent('Button', {
     onPress: () => 'Paid!',
   });
-  button.appendChild('Submit');
-  root.appendChild(button);
+  button.append('Submit');
+  root.append(button);
 }, myRoot);
 ```
 
@@ -90,8 +90,8 @@ function render(root) {
     onPress: () => {},
   });
 
-  button.appendChild('Submit');
-  root.appendChild(button);
+  button.append('Submit');
+  root.append(button);
 }
 
 const myComponent = mount(render);
@@ -114,8 +114,8 @@ function render(root) {
     primary: true,
   });
 
-  button.appendChild('Submit');
-  root.appendChild(button);
+  button.append('Submit');
+  root.append(button);
 }
 
 const myComponent = mount(render);
@@ -135,8 +135,8 @@ function render(root) {
   });
 
   const text = root.createText('Hello!');
-  button.appendChild(text);
-  root.appendChild(button);
+  button.append(text);
+  root.append(button);
 }
 
 const myComponent = mount(render);

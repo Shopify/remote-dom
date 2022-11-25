@@ -12,7 +12,7 @@ describe('vue', () => {
 
   beforeEach(() => {
     appElement = document.createElement('div');
-    document.body.appendChild(appElement);
+    document.body.append(appElement);
   });
 
   afterEach(() => {

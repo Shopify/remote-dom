@@ -155,17 +155,17 @@ Our remote environment is now fully constructed and can load third-party code. T
 
 self.onRender((root) => {
   const card = root.createComponent('Card');
-  card.appendChild('Card contents');
+  card.append('Card contents');
 
   const button = root.createComponent('Button', {
     onPress() {
       console.log('Pressed!');
     },
   });
-  button.appendChild('Click me');
+  button.append('Click me');
 
-  card.appendChild(button);
-  root.appendChild(card);
+  card.append(button);
+  root.append(card);
   root.mount();
 });
 ```

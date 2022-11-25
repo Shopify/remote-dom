@@ -353,7 +353,7 @@ This library also provides a collection of adaptors that transform common `postM
 
   const iframe = document.createElement('iframe');
   iframe.setAttribute('src', '/my-iframe-page');
-  document.appendChild(iframe);
+  document.append(iframe);
 
   const endpoint = createEndpoint(fromIframe(iframe));
 

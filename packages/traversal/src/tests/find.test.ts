@@ -9,30 +9,30 @@ describe('find()', () => {
   it('finds a single element', () => {
     const root = createRemoteRoot(() => {});
     const target = root.createComponent(Target);
-    root.appendChild(target);
+    root.append(target);
     expect(find(root, Target)).toBe(target);
   });
 
   it('returns null when no matching element is found', () => {
     const root = createRemoteRoot(() => {});
-    root.appendChild(root.createComponent(RedHerring));
+    root.append(root.createComponent(RedHerring));
     expect(find(root, Target)).toBeNull();
   });
 
   it('returns the first element when multiple are found', () => {
     const root = createRemoteRoot(() => {});
     const target = root.createComponent(Target);
-    root.appendChild(target);
-    root.appendChild(root.createComponent(Target));
+    root.append(target);
+    root.append(root.createComponent(Target));
     expect(find(root, Target)).toBe(target);
   });
 
   it('returns the first matching component with matching props when they are passed', () => {
     const root = createRemoteRoot(() => {});
-    root.appendChild(root.createComponent(Target, {disabled: false}));
+    root.append(root.createComponent(Target, {disabled: false}));
 
     const target = root.createComponent(Target, {disabled: true});
-    root.appendChild(target);
+    root.append(target);
 
     expect(find(root, Target, {disabled: true})).toBe(target);
   });
@@ -45,9 +45,9 @@ describe('findAll()', () => {
     const targetTwo = root.createComponent(Target);
     const container = root.createComponent(RedHerring);
 
-    container.appendChild(targetTwo);
-    root.appendChild(targetOne);
-    root.appendChild(container);
+    container.append(targetTwo);
+    root.append(targetOne);
+    root.append(container);
 
     expect(findAll(root, Target)).toStrictEqual([targetOne, targetTwo]);
   });
@@ -58,9 +58,9 @@ describe('findAll()', () => {
     const targetTwo = root.createComponent(Target, {disabled: false});
     const container = root.createComponent(RedHerring);
 
-    container.appendChild(targetTwo);
-    root.appendChild(targetOne);
-    root.appendChild(container);
+    container.append(targetTwo);
+    root.append(targetOne);
+    root.append(container);
 
     expect(findAll(root, Target, {disabled: false})).toStrictEqual([targetTwo]);
   });

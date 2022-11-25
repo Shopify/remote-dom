@@ -32,11 +32,7 @@ export function createRenderer<Root extends RemoteRoot>(
       return root.createText(text);
     },
     insert(child, parent, anchor) {
-      if (anchor) {
-        parent.insertChildBefore(child, anchor);
-      } else {
-        parent.appendChild(child);
-      }
+      parent.insertBefore(child, anchor);
     },
     nextSibling(node) {
       const {parent} = node;
@@ -102,9 +98,5 @@ export function createRenderer<Root extends RemoteRoot>(
 }
 
 function setElementText(element: Component, text: string) {
-  for (const child of element.children) {
-    element.removeChild(child);
-  }
-
-  element.appendChild(text);
+  element.replaceChildren(text);
 }

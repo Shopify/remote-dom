@@ -111,6 +111,16 @@ export interface RemoteRoot<
     >
   >;
   readonly options: RemoteRootOptions<AllowedComponents>;
+  append(
+    ...children: AllowedChildren<
+      AllowedChildrenTypes,
+      RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
+      true
+    >[]
+  ): void | Promise<void>;
+  /**
+   * @deprecated use `RemoteRoot.append` instead.
+   */
   appendChild(
     child: AllowedChildren<
       AllowedChildrenTypes,
@@ -124,6 +134,26 @@ export interface RemoteRoot<
       RemoteRoot<AllowedComponents, AllowedChildrenTypes>
     >,
   ): void | Promise<void>;
+  replaceChildren(
+    ...children: AllowedChildren<
+      AllowedChildrenTypes,
+      RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
+      true
+    >[]
+  ): void | Promise<void>;
+  insertBefore(
+    child: AllowedChildren<
+      AllowedChildrenTypes,
+      RemoteRoot<AllowedComponents, AllowedChildrenTypes>
+    >,
+    before?: AllowedChildren<
+      AllowedChildrenTypes,
+      RemoteRoot<AllowedComponents, AllowedChildrenTypes>
+    > | null,
+  ): void | Promise<void>;
+  /**
+   * @deprecated use `RemoteRoot.insertBefore` instead.
+   */
   insertChildBefore(
     child: AllowedChildren<
       AllowedChildrenTypes,
@@ -199,12 +229,28 @@ export interface RemoteComponent<
   updateProps(
     props: Partial<PropsForRemoteComponent<Type>>,
   ): void | Promise<void>;
+  append(
+    ...children: AllowedChildren<ExtractChildren<Type>, Root, true>[]
+  ): void | Promise<void>;
+  /**
+   * @deprecated use `RemoteComponent.append` instead.
+   */
   appendChild(
     child: AllowedChildren<ExtractChildren<Type>, Root, true>,
   ): void | Promise<void>;
   removeChild(
     child: AllowedChildren<ExtractChildren<Type>, Root>,
   ): void | Promise<void>;
+  replaceChildren(
+    ...children: AllowedChildren<ExtractChildren<Type>, Root, true>[]
+  ): void | Promise<void>;
+  insertBefore(
+    child: AllowedChildren<ExtractChildren<Type>, Root>,
+    before?: AllowedChildren<ExtractChildren<Type>, Root> | null,
+  ): void | Promise<void>;
+  /**
+   * @deprecated use `RemoteComponent.insertBefore` instead.
+   */
   insertChildBefore(
     child: AllowedChildren<ExtractChildren<Type>, Root>,
     before: AllowedChildren<ExtractChildren<Type>, Root>,

@@ -51,13 +51,13 @@ describe('root', () => {
     });
   });
 
-  describe('appendChild()', () => {
+  describe('append()', () => {
     it('does not throw error when appending a child created by the remote root', () => {
       const root = createRemoteRoot(() => {});
 
       expect(() => {
         const card = root.createComponent('Card');
-        root.appendChild(card);
+        root.append(card);
       }).not.toThrow();
     });
 
@@ -66,33 +66,59 @@ describe('root', () => {
 
       expect(() => {
         const card = {} as any;
-        root.appendChild(card);
+        root.append(card);
       }).toThrow(
         'Cannot append a node that was not created by this remote root',
       );
     });
   });
 
-  describe('insertChildBefore()', () => {
-    it('does not throw error when calling insertChildBefore for a component created by the remote root', () => {
+  describe('insertBefore()', () => {
+    it('does not throw error when calling insertBefore for a component created by the remote root', () => {
       const root = createRemoteRoot(() => {});
 
       expect(() => {
         const card = root.createComponent('Card');
         const image = root.createComponent('Image');
-        root.appendChild(image);
-        root.insertChildBefore(card, image);
+        root.append(image);
+        root.insertBefore(card, image);
       }).not.toThrow();
     });
 
-    it('throws error when calling insertChildBefore for a component not created by the remote root', () => {
+    it('throws error when calling insertBefore for a component not created by the remote root', () => {
       const root = createRemoteRoot(() => {});
 
       expect(() => {
         const card = root.createComponent('Card');
         const button = {} as any;
-        root.appendChild(card);
-        root.insertChildBefore(button, card);
+        root.append(card);
+        root.insertBefore(button, card);
+      }).toThrow(
+        'Cannot insert a node that was not created by this remote root',
+      );
+    });
+  });
+
+  describe('replaceChildren()', () => {
+    it('does not throw error when calling insertBefore for a component created by the remote root', () => {
+      const root = createRemoteRoot(() => {});
+
+      expect(() => {
+        const card = root.createComponent('Card');
+        const image = root.createComponent('Image');
+        root.append(image);
+        root.replaceChildren(card);
+      }).not.toThrow();
+    });
+
+    it('throws error when calling insertBefore for a component not created by the remote root', () => {
+      const root = createRemoteRoot(() => {});
+
+      expect(() => {
+        const card = root.createComponent('Card');
+        const button = {} as any;
+        root.append(card);
+        root.replaceChildren(button);
       }).toThrow(
         'Cannot insert a node that was not created by this remote root',
       );
@@ -108,7 +134,7 @@ describe('root', () => {
       const root = createRemoteRoot(receiver.receive);
       const button = root.createComponent('Button', {onPress: funcOne});
 
-      root.appendChild(button);
+      root.append(button);
       root.mount();
 
       // After this, the receiver will have the initial Button component
@@ -135,7 +161,7 @@ describe('root', () => {
         },
       });
 
-      root.appendChild(resourceList);
+      root.append(resourceList);
       root.mount();
 
       resourceList.updateProps({
@@ -167,7 +193,7 @@ describe('root', () => {
         actions: [{onAction: funcOne}],
       });
 
-      root.appendChild(card);
+      root.append(card);
       root.mount();
 
       // After this, the receiver will have the initial Card component
@@ -192,7 +218,7 @@ describe('root', () => {
         secondaryActions: [{onAction: firstActionFuncOne}],
       });
 
-      root.appendChild(modal);
+      root.append(modal);
       root.mount();
 
       modal.updateProps({
@@ -231,7 +257,7 @@ describe('root', () => {
         ],
       });
 
-      root.appendChild(modal);
+      root.append(modal);
       root.mount();
 
       modal.updateProps({

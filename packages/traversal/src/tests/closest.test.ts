@@ -15,7 +15,7 @@ describe('closest()', () => {
   it('returns null when no ancestor matches', () => {
     const root = createRemoteRoot(() => {});
     const descendant = root.createComponent(Descendant);
-    root.appendChild(descendant);
+    root.append(descendant);
     expect(closest(descendant, Target)).toBeNull();
   });
 
@@ -25,9 +25,9 @@ describe('closest()', () => {
     const target = root.createComponent(Target);
     const outerTarget = root.createComponent(Target);
 
-    target.appendChild(descendant);
-    outerTarget.appendChild(target);
-    root.appendChild(outerTarget);
+    target.append(descendant);
+    outerTarget.append(target);
+    root.append(outerTarget);
 
     expect(closest(descendant, Target)).toBe(target);
   });
@@ -38,9 +38,9 @@ describe('closest()', () => {
     const target = root.createComponent(Target, {disabled: true});
     const innerTarget = root.createComponent(Target, {disabled: false});
 
-    innerTarget.appendChild(descendant);
-    target.appendChild(innerTarget);
-    root.appendChild(target);
+    innerTarget.append(descendant);
+    target.append(innerTarget);
+    root.append(target);
 
     expect(closest(descendant, Target, {disabled: true})).toBe(target);
   });
