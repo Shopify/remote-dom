@@ -1,7 +1,4 @@
-import reactReconciler, {
-  Reconciler as ReactReconciler,
-  HostConfig,
-} from 'react-reconciler';
+import reactReconciler, {Reconciler as ReactReconciler} from 'react-reconciler';
 import type {
   RemoteRoot,
   RemoteText,
@@ -30,23 +27,7 @@ export type Reconciler = ReactReconciler<
   PublicInstance
 >;
 
-export const createReconciler = (
-  hostConfig?: HostConfig<
-    Type,
-    Props,
-    RemoteRoot,
-    ViewInstance,
-    TextInstance,
-    SuspenseInstance,
-    HydratableInstance,
-    PublicInstance,
-    HostContext,
-    UpdatePayload,
-    ChildSet,
-    TimeoutHandle,
-    NoTimeout
-  >,
-) =>
+export const createReconciler = (options?: {primary?: boolean}) =>
   reactReconciler<
     Type,
     Props,
@@ -72,7 +53,7 @@ export const createReconciler = (
     queueMicrotask: (callback) =>
       Promise.resolve(null).then(callback).catch(handleErrorInNextTick),
 
-    isPrimaryRenderer: true,
+    isPrimaryRenderer: options?.primary ?? true,
     supportsMutation: true,
     supportsHydration: false,
     supportsPersistence: false,
@@ -188,7 +169,6 @@ export const createReconciler = (
     resetAfterCommit() {},
     commitMount() {},
     preparePortalMount() {},
-    ...hostConfig,
   });
 
 function handleErrorInNextTick(error: Error) {
