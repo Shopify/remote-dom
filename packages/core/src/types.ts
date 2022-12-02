@@ -301,6 +301,10 @@ export interface RemoteText<Root extends RemoteRoot<any, any>> {
   readonly root: Root;
   readonly top: RemoteComponent<any, Root> | Root | null;
   readonly parent: RemoteComponent<any, Root> | Root | null;
+  update(text: string): void | Promise<void>;
+  /**
+   * @deprecated use `RemoteText.update` instead.
+   */
   updateText(text: string): void | Promise<void>;
 }
 

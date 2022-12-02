@@ -233,7 +233,7 @@ A `RemoteText` object represents a text element being rendered to the host UI. I
 
 ##### `RemoteText#text`
 
-The current text content of the element. This representation is not mutable, so changing any value on this object will have no effect (use `updateText` instead)
+The current text content of the element. This representation is not mutable, so changing any value on this object will have no effect (use `update` instead)
 
 ##### `RemoteText#root`
 
@@ -243,7 +243,7 @@ A readonly reference to the root that constructed this component.
 
 A readonly reference to the parent of this component in the tree (or `null`, if it has no parent).
 
-##### `RemoteText#updateText()`
+##### `RemoteText#update()`
 
 Updates the text content.
 
@@ -251,7 +251,7 @@ Updates the text content.
 const text = root.createText('Hello');
 
 if (LOCALE === 'fr') {
-  text.updateText('Bonjour');
+  text.update('Bonjour');
 }
 ```
 

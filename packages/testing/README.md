@@ -130,7 +130,7 @@ Asserts that the rendered output of the component contains the passed string as 
 function render(root) {
   const button = root.createComponent('Button', {
     onPress: () => {
-      text.updateText('Goodbye!');
+      text.update('Goodbye!');
     },
   });
 

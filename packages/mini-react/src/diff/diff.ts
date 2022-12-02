@@ -657,7 +657,7 @@ function diffElementNodes(
       oldProps !== newProps &&
       (resolvedRemoteNode as RemoteText<any>).text !== newProps
     ) {
-      (resolvedRemoteNode as RemoteText<any>).updateText(newProps);
+      (resolvedRemoteNode as RemoteText<any>).update(newProps);
     }
   } else {
     resolvedRemoteNode = resolvedRemoteNode as RemoteComponentNode;

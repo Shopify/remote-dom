@@ -244,14 +244,16 @@ export function createRemoteRoot<
     createText(content = '') {
       const id = `${currentId++}`;
       const internals: TextInternals = {text: content};
+      const update: RemoteText<Root>['update'] = (newText) =>
+        updateText(text, newText, internals, rootInternals);
 
       const text: RemoteText<Root> = {
         kind: KIND_TEXT,
         get text() {
           return internals.text;
         },
-        updateText: (newText) =>
-          updateText(text, newText, internals, rootInternals),
+        update,
+        updateText: update,
         // Just satisfying the type definition, since we need to write
         // some properties manually.
         ...EMPTY_OBJECT,

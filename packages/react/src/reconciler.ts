@@ -77,7 +77,7 @@ export const createReconciler = (options?: {primary?: boolean}) =>
 
     // Updates
     commitTextUpdate(text, _oldText, newText) {
-      text.updateText(newText);
+      text.update(newText);
     },
     prepareUpdate(_instance, _type, oldProps, newProps) {
       const updateProps: Record<string, unknown> = {};
