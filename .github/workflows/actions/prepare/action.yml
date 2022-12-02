@@ -1,0 +1,13 @@
+name: Prepare repo
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-node@v3
+      name: Setup node.js and yarn
+      with:
+        cache: yarn
+        node-version-file: '.nvmrc'
+
+    - name: Yarn install
+      run: yarn install --frozen-lockfile
+      shell: bash
