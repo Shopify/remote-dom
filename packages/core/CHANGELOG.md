@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2022-12-02
+
+- Added a number of methods that align more closely with the corresponding DOM API, and deprecated a few existing methods with overlapping functionality ([pull request](https://github.com/Shopify/remote-ui/pull/197)):
+
+  - `RemoteParent.appendChild` is deprecated, with a new `RemoteParent.append` API recommended instead. This new API matches the DOM’s version; it allows you to pass multiple children, including strings that are converted to text nodes.
+  - `RemoteParent.insertChildBefore` is deprecated, with a new `RemoteParent.insertBefore` API recommended instead. This matches the DOM, including the fact that the second argument can be null (in which case, the method behaves the same as `append`
+  - `RemoteParent.replaceChildren` is new, and matches the DOM's API of the same name. It allows passing any number of children/ strings, and those are used to fully replace the existing children.
+  - `RemoteText.updateText` is deprecated in favor of a new `RemoteText.update` method, which is a little shorter.
+
 ## [2.1.14] - 2021-07-14
 
 - Fixed a crash when mutating the children of a fragment ([pull request](https://github.com/Shopify/remote-ui/pull/170))
