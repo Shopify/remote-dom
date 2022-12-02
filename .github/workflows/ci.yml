@@ -5,56 +5,38 @@ on: [push]
 jobs:
   type-check:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v1
-        name: Checkout
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/actions/prepare
 
-      - uses: actions/setup-node@v2
-        name: Setup node.js and yarn
-        with:
-          cache: yarn
-          node-version-file: '.nvmrc'
-
-      - name: Yarn install
-        run: yarn install --frozen-lockfile
-
-      - uses: actions/cache@v1
-        id: typescript-cache
+      - id: typescript-cache
         name: Restore TypeScript cache
+        uses: actions/cache@v1
         with:
-          path: .sewing-kit/cache/typescript/
-          key: ${{ runner.os }}-typescript-v2-${{ github.sha }}
+          path: |
+            packages/*/build/ts
+            packages/*/build/*.tsbuildinfo
+          key: ${{ runner.os }}-typescript-v1-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-typescript-v2-
+            ${{ runner.os }}-typescript-v1-
 
       - name: Type check
         run: yarn type-check
 
   test:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v1
-        name: Checkout
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/actions/prepare
 
-      - uses: actions/setup-node@v2
-        name: Setup node.js and yarn
-        with:
-          cache: yarn
-          node-version-file: '.nvmrc'
-
-      - name: Yarn install
-        run: yarn install --frozen-lockfile
-
-      - uses: actions/cache@v1
-        id: jest-cache
+      - id: jest-cache
         name: Restore jest cache
+        uses: actions/cache@v1
         with:
-          path: .sewing-kit/cache/jest/
-          key: ${{ runner.os }}-jest-${{ github.sha }}
+          path: .loom/cache/jest/
+          key: ${{ runner.os }}-jest-v1-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-jest-
+            ${{ runner.os }}-jest-v1-
 
       - name: Test
         run: yarn test
@@ -63,26 +45,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
-        name: Checkout
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/actions/prepare
 
-      - uses: actions/setup-node@v2
-        name: Setup node.js and yarn
-        with:
-          cache: yarn
-          node-version-file: '.nvmrc'
-
-      - name: Yarn install
-        run: yarn install --frozen-lockfile
-
-      - uses: actions/cache@v1
-        id: eslint-cache
+      - id: eslint-cache
         name: Restore ESLint cache
+        uses: actions/cache@v1
         with:
-          path: .sewing-kit/cache/eslint
-          key: ${{ runner.os }}-eslint-${{ github.sha }}
+          path: .loom/cache/eslint
+          key: ${{ runner.os }}-eslint-v1-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-eslint-
+            ${{ runner.os }}-eslint-v1-
 
       - name: Lint
         run: yarn lint

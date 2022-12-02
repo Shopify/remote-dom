@@ -144,7 +144,7 @@ export interface RemoteRoot<
             AllowedChildrenTypes,
             RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
             true
-          >[]
+          >[],
         ]
       | [
           (PropsForRemoteComponent<Type> | null)?,
@@ -160,7 +160,7 @@ export interface RemoteRoot<
             AllowedChildrenTypes,
             RemoteRoot<AllowedComponents, AllowedChildrenTypes>,
             true
-          >[]
+          >[],
         ]
       | [
           PropsForRemoteComponent<Type>,
