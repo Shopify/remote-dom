@@ -13,6 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+
       - uses: ./.github/workflows/actions/prepare
 
       - id: changesets
