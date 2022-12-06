@@ -211,6 +211,16 @@ if (SHOULD_BE_DISABLED) {
 }
 ```
 
+##### `RemoteComponent#remove()`
+
+Removes the component from its parent, if it is attached to one.
+
+```ts
+const card = root.createComponent('Card');
+root.append(card);
+card.remove();
+```
+
 ##### `RemoteComponent#append()`
 
 Just like [`RemoteRoot#append`](#remoterootappend), but appending children for a single component rather than the root.
@@ -253,6 +263,16 @@ const text = root.createText('Hello');
 if (LOCALE === 'fr') {
   text.update('Bonjour');
 }
+```
+
+##### `RemoteComponent#remove()`
+
+Removes the text from its parent, if it is attached to one.
+
+```ts
+const text = root.createText('Hello');
+root.append(card);
+text.remove();
 ```
 
 #### `RemoteFragment`

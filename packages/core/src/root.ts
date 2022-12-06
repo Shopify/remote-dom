@@ -175,6 +175,7 @@ export function createRemoteRoot<
         get remoteProps() {
           return internals.internalProps;
         },
+        remove: () => remove(component),
         updateProps: (newProps) =>
           updateProps(component, newProps, internals, rootInternals),
         append: (...children) =>
@@ -254,6 +255,7 @@ export function createRemoteRoot<
         },
         update,
         updateText: update,
+        remove: () => remove(text),
         // Just satisfying the type definition, since we need to write
         // some properties manually.
         ...EMPTY_OBJECT,
@@ -679,6 +681,10 @@ function collectNestedHotSwappableValues(
       [],
     );
   }
+}
+
+function remove(child: AnyChild) {
+  (child.parent as AnyParent)?.removeChild(child);
 }
 
 function append(

@@ -226,6 +226,7 @@ export interface RemoteComponent<
   readonly root: Root;
   readonly top: RemoteComponent<any, Root> | Root | null;
   readonly parent: RemoteComponent<any, Root> | Root | null;
+  remove(): void | Promise<void>;
   updateProps(
     props: Partial<PropsForRemoteComponent<Type>>,
   ): void | Promise<void>;
@@ -306,6 +307,7 @@ export interface RemoteText<Root extends RemoteRoot<any, any>> {
    * @deprecated use `RemoteText.update` instead.
    */
   updateText(text: string): void | Promise<void>;
+  remove(): void | Promise<void>;
 }
 
 export type RemoteChild<Root extends RemoteRoot<any, any>> =
