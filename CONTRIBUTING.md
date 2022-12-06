@@ -16,11 +16,11 @@ There are many ways to contribute to remote-ui, some of which are:
 
 ### Getting started
 
-Clone this repo, then run `yarn install`. This repo uses [yarn](https://yarnpkg.com) for package management, and [lerna](https://lerna.js.org) for publishing multiple packages out of a single repo (a “monorepo”). The codebase is entirely written in [TypeScript](https://www.typescriptlang.org).
+Clone this repo, then run `yarn install`. This repo uses [yarn](https://yarnpkg.com) for package management. The codebase is entirely written in [TypeScript](https://www.typescriptlang.org).
 
 ### Development tasks
 
-remote-ui uses [loom](https://www.npmjs.com/package/@shopify/loom-cli), a work-in-progress extraction of some of Shopify’s front-end build tools, for all development tasks. You will see `loom.config.ts` files at the root of the repo, and for each package, which control the way those packages are built, tested, and more.
+remote-ui uses [loom](https://www.npmjs.com/package/@shopify/loom-cli) for all development tasks. You will see `loom.config.ts` files at the root of the repo, and for each package, which control the way those packages are built, tested, and more.
 
 #### Type check
 
@@ -56,6 +56,7 @@ If you are fixing a minor issue, feel free to send a pull request directly. If y
 1. Run `yarn install` from the repository root
 1. Make sure your changes do not cause errors to be thrown when running `yarn test`, `yarn lint`, or `yarn type-check` (these will also be checked automatically when you open your pull request, as they run as part of remote-ui’s [GitHub Action-based CI](./.github/workflows/ci.yml))
 1. Add a description of your changes to package’s `CHANGELOG.md`
+1. Add a [changeset using `yarn changeset add`](#releasing-changes)
 1. If you haven’t already, [sign a Contributor License Agreement](https://cla.shopify.com/)
 
 #### Contributor License Agreement (CLA)
@@ -64,13 +65,16 @@ Each contributor is required to [sign a CLA](https://cla.shopify.com/). This pro
 
 ### Releasing changes
 
-Currently, only developers with access to Shopify’s internal tools can tag new versions and publish releases. We’ll automatically publish new versions as pull requests are merged, but we ask that you suggest the type of version change you expect a package to need as the result of your changes. This project uses [Semantic Versioning](https://semver.org), with each package individually-versioned.
+This repo uses [Changesets](https://github.com/changesets/changesets) to manage releases. As you contribute changes to the repo, you can include changeset files that describe the packages being changed, the significance of the change, and a detailed description.
 
-For Shopify developers doing a release, please follow these steps:
+Before you create a PR for your change, run `yarn changeset`. This command will prompt you to select the packages and type (patch, minor, or major) of change you are working on. You will also be asked for an initial description.
 
-1. Create a new branch off `main`.
-1. On your new branch, run `yarn version-bump` and select new versions for all packages.
-1. Ensure that any packages with meaningful version changes have corresponding updates to their collocated `CHANGELOG.md`.
-1. Push your changes to the `origin` remote, ensuring you also `--follow-tags`.
-1. Open a PR for your new branch, and get it approved and merged.
-1. After merging, visit the [shipit stack](https://shipit.shopify.io/shopify/remote-ui/production) and deploy your commit. This will publish the new versions to the npm registry.
+This command creates a file in the `.changeset` directory at the root of the repo. The contents of these files will be included in the changelog entries of each affected package. If you have additional detail or migration instructions related to the change, you can add it as markdown to the generated file.
+
+Once you are satisfied with the content of the file, commit it alongside the rest of your changes, and merge it as part of your normal PR flow. Don’t worry, the new version will not be published immediately! A Shopify developer will take care of actually publishing the new versions.
+
+#### Publishing new versions
+
+> **Note:** currently, only Shopify developers can publish new versions of packages.
+
+Once changeset files are merged into the `main` branch of this repo, a [Github action](./.github/workflows/changesets.yml) will create a new PR to apply all the outstanding changesets to their respective packages, creating a new set of package versions. You just need to merge that PR, and the robots will take care of publishing the changes to NPM!

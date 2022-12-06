@@ -12,11 +12,12 @@
     "lint": "loom lint",
     "type-check": "loom type-check",
     "build": "loom build",
-    "version-bump": "lerna version --no-push --include-merged-tags",
-    "deploy": "lerna publish from-package --yes",
+    "release": "loom build && changeset publish",
     "example:vanilla-dom": "yarn workspace example-vanilla-dom start"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.4.7",
+    "@changesets/cli": "^2.25.2",
     "@shopify/babel-preset": "^24.1.0",
     "@shopify/browserslist-config": "^3.0.0",
     "@shopify/eslint-plugin": "^42.0.0",
@@ -27,10 +28,8 @@
     "@shopify/loom-plugin-prettier": "^2.0.0",
     "@shopify/typescript-configs": "^5.1.0",
     "eslint": "^8.28.0",
-    "lerna": "^3.22.1",
     "prettier": "^2.8.0",
     "rollup-plugin-copy": "^3.4.0",
     "typescript": "^4.4.0"
-  },
-  "dependencies": {}
+  }
 }
