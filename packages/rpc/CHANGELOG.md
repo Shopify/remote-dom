@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.5
+
+### Patch Changes
+
+- [#192](https://github.com/Shopify/remote-ui/pull/192) [`fb2e2e8`](https://github.com/Shopify/remote-ui/commit/fb2e2e8b76876158a6dab1aee2a9915d5a182a20) Thanks [@TheCloudlessSky](https://github.com/TheCloudlessSky)! - Fix memory leak when listening to 'message' events from child iframes
+
 ## [1.3.3] - 2022-08-15
 
 - Errors in exposed methods are now rethrown where they occur ([pull request](https://github.com/Shopify/remote-ui/pull/173)).
