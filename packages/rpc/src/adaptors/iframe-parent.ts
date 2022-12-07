@@ -18,13 +18,20 @@ export function fromIframe(
     (event: MessageEvent) => void
   >();
 
+  let resolveIFrameReadyPromise: () => void;
+
+  function onMessage(event: MessageEvent<any>) {
+    if (event.source !== target.contentWindow) return;
+
+    if (event.data === 'remote-ui::ready') {
+      window.removeEventListener('message', onMessage);
+      resolveIFrameReadyPromise();
+    }
+  }
+
   const iframeReadyPromise = new Promise<void>((resolve) => {
-    window.addEventListener('message', (event) => {
-      if (event.source !== target.contentWindow) return;
-      if (event.data === 'remote-ui::ready') {
-        resolve();
-      }
-    });
+    resolveIFrameReadyPromise = resolve;
+    window.addEventListener('message', onMessage);
   });
 
   return {
@@ -50,6 +57,8 @@ export function fromIframe(
       self.removeEventListener(event, wrappedListener);
     },
     terminate() {
+      window.removeEventListener('message', onMessage);
+
       if (shouldTerminate) target.remove();
     },
   };
