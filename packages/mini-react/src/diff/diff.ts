@@ -657,7 +657,7 @@ function diffElementNodes(
       oldProps !== newProps &&
       (resolvedRemoteNode as RemoteText<any>).text !== newProps
     ) {
-      (resolvedRemoteNode as RemoteText<any>).updateText(newProps);
+      (resolvedRemoteNode as RemoteText<any>).update(newProps);
     }
   } else {
     resolvedRemoteNode = resolvedRemoteNode as RemoteComponentNode;
@@ -978,7 +978,7 @@ function placeChild(
 
     // eslint-disable-next-line no-labels
     outer: if (oldRemoteNode == null || oldRemoteNode.parent !== parentNode) {
-      parentNode.appendChild(newRemoteNode);
+      parentNode.append(newRemoteNode);
       nextRemoteNode = null;
     } else {
       // `j<oldChildrenLength; j+=2` is an alternative to `j++<oldChildrenLength/2`
@@ -994,7 +994,7 @@ function placeChild(
         }
       }
 
-      parentNode.insertChildBefore(newRemoteNode, oldRemoteNode);
+      parentNode.insertBefore(newRemoteNode, oldRemoteNode);
       nextRemoteNode = oldRemoteNode;
     }
   }

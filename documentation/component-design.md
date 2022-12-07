@@ -62,7 +62,7 @@ However, remote-ui has one important feature that can impact some component APIs
   const button = root.createComponent(Button, {
     icon: root.createComponent(Icon),
   });
-  root.appendChild(button);
+  root.append(button);
   root.mount();
   ```
 

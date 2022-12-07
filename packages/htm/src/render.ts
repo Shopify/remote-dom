@@ -29,10 +29,8 @@ export function append(
   parent: RemoteRoot<any, any> | RemoteComponent<any, any>,
 ) {
   if (Array.isArray(tree)) {
-    for (const child of tree) {
-      parent.appendChild(child);
-    }
+    parent.append(...tree);
   } else {
-    parent.appendChild(tree);
+    parent.append(tree);
   }
 }

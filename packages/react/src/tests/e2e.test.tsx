@@ -100,7 +100,7 @@ describe('@remote-ui/react', () => {
 
   beforeEach(() => {
     appElement = document.createElement('div');
-    document.body.appendChild(appElement);
+    document.body.append(appElement);
     jest.useFakeTimers();
   });
 

@@ -69,12 +69,12 @@ const button = root.createComponent('Button', {
 
 If you are familiar with React, or if the “host” side of these components is implemented in React, you may be tempted to pass a function as the `children` prop. This pattern is commonly referred to as “render props” in React. However, this pattern likely is not doing what you think it is. Remember that functions passed as props will always be asynchronous when called by the host, because they are implemented with message passing. This makes them poorly suited for rendering UI, where you generally need to run synchronous functions.
 
-To prevent this kind of mistake, any `children` prop will be deleted from the props object. If you want to implement a render prop-style API, you can do so without potentially causing confusion by using a different prop name, and ensuring that you handle the fact that the host will receive a promise whenever they call this function. If you are just trying to append other `RemoteComponent` and `RemoteText` instances to your tree, use `RemoteComponent#appendChild()`.
+To prevent this kind of mistake, any `children` prop will be deleted from the props object. If you want to implement a render prop-style API, you can do so without potentially causing confusion by using a different prop name, and ensuring that you handle the fact that the host will receive a promise whenever they call this function. If you are just trying to append other `RemoteComponent` and `RemoteText` instances to your tree, use `RemoteComponent#append()`.
 
 `createComponent` also allows you to pass initial children for the created component. If you have only one child, you can pass it directly as the third argument. If you have more than one child, you can either pass them as an array for the third argument, or as additional positional arguments. You can also pass a string directly, and it will be normalized into a `RemoteText` object for you.
 
 ```ts
-root.appendChild(
+root.append(
   root.createComponent('BlockStack', undefined, [
     root.createComponent('Text', undefined, 'This will be fun!'),
     root.createComponent(
@@ -97,35 +97,35 @@ root.appendChild(
 ```ts
 const iconFragment = root.createFragment();
 const icon = root.createComponent('Icon');
-iconFragment.appendChild(icon);
+iconFragment.append(icon);
 
 const headerFragment = root.createFragment();
 const header = root.createText('Hello world!');
-headerFragment.appendChild(header);
+headerFragment.append(header);
 const card = root.createComponent('Card', {
   icon: iconFragment,
   header: headerFragment,
 });
 ```
 
-##### `RemoteRoot#appendChild()`
+##### `RemoteRoot#append()`
 
-This method appends a `RemoteComponent` or `RemoteText` to the remote root as the last child. This method returns a promise for when the update has been applied in the host.
+This method appends one or more `RemoteComponent` or `RemoteText` to the remote root as the last children. This method returns a promise for when the update has been applied in the host.
 
 ```ts
 const card = root.createComponent('Card');
-root.appendChild(card);
+root.append(card);
 ```
 
-##### `RemoteRoot#insertChildBefore()`
+##### `RemoteRoot#insertBefore()`
 
-This method inserts a `RemoteComponent` or `RemoteText` in the remote root before the specified child. This method returns a promise for when the update has been applied in the host.
+This method inserts a `RemoteComponent` or `RemoteText` in the remote root before the specified child. This method returns a promise for when the update has been applied in the host. If the second argument is excluded, this method behaves identically to `append()`.
 
 ```ts
 const card = root.createComponent('Card');
 const earlierCard = root.createComponent('Card');
-root.appendChild(card);
-root.insertChildBefore(earlierCard, card);
+root.append(card);
+root.insertBefore(earlierCard, card);
 ```
 
 ##### `RemoteRoot#removeChild()`
@@ -134,11 +134,25 @@ This method removes a `RemoteComponent` or `RemoteText` from the remote root. Th
 
 ```ts
 const card = root.createComponent('Card');
-root.appendChild(card);
+root.append(card);
 
 // later...
 
 root.removeChild(card);
+```
+
+##### `RemoteRoot#replaceChildren()`
+
+This method removes all children from the root, and replaces them with the list of children passed to this method. This method returns a promise for when the update has been applied in the host.
+
+```ts
+const card = root.createComponent('Card');
+root.append(card);
+
+// later...
+
+const newCard = root.createComponent('Card');
+root.replaceChildren(newCard);
 ```
 
 ##### `RemoteRoot#children`
@@ -151,7 +165,7 @@ The `mount` method flushes the initial tree to the host. Before `mount` is calle
 
 ```ts
 const card = root.createComponent('Card');
-root.appendChild(card);
+root.append(card);
 root.mount();
 ```
 
@@ -197,17 +211,31 @@ if (SHOULD_BE_DISABLED) {
 }
 ```
 
-##### `RemoteComponent#appendChild()`
+##### `RemoteComponent#remove()`
 
-Just like [`RemoteRoot#appendChild`](#remoterootappendchild), but appending a child for a single component rather than the root.
+Removes the component from its parent, if it is attached to one.
 
-##### `RemoteComponent#insertChildBefore()`
+```ts
+const card = root.createComponent('Card');
+root.append(card);
+card.remove();
+```
 
-Just like [`RemoteRoot#insertChildBefore`](#remoterootinsertchildbefore), but inserting a child for a single component rather than the root.
+##### `RemoteComponent#append()`
+
+Just like [`RemoteRoot#append`](#remoterootappend), but appending children for a single component rather than the root.
+
+##### `RemoteComponent#insertBefore()`
+
+Just like [`RemoteRoot#insertBefore`](#remoterootinsertbefore), but inserting a child for a single component rather than the root.
 
 ##### `RemoteComponent#removeChild()`
 
 Just like [`RemoteRoot#removeChild`](#remoterootremovechild), but removing a child for a single component rather than the root.
+
+##### `RemoteComponent#replaceChildren()`
+
+Just like [`RemoteRoot#replaceChildren`](#remoterootreplacechildren), but replacing children for a single component rather than the root.
 
 #### `RemoteText`
 
@@ -215,7 +243,7 @@ A `RemoteText` object represents a text element being rendered to the host UI. I
 
 ##### `RemoteText#text`
 
-The current text content of the element. This representation is not mutable, so changing any value on this object will have no effect (use `updateText` instead)
+The current text content of the element. This representation is not mutable, so changing any value on this object will have no effect (use `update` instead)
 
 ##### `RemoteText#root`
 
@@ -225,7 +253,7 @@ A readonly reference to the root that constructed this component.
 
 A readonly reference to the parent of this component in the tree (or `null`, if it has no parent).
 
-##### `RemoteText#updateText()`
+##### `RemoteText#update()`
 
 Updates the text content.
 
@@ -233,8 +261,18 @@ Updates the text content.
 const text = root.createText('Hello');
 
 if (LOCALE === 'fr') {
-  text.updateText('Bonjour');
+  text.update('Bonjour');
 }
+```
+
+##### `RemoteComponent#remove()`
+
+Removes the text from its parent, if it is attached to one.
+
+```ts
+const text = root.createText('Hello');
+root.append(card);
+text.remove();
 ```
 
 #### `RemoteFragment`
@@ -257,17 +295,21 @@ A readonly reference to the root that constructed this fragment.
 
 A readonly reference to the parent of this fragment in the tree (or `null`, if it has no parent).
 
-##### `RemoteFragment#appendChild()`
+##### `RemoteFragment#append()`
 
-Just like [`RemoteRoot#appendChild`](#remoterootappendchild), but appending a child for a single fragment rather than the root.
+Just like [`RemoteRoot#append`](#remoterootappend), but appending a child for a single fragment rather than the root.
 
-##### `RemoteFragment#insertChildBefore()`
+##### `RemoteFragment#insertBefore()`
 
-Just like [`RemoteRoot#insertChildBefore`](#remoterootinsertchildbefore), but inserting a child for a single fragment rather than the root.
+Just like [`RemoteRoot#insertBefore`](#remoterootinsertbefore), but inserting a child for a single fragment rather than the root.
 
 ##### `RemoteFragment#removeChild()`
 
 Just like [`RemoteRoot#removeChild`](#remoterootremovechild), but removing a child for a single fragment rather than the root.
+
+##### `RemoteFragment#replaceChildren()`
+
+Just like [`RemoteRoot#replaceChildren`](#remoterootreplacechildren), but replacing children for a single fragment rather than the root.
 
 ### `createRemoteReceiver()`
 
@@ -386,7 +428,7 @@ const Card = createRemoteComponent<'Card', {title: string}, typeof CardSection>(
 );
 ```
 
-These types are used to validate the passed arguments in `RemoteRoot#createComponent`, `RemoteRoot#appendChild`, and the other mutation APIs. With the example above, TypeScript would complain about the following calls, because we are not providing the mandatory `title` prop to `createComponent`, and we are appending a component other than `CardSection` to `Card`.
+These types are used to validate the passed arguments in `RemoteRoot#createComponent`, `RemoteRoot#append`, and the other mutation APIs. With the example above, TypeScript would complain about the following calls, because we are not providing the mandatory `title` prop to `createComponent`, and we are appending a component other than `CardSection` to `Card`.
 
 ```ts
 import {createRemoteRoot} from '@remote-ui/core';
@@ -396,7 +438,7 @@ const button = root.createComponent(Button, {
   onPress: () => console.log('Clicked!'),
 });
 const card = root.createComponent(Card);
-card.appendChild(button);
+card.append(button);
 ```
 
 ### Other exports

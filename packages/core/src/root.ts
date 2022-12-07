@@ -175,8 +175,16 @@ export function createRemoteRoot<
         get remoteProps() {
           return internals.internalProps;
         },
+        remove: () => remove(component),
         updateProps: (newProps) =>
           updateProps(component, newProps, internals, rootInternals),
+        append: (...children) =>
+          append(
+            component,
+            children.map((child) => normalizeChild(child, remoteRoot)),
+            internals,
+            rootInternals,
+          ),
         appendChild: (child) =>
           appendChild(
             component,
@@ -186,8 +194,23 @@ export function createRemoteRoot<
           ),
         removeChild: (child) =>
           removeChild(component, child, internals, rootInternals),
+        replaceChildren: (...children) =>
+          replaceChildren(
+            component,
+            children.map((child) => normalizeChild(child, remoteRoot)),
+            internals,
+            rootInternals,
+          ),
+        insertBefore: (child, before) =>
+          insertBefore(
+            component,
+            normalizeChild(child, remoteRoot),
+            before,
+            internals,
+            rootInternals,
+          ),
         insertChildBefore: (child, before) =>
-          insertChildBefore(
+          insertBefore(
             component,
             normalizeChild(child, remoteRoot),
             before,
@@ -222,14 +245,17 @@ export function createRemoteRoot<
     createText(content = '') {
       const id = `${currentId++}`;
       const internals: TextInternals = {text: content};
+      const update: RemoteText<Root>['update'] = (newText) =>
+        updateText(text, newText, internals, rootInternals);
 
       const text: RemoteText<Root> = {
         kind: KIND_TEXT,
         get text() {
           return internals.text;
         },
-        updateText: (newText) =>
-          updateText(text, newText, internals, rootInternals),
+        update,
+        updateText: update,
+        remove: () => remove(text),
         // Just satisfying the type definition, since we need to write
         // some properties manually.
         ...EMPTY_OBJECT,
@@ -252,6 +278,13 @@ export function createRemoteRoot<
         get children() {
           return internals.children;
         },
+        append: (...children) =>
+          append(
+            fragment,
+            children.map((child) => normalizeChild(child, remoteRoot)),
+            internals,
+            rootInternals,
+          ),
         appendChild: (child) =>
           appendChild(
             fragment,
@@ -261,8 +294,23 @@ export function createRemoteRoot<
           ),
         removeChild: (child) =>
           removeChild(fragment, child, internals, rootInternals),
+        replaceChildren: (...children) =>
+          replaceChildren(
+            fragment,
+            children.map((child) => normalizeChild(child, remoteRoot)),
+            internals,
+            rootInternals,
+          ),
+        insertBefore: (child, before) =>
+          insertBefore(
+            fragment,
+            normalizeChild(child, remoteRoot),
+            before,
+            internals,
+            rootInternals,
+          ),
         insertChildBefore: (child, before) =>
-          insertChildBefore(
+          insertBefore(
             fragment,
             normalizeChild(child, remoteRoot),
             before,
@@ -282,6 +330,14 @@ export function createRemoteRoot<
 
       return fragment;
     },
+
+    append: (...children) =>
+      append(
+        remoteRoot,
+        children.map((child) => normalizeChild(child, remoteRoot)),
+        rootInternals,
+        rootInternals,
+      ),
     appendChild: (child) =>
       appendChild(
         remoteRoot,
@@ -289,10 +345,25 @@ export function createRemoteRoot<
         rootInternals,
         rootInternals,
       ),
+    replaceChildren: (...children) =>
+      replaceChildren(
+        remoteRoot,
+        children.map((child) => normalizeChild(child, remoteRoot)),
+        rootInternals,
+        rootInternals,
+      ),
     removeChild: (child) =>
       removeChild(remoteRoot, child, rootInternals, rootInternals),
+    insertBefore: (child, before) =>
+      insertBefore(
+        remoteRoot,
+        normalizeChild(child, remoteRoot),
+        before,
+        rootInternals,
+        rootInternals,
+      ),
     insertChildBefore: (child, before) =>
-      insertChildBefore(
+      insertBefore(
         remoteRoot,
         normalizeChild(child, remoteRoot),
         before,
@@ -470,8 +541,8 @@ function updateProps(
 // const textField = root.createComponent('TextField', {value, onChange});
 // const button = root.createComponent('Button', {onPress});
 //
-// root.appendChild(textField);
-// root.appendChild(button);
+// root.append(textField);
+// root.append(button);
 //
 // function getPropsForValue(value = '') {
 //   return {
@@ -612,6 +683,21 @@ function collectNestedHotSwappableValues(
   }
 }
 
+function remove(child: AnyChild) {
+  (child.parent as AnyParent)?.removeChild(child);
+}
+
+function append(
+  container: AnyParent,
+  children: AnyChild[],
+  internals: ParentInternals,
+  rootInternals: RootInternals,
+) {
+  for (const child of children) {
+    appendChild(container, child, internals, rootInternals);
+  }
+}
+
 function appendChild(
   container: AnyParent,
   child: AnyChild,
@@ -673,6 +759,19 @@ function appendChild(
   });
 }
 
+function replaceChildren(
+  container: AnyParent,
+  children: AnyChild[],
+  internals: ParentInternals,
+  rootInternals: RootInternals,
+) {
+  for (const child of container.children) {
+    removeChild(container, child, internals, rootInternals);
+  }
+
+  append(container, children, internals, rootInternals);
+}
+
 // there is a problem with this, because when multiple children
 // are removed, there is no guarantee the messages will arrive in the
 // order we need them to on the host side (it depends how React
@@ -707,10 +806,10 @@ function removeChild(
   });
 }
 
-function insertChildBefore(
+function insertBefore(
   container: AnyParent,
   child: AnyChild,
-  before: AnyChild,
+  before: AnyChild | undefined | null,
   internals: ParentInternals,
   rootInternals: RootInternals,
 ) {
@@ -727,7 +826,10 @@ function insertChildBefore(
 
   return perform(container, rootInternals, {
     remote: (channel) => {
-      const beforeIndex = container.children.indexOf(before as any);
+      const beforeIndex =
+        before == null
+          ? container.children.length - 1
+          : container.children.indexOf(before as any);
 
       channel(
         ACTION_INSERT_CHILD,
@@ -766,7 +868,12 @@ function insertChildBefore(
         newChildren = [...internals.children];
       }
 
-      newChildren.splice(newChildren.indexOf(before), 0, child);
+      if (before == null) {
+        newChildren.push(child);
+      } else {
+        newChildren.splice(newChildren.indexOf(before), 0, child);
+      }
+
       internals.children = strict ? Object.freeze(newChildren) : newChildren;
     },
   });

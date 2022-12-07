@@ -77,7 +77,7 @@ export const createReconciler = (options?: {primary?: boolean}) =>
 
     // Updates
     commitTextUpdate(text, _oldText, newText) {
-      text.updateText(newText);
+      text.update(newText);
     },
     prepareUpdate(_instance, _type, oldProps, newProps) {
       const updateProps: Record<string, unknown> = {};
@@ -127,10 +127,10 @@ export const createReconciler = (options?: {primary?: boolean}) =>
 
     // Update root
     appendChildToContainer(remoteRoot, child) {
-      remoteRoot.appendChild(child);
+      remoteRoot.append(child);
     },
     insertInContainerBefore(remoteRoot, child, beforeChild) {
-      remoteRoot.insertChildBefore(child, beforeChild);
+      remoteRoot.insertBefore(child, beforeChild);
     },
     removeChildFromContainer(remoteRoot, child) {
       remoteRoot.removeChild(child);
@@ -143,13 +143,13 @@ export const createReconciler = (options?: {primary?: boolean}) =>
 
     // Update children
     appendInitialChild(parent, child) {
-      parent.appendChild(child);
+      parent.append(child);
     },
     appendChild(parent, child) {
-      parent.appendChild(child);
+      parent.append(child);
     },
     insertBefore(parent, newChild, beforeChild) {
-      parent.insertChildBefore(newChild, beforeChild);
+      parent.insertBefore(newChild, beforeChild);
     },
     removeChild(parent, child) {
       parent.removeChild(child);

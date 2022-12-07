@@ -29,8 +29,8 @@ import {find} from '@remote-ui/traversal';
 const root = createRemoteRoot(() => {});
 const buttonGroup = root.createComponent('ButtonGroup');
 
-buttonGroup.appendChild(root.createComponent('Button'));
-root.appendChild(buttonGroup);
+buttonGroup.append(root.createComponent('Button'));
+root.append(buttonGroup);
 
 const button = find(root, 'Button');
 ```
@@ -45,9 +45,9 @@ const root = createRemoteRoot(() => {});
 const buttonGroup = root.createComponent('ButtonGroup');
 const buttonOne = root.createComponent('Button', {id: 'one'});
 
-buttonGroup.appendChild(buttonOne);
-buttonGroup.appendChild(root.createComponent('Button', {id: 'two'}));
-root.appendChild(buttonGroup);
+buttonGroup.append(buttonOne);
+buttonGroup.append(root.createComponent('Button', {id: 'two'}));
+root.append(buttonGroup);
 
 const buttonTwo = find(root, 'Button', {id: 'two'});
 ```
@@ -68,8 +68,8 @@ const root = createRemoteRoot(() => {});
 const buttonGroup = root.createComponent('ButtonGroup');
 const button = root.createComponent('Button');
 
-buttonGroup.appendChild(button);
-root.appendChild(buttonGroup);
+buttonGroup.append(button);
+root.append(buttonGroup);
 
 const foundButtonGroup = closest(button, 'ButtonGroup'); // same as buttonGroup
 ```
