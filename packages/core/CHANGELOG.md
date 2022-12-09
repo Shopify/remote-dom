@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.2.1
+
+### Patch Changes
+
+- [#187](https://github.com/Shopify/remote-ui/pull/187) [`d8e7bae`](https://github.com/Shopify/remote-ui/commit/d8e7baed50d5743a55f86b88005f411fba0c7cd5) Thanks [@lemonmade](https://github.com/lemonmade)! - Fix infinite loops with self-referencing structures
+
+- Updated dependencies [[`d8e7bae`](https://github.com/Shopify/remote-ui/commit/d8e7baed50d5743a55f86b88005f411fba0c7cd5)]:
+  - @remote-ui/rpc@1.4.1
+
 ## 2.2.0
 
 ### Minor Changes
