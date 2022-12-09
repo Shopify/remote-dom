@@ -18,6 +18,10 @@
   - @remote-ui/core@2.2.0
   - @remote-ui/rpc@1.4.0
 
+### Deprecated
+
+- The `render` function is deprecated. Please move to using the new `createRoot` instead, which matches the API provided by React.
+
 ## [4.5.1] - 2022-05-16
 
 - Fixed a missing `useAttached()` export in the `@shopify/remote-ui/host` entrypoint.

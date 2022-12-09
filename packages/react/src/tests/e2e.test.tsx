@@ -1,7 +1,8 @@
 /* eslint @shopify/jsx-no-hardcoded-content: off */
 
-import {useEffect, useContext, createContext, useState} from 'react';
-import {render as domRender} from 'react-dom';
+import {useEffect, useContext, useState, createContext} from 'react';
+import {createRoot as createDOMRoot} from 'react-dom/client';
+import type {Root} from 'react-dom/client';
 import {act as domAct, Simulate} from 'react-dom/test-utils';
 import {
   KIND_ROOT,
@@ -13,10 +14,14 @@ import type {RemoteFragment, PropsForRemoteComponent} from '@remote-ui/core';
 import {RemoteRenderer, createController} from '../host';
 import type {ControllerOptions} from '../host';
 import {
-  render,
+  createRoot,
   createRemoteReactComponent,
   ReactPropsFromRemoteComponentType,
 } from '..';
+
+// Tell react to enable `act()` behaviour. See:
+// https://reactjs.org/blog/2022/03/08/react-18-upgrade-guide.html#configuring-your-testing-environment
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
 const RemoteHelloWorld = createRemoteReactComponent<
   'HelloWorld',
@@ -97,14 +102,21 @@ function HostWithFragment({
 
 describe('@remote-ui/react', () => {
   let appElement!: HTMLElement;
+  let domRoot: Root;
 
   beforeEach(() => {
     appElement = document.createElement('div');
     document.body.append(appElement);
+    domAct(() => {
+      domRoot = createDOMRoot(appElement);
+    });
     jest.useFakeTimers();
   });
 
   afterEach(() => {
+    domAct(() => {
+      domRoot.unmount();
+    });
     appElement.remove();
     jest.useRealTimers();
   });
@@ -128,10 +140,9 @@ describe('@remote-ui/react', () => {
     }
 
     domAct(() => {
-      domRender(<HostApp />, appElement);
-      render(<RemoteApp />, remoteRoot, () => {
-        remoteRoot.mount();
-      });
+      domRoot.render(<HostApp />);
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
       jest.runAllTimers();
     });
 
@@ -168,10 +179,9 @@ describe('@remote-ui/react', () => {
     }
 
     domAct(() => {
-      domRender(<HostApp />, appElement);
-      render(<RemoteApp />, remoteRoot, () => {
-        remoteRoot.mount();
-      });
+      domRoot.render(<HostApp />);
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
       jest.runAllTimers();
     });
 
@@ -200,15 +210,13 @@ describe('@remote-ui/react', () => {
     }
 
     domAct(() => {
-      domRender(
+      domRoot.render(
         <PersonContext.Provider value={person}>
           <HostApp />
         </PersonContext.Provider>,
-        appElement,
       );
-      render(<RemoteApp />, remoteRoot, () => {
-        remoteRoot.mount();
-      });
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
       jest.runAllTimers();
     });
 
@@ -234,10 +242,9 @@ describe('@remote-ui/react', () => {
     }
 
     domAct(() => {
-      domRender(<HostApp />, appElement);
-      render(<RemoteApp />, remoteRoot, () => {
-        remoteRoot.mount();
-      });
+      domRoot.render(<HostApp />);
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
       jest.runAllTimers();
     });
     expect(appElement.innerHTML).toBe(`<img src="https://shopify.com">`);
@@ -262,10 +269,9 @@ describe('@remote-ui/react', () => {
     }
 
     domAct(() => {
-      domRender(<HostApp />, appElement);
-      render(<RemoteApp />, remoteRoot, () => {
-        remoteRoot.mount();
-      });
+      domRoot.render(<HostApp />);
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
       jest.runAllTimers();
     });
     expect(appElement.innerHTML).toBe('hello');
@@ -317,10 +323,9 @@ describe('@remote-ui/react', () => {
     }
 
     domAct(() => {
-      domRender(<HostApp />, appElement);
-      render(<RemoteApp />, remoteRoot, () => {
-        remoteRoot.mount();
-      });
+      domRoot.render(<HostApp />);
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
       jest.runAllTimers();
     });
 
@@ -388,10 +393,9 @@ describe('@remote-ui/react', () => {
     }
 
     domAct(() => {
-      domRender(<HostApp />, appElement);
-      render(<RemoteApp />, remoteRoot, () => {
-        remoteRoot.mount();
-      });
+      domRoot.render(<HostApp />);
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
       jest.runAllTimers();
     });
 
@@ -457,10 +461,9 @@ describe('@remote-ui/react', () => {
     }
 
     domAct(() => {
-      domRender(<HostApp />, appElement);
-      render(<RemoteApp />, remoteRoot, () => {
-        remoteRoot.mount();
-      });
+      domRoot.render(<HostApp />);
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
       jest.runAllTimers();
     });
 
@@ -519,10 +522,9 @@ describe('@remote-ui/react', () => {
     }
 
     domAct(() => {
-      domRender(<HostApp />, appElement);
-      render(<RemoteApp />, remoteRoot, () => {
-        remoteRoot.mount();
-      });
+      domRoot.render(<HostApp />);
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
       jest.runAllTimers();
     });
 
@@ -581,10 +583,9 @@ describe('@remote-ui/react', () => {
     }
 
     domAct(() => {
-      domRender(<HostApp />, appElement);
-      render(<RemoteApp />, remoteRoot, () => {
-        remoteRoot.mount();
-      });
+      domRoot.render(<HostApp />);
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
       jest.runAllTimers();
     });
 
@@ -641,10 +642,9 @@ describe('@remote-ui/react', () => {
     }
 
     domAct(() => {
-      domRender(<HostApp />, appElement);
-      render(<RemoteApp />, remoteRoot, () => {
-        remoteRoot.mount();
-      });
+      domRoot.render(<HostApp />);
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
       jest.runAllTimers();
     });
 
@@ -708,10 +708,9 @@ describe('@remote-ui/react', () => {
     }
 
     domAct(() => {
-      domRender(<HostApp />, appElement);
-      render(<RemoteApp />, remoteRoot, () => {
-        remoteRoot.mount();
-      });
+      domRoot.render(<HostApp />);
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
       jest.runAllTimers();
     });
 
@@ -761,7 +760,13 @@ describe('@remote-ui/react', () => {
               )
             }
           />
-          <RemoteButton onPress={() => setShow(true)}>Show</RemoteButton>
+          <RemoteButton
+            onPress={() => {
+              setShow(true);
+            }}
+          >
+            Show
+          </RemoteButton>
         </>
       );
     }
@@ -777,16 +782,18 @@ describe('@remote-ui/react', () => {
     }
 
     domAct(() => {
-      domRender(<HostApp />, appElement);
-      render(<RemoteApp />, remoteRoot, () => {
-        remoteRoot.mount();
-      });
+      domRoot.render(<HostApp />);
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
       jest.runAllTimers();
     });
     expect(appElement.innerHTML).toBe(`<button type="button">Show</button>`);
 
     domAct(() => {
       Simulate.click(appElement.querySelector('button')!);
+    });
+
+    domAct(() => {
       jest.runAllTimers();
     });
 
@@ -833,15 +840,17 @@ describe('@remote-ui/react', () => {
     }
 
     domAct(() => {
-      domRender(<HostApp />, appElement);
-      render(<RemoteApp />, remoteRoot, () => {
-        remoteRoot.mount();
-      });
+      domRoot.render(<HostApp />);
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
       jest.runAllTimers();
     });
 
     domAct(() => {
       Simulate.click(appElement.querySelector('button')!);
+    });
+
+    domAct(() => {
       jest.runAllTimers();
     });
 

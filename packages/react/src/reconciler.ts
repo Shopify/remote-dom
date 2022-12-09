@@ -1,4 +1,5 @@
-import reactReconciler, {Reconciler as ReactReconciler} from 'react-reconciler';
+import reactReconciler from 'react-reconciler';
+import type {Reconciler as ReactReconciler} from 'react-reconciler';
 import type {
   RemoteRoot,
   RemoteText,
@@ -43,15 +44,26 @@ export const createReconciler = (options?: {primary?: boolean}) =>
     TimeoutHandle,
     NoTimeout
   >({
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - Compat for React <= 17.x
     now: Date.now,
 
     // Timeout
     scheduleTimeout: setTimeout,
     cancelTimeout: clearTimeout,
     noTimeout: false,
-    // @see https://github.com/facebook/react/blob/master/packages/react-dom/src/client/ReactDOMHostConfig.js#L408
-    queueMicrotask: (callback) =>
-      Promise.resolve(null).then(callback).catch(handleErrorInNextTick),
+
+    // Microtask scheduling
+    // @see https://github.com/facebook/react/blob/2c8a1452b82b9ec5ebfa3f370b31fda19610ae92/packages/react-dom/src/client/ReactDOMHostConfig.js#L391-L401
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - types in `@types/react-reconciler` are outdated
+    supportsMicrotasks: true,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - types in `@types/react-reconciler` are outdated
+    scheduleMicrotask,
+
+    // Compat for React <= 17.x
+    queueMicrotask: scheduleMicrotask,
 
     isPrimaryRenderer: options?.primary ?? true,
     supportsMutation: true,
@@ -170,6 +182,12 @@ export const createReconciler = (options?: {primary?: boolean}) =>
     commitMount() {},
     preparePortalMount() {},
   });
+
+function scheduleMicrotask(callback: () => void) {
+  return typeof queueMicrotask === 'function'
+    ? queueMicrotask
+    : Promise.resolve(null).then(callback).catch(handleErrorInNextTick);
+}
 
 function handleErrorInNextTick(error: Error) {
   setTimeout(() => {
