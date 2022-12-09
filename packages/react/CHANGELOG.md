@@ -1,5 +1,13 @@
 # Changelog
 
+## 5.0.0
+
+### Major Changes
+
+- [#191](https://github.com/Shopify/remote-ui/pull/191) [`77ba3da`](https://github.com/Shopify/remote-ui/commit/77ba3da217cb0e443e674afc058916ca25f5900e) Thanks [@lemonmade](https://github.com/lemonmade)! - Added support for React 18 by having the consumer own the versions of `react` and `react-reconciler`. If you are currently using React 17 only, and are rendering in the “remote” context, you will need to add a dependency on `react-reconciler^0.27.0`. If you are using React 18, you will need to manually install the version of `react-reconciler` that matches up to that version (currently, `^0.29.0`).
+
+- [#191](https://github.com/Shopify/remote-ui/pull/191) [`77ba3da`](https://github.com/Shopify/remote-ui/commit/77ba3da217cb0e443e674afc058916ca25f5900e) Thanks [@lemonmade](https://github.com/lemonmade)! - Removed re-export of `@remote-ui/rpc`. If you need `retain` or `release`, import them directly from `@remote-ui/rpc` instead.
+
 ## 4.6.0
 
 ### Minor Changes
