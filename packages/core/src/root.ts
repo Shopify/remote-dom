@@ -528,7 +528,6 @@ function updateProps(
       };
 
       for (const [hotSwappable, newValue] of hotSwapFunctions) {
-        console.log({hotSwappable, newValue});
         hotSwappable[FUNCTION_CURRENT_IMPLEMENTATION_KEY] = newValue;
       }
     },
@@ -606,16 +605,13 @@ type HotSwapResult = [any, HotSwapRecord[]?];
 function tryHotSwappingValues(
   currentValue: unknown,
   newValue: unknown,
-  seenByValue = new Map<any, Map<any, HotSwapResult>>(),
+  seen = new Set<any>(),
 ): HotSwapResult {
-  let seen = seenByValue.get(currentValue);
-  if (seen == null) {
-    seen = new Map();
-    seenByValue.set(currentValue, seen);
+  if (seen.has(currentValue)) {
+    return [IGNORE];
   }
 
-  const seenValue = seen.get(newValue);
-  if (seenValue) return seenValue;
+  seen.add(currentValue);
 
   if (
     typeof currentValue === 'function' &&
@@ -626,41 +622,22 @@ function tryHotSwappingValues(
       [[currentValue as HotSwappableFunction<any>, newValue]],
     ];
 
-    seen.set(newValue, result);
-
     return result;
   }
 
   if (Array.isArray(currentValue)) {
-    seen.set(newValue, [IGNORE]);
-
-    const result = tryHotSwappingArrayValues(
-      currentValue,
-      newValue,
-      seenByValue,
-    );
-
-    seen.set(newValue, result);
+    const result = tryHotSwappingArrayValues(currentValue, newValue, seen);
 
     return result;
   }
 
   if (isBasicObject(currentValue) && !isRemoteFragment(currentValue)) {
-    seen.set(newValue, [IGNORE]);
-
-    const result = tryHotSwappingObjectValues(
-      currentValue,
-      newValue,
-      seenByValue,
-    );
-
-    seen.set(newValue, result);
+    const result = tryHotSwappingObjectValues(currentValue, newValue, seen);
 
     return result;
   }
 
   const result: HotSwapResult = [currentValue === newValue ? IGNORE : newValue];
-  seen.set(newValue, result);
 
   return result;
 }
@@ -701,12 +678,6 @@ function makeValueHotSwappable(
 
   if (typeof value === 'function') {
     const wrappedFunction: HotSwappableFunction<any> = ((...args: any[]) => {
-      console.log(
-        Object.getOwnPropertyDescriptor(
-          wrappedFunction,
-          FUNCTION_CURRENT_IMPLEMENTATION_KEY,
-        ),
-      );
       return wrappedFunction[FUNCTION_CURRENT_IMPLEMENTATION_KEY](...args);
     }) as any;
 
@@ -1116,7 +1087,7 @@ function makeRemote<Root extends RemoteRoot<any, any>>(
 function tryHotSwappingObjectValues(
   currentValue: object,
   newValue: unknown,
-  seenByValue: Map<any, Map<any, HotSwapResult>>,
+  seen: Set<any>,
 ): HotSwapResult {
   if (!isBasicObject(newValue)) {
     return [
@@ -1156,10 +1127,12 @@ function tryHotSwappingObjectValues(
     const [updatedValue, elementHotSwaps] = tryHotSwappingValues(
       currentObjectValue,
       newObjectValue,
-      seenByValue,
+      seen,
     );
 
-    if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);
+    if (elementHotSwaps) {
+      hotSwaps.push(...elementHotSwaps);
+    }
 
     if (updatedValue !== IGNORE) {
       hasChanged = true;
@@ -1180,7 +1153,7 @@ function tryHotSwappingObjectValues(
 function tryHotSwappingArrayValues(
   currentValue: unknown[],
   newValue: unknown,
-  seenByValue: Map<any, Map<any, HotSwapResult>>,
+  seen: Set<any>,
 ): HotSwapResult {
   if (!Array.isArray(newValue)) {
     return [
@@ -1214,7 +1187,7 @@ function tryHotSwappingArrayValues(
       const [updatedValue, elementHotSwaps] = tryHotSwappingValues(
         currentArrayValue,
         newArrayValue,
-        seenByValue,
+        seen,
       );
 
       if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);

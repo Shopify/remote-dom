@@ -290,7 +290,7 @@ describe('root', () => {
       expect(secondActionFuncOne).toHaveBeenCalled();
     });
 
-    it.only('can handle recursive hot swapping', async () => {
+    it('can handle recursive hot swapping', async () => {
       const funcOne = jest.fn();
       const objectOne = {func: funcOne};
       Reflect.defineProperty(objectOne, 'self', {
@@ -312,7 +312,7 @@ describe('root', () => {
         complexProp: objectOne,
       });
 
-      root.appendChild(button);
+      root.append(button);
       root.mount();
 
       // After this, the receiver will have the initial Button component
