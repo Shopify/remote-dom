@@ -289,6 +289,43 @@ describe('root', () => {
 
       expect(secondActionFuncOne).toHaveBeenCalled();
     });
+
+    it('can handle recursive hot swapping', async () => {
+      const funcOne = jest.fn();
+      const objectOne = {func: funcOne};
+      Reflect.defineProperty(objectOne, 'self', {
+        value: objectOne,
+        enumerable: true,
+      });
+
+      const funcTwo = jest.fn();
+      const objectTwo = {func: funcTwo};
+      Reflect.defineProperty(objectTwo, 'self', {
+        value: [],
+        enumerable: true,
+      });
+
+      const receiver = createDelayedReceiver();
+
+      const root = createRemoteRoot(receiver.receive);
+      const button = root.createComponent('Button', {
+        complexProp: objectOne,
+      });
+
+      root.append(button);
+      root.mount();
+
+      // After this, the receiver will have the initial Button component
+      receiver.flush();
+
+      await button.updateProps({complexProp: objectTwo});
+
+      const currentProp = (receiver.children[0] as any).props.complexProp;
+      currentProp.func();
+
+      expect(funcOne).not.toHaveBeenCalled();
+      expect(funcTwo).toHaveBeenCalled();
+    });
   });
 });
 

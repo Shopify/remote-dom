@@ -1,4 +1,5 @@
-import {RemoteComponentType} from '@remote-ui/types';
+import type {RemoteComponentType} from '@remote-ui/types';
+import {isBasicObject} from '@remote-ui/rpc';
 
 import {
   ACTION_MOUNT,
@@ -599,39 +600,82 @@ function updateProps(
 // it instead calls our wrapper around the function, which can refer to, and call, the
 // most recently-applied implementation, instead of directly calling the old implementation.
 
+type HotSwapResult = [any, HotSwapRecord[]?];
+
 function tryHotSwappingValues(
   currentValue: unknown,
   newValue: unknown,
-): [any, HotSwapRecord[]?] {
+  seen = new Set<any>(),
+): HotSwapResult {
+  if (seen.has(currentValue)) {
+    return [IGNORE];
+  }
+
+  seen.add(currentValue);
+
   if (
     typeof currentValue === 'function' &&
     FUNCTION_CURRENT_IMPLEMENTATION_KEY in currentValue
   ) {
-    return [
+    const result: HotSwapResult = [
       typeof newValue === 'function' ? IGNORE : makeValueHotSwappable(newValue),
       [[currentValue as HotSwappableFunction<any>, newValue]],
     ];
+
+    return result;
   }
 
   if (Array.isArray(currentValue)) {
-    return tryHotSwappingArrayValues(currentValue, newValue);
+    const result = tryHotSwappingArrayValues(currentValue, newValue, seen);
+
+    return result;
   }
 
-  if (
-    typeof currentValue === 'object' &&
-    currentValue != null &&
-    !isRemoteFragment(currentValue)
-  ) {
-    return tryHotSwappingObjectValues(currentValue, newValue);
+  if (isBasicObject(currentValue) && !isRemoteFragment(currentValue)) {
+    const result = tryHotSwappingObjectValues(currentValue, newValue, seen);
+
+    return result;
   }
 
-  return [currentValue === newValue ? IGNORE : newValue];
+  const result: HotSwapResult = [currentValue === newValue ? IGNORE : newValue];
+
+  return result;
 }
 
-function makeValueHotSwappable(value: unknown): unknown {
+function makeValueHotSwappable(
+  value: unknown,
+  seen = new Map<any, any>(),
+): unknown {
+  const seenValue = seen.get(value);
+  if (seenValue) return seenValue;
+
   if (isRemoteFragment(value)) {
+    seen.set(value, value);
     return value;
   }
+
+  if (Array.isArray(value)) {
+    const result: any[] = [];
+    seen.set(value, result);
+
+    for (const nested of value) {
+      result.push(makeValueHotSwappable(nested, seen));
+    }
+
+    return result;
+  }
+
+  if (isBasicObject(value)) {
+    const result: Record<string, any> = {};
+    seen.set(value, result);
+
+    for (const key of Object.keys(value)) {
+      result[key] = makeValueHotSwappable((value as any)[key], seen);
+    }
+
+    return result;
+  }
+
   if (typeof value === 'function') {
     const wrappedFunction: HotSwappableFunction<any> = ((...args: any[]) => {
       return wrappedFunction[FUNCTION_CURRENT_IMPLEMENTATION_KEY](...args);
@@ -648,39 +692,48 @@ function makeValueHotSwappable(value: unknown): unknown {
       },
     );
 
+    seen.set(value, wrappedFunction);
+
     return wrappedFunction;
-  } else if (Array.isArray(value)) {
-    return value.map(makeValueHotSwappable);
-  } else if (typeof value === 'object' && value != null) {
-    return Object.keys(value).reduce<{[key: string]: any}>((newValue, key) => {
-      newValue[key] = makeValueHotSwappable((value as any)[key]);
-      return newValue;
-    }, {});
   }
+
+  seen.set(value, value);
 
   return value;
 }
 
-// eslint-disable-next-line consistent-return
 function collectNestedHotSwappableValues(
   value: unknown,
+  seen: Set<any> = new Set(),
 ): HotSwappableFunction<any>[] | undefined {
-  if (typeof value === 'function') {
-    if (FUNCTION_CURRENT_IMPLEMENTATION_KEY in value) return [value];
-  } else if (Array.isArray(value)) {
+  if (seen.has(value)) return undefined;
+  seen.add(value);
+
+  if (Array.isArray(value)) {
     return value.reduce<HotSwappableFunction<any>[]>((all, element) => {
-      const nested = collectNestedHotSwappableValues(element);
+      const nested = collectNestedHotSwappableValues(element, seen);
       return nested ? [...all, ...nested] : all;
     }, []);
-  } else if (typeof value === 'object' && value != null) {
+  }
+
+  if (isBasicObject(value)) {
     return Object.keys(value).reduce<HotSwappableFunction<any>[]>(
       (all, key) => {
-        const nested = collectNestedHotSwappableValues((value as any)[key]);
+        const nested = collectNestedHotSwappableValues(
+          (value as any)[key],
+          seen,
+        );
         return nested ? [...all, ...nested] : all;
       },
       [],
     );
   }
+
+  if (typeof value === 'function') {
+    return FUNCTION_CURRENT_IMPLEMENTATION_KEY in value ? [value] : undefined;
+  }
+
+  return undefined;
 }
 
 function remove(child: AnyChild) {
@@ -1034,8 +1087,9 @@ function makeRemote<Root extends RemoteRoot<any, any>>(
 function tryHotSwappingObjectValues(
   currentValue: object,
   newValue: unknown,
-): [any, HotSwapRecord[]?] {
-  if (typeof newValue !== 'object' || newValue == null) {
+  seen: Set<any>,
+): HotSwapResult {
+  if (!isBasicObject(newValue)) {
     return [
       makeValueHotSwappable(newValue),
       collectNestedHotSwappableValues(currentValue)?.map(
@@ -1073,9 +1127,12 @@ function tryHotSwappingObjectValues(
     const [updatedValue, elementHotSwaps] = tryHotSwappingValues(
       currentObjectValue,
       newObjectValue,
+      seen,
     );
 
-    if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);
+    if (elementHotSwaps) {
+      hotSwaps.push(...elementHotSwaps);
+    }
 
     if (updatedValue !== IGNORE) {
       hasChanged = true;
@@ -1096,7 +1153,8 @@ function tryHotSwappingObjectValues(
 function tryHotSwappingArrayValues(
   currentValue: unknown[],
   newValue: unknown,
-): [any, HotSwapRecord[]?] {
+  seen: Set<any>,
+): HotSwapResult {
   if (!Array.isArray(newValue)) {
     return [
       makeValueHotSwappable(newValue),
@@ -1129,6 +1187,7 @@ function tryHotSwappingArrayValues(
       const [updatedValue, elementHotSwaps] = tryHotSwappingValues(
         currentArrayValue,
         newArrayValue,
+        seen,
       );
 
       if (elementHotSwaps) hotSwaps.push(...elementHotSwaps);
