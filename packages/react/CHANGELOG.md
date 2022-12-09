@@ -18,6 +18,17 @@
   - @remote-ui/core@2.2.0
   - @remote-ui/rpc@1.4.0
 
+## [5.0.0] - 2022-11-25
+
+### Breaking changes
+
+- Added support for React 18 by having the consumer own the versions of `react` and `react-reconciler`. If you are currently using React 17 only, and are rendering in the “remote” context, you will need to add a dependency on `react-reconciler^0.27.0`. If you are using React 18, you will need to manually install the version of `react-reconciler` that matches up to that version (currently, `^0.29.0`).
+- Removed re-export of `@remote-ui/rpc`. If you need `retain` or `release`, import them directly from `@remote-ui/rpc` instead.
+
+### Deprecated
+
+- The `render` function is deprecated. Please move to using the new `createRoot` instead, which matches the API provided by React.
+
 ## [4.5.1] - 2022-05-16
 
 - Fixed a missing `useAttached()` export in the `@shopify/remote-ui/host` entrypoint.

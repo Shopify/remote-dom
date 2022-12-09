@@ -16,17 +16,45 @@ or, using `npm`:
 npm install @remote-ui/react --save
 ```
 
+### React peer dependencies
+
+This package also has peer dependencies on a few React-related packages, but the versions you need depend on the version of React you are using:
+
+**React 17.x.x**: you will need to have React installed. Additionally, if you are in the “remote” environment, you will need a dependency on `react-reconciler` between greater than or equal to `0.26.0`, and less than `0.28.0`:
+
+```
+yarn add react@^17.0.0 react-reconciler@^0.27.0
+
+# or, with `npm`:
+
+npm install react@^17.0.0 react-reconciler@^0.27.0 --save
+```
+
+**React 17.0.0 and later**: you will need to have React installed. Additionally, if you are in the “remote” environment, you will need a dependency on `react-reconciler` between greater than or equal to `0.28.0`:
+
+```
+yarn add react react-reconciler
+
+# or, with `npm`:
+
+npm install react react-reconciler --save
+```
+
+If you are only using the utilities for [React host applications](#host-environment), you do not need to declare a dependency on `react-reconciler`.
+
 ## Usage
 
 ### Remote environment
 
-#### `render()`
+#### `createRoot()`
 
-The main entrypoint for this package, `@remote-ui/react`, provides the custom React renderer that outputs instructions to a [`@remote-ui/core` `RemoteRoot`](../core#remoteroot) object. This lets you use the remote-ui system for communicating patch updates to host components over a bridge, but have React help manage your stateful application logic. To run a React app against a `RemoteRoot`, use the `render` function exported by this library, passing in the remote root and your root React component:
+The main entrypoint for this package, `@remote-ui/react`, provides the custom React renderer that outputs instructions to a [`@remote-ui/core` `RemoteRoot`](../core#remoteroot) object. This lets you use the remote-ui system for communicating patch updates to host components over a bridge, but have React help manage your stateful application logic.
+
+To run a React app against a `RemoteRoot`, use the `createRoot` function exported by this library. This API has a similar signature to [the equivalent `react-dom` API](https://reactjs.org/docs/react-dom-client.html#createroot), where you first pass the the remote root you are targeting, and then render your React component into it:
 
 ```tsx
 // For convenience, this library re-exports several values from @remote-ui/core, like createRemoteRoot
-import {render, createRemoteRoot} from '@remote-ui/react';
+import {createRoot, createRemoteRoot} from '@remote-ui/react';
 
 // a remote component — see implementation below for getting strong
 // typing on the available props.
@@ -43,16 +71,16 @@ function App() {
   return <Button onClick={() => console.log('clicked!')}>Click me!</Button>;
 }
 
-render(<App />, remoteRoot);
+createRoot(remoteRoot).render(<App />);
 ```
 
 As you add, remove, and update host components in your React tree, this renderer will output those operations to the `RemoteRoot`. Since remote components are just a combination of a name and allowed properties, they map exactly to React components, which behave the same way.
 
-Updating the the root React element for a given remote root can be done by calling the `render()` function again. For example, the root React element can be updated in an effect to receive updated props when they change:
+Updating the the root React element for a given remote root can be done by calling the `render()` method again. For example, the root React element can be updated in an effect to receive updated props when they change:
 
 ```tsx
 import {useEffect, useMemo} from 'react';
-import {render, createRemoteRoot} from '@remote-ui/react';
+import {createRoot, createRemoteRoot} from '@remote-ui/react';
 
 // A remote component
 const Button = createRemoteReactComponent<'Button', {onPress(): void}>(
@@ -64,23 +92,24 @@ function App({count, onPress}: {count: number; onPress(): void}) {
 }
 
 function MyRemoteRenderer() {
-  const remoteRoot = useMemo(() => {
+  const root = useMemo(() => {
     // Assuming we get a function that will communicate with the host...
     const channel = () => {};
 
-    return createRemoteRoot(channel, {
+    const remoteRoot = createRemoteRoot(channel, {
       components: [Button],
     });
+
+    return createRoot(remoteRoot);
   }, []);
   const [count, setCount] = useState(0);
 
   useEffect(() => {
     // We update the root component by calling `render` whenever `count` changes
-    render(
+    root.render(
       <App count={count} onPress={() => setCount((count) => count + 1)} />,
-      remoteRoot,
     );
-  }, [count, remoteRoot]);
+  }, [count, root]);
 }
 ```
 

@@ -1,4 +1,5 @@
-import type {ReactElement} from 'react';
+import {version} from 'react';
+import type {ReactNode} from 'react';
 import type {RemoteRoot} from '@remote-ui/core';
 import type {RootTag} from 'react-reconciler';
 
@@ -15,13 +16,34 @@ const cache = new WeakMap<
   }
 >();
 
-// @see https://github.com/facebook/react/blob/993ca533b42756811731f6b7791ae06a35ee6b4d/packages/react-reconciler/src/ReactRootTags.js
-// I think we are a legacy root?
+// @see https://github.com/facebook/react/blob/fea6f8da6ab669469f2fa3f18bd3a831f00ab284/packages/react-reconciler/src/ReactRootTags.js#L12
+// We don't support concurrent rendering for now.
 const LEGACY_ROOT: RootTag = 0;
 const defaultReconciler = createReconciler();
 
+export interface Root {
+  render(children: ReactNode): void;
+  unmount(): void;
+}
+
+export function createRoot(root: RemoteRoot<any, any>): Root {
+  return {
+    render(children) {
+      render(children, root);
+    },
+    unmount() {
+      if (!cache.has(root)) return;
+      render(null, root);
+      cache.delete(root);
+    },
+  };
+}
+
+/**
+ * @deprecated Use `createRoot` for a React 18-style rendering API.
+ */
 export function render(
-  element: ReactElement,
+  element: ReactNode,
   root: RemoteRoot<any, any>,
   callback?: () => void,
   reconciler: Reconciler = defaultReconciler,
@@ -30,9 +52,26 @@ export function render(
   let cached = cache.get(root);
 
   if (!cached) {
+    const major = Number(version.split('.')?.[0] || 18);
+
     // Since we haven't created a container for this root yet, create a new one
     const value = {
-      container: reconciler.createContainer(root, LEGACY_ROOT, false, null),
+      container:
+        major >= 18
+          ? reconciler.createContainer(
+              root,
+              LEGACY_ROOT,
+              null,
+              false,
+              null,
+              // Might not be necessary
+              'r-ui',
+              () => null,
+              null,
+            )
+          : // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore - this is to support React 17
+            reconciler.createContainer(root, LEGACY_ROOT, false, null),
       // We also cache the render context to avoid re-creating it on subsequent render calls
       renderContext: {root, reconciler},
     };
@@ -47,9 +86,11 @@ export function render(
   // callback is cast here because the typings do not mark that argument
   // as optional, even though it is.
   reconciler.updateContainer(
-    <RenderContext.Provider value={renderContext}>
-      {element}
-    </RenderContext.Provider>,
+    element && (
+      <RenderContext.Provider value={renderContext}>
+        {element}
+      </RenderContext.Provider>
+    ),
     container,
     null,
     callback as any,
