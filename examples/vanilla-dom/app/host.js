@@ -15,13 +15,27 @@ customElements.define(UiTextField.name, UiTextField);
 
 const uiRoot = document.querySelector('#root');
 const textField = document.querySelector(UiTextField.name);
-const remoteIframe = document.querySelector('iframe');
+
+/*
+We use an iframe as the remote environment here, because it supports
+modules in most modern browsers. Aside from support for ES modules, there
+is nothing that prevents us from instead using a web worker as the remote
+environment. Note that, without using a separate domain, or manually
+hiding globals within the iframe, we are not actually creating a “safe”
+sandbox here, as the remote code can reach up into the parent.
+*/
+const remoteIframe = Object.assign(document.createElement('iframe'), {
+  src: './remote.html',
+  sandbox: 'allow-same-origin allow-scripts',
+  style: 'visibility: hidden; position: absolute',
+});
 
 // This creates an object that represents the remote context — in this case,
 // some JavaScript executing inside an `iframe`. We can use this object
 // to interact with the `iframe` code without having to worry about using
 // `postMessage()`.
 const remoteEndpoint = createEndpoint(fromIframe(remoteIframe));
+document.body.appendChild(remoteIframe);
 
 // This object will receive messages about UI updates from the remote context
 // and turn them into a matching tree of DOM nodes. We provide a mapping of
