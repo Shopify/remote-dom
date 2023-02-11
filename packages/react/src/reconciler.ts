@@ -181,6 +181,7 @@ export const createReconciler = (options?: {primary?: boolean}) =>
     resetAfterCommit() {},
     commitMount() {},
     preparePortalMount() {},
+    detachDeletedInstance() {},
   });
 
 function scheduleMicrotask(callback: () => void) {
