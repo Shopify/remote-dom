@@ -857,7 +857,7 @@ describe('@remote-ui/react', () => {
     expect(appElement.innerHTML).toContain('bac');
   });
 
-  it('handles removal of components that have unmounted', () => {
+  it('handles removal & cleanup of unmounted components', () => {
     const receiver = createRemoteReceiver();
     const remoteRoot = createRemoteRoot(receiver.receive, {
       components: [RemoteImage, RemoteButton],
