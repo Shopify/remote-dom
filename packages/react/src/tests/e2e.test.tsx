@@ -856,4 +856,50 @@ describe('@remote-ui/react', () => {
 
     expect(appElement.innerHTML).toContain('bac');
   });
+
+  it('handles removal & cleanup of unmounted components', () => {
+    const receiver = createRemoteReceiver();
+    const remoteRoot = createRemoteRoot(receiver.receive, {
+      components: [RemoteImage, RemoteButton],
+    });
+
+    function RemoteApp() {
+      const [showImage, setShowImage] = useState(true);
+
+      return (
+        <>
+          {showImage && <RemoteImage data-test-id="image" />}
+          <RemoteButton onPress={() => setShowImage((prev) => !prev)}>
+            Toggle image
+          </RemoteButton>
+        </>
+      );
+    }
+
+    const controller = createController({
+      Button: HostButton,
+      Image: HostImage,
+    });
+
+    function HostApp() {
+      return <RemoteRenderer controller={controller} receiver={receiver} />;
+    }
+
+    domAct(() => {
+      domRoot.render(<HostApp />);
+      createRoot(remoteRoot).render(<RemoteApp />);
+      remoteRoot.mount();
+      jest.runAllTimers();
+    });
+
+    domAct(() => {
+      Simulate.click(appElement.querySelector('button')!);
+    });
+
+    domAct(() => {
+      jest.runAllTimers();
+    });
+
+    expect(appElement.innerHTML).not.toContain('data-test-id="image"');
+  });
 });

@@ -8,6 +8,10 @@
 
 - [#191](https://github.com/Shopify/remote-ui/pull/191) [`77ba3da`](https://github.com/Shopify/remote-ui/commit/77ba3da217cb0e443e674afc058916ca25f5900e) Thanks [@lemonmade](https://github.com/lemonmade)! - Removed re-export of `@remote-ui/rpc`. If you need `retain` or `release`, import them directly from `@remote-ui/rpc` instead.
 
+### Patch Changes
+
+- Added missing `detachDeletedInstance` function to `@remote-ui/react/reconciler`. This function is invoked during React's clean up phase, so prior to this change you'd get an exception / broken app when a component is removed from the tree.
+
 ## 4.6.0
 
 ### Minor Changes
