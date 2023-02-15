@@ -30,14 +30,14 @@ yarn add react@^17.0.0 react-reconciler@^0.27.0
 npm install react@^17.0.0 react-reconciler@^0.27.0 --save
 ```
 
-**React 17.0.0 and later**: you will need to have React installed. Additionally, if you are in the “remote” environment, you will need a dependency on `react-reconciler` between greater than or equal to `0.28.0`:
+**React 18.x.x and later**: you will need to have React installed. Additionally, if you are in the “remote” environment, you will need a dependency on `react-reconciler` greater than or equal to `0.28.0`:
 
 ```
-yarn add react react-reconciler
+yarn add react@^18.0.0 react-reconciler@">=0.28.0"
 
 # or, with `npm`:
 
-npm install react react-reconciler --save
+npm install react@^18.0.0 react-reconciler@">=0.28.0" --save
 ```
 
 If you are only using the utilities for [React host applications](#host-environment), you do not need to declare a dependency on `react-reconciler`.
