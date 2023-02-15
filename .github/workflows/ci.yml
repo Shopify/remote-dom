@@ -1,6 +1,11 @@
 name: CI
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+      - changeset-release/*
+  pull_request:
 
 jobs:
   type-check:
