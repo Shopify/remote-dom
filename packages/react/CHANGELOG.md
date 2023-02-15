@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.0.1
+
+### Patch Changes
+
+- [#206](https://github.com/Shopify/remote-ui/pull/206) [`6f1ceef`](https://github.com/Shopify/remote-ui/commit/6f1ceef342c0d91e9736bfca8e7f8845f4ffd0f3) Thanks [@banderson](https://github.com/banderson)! - Added missing `detachDeletedInstance` function to `@remote-ui/react/reconciler`. This function is invoked during React's clean up phase, so prior to this change you'd get an exception / broken app when a component is removed from the tree.
+
 ## 5.0.0
 
 ### Major Changes
