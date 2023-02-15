@@ -868,7 +868,7 @@ describe('@remote-ui/react', () => {
 
       return (
         <>
-          {showImage && <RemoteImage data-test-id="image" />}
+          {showImage && <RemoteImage src="image.png" />}
           <RemoteButton onPress={() => setShowImage((prev) => !prev)}>
             Toggle image
           </RemoteButton>
