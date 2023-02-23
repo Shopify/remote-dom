@@ -29,6 +29,8 @@ export function fromIframe(
     }
   }
 
+  target.contentWindow?.postMessage('remote-ui::ready', targetOrigin);
+
   const iframeReadyPromise = new Promise<void>((resolve) => {
     resolveIFrameReadyPromise = resolve;
     window.addEventListener('message', onMessage);
@@ -37,7 +39,6 @@ export function fromIframe(
   return {
     async postMessage(message, transfer) {
       await iframeReadyPromise;
-
       target.contentWindow!.postMessage(message, targetOrigin, transfer);
     },
     addEventListener(event, listener) {
