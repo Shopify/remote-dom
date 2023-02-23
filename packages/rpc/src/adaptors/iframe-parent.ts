@@ -1,4 +1,5 @@
 import type {MessageEndpoint} from '../types';
+
 import {READY_MESSAGE_KEY} from './constants';
 
 export function fromIframe(
