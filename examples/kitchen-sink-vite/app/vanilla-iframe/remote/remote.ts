@@ -4,7 +4,7 @@ import {
   fromInsideIframe,
 } from "@remote-ui/rpc";
 import { createRemoteRoot } from "@remote-ui/core";
-import { type EndpointApi } from "../types";
+import type { EndpointApi } from "../types";
 
 // This creates the “remote” endpoint — the one that executes inside
 // a hidden iframe, and has no access to the DOM of the main page.

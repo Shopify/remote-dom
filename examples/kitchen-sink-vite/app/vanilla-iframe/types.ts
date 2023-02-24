@@ -1,4 +1,4 @@
-import { type RemoteChannel } from "@remote-ui/core";
+import type { RemoteChannel } from "@remote-ui/core";
 
 export type Api = {
   getMessage(): Promise<string>;

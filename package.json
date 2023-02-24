@@ -14,7 +14,7 @@
     "build": "loom build",
     "release": "loom build && changeset publish",
     "example:vanilla-dom": "yarn workspace example-vanilla-dom start",
-    "example:vanilla-dom-vite": "yarn workspace example-vanilla-dom-vite dev"
+    "example:kitchen-sink-vite": "yarn workspace example-kitchen-sink-vite dev"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.7",

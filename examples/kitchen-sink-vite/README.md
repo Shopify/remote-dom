@@ -6,4 +6,4 @@ The app uses [vite](https://vitejs.dev/) and imports the local in-repo version o
 
 ## Usage
 
-Run `yarn example:vanilla-dom-vite` in the root folder of this repo.
+Run `yarn example:kitchen-sink-vite` in the root folder of this repo.

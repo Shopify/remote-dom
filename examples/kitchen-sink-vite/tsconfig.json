@@ -3,7 +3,7 @@
     "target": "ESNext",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "lib": ["ESNext", "DOM"],
+    "lib": ["ESNext", "DOM", "WebWorker"],
     "moduleResolution": "Node",
     "strict": true,
     "resolveJsonModule": true,
@@ -13,12 +13,14 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "jsx": "react-jsx"
   },
   "include": ["app"],
   "references": [
     {"path": "../../packages/core"},
     {"path": "../../packages/rpc"},
-    {"path": "../../packages/dom"}
+    {"path": "../../packages/dom"},
+    {"path": "../../packages/react"}
   ]
 }
