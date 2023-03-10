@@ -1,12 +1,8 @@
-import { DomReceiver } from "@remote-ui/dom";
-import {
-  createEndpoint,
-  fromIframe,
-} from "@remote-ui/rpc";
+import {DomReceiver} from '@remote-ui/dom';
+import {createEndpoint, fromIframe} from '@remote-ui/rpc';
 
-
-import { UiButton, UiTextField } from "./components";
-import { EndpointApi } from "./types";
+import {UiButton, UiTextField} from './components';
+import {EndpointApi} from './types';
 
 // We register a few custom elements that will be rendered by our
 // application — `UiButton` will be available for the remote context to
@@ -15,13 +11,9 @@ import { EndpointApi } from "./types";
 customElements.define(UiButton.name, UiButton);
 customElements.define(UiTextField.name, UiTextField);
 
-const uiRoot = document.querySelector("#root");
+const uiRoot = document.querySelector('#root');
 const textField = document.querySelector<HTMLInputElement>(UiTextField.name)!;
-const remoteIframe = Object.assign(document.createElement("iframe"), {
-  src: "/remote/index.html",
-  sandbox: "allow-same-origin allow-scripts",
-  style: "visibility: hidden; position: absolute",
-});
+const remoteIframe = document.querySelector('iframe')!;
 
 // This creates an object that represents the remote context — in this case,
 // some JavaScript executing inside an `iframe`. We can use this object
@@ -29,7 +21,7 @@ const remoteIframe = Object.assign(document.createElement("iframe"), {
 // `postMessage()`.
 const remoteEndpoint = createEndpoint<EndpointApi>(fromIframe(remoteIframe));
 
-document.body.appendChild(remoteIframe)
+document.body.appendChild(remoteIframe);
 
 // This object will receive messages about UI updates from the remote context
 // and turn them into a matching tree of DOM nodes. We provide a mapping of

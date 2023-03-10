@@ -1,5 +1,7 @@
 import type {MessageEndpoint} from '../types';
 
+import {READY_MESSAGE_KEY} from './constants';
+
 export function fromIframe(
   target: HTMLIFrameElement,
   {terminate: shouldTerminate = true, targetOrigin = '*'} = {},
@@ -23,11 +25,13 @@ export function fromIframe(
   function onMessage(event: MessageEvent<any>) {
     if (event.source !== target.contentWindow) return;
 
-    if (event.data === 'remote-ui::ready') {
+    if (event.data === READY_MESSAGE_KEY) {
       window.removeEventListener('message', onMessage);
       resolveIFrameReadyPromise();
     }
   }
+
+  target.contentWindow?.postMessage(READY_MESSAGE_KEY, targetOrigin);
 
   const iframeReadyPromise = new Promise<void>((resolve) => {
     resolveIFrameReadyPromise = resolve;
@@ -37,7 +41,6 @@ export function fromIframe(
   return {
     async postMessage(message, transfer) {
       await iframeReadyPromise;
-
       target.contentWindow!.postMessage(message, targetOrigin, transfer);
     },
     addEventListener(event, listener) {

@@ -27,12 +27,6 @@
     </main>
 
     <!--
-      This JavaScript will connect to the iframe, and begin propagating UI updates
-      into the UI element above.
-    -->
-    <script type="module" src="./host.ts" crossorigin="anonymous"></script>
-
-    <!--
       We use an iframe as the remote environment here, because it supports
       modules in most modern browsers. Aside from support for ES modules, there
       is nothing that prevents us from instead using a web worker as the remote
@@ -40,5 +34,16 @@
       hiding globals within the iframe, we are not actually creating a “safe”
       sandbox here, as the remote code can reach up into the parent.
     -->
+    <iframe
+      src="./remote/index.html"
+      sandbox="allow-same-origin allow-scripts"
+      style="visibility: hidden; position: absolute"
+    ></iframe>
+
+    <!--
+      This JavaScript will connect to the iframe, and begin propagating UI updates
+      into the UI element above.
+    -->
+    <script type="module" src="./host.ts" crossorigin="anonymous"></script>
   </body>
 </html>
