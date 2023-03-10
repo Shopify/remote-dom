@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.2
+
+### Patch Changes
+
+- [#215](https://github.com/Shopify/remote-ui/pull/215) [`981d67c`](https://github.com/Shopify/remote-ui/commit/981d67c60754dc6e9f5dbee5794dffcaeb902261) Thanks [@robin-drexler](https://github.com/robin-drexler)! - Ensures iframe connection can always be established
+
 ## 1.4.1
 
 ### Patch Changes
