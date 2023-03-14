@@ -1,5 +1,5 @@
 {
-  "name": "example-vanilla-dom-vite",
+  "name": "example-kitchen-sink-vite",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,10 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "lit": "^2.6.1"
+    "lit": "^2.6.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "typescript": "^4.4.0",
-    "vite": "^4.1.0"
+    "vite": "^4.1.4",
+    "@vitejs/plugin-react": "^3.1.0"
   }
 }

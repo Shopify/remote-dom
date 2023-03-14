@@ -2,17 +2,17 @@
 // framework for creating web components. To learn more about Lit,
 // you can visit https://lit.dev.
 
-import { html, css, LitElement } from "lit";
+import {html, css, LitElement} from 'lit';
 
 export class UiButton extends LitElement {
   // @ts-ignore
   static get name() {
-    return "ui-button";
+    return 'ui-button';
   }
 
   static get properties() {
     return {
-      onPress: { type: Function },
+      onPress: {type: Function},
     };
   }
 
@@ -36,7 +36,7 @@ export class UiButton extends LitElement {
       .Button::after {
         --Button-focus-ring-offset: 2px;
 
-        content: "";
+        content: '';
         position: absolute;
         z-index: 1;
         top: calc(-1 * var(--Button-focus-ring-offset));
@@ -84,12 +84,12 @@ export class UiButton extends LitElement {
 
 export class UiTextField extends LitElement {
   static get name() {
-    return "ui-text-field";
+    return 'ui-text-field';
   }
 
   static get properties() {
     return {
-      label: { type: String },
+      label: {type: String},
     };
   }
 
@@ -149,7 +149,7 @@ export class UiTextField extends LitElement {
   }
 
   get value() {
-    return this.shadowRoot.querySelector("input").value;
+    return this.shadowRoot.querySelector('input').value;
   }
 
   id = nanoId();
@@ -172,10 +172,10 @@ export class UiTextField extends LitElement {
 // This alphabet uses `A-Za-z0-9_-` symbols. The genetic algorithm helped
 // optimize the gzip compression for this alphabet.
 const urlAlphabet =
-  "ModuleSymbhasOwnPr-0123456789ABCDEFGHNRVfgctiUvz_KqYTJkLxpZXIjQW";
+  'ModuleSymbhasOwnPr-0123456789ABCDEFGHNRVfgctiUvz_KqYTJkLxpZXIjQW';
 
 function nanoId(size = 21) {
-  let id = "";
+  let id = '';
   // A compact alternative for `for (var i = 0; i < step; i++)`.
   let i = size;
   while (i--) {
