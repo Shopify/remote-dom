@@ -343,7 +343,7 @@ This library also provides a collection of adaptors that transform common `postM
   import {createEndpoint, fromMessagePort} from '@remote-ui/rpc';
 
   const channel = new MessageChannel();
-  const endpoint = createEndpoint(fromWebWorker(channel.port2));
+  const endpoint = createEndpoint(fromMessagePort(channel.port2));
   ```
 
 - `fromIframe()` allows you to create an `Endpoint` from a browser window by connecting it to a child `iframe`:
