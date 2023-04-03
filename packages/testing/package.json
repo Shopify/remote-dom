@@ -19,11 +19,13 @@
   },
   "exports": {
     ".": {
+      "types": "./build/ts/index.d.ts",
       "esnext": "./index.esnext",
       "import": "./index.mjs",
       "require": "./index.js"
     },
     "./matchers": {
+      "types": "./build/ts/matchers/index.d.ts",
       "esnext": "./matchers.esnext",
       "import": "./matchers.mjs",
       "require": "./matchers.js"
