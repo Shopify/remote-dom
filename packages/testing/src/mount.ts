@@ -111,7 +111,9 @@ export function mount<Root extends RemoteRoot<any, any> = RemoteRoot<any, any>>(
 
             if (propValue == null) {
               throw new Error(
-                `Attempted to call prop ${prop} but it was not defined.`,
+                `Attempted to call prop ${String(
+                  prop,
+                )} but it was not defined.`,
               );
             }
 

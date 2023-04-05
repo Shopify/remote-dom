@@ -35,7 +35,7 @@ export interface Node<Props> {
 
   trigger<K extends FunctionKeys<Props>>(
     prop: K,
-    ...args: DeepPartial<Parameters<Props[K]>>
+    ...args: DeepPartial<MaybeFunctionParameters<Props[K]>>
   ): MaybeFunctionReturnType<NonNullable<Props[K]>>;
   triggerKeypath<T = unknown>(keypath: string, ...args: unknown[]): T;
 
@@ -70,3 +70,7 @@ export type Predicate = (node: Node<unknown>) => boolean;
 type MaybeFunctionReturnType<T> = T extends (...args: any[]) => any
   ? ReturnType<T>
   : unknown;
+
+type MaybeFunctionParameters<T> = T extends (...args: any[]) => any
+  ? ReturnType<T>
+  : [];
