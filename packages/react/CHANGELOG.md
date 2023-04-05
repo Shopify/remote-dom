@@ -1,5 +1,16 @@
 # Changelog
 
+## 5.0.2
+
+### Patch Changes
+
+- [#223](https://github.com/Shopify/remote-ui/pull/223) [`6c7f5f4`](https://github.com/Shopify/remote-ui/commit/6c7f5f44314447a436c8277f2d23e5ba82fb5c3e) Thanks [@lemonmade](https://github.com/lemonmade)! - Fix TypeScript types for exports consumers
+
+- Updated dependencies [[`6c7f5f4`](https://github.com/Shopify/remote-ui/commit/6c7f5f44314447a436c8277f2d23e5ba82fb5c3e)]:
+  - @remote-ui/async-subscription@2.1.14
+  - @remote-ui/core@2.2.2
+  - @remote-ui/rpc@1.4.3
+
 ## 5.0.1
 
 ### Patch Changes

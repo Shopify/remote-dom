@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0
+
+### Major Changes
+
+- [#224](https://github.com/Shopify/remote-ui/pull/224) [`bf296a5`](https://github.com/Shopify/remote-ui/commit/bf296a5366a94b2309fd1aa62290ba0410f32fb0) Thanks [@lemonmade](https://github.com/lemonmade)! - Deprecated `@remote-ui/mini-react`. We suggest using the `@remote-ui/react` package instead, and are working on a DOM adaptor for remote-ui that will allow you to use smaller alternatives to React (like [Preact](https://preactjs.com/)) instead.
+
 ## 1.4.0
 
 ### Minor Changes
