@@ -21,9 +21,9 @@ jobs:
           path: |
             packages/*/build/ts
             packages/*/build/*.tsbuildinfo
-          key: ${{ runner.os }}-typescript-v2-${{ github.sha }}
+          key: ${{ runner.os }}-typescript-v1-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-typescript-v2-
+            ${{ runner.os }}-typescript-v1-
 
       - name: Type check
         run: yarn type-check
