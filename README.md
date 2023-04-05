@@ -41,7 +41,9 @@ We’ve prepared some guides for getting the most out of remote-ui:
 
 ## Examples
 
-We have created an example project, bootstrapped with [Create React App](https://github.com/facebook/create-react-app), that shows how you can incorporate the different parts of remote-ui into a simple React codebase.
+We have created [a local vanilla-js example project](./examples/vanilla-dom/).
+
+Alternatively, you can also run this [app directly in your browser](https://glitch.new/~remote-ui-vanilla) or try out a [react-based example app](https://glitch.new/~remote-ui-react).
 
 Want to learn even more? [Read through the comprehensive example](documentation/comprehensive-example.md), a written guide that documents a fully-featured implementation of remote-ui across both the host (browser) and remote (web worker) environments.
 
