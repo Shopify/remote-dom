@@ -3,7 +3,6 @@
 '@remote-ui/core': patch
 '@remote-ui/dom': patch
 '@remote-ui/htm': patch
-'@remote-ui/mini-react': patch
 '@remote-ui/react': patch
 '@remote-ui/rpc': patch
 '@remote-ui/testing': patch
