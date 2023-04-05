@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.2.2
+
+### Patch Changes
+
+- [#223](https://github.com/Shopify/remote-ui/pull/223) [`6c7f5f4`](https://github.com/Shopify/remote-ui/commit/6c7f5f44314447a436c8277f2d23e5ba82fb5c3e) Thanks [@lemonmade](https://github.com/lemonmade)! - Fix TypeScript types for exports consumers
+
+- Updated dependencies [[`6c7f5f4`](https://github.com/Shopify/remote-ui/commit/6c7f5f44314447a436c8277f2d23e5ba82fb5c3e)]:
+  - @remote-ui/rpc@1.4.3
+  - @remote-ui/types@1.1.3
+
 ## 2.2.1
 
 ### Patch Changes
