@@ -29,7 +29,7 @@ export function createRemoteVueComponent<
       ? emits.reduce<Record<string, (...args: any[]) => any>>(
           (methods, eventName) => {
             const propName = emitMap![eventName as keyof typeof emitMap];
-            methods[`emitter_${propName}`] = function (...args: any[]) {
+            methods[`emitter_${String(propName)}`] = function (...args: any[]) {
               this.$emit(eventName, ...args);
             };
             return methods;
@@ -45,7 +45,8 @@ export function createRemoteVueComponent<
           ...emits.reduce<Record<string, (...args: any[]) => any>>(
             (emitProps, eventName) => {
               const propName = emitMap![eventName as keyof typeof emitMap];
-              emitProps[propName as string] = instance[`emitter_${propName}`];
+              emitProps[propName as string] =
+                instance[`emitter_${String(propName)}`];
               return emitProps;
             },
             {},

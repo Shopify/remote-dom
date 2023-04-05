@@ -234,7 +234,7 @@ export function createRemoteReceiver(): RemoteReceiver {
         }
       });
 
-      Object.assign(component.props, newProps);
+      Object.assign(component.props as any, newProps);
       component.version += 1;
 
       // eslint-disable-next-line promise/catch-or-return

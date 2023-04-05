@@ -22,7 +22,7 @@ export function nodeChildToString<Props>(
 
   const name = nodeName(node);
   const indent = '  '.repeat(level);
-  const props = Object.keys(node.props)
+  const props = Object.keys(node.props as object)
     // filter out insigificiant properties unless all option is present
     .filter((key) => {
       if (options.all) {

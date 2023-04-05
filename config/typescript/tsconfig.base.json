@@ -3,6 +3,7 @@
   "compilerOptions": {
     "composite": true,
     "emitDeclarationOnly": true,
+    "moduleResolution": "nodenext",
     "jsx": "react-jsx",
     "typeRoots": ["../../node_modules/@types", "./typings"]
   }

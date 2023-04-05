@@ -19,11 +19,13 @@
   },
   "exports": {
     ".": {
+      "types": "./build/ts/index.d.ts",
       "esnext": "./index.esnext",
       "import": "./index.mjs",
       "require": "./index.js"
     },
     "./host": {
+      "types": "./build/ts/host/index.d.ts",
       "esnext": "./host.esnext",
       "import": "./host.mjs",
       "require": "./host.js"
@@ -31,7 +33,7 @@
   },
   "sideEffects": false,
   "devDependencies": {
-    "@types/react-dom": "^18.0.5",
+    "@types/react-dom": "^18.0.11",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-reconciler": "^0.29.0"
