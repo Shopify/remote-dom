@@ -61,33 +61,5 @@ module.exports = {
         '@typescript-eslint/consistent-indexed-object-style': 'off',
       },
     },
-    {
-      files: ['packages/mini-react/src/**/*'],
-      extends: [
-        'plugin:@shopify/typescript',
-        'plugin:@shopify/react',
-        'plugin:@shopify/jest',
-        'plugin:@shopify/prettier',
-      ],
-      rules: {
-        // We use the new JSX transform that does not require a `React` variable
-        'react/react-in-jsx-scope': 'off',
-
-        // Complains about `{}`, but there is no better type for us to use
-        // for most of this library.
-        '@typescript-eslint/ban-types': 'off',
-
-        // This rule gets confused a lot because we are *creating* React in
-        // this library, not *using* React.
-        '@shopify/react-prefer-private-members': 'off',
-
-        // Have to repeat the global rule overrides
-        'lines-around-comment': 'off',
-        'no-catch-shadow': 'off',
-        'babel/no-unused-expressions': 'off',
-        '@typescript-eslint/naming-convention': 'off',
-        '@typescript-eslint/consistent-indexed-object-style': 'off',
-      },
-    },
   ],
 };
