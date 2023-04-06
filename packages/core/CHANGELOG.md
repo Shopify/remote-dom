@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.3
+
+### Patch Changes
+
+- [#226](https://github.com/Shopify/remote-ui/pull/226) [`d0ef4fb`](https://github.com/Shopify/remote-ui/commit/d0ef4fb14f0c5c835bd8b36a0b63a30bd2f73f67) Thanks [@alexandcote](https://github.com/alexandcote)! - Re-exposing types definitions in @remote-ui/core
+
 ## 2.2.2
 
 ### Patch Changes
