@@ -611,12 +611,11 @@ function tryHotSwappingValues(
     return [IGNORE];
   }
 
-  seen.add(currentValue);
-
   if (
     typeof currentValue === 'function' &&
     FUNCTION_CURRENT_IMPLEMENTATION_KEY in currentValue
   ) {
+    seen.add(currentValue);
     const result: HotSwapResult = [
       typeof newValue === 'function' ? IGNORE : makeValueHotSwappable(newValue),
       [[currentValue as HotSwappableFunction<any>, newValue]],
@@ -626,12 +625,14 @@ function tryHotSwappingValues(
   }
 
   if (Array.isArray(currentValue)) {
+    seen.add(currentValue);
     const result = tryHotSwappingArrayValues(currentValue, newValue, seen);
 
     return result;
   }
 
   if (isBasicObject(currentValue) && !isRemoteFragment(currentValue)) {
+    seen.add(currentValue);
     const result = tryHotSwappingObjectValues(currentValue, newValue, seen);
 
     return result;
@@ -696,8 +697,6 @@ function makeValueHotSwappable(
 
     return wrappedFunction;
   }
-
-  seen.set(value, value);
 
   return value;
 }
