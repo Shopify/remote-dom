@@ -12,7 +12,8 @@
     "lint": "loom lint",
     "type-check": "loom type-check",
     "build": "loom build",
-    "release": "loom build && changeset publish",
+    "prerelease": "loom build",
+    "release": "changeset publish",
     "example:vanilla-dom": "yarn workspace example-vanilla-dom start",
     "example:kitchen-sink-vite": "yarn workspace example-kitchen-sink-vite dev"
   },
