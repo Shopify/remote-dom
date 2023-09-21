@@ -41,7 +41,8 @@ export function fromIframe(
   return {
     async postMessage(message, transfer) {
       await iframeReadyPromise;
-      target.contentWindow!.postMessage(message, targetOrigin, transfer);
+
+      target.contentWindow?.postMessage(message, targetOrigin, transfer);
     },
     addEventListener(event, listener) {
       const wrappedListener = (event: MessageEvent) => {
