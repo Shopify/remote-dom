@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.4
+
+### Patch Changes
+
+- [#242](https://github.com/Shopify/remote-ui/pull/242) [`1ca9d6c`](https://github.com/Shopify/remote-ui/commit/1ca9d6c06cd2da9fde594f8a2f3e5769b12bad2a) Thanks [@mikewilson01](https://github.com/mikewilson01)! - Check for targetWindow before posting a message
+
 ## 1.4.3
 
 ### Patch Changes
