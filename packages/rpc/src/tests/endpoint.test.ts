@@ -1,5 +1,5 @@
 import {MessageEndpoint} from '../types';
-import {createEndpoint, TERMINATE} from '../endpoint';
+import {createEndpoint, MESSAGE_IDS} from '../endpoint';
 import {fromMessagePort} from '../adaptors';
 import {release, retain} from '../memory';
 
@@ -164,7 +164,10 @@ describe('createEndpoint()', () => {
 
       endpoint.terminate();
 
-      expect(messageSpy).toHaveBeenCalledWith([TERMINATE], undefined);
+      expect(messageSpy).toHaveBeenCalledWith(
+        [MESSAGE_IDS.TERMINATE],
+        undefined,
+      );
     });
 
     it('does not send memory management messages to a terminated endpoint', async () => {

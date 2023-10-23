@@ -8,33 +8,26 @@ import type {
 import {StackFrame} from './memory';
 import type {Retainer} from './memory';
 
-export const CALL = 0;
-export const RESULT = 1;
-export const TERMINATE = 2;
-export const RELEASE = 3;
-export const FUNCTION_APPLY = 5;
-export const FUNCTION_RESULT = 6;
-
-const ALL_MESSAGE_IDS = [
-  CALL,
-  RESULT,
-  TERMINATE,
-  RELEASE,
-  FUNCTION_APPLY,
-  FUNCTION_RESULT,
-];
+export const MESSAGE_IDS = {
+  CALL: 0,
+  RESULT: 1,
+  TERMINATE: 2,
+  RELEASE: 3,
+  FUNCTION_APPLY: 4,
+  FUNCTION_RESULT: 5,
+} as const;
 
 type AnyFunction = (...args: any[]) => any;
 
 type ResultData = [string, Error?, any?];
 
 type MessageData =
-  | [typeof CALL, [string, string | number, any]]
-  | [typeof RESULT, ResultData]
-  | [typeof TERMINATE]
-  | [typeof RELEASE, [string]]
-  | [typeof FUNCTION_APPLY, [string, string, any]]
-  | [typeof FUNCTION_RESULT, ResultData];
+  | [typeof MESSAGE_IDS.CALL, [string, string | number, any]]
+  | [typeof MESSAGE_IDS.RESULT, ResultData]
+  | [typeof MESSAGE_IDS.TERMINATE]
+  | [typeof MESSAGE_IDS.RELEASE, [string]]
+  | [typeof MESSAGE_IDS.FUNCTION_APPLY, [string, string, any]]
+  | [typeof MESSAGE_IDS.FUNCTION_RESULT, ResultData];
 
 export interface CreateEndpointOptions<T = unknown> {
   uuid?(): string;
@@ -92,14 +85,14 @@ export function createEndpoint<T>(
   const encoder = createEncoder({
     uuid,
     release(id) {
-      send([RELEASE, [id]]);
+      send([MESSAGE_IDS.RELEASE, [id]]);
     },
     call(id, args, retainedBy) {
       const callId = uuid();
       const done = waitForResult(callId, retainedBy);
       const [encoded, transferables] = encoder.encode(args);
 
-      send([FUNCTION_APPLY, [callId, id, encoded]], transferables);
+      send([MESSAGE_IDS.FUNCTION_APPLY, [callId, id, encoded]], transferables);
 
       return done;
     },
@@ -142,7 +135,7 @@ export function createEndpoint<T>(
       }
     },
     terminate() {
-      send([TERMINATE]);
+      send([MESSAGE_IDS.TERMINATE]);
 
       terminate();
 
@@ -168,11 +161,11 @@ export function createEndpoint<T>(
     }
 
     switch (data[0]) {
-      case TERMINATE: {
+      case MESSAGE_IDS.TERMINATE: {
         terminate();
         break;
       }
-      case CALL: {
+      case MESSAGE_IDS.CALL: {
         const stackFrame = new StackFrame();
         const [id, property, args] = data[1];
         const func = activeApi.get(property);
@@ -188,10 +181,10 @@ export function createEndpoint<T>(
             await func(...(encoder.decode(args, [stackFrame]) as any[])),
           );
 
-          send([RESULT, [id, undefined, encoded]], transferables);
+          send([MESSAGE_IDS.RESULT, [id, undefined, encoded]], transferables);
         } catch (error) {
           const {name, message, stack} = error as Error;
-          send([RESULT, [id, {name, message, stack}]]);
+          send([MESSAGE_IDS.RESULT, [id, {name, message, stack}]]);
           throw error;
         } finally {
           stackFrame.release();
@@ -199,35 +192,38 @@ export function createEndpoint<T>(
 
         break;
       }
-      case RESULT: {
+      case MESSAGE_IDS.RESULT: {
         const [callId] = data[1];
 
         callIdsToResolver.get(callId)!(...data[1]);
         callIdsToResolver.delete(callId);
         break;
       }
-      case RELEASE: {
+      case MESSAGE_IDS.RELEASE: {
         const [id] = data[1];
         encoder.release(id);
         break;
       }
-      case FUNCTION_RESULT: {
+      case MESSAGE_IDS.FUNCTION_RESULT: {
         const [callId] = data[1];
 
         callIdsToResolver.get(callId)!(...data[1]);
         callIdsToResolver.delete(callId);
         break;
       }
-      case FUNCTION_APPLY: {
+      case MESSAGE_IDS.FUNCTION_APPLY: {
         const [callId, funcId, args] = data[1];
 
         try {
           const result = await encoder.call(funcId, args);
           const [encoded, transferables] = encoder.encode(result);
-          send([FUNCTION_RESULT, [callId, undefined, encoded]], transferables);
+          send(
+            [MESSAGE_IDS.FUNCTION_RESULT, [callId, undefined, encoded]],
+            transferables,
+          );
         } catch (error) {
           const {name, message, stack} = error as Error;
-          send([FUNCTION_RESULT, [callId, {name, message, stack}]]);
+          send([MESSAGE_IDS.FUNCTION_RESULT, [callId, {name, message, stack}]]);
           throw error;
         }
 
@@ -258,7 +254,7 @@ export function createEndpoint<T>(
       const done = waitForResult(id);
       const [encoded, transferables] = encoder.encode(args);
 
-      send([CALL, [id, property, encoded]], transferables);
+      send([MESSAGE_IDS.CALL, [id, property, encoded]], transferables);
 
       return done;
     };
@@ -288,7 +284,7 @@ export function createEndpoint<T>(
 }
 
 function dataIsMessageMap(data: any): data is MessageData {
-  return Array.isArray(data) && ALL_MESSAGE_IDS.includes(data[0]);
+  return Array.isArray(data) && Object.values(MESSAGE_IDS).includes(data[0]);
 }
 
 function defaultUuid() {
