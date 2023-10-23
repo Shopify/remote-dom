@@ -26,22 +26,15 @@ const ALL_MESSAGE_IDS = [
 
 type AnyFunction = (...args: any[]) => any;
 
-interface MessageMap {
-  [CALL]: [string, string | number, any];
-  [RESULT]: [string, Error?, any?];
-  [TERMINATE]: void;
-  [RELEASE]: [string];
-  [FUNCTION_APPLY]: [string, string, any];
-  [FUNCTION_RESULT]: [string, Error?, any?];
-}
+type ResultData = [string, Error?, any?];
 
 type MessageData =
-  | [typeof CALL, MessageMap[typeof CALL]]
-  | [typeof RESULT, MessageMap[typeof RESULT]]
-  | [typeof TERMINATE, MessageMap[typeof TERMINATE]]
-  | [typeof RELEASE, MessageMap[typeof RELEASE]]
-  | [typeof FUNCTION_APPLY, MessageMap[typeof FUNCTION_APPLY]]
-  | [typeof FUNCTION_RESULT, MessageMap[typeof FUNCTION_RESULT]];
+  | [typeof CALL, [string, string | number, any]]
+  | [typeof RESULT, ResultData]
+  | [typeof TERMINATE]
+  | [typeof RELEASE, [string]]
+  | [typeof FUNCTION_APPLY, [string, string, any]]
+  | [typeof FUNCTION_RESULT, ResultData];
 
 export interface CreateEndpointOptions<T = unknown> {
   uuid?(): string;
@@ -92,26 +85,21 @@ export function createEndpoint<T>(
   let messenger = initialMessenger;
 
   const activeApi = new Map<string | number, AnyFunction>();
-  const callIdsToResolver = new Map<
-    string,
-    (
-      ...args: MessageMap[typeof FUNCTION_RESULT] | MessageMap[typeof RESULT]
-    ) => void
-  >();
+  const callIdsToResolver = new Map<string, (...args: ResultData) => void>();
 
   const call = createCallable<T>(handlerForCall, callable);
 
   const encoder = createEncoder({
     uuid,
     release(id) {
-      send(RELEASE, [id]);
+      send([RELEASE, [id]]);
     },
     call(id, args, retainedBy) {
       const callId = uuid();
       const done = waitForResult(callId, retainedBy);
       const [encoded, transferables] = encoder.encode(args);
 
-      send(FUNCTION_APPLY, [callId, id, encoded], transferables);
+      send([FUNCTION_APPLY, [callId, id, encoded]], transferables);
 
       return done;
     },
@@ -154,7 +142,7 @@ export function createEndpoint<T>(
       }
     },
     terminate() {
-      send(TERMINATE, undefined);
+      send([TERMINATE]);
 
       terminate();
 
@@ -164,16 +152,12 @@ export function createEndpoint<T>(
     },
   };
 
-  function send<Type extends keyof MessageMap>(
-    type: Type,
-    args: MessageMap[Type],
-    transferables?: Transferable[],
-  ) {
+  function send(data: MessageData, transferables?: Transferable[]) {
     if (terminated) {
       return;
     }
 
-    messenger.postMessage(args ? [type, args] : [type], transferables);
+    messenger.postMessage(data, transferables);
   }
 
   async function listener(event: MessageEvent) {
@@ -204,10 +188,10 @@ export function createEndpoint<T>(
             await func(...(encoder.decode(args, [stackFrame]) as any[])),
           );
 
-          send(RESULT, [id, undefined, encoded], transferables);
+          send([RESULT, [id, undefined, encoded]], transferables);
         } catch (error) {
           const {name, message, stack} = error as Error;
-          send(RESULT, [id, {name, message, stack}]);
+          send([RESULT, [id, {name, message, stack}]]);
           throw error;
         } finally {
           stackFrame.release();
@@ -240,10 +224,10 @@ export function createEndpoint<T>(
         try {
           const result = await encoder.call(funcId, args);
           const [encoded, transferables] = encoder.encode(result);
-          send(FUNCTION_RESULT, [callId, undefined, encoded], transferables);
+          send([FUNCTION_RESULT, [callId, undefined, encoded]], transferables);
         } catch (error) {
           const {name, message, stack} = error as Error;
-          send(FUNCTION_RESULT, [callId, {name, message, stack}]);
+          send([FUNCTION_RESULT, [callId, {name, message, stack}]]);
           throw error;
         }
 
@@ -274,7 +258,7 @@ export function createEndpoint<T>(
       const done = waitForResult(id);
       const [encoded, transferables] = encoder.encode(args);
 
-      send(CALL, [id, property, encoded], transferables);
+      send([CALL, [id, property, encoded]], transferables);
 
       return done;
     };
