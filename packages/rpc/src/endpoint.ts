@@ -201,7 +201,7 @@ export function createEndpoint<T>(
       case RESULT: {
         const [callId] = data[1] as MessageMap[typeof RESULT];
 
-        callIdsToResolver.get(callId)!(
+        callIdsToResolver.get(callId)?.(
           ...(data[1] as MessageMap[typeof RESULT]),
         );
         callIdsToResolver.delete(callId);
@@ -215,7 +215,7 @@ export function createEndpoint<T>(
       case FUNCTION_RESULT: {
         const [callId] = data[1] as MessageMap[typeof FUNCTION_RESULT];
 
-        callIdsToResolver.get(callId)!(
+        callIdsToResolver.get(callId)?.(
           ...(data[1] as MessageMap[typeof FUNCTION_RESULT]),
         );
         callIdsToResolver.delete(callId);
