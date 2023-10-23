@@ -15,6 +15,15 @@ export const RELEASE = 3;
 export const FUNCTION_APPLY = 5;
 export const FUNCTION_RESULT = 6;
 
+const ALL_MESSAGE_IDS = [
+  CALL,
+  RESULT,
+  TERMINATE,
+  RELEASE,
+  FUNCTION_APPLY,
+  FUNCTION_RESULT,
+];
+
 type AnyFunction = (...args: any[]) => any;
 
 interface MessageMap {
@@ -25,6 +34,14 @@ interface MessageMap {
   [FUNCTION_APPLY]: [string, string, any];
   [FUNCTION_RESULT]: [string, Error?, any?];
 }
+
+type MessageData =
+  | [typeof CALL, MessageMap[typeof CALL]]
+  | [typeof RESULT, MessageMap[typeof RESULT]]
+  | [typeof TERMINATE, MessageMap[typeof TERMINATE]]
+  | [typeof RELEASE, MessageMap[typeof RELEASE]]
+  | [typeof FUNCTION_APPLY, MessageMap[typeof FUNCTION_APPLY]]
+  | [typeof FUNCTION_RESULT, MessageMap[typeof FUNCTION_RESULT]];
 
 export interface CreateEndpointOptions<T = unknown> {
   uuid?(): string;
@@ -162,7 +179,7 @@ export function createEndpoint<T>(
   async function listener(event: MessageEvent) {
     const {data} = event;
 
-    if (data == null || !Array.isArray(data)) {
+    if (!dataIsMessageMap(data)) {
       return;
     }
 
@@ -173,7 +190,7 @@ export function createEndpoint<T>(
       }
       case CALL: {
         const stackFrame = new StackFrame();
-        const [id, property, args] = data[1] as MessageMap[typeof CALL];
+        const [id, property, args] = data[1];
         const func = activeApi.get(property);
 
         try {
@@ -199,31 +216,26 @@ export function createEndpoint<T>(
         break;
       }
       case RESULT: {
-        const [callId] = data[1] as MessageMap[typeof RESULT];
+        const [callId] = data[1];
 
-        callIdsToResolver.get(callId)!(
-          ...(data[1] as MessageMap[typeof RESULT]),
-        );
+        callIdsToResolver.get(callId)!(...data[1]);
         callIdsToResolver.delete(callId);
         break;
       }
       case RELEASE: {
-        const [id] = data[1] as MessageMap[typeof RELEASE];
+        const [id] = data[1];
         encoder.release(id);
         break;
       }
       case FUNCTION_RESULT: {
-        const [callId] = data[1] as MessageMap[typeof FUNCTION_RESULT];
+        const [callId] = data[1];
 
-        callIdsToResolver.get(callId)!(
-          ...(data[1] as MessageMap[typeof FUNCTION_RESULT]),
-        );
+        callIdsToResolver.get(callId)!(...data[1]);
         callIdsToResolver.delete(callId);
         break;
       }
       case FUNCTION_APPLY: {
-        const [callId, funcId, args] =
-          data[1] as MessageMap[typeof FUNCTION_APPLY];
+        const [callId, funcId, args] = data[1];
 
         try {
           const result = await encoder.call(funcId, args);
@@ -289,6 +301,10 @@ export function createEndpoint<T>(
     encoder.terminate?.();
     messenger.removeEventListener('message', listener);
   }
+}
+
+function dataIsMessageMap(data: any): data is MessageData {
+  return Array.isArray(data) && ALL_MESSAGE_IDS.includes(data[0]);
 }
 
 function defaultUuid() {
