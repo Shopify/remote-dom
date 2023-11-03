@@ -20,11 +20,11 @@ npm install @remote-ui/rpc --save
 
 `@remote-ui/core` uses JavaScript’s native `Map`, `Set`, `WeakSet`. It also uses numerous language constructs that require the `Symbol` global. This package also makes heavy use of Promises and async/ await, which are based on generators.
 
-Polyfills for all of these features (via [`core-js`](https://github.com/zloirock/core-js) and [regenerator-runtime](https://github.com/facebook/regenerator/tree/master/packages/regenerator-runtime)) are imported automatically with the “default” version of this package. If you have a build system that is smart about adding polyfills, you can configure it to [prefer (and process) a special build meant to minimize polyfills](../documentation/guides/polyfills.md).
+Polyfills for all of these features (via [`core-js`](https://github.com/zloirock/core-js) and [regenerator-runtime](https://github.com/facebook/regenerator/tree/master/packages/regenerator-runtime)) are imported automatically with the “default” version of this package. If you have a build system that is smart about adding polyfills, you can configure it to [prefer (and process) a special build meant to minimize polyfills](/documentation/guides/polyfills.md).
 
 ## Usage
 
-Most developers will not need to know about `@remote-ui/rpc`. The [comprehensive example](../documentation/comprehensive-example.md) shows how a developer can use the higher-level abstractions available in `@remote-ui/core` and `@remote-ui/web-workers` to build a powerful, remote-ui-powered UI. However, users with more complex needs may need to use this library directly, such as those constructing remote environments around an object other than a web worker.
+Most developers will not need to know about `@remote-ui/rpc`. The [comprehensive example](/documentation/comprehensive-example.md) shows how a developer can use the higher-level abstractions available in `@remote-ui/core` and `@remote-ui/web-workers` to build a powerful, remote-ui-powered UI. However, users with more complex needs may need to use this library directly, such as those constructing remote environments around an object other than a web worker.
 
 ### `createEndpoint()`
 
