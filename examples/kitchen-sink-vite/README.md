@@ -1,9 +1,22 @@
-# Example: remote-ui using the DOM and vitejs
+# Example: remote-dom using Vite and a variety of DOM-friendly JavaScript libraries
 
-This example shows how you can use remote-ui to implement off-main-thread rendering using just the DOM.
+```bash
+# Run this command from the root of the repo:
+pnpm run example:kitchen-sink-vite
+```
 
-The app uses [vite](https://vitejs.dev/) and imports the local in-repo version of `@remote-ui` packages which makes a great app to develop changes in these packages with.
+This example shows how you can use remote-dom to implement off-main-thread rendering using a variety of JavaScript libraries and execution environments.
 
-## Usage
+Using [Vite](https://vitejs.dev/), this example shows how to render DOM elements with remote-dom in two different sandboxing environments:
 
-Run `yarn example:kitchen-sink-vite` in the root folder of this repo.
+- An `iframe`
+- A Web Worker
+
+Because remote-dom is based on DOM APIs, the sandboxed code can use a variety of JavaScript libraries that are designed to work with the DOM. This example allows switching between the same UI, authored using four different libraries:
+
+- “Vanilla” JavaScript
+- React
+- Preact
+- Svelte
+
+This example imports the local in-repo version of `@remote-dom` packages, so it is useful when working on changes to the libraries.

@@ -30,7 +30,7 @@ This repo uses [project references](https://www.typescriptlang.org/docs/handbook
 
 #### Lint
 
-Run `yarn lint`, which will run the entire codebase through [ESLint](https://eslint.org) and [Prettier](https://prettier.io).
+Run `yarn lint`, which will run the entire codebase through [Prettier](https://prettier.io).
 
 #### Test
 

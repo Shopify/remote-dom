@@ -1,5 +1,6 @@
 {
-  "name": "remote-ui",
+  "name": "remote-dom",
+  "type": "module",
   "version": "0.0.0",
   "private": true,
   "repository": "https://github.com/Shopify/remote-ui.git",
@@ -8,30 +9,38 @@
     "./examples/*"
   ],
   "scripts": {
-    "test": "loom test",
-    "lint": "loom lint",
-    "type-check": "loom type-check",
-    "build": "loom build",
-    "prerelease": "loom build",
+    "build": "pnpm -r run build",
+    "format": "prettier --write --cache .",
+    "lint": "prettier --check --cache .",
+    "test": "vitest",
+    "type-check": "tsc --build --pretty",
+    "prerelease": "pnpm run build",
     "release": "changeset publish",
-    "example:vanilla-dom": "yarn workspace example-vanilla-dom start",
-    "example:kitchen-sink-vite": "yarn workspace example-kitchen-sink-vite dev"
+    "example:vanilla-dom": "pnpm run --filter example-vanilla-dom start",
+    "example:kitchen-sink-vite": "pnpm run --filter example-kitchen-sink-vite start"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.7",
     "@changesets/cli": "^2.25.2",
-    "@shopify/babel-preset": "^24.1.0",
-    "@shopify/browserslist-config": "^3.0.0",
-    "@shopify/eslint-plugin": "^42.0.0",
-    "@shopify/loom": "^1.0.0",
-    "@shopify/loom-cli": "^1.0.0",
-    "@shopify/loom-plugin-build-library": "^1.0.0",
-    "@shopify/loom-plugin-eslint": "^2.0.0",
-    "@shopify/loom-plugin-prettier": "^2.0.0",
-    "@shopify/typescript-configs": "^5.1.0",
-    "eslint": "^8.28.0",
-    "prettier": "^2.8.0",
-    "rollup-plugin-copy": "^3.4.0",
-    "typescript": "^5.0.0"
-  }
+    "@quilted/rollup": "^0.2.7",
+    "@quilted/typescript": "^0.3.0",
+    "@quilted/vite": "^0.1.6",
+    "@types/node": "^20.9.0",
+    "prettier": "^3.0.0",
+    "rollup": "^4.3.0",
+    "tsx": "^4.1.0",
+    "typescript": "^5.2.2",
+    "vite": "^4.5.0",
+    "vitest": "^0.34.0"
+  },
+  "packageManager": "pnpm@8.10.2+sha256.487609e857f1c11780cc98dd0bfe4c8a8b11c7f23bc3a4493ac7d263d6fb6c8c",
+  "prettier": {
+    "arrowParens": "always",
+    "bracketSpacing": false,
+    "singleQuote": true,
+    "trailingComma": "all"
+  },
+  "browserslist": [
+    "defaults and not dead"
+  ]
 }

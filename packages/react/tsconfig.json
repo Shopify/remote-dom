@@ -1,10 +1,10 @@
 {
-  "extends": "../../config/typescript/tsconfig.base.json",
+  "extends": "@quilted/typescript/project.json",
   "compilerOptions": {
-    "outDir": "build/ts",
-    "baseUrl": "src",
-    "rootDir": "src"
+    "rootDir": "source",
+    "outDir": "build/typescript"
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "references": [{"path": "../core"}, {"path": "../async-subscription"}]
+  "include": ["source"],
+  "exclude": [],
+  "references": [{"path": "../core"}, {"path": "../signals"}]
 }

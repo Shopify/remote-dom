@@ -1,0 +1,80 @@
+{
+  "name": "@remote-dom/preact",
+  "type": "module",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "@remote-dom/registry": "https://registry.npmjs.org"
+  },
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/remote-dom",
+    "directory": "packages/preact"
+  },
+  "exports": {
+    ".": {
+      "types": "./build/typescript/index.d.ts",
+      "quilt:source": "./source/index.ts",
+      "quilt:esnext": "./build/esnext/index.esnext",
+      "import": "./build/esm/index.mjs",
+      "require": "./build/cjs/index.cjs"
+    },
+    "./host": {
+      "types": "./build/typescript/host.d.ts",
+      "quilt:source": "./source/host.ts",
+      "quilt:esnext": "./build/esnext/host.esnext",
+      "import": "./build/esm/host.mjs",
+      "require": "./build/cjs/host.cjs"
+    },
+    "./html": {
+      "types": "./build/typescript/html.d.ts",
+      "quilt:source": "./source/html.ts",
+      "quilt:esnext": "./build/esnext/html.esnext",
+      "import": "./build/esm/html.mjs",
+      "require": "./build/cjs/html.cjs"
+    }
+  },
+  "types": "./build/typescript/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "host": [
+        "./build/typescript/host.d.ts"
+      ],
+      "html": [
+        "./build/typescript/html.d.ts"
+      ]
+    }
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "rollup --config ./rollup.config.js"
+  },
+  "dependencies": {
+    "@remote-dom/core": "^0.0.1",
+    "@remote-dom/signals": "^0.0.1",
+    "htm": "^3.1.1"
+  },
+  "peerDependencies": {
+    "@preact/signals-core": "^1.3.0",
+    "preact": "^10.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@preact/signals-core": {
+      "optional": true
+    },
+    "preact": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@preact/signals-core": "^1.5.0",
+    "preact": "^10.17.0"
+  },
+  "browserslist": [
+    "defaults and not dead"
+  ]
+}

@@ -2,15 +2,11 @@
   "files": [],
   "include": [],
   "references": [
-    {"path": "./packages/async-subscription"},
-    {"path": "./packages/types"},
+    {"path": "./examples/kitchen-sink-vite"},
     {"path": "./packages/core"},
-    {"path": "./packages/dom"},
-    {"path": "./packages/htm"},
+    {"path": "./packages/polyfill"},
+    {"path": "./packages/preact"},
     {"path": "./packages/react"},
-    {"path": "./packages/rpc"},
-    {"path": "./packages/testing"},
-    {"path": "./packages/traversal"},
-    {"path": "./packages/vue"}
+    {"path": "./packages/signals"}
   ]
 }

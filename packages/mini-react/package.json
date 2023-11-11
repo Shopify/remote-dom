@@ -1,9 +1,0 @@
-{
-  "name": "@remote-ui/mini-react",
-  "version": "2.0.0",
-  "publishConfig": {
-    "access": "public",
-    "@remote-ui:registry": "https://registry.npmjs.org"
-  },
-  "license": "MIT"
-}
