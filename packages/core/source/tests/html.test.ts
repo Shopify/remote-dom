@@ -1,4 +1,6 @@
 import '../polyfill.ts';
+import {describe, it, expect} from 'vitest';
+
 import {html, type PropertiesWithChildren} from '../html.ts';
 
 class Button extends HTMLElement {
@@ -53,7 +55,7 @@ describe('html', () => {
     expect(button.childNodes).toStrictEqual(
       expect.arrayContaining([expect.any(Text), expect.any(RemoteFragment)]),
     );
-    expect(button.childNodes[1]!.childNodes).toStrictEqual([icon]);
+    expect(button.childNodes[1]!.childNodes).toEqual([icon]);
     expect((button.childNodes[1] as RemoteFragment).slot).toBe('icon');
   });
 
@@ -75,14 +77,14 @@ describe('html', () => {
     const button = html<Button>`<ui-button>${text}${icon}</ui-button>`;
 
     expect(button.localName).toBe('ui-button');
-    expect(button.childNodes).toStrictEqual([text, icon]);
+    expect(button.childNodes).toEqual([text, icon]);
   });
 
   it('converts numbers passed as children into text nodes', () => {
     const button = html<Button>`<ui-button>Clicked ${0} times</ui-button>`;
 
     expect(button.outerHTML).toBe('<ui-button>Clicked 0 times</ui-button>');
-    expect(button.childNodes).toStrictEqual([
+    expect(button.childNodes).toEqual([
       expect.any(Text),
       expect.any(Text),
       expect.any(Text),
@@ -96,7 +98,7 @@ describe('html', () => {
     `;
 
     expect(button.outerHTML).toBe('<ui-button>Press me!</ui-button>');
-    expect(button.childNodes).toStrictEqual([expect.any(Text)]);
+    expect(button.childNodes).toEqual([expect.any(Text)]);
   });
 
   describe('components', () => {

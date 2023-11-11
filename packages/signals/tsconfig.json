@@ -6,5 +6,5 @@
   },
   "include": ["source"],
   "exclude": [],
-  "references": [{"path": "../polyfill"}]
+  "references": [{"path": "../core"}]
 }

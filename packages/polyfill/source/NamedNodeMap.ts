@@ -120,6 +120,14 @@ export class NamedNodeMap {
   setNamedItemNS(attr: Attr) {
     return this.setNamedItem(attr);
   }
+
+  *[Symbol.iterator]() {
+    let attr = this[CHILD];
+    while (attr) {
+      yield attr;
+      attr = attr[NEXT];
+    }
+  }
 }
 
 function updateElementAttribute(
