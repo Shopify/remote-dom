@@ -1,0 +1,16 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+      - '!main'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Checks 📝
+    uses: ./.github/workflows/checks.yml

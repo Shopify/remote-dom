@@ -1,0 +1,28 @@
+name: Changelog Reminder
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'packages/*/source/**'
+      - 'packages/*/package.json'
+      - '!*.test.*'
+      - '!*.md'
+
+jobs:
+  remind:
+    name: Changeset Reminder
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ !github.event.pull_request.draft && !startsWith(github.head_ref, 'changeset-release/') }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: mskelton/changelog-reminder-action@v2
+        with:
+          changelogRegex: "\\.changeset"
+          message: >
+            We detected some changes in public packages, and there are no updates in the `.changeset` directory.
+
+            If the changes are user-facing and should cause a version bump, run `pnpm changeset` to track your changes and include them in the next release CHANGELOG.
+
+            If you are making simple updates to repo configuration, examples, or documentation, you do not need to add a changeset.

@@ -1,0 +1,32 @@
+name: Checks
+
+on:
+  workflow_call:
+
+jobs:
+  lint:
+    name: Lint 💅
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/actions/prepare
+      - run: pnpm run lint
+
+  type-check:
+    name: Type check 🧮
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/actions/prepare
+      - run: pnpm run type-check
+
+  test:
+    name: Tests 🧪
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/actions/prepare
+      - run: pnpm run test
