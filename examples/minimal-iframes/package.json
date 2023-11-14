@@ -1,0 +1,11 @@
+{
+  "name": "example-minimal-iframes",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "vite"
+  },
+  "dependencies": {
+    "@remote-dom/core": "workspace:*"
+  }
+}

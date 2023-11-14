@@ -14,7 +14,7 @@ import type {RemoteNodeSerialization} from '../types.ts';
 import type {RemoteReceiverOptions} from './shared.ts';
 
 export class DOMRemoteReceiver {
-  readonly root: DocumentFragment | Element = document.createDocumentFragment();
+  readonly root: DocumentFragment | Element;
   readonly receive: RemoteMutationCallback;
 
   get callback() {
@@ -23,9 +23,14 @@ export class DOMRemoteReceiver {
 
   private readonly attached = new Map<string, Node>();
 
-  constructor({retain, release}: RemoteReceiverOptions = {}) {
+  constructor({
+    root = document.createDocumentFragment(),
+    retain,
+    release,
+  }: RemoteReceiverOptions & {root?: DocumentFragment | Element} = {}) {
     const {attached} = this;
 
+    this.root = root;
     this.receive = createRemoteMutationCallback({
       insertChild: (id, child, index) => {
         const parent = id === ROOT_ID ? this.root : attached.get(id)!;
