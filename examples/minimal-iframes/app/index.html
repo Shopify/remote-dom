@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <body>
     <div id="root"></div>
@@ -7,6 +7,10 @@
 
     <script type="module">
       class UIBanner extends HTMLElement {
+        static get observedAttributes() {
+          return ['tone'];
+        }
+
         connectedCallback() {
           // We will allow you to pass a `tone` attribute to the element, which
           // styles the banner according to our design system. We’ll see how to
@@ -32,6 +36,16 @@
             </style>
             <div class="Banner Banner--${tone}"><slot></slot></div>
           `;
+        }
+
+        attributeChangedCallback(name, oldValue, newValue) {
+          if (name === 'tone') {
+            const banner = this.shadowRoot?.querySelector('.Banner');
+            if (banner == null) return;
+
+            banner.classList.remove(`Banner--${oldValue ?? 'neutral'}`);
+            banner.classList.add(`Banner--${newValue ?? 'neutral'}`);
+          }
         }
       }
 
