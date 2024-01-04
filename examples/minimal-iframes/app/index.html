@@ -69,7 +69,7 @@
 
       window.addEventListener('message', ({source, data}) => {
         if (source !== iframe.contentWindow) return;
-        receiver.receive(data);
+        receiver.connection.mutate(data);
       });
     </script>
   </body>

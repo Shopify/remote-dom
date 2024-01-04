@@ -8,7 +8,7 @@
   },
   "version": "0.0.1",
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0"
   },
   "repository": {
     "type": "git",
@@ -20,29 +20,25 @@
       "types": "./build/typescript/index.d.ts",
       "quilt:source": "./source/index.ts",
       "quilt:esnext": "./build/esnext/index.esnext",
-      "import": "./build/esm/index.mjs",
-      "require": "./build/cjs/index.cjs"
+      "import": "./build/esm/index.mjs"
     },
     "./host": {
       "types": "./build/typescript/host.d.ts",
       "quilt:source": "./source/host.ts",
       "quilt:esnext": "./build/esnext/host.esnext",
-      "import": "./build/esm/host.mjs",
-      "require": "./build/cjs/host.cjs"
+      "import": "./build/esm/host.mjs"
     },
     "./html": {
       "types": "./build/typescript/html.d.ts",
       "quilt:source": "./source/html.ts",
       "quilt:esnext": "./build/esnext/html.esnext",
-      "import": "./build/esm/html.mjs",
-      "require": "./build/cjs/html.cjs"
+      "import": "./build/esm/html.mjs"
     },
     "./polyfill": {
       "types": "./build/typescript/polyfill.d.ts",
       "quilt:source": "./source/polyfill.ts",
       "quilt:esnext": "./build/esnext/polyfill.esnext",
-      "import": "./build/esm/polyfill.mjs",
-      "require": "./build/cjs/polyfill.cjs"
+      "import": "./build/esm/polyfill.mjs"
     }
   },
   "types": "./build/typescript/index.d.ts",
@@ -66,11 +62,11 @@
     "./build/esnext/polyfill.esnext"
   ],
   "scripts": {
-    "build": "rollup --config ./rollup.config.js"
+    "build": "rollup --config rollup.config.js"
   },
   "dependencies": {
-    "@remote-dom/core": "^0.0.1",
-    "@types/react": "^17.0.0 || ^18.0.0",
+    "@remote-dom/core": "workspace:^",
+    "@types/react": "^18.0.0",
     "htm": "^3.1.1"
   },
   "peerDependencies": {
@@ -82,8 +78,11 @@
     }
   },
   "devDependencies": {
-    "@quilted/testing": "^0.1.6",
-    "react": "npm:@quilted/react@^18.2.0"
+    "@quilted/react-testing": "^0.6.5",
+    "@types/react-dom": "^18.2.0",
+    "preact": "^10.19.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "browserslist": [
     "defaults and not dead"

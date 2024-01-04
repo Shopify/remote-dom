@@ -1,4 +1,4 @@
-import type {RemoteMutationCallback} from '@remote-dom/core';
+import type {RemoteConnection} from '@remote-dom/core';
 
 export type RenderFramework = 'vanilla' | 'htm';
 export type RenderSandbox = 'iframe' | 'worker';
@@ -10,5 +10,5 @@ export interface RenderApi {
 }
 
 export interface SandboxApi {
-  render(callback: RemoteMutationCallback, api: RenderApi): Promise<unknown>;
+  render(connection: RemoteConnection, api: RenderApi): Promise<unknown>;
 }

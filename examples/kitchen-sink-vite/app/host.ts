@@ -52,7 +52,7 @@ receiver.connect(uiRoot);
 // provides a `render()` function that will be called in response to this
 // method, with the `Endpoint` taking care of serializing arguments over
 // `postMessage()` to the remote context.
-await workerSandbox.render(receiver.receive, {
+await workerSandbox.render(receiver.connection, {
   sandbox: 'worker',
   framework: 'htm',
   async alert(content) {

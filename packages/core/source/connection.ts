@@ -5,7 +5,7 @@ import {
   MUTATION_TYPE_UPDATE_PROPERTY,
 } from './constants.ts';
 import type {
-  RemoteMutationCallback,
+  RemoteConnection,
   RemoteMutationRecord,
   RemoteMutationRecordInsertChild,
   RemoteMutationRecordRemoveChild,
@@ -13,9 +13,10 @@ import type {
   RemoteMutationRecordUpdateProperty,
 } from './types.ts';
 
-export type {RemoteMutationCallback};
+export type {RemoteConnection};
 
-export interface RemoteMutationHandler {
+export interface RemoteConnectionHandler {
+  call: RemoteConnection['call'];
   insertChild(
     id: RemoteMutationRecordInsertChild[1],
     child: RemoteMutationRecordInsertChild[2],
@@ -36,12 +37,13 @@ export interface RemoteMutationHandler {
   ): void;
 }
 
-export function createRemoteMutationCallback({
+export function createRemoteConnection({
+  call,
   insertChild,
   removeChild,
   updateText,
   updateProperty,
-}: RemoteMutationHandler): RemoteMutationCallback {
+}: RemoteConnectionHandler): RemoteConnection {
   const messageMap = new Map<RemoteMutationRecord[0], (...args: any[]) => any>([
     [MUTATION_TYPE_INSERT_CHILD, insertChild],
     [MUTATION_TYPE_REMOVE_CHILD, removeChild],
@@ -49,9 +51,12 @@ export function createRemoteMutationCallback({
     [MUTATION_TYPE_UPDATE_PROPERTY, updateProperty],
   ]);
 
-  return function handler(records) {
-    for (const [type, ...args] of records) {
-      messageMap.get(type)!(...args);
-    }
+  return {
+    call,
+    mutate(records) {
+      for (const [type, ...args] of records) {
+        messageMap.get(type)!(...args);
+      }
+    },
   };
 }

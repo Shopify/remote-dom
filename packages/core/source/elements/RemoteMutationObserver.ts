@@ -13,10 +13,10 @@ import {
   MUTATION_TYPE_UPDATE_TEXT,
   MUTATION_TYPE_UPDATE_PROPERTY,
 } from '../constants.ts';
-import type {RemoteMutationCallback, RemoteMutationRecord} from '../types.ts';
+import type {RemoteConnection, RemoteMutationRecord} from '../types.ts';
 
 export class RemoteMutationObserver extends MutationObserver {
-  constructor(private readonly callback: RemoteMutationCallback) {
+  constructor(private readonly connection: RemoteConnection) {
     super((records) => {
       const remoteRecords: RemoteMutationRecord[] = [];
 
@@ -39,7 +39,7 @@ export class RemoteMutationObserver extends MutationObserver {
           });
 
           record.addedNodes.forEach((node, index) => {
-            connectRemoteNode(node, callback);
+            connectRemoteNode(node, connection);
 
             remoteRecords.push([
               MUTATION_TYPE_INSERT_CHILD,
@@ -68,12 +68,12 @@ export class RemoteMutationObserver extends MutationObserver {
         }
       }
 
-      callback(remoteRecords);
+      connection.mutate(remoteRecords);
     });
   }
 
   observe(
-    target: Node & {[REMOTE_ID]?: string},
+    target: Node,
     options?: MutationObserverInit & {
       /**
        * Whether to send the initial state of the tree to the mutation
@@ -84,19 +84,24 @@ export class RemoteMutationObserver extends MutationObserver {
       initial?: boolean;
     },
   ) {
-    if (target[REMOTE_ID] == null) {
-      target[REMOTE_ID] = ROOT_ID;
-    }
+    Object.defineProperty(target, REMOTE_ID, {value: ROOT_ID});
 
-    if (options?.initial !== false) {
-      this.callback(
-        Array.from(target.childNodes, (node, index) => [
+    if (options?.initial !== false && target.childNodes.length > 0) {
+      const records: RemoteMutationRecord[] = [];
+
+      for (let i = 0; i < target.childNodes.length; i++) {
+        const node = target.childNodes[i]!;
+        connectRemoteNode(node, this.connection);
+
+        records.push([
           MUTATION_TYPE_INSERT_CHILD,
           ROOT_ID,
           serializeRemoteNode(node),
-          index,
-        ]),
-      );
+          i,
+        ]);
+      }
+
+      this.connection.mutate(records);
     }
 
     super.observe(target, {

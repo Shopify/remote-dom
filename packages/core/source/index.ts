@@ -1,13 +1,13 @@
 export {
-  createRemoteMutationCallback,
-  type RemoteMutationHandler,
-} from './callback.ts';
+  createRemoteConnection,
+  type RemoteConnectionHandler,
+} from './connection.ts';
 
 export * from './types.ts';
 export {
   ROOT_ID,
   REMOTE_ID,
-  REMOTE_CALLBACK,
+  REMOTE_CONNECTION,
   REMOTE_PROPERTIES,
   NODE_TYPE_COMMENT,
   NODE_TYPE_ELEMENT,

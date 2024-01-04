@@ -1,17 +1,20 @@
 import {
   REMOTE_ID,
-  REMOTE_CALLBACK,
+  REMOTE_CONNECTION,
   REMOTE_PROPERTIES,
   MUTATION_TYPE_UPDATE_PROPERTY,
 } from '../constants.ts';
-import type {
-  RemoteMutationCallback,
-  RemoteNodeSerialization,
-} from '../types.ts';
+import type {RemoteConnection, RemoteNodeSerialization} from '../types.ts';
 
 let id = 0;
 
-export function remoteId(node: Node & {[REMOTE_ID]?: string}) {
+export type RemoteConnectedNode<T extends Node = Node> = T & {
+  [REMOTE_ID]?: string;
+  [REMOTE_CONNECTION]?: RemoteConnection;
+  [REMOTE_PROPERTIES]?: Record<string, unknown>;
+};
+
+export function remoteId(node: RemoteConnectedNode) {
   if (node[REMOTE_ID] == null) {
     node[REMOTE_ID] = String(id++);
   }
@@ -19,9 +22,7 @@ export function remoteId(node: Node & {[REMOTE_ID]?: string}) {
   return node[REMOTE_ID];
 }
 
-export function remoteProperties(
-  node: Node & {[REMOTE_PROPERTIES]?: Record<string, unknown>},
-) {
+export function remoteProperties(node: RemoteConnectedNode) {
   if (node[REMOTE_PROPERTIES] != null) return node[REMOTE_PROPERTIES];
   if ((node as any).attributes == null) return undefined;
 
@@ -39,7 +40,7 @@ export function updateRemoteElementProperty(
   property: string,
   value: unknown,
 ) {
-  let properties = (node as any)[REMOTE_PROPERTIES];
+  let properties = (node as RemoteConnectedNode)[REMOTE_PROPERTIES];
 
   if (properties == null) {
     properties = {};
@@ -50,32 +51,34 @@ export function updateRemoteElementProperty(
 
   properties[property] = value;
 
-  const callback = (node as any)[REMOTE_CALLBACK];
+  const connection = (node as RemoteConnectedNode)[REMOTE_CONNECTION];
 
-  if (callback == null) return;
+  if (connection == null) return;
 
-  callback([[MUTATION_TYPE_UPDATE_PROPERTY, remoteId(node), property, value]]);
+  connection.mutate([
+    [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(node), property, value],
+  ]);
 }
 
 export function connectRemoteNode(
-  node: Node,
-  callback: RemoteMutationCallback,
+  node: RemoteConnectedNode,
+  connection: RemoteConnection,
 ) {
-  if ((node as any)[REMOTE_CALLBACK] === callback) return;
+  if ((node as any)[REMOTE_CONNECTION] === connection) return;
 
-  (node as any)[REMOTE_CALLBACK] = callback;
+  (node as any)[REMOTE_CONNECTION] = connection;
 
   if (node.childNodes) {
     for (let i = 0; i < node.childNodes.length; i++) {
-      connectRemoteNode(node.childNodes[i]!, callback);
+      connectRemoteNode(node.childNodes[i]!, connection);
     }
   }
 }
 
-export function disconnectRemoteNode(node: Node) {
-  if ((node as any)[REMOTE_CALLBACK] == null) return;
+export function disconnectRemoteNode(node: RemoteConnectedNode) {
+  if ((node as any)[REMOTE_CONNECTION] == null) return;
 
-  (node as any)[REMOTE_CALLBACK] = undefined;
+  (node as any)[REMOTE_CONNECTION] = undefined;
 
   if (node.childNodes) {
     for (let i = 0; i < node.childNodes.length; i++) {
@@ -94,13 +97,14 @@ export function serializeRemoteNode(node: Node): RemoteNodeSerialization {
         id: remoteId(node),
         type: nodeType,
         element: (node as Element).localName,
-        properties: remoteProperties(node),
+        properties: Object.assign({}, remoteProperties(node)),
         children: Array.from(node.childNodes).map(serializeRemoteNode),
       };
     }
     // TextNode
     case 3:
     // Comment
+    // eslint-disable-next-line no-fallthrough
     case 8: {
       return {
         id: remoteId(node),
@@ -116,4 +120,19 @@ export function serializeRemoteNode(node: Node): RemoteNodeSerialization {
       );
     }
   }
+}
+
+export function callRemoteElementMethod(
+  node: Element,
+  method: string,
+  ...args: unknown[]
+) {
+  const id = (node as RemoteConnectedNode)[REMOTE_ID];
+  const connection = (node as RemoteConnectedNode)[REMOTE_CONNECTION];
+
+  if (id == null || connection == null) {
+    throw new Error(`Cannot call method ${method} on an unconnected node`);
+  }
+
+  return connection.call(id, method, ...args);
 }

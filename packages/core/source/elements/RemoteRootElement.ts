@@ -1,38 +1,36 @@
 import {
-  REMOTE_ID,
-  REMOTE_CALLBACK,
   ROOT_ID,
+  REMOTE_ID,
+  REMOTE_CONNECTION,
   MUTATION_TYPE_INSERT_CHILD,
 } from '../constants.ts';
-import type {RemoteMutationCallback, RemoteMutationRecord} from '../types.ts';
+import type {RemoteConnection, RemoteMutationRecord} from '../types.ts';
 
 import {connectRemoteNode, serializeRemoteNode} from './internals.ts';
 
 export class RemoteRootElement extends HTMLElement {
   readonly [REMOTE_ID] = ROOT_ID;
 
-  [REMOTE_CALLBACK]?: RemoteMutationCallback;
+  [REMOTE_CONNECTION]?: RemoteConnection;
 
-  connect(callback: RemoteMutationCallback): void {
-    if (this[REMOTE_CALLBACK] === callback) return;
+  connect(connection: RemoteConnection): void {
+    if (this[REMOTE_CONNECTION] === connection) return;
 
-    connectRemoteNode(this, callback);
+    connectRemoteNode(this, connection);
 
-    if (this.childNodes.length > 0) {
-      const records: RemoteMutationRecord[] = [];
+    if (this.childNodes.length === 0) return;
 
-      for (let i = 0; i < this.childNodes.length; i++) {
-        const node = this.childNodes[i]!;
+    const records: RemoteMutationRecord[] = [];
 
-        records.push([
-          MUTATION_TYPE_INSERT_CHILD,
-          this[REMOTE_ID],
-          serializeRemoteNode(node),
-          i,
-        ]);
-      }
+    for (let i = 0; i < this.childNodes.length; i++) {
+      const node = this.childNodes[i]!;
 
-      callback(records);
+      records.push([
+        MUTATION_TYPE_INSERT_CHILD,
+        ROOT_ID,
+        serializeRemoteNode(node),
+        i,
+      ]);
     }
   }
 }

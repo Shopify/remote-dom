@@ -14,10 +14,6 @@ export {
 } from './host/component.tsx';
 export {RemoteFragmentRenderer} from './host/RemoteFragmentRenderer.tsx';
 export {
-  RemoteTextRenderer,
-  type RemoteTextRendererProps,
-} from './host/RemoteTextRenderer.tsx';
-export {
   RemoteRootRenderer,
   type RemoteRootRendererProps,
 } from './host/RemoteRootRenderer.tsx';

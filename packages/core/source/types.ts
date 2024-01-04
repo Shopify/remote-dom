@@ -43,9 +43,10 @@ export type RemoteMutationRecord =
   | RemoteMutationRecordUpdateText
   | RemoteMutationRecordUpdateProperty;
 
-export type RemoteMutationCallback = (
-  records: readonly RemoteMutationRecord[],
-) => void | Promise<void>;
+export interface RemoteConnection {
+  mutate(records: readonly RemoteMutationRecord[]): void;
+  call(id: string, method: string, ...args: readonly unknown[]): unknown;
+}
 
 export interface RemoteElementSerialization {
   readonly id: string;

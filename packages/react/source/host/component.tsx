@@ -1,8 +1,10 @@
 import type {RemoteReceiverElement} from '@remote-dom/core/receiver';
 import {
-  forwardRef,
-  type ForwardRefRenderFunction,
-  type ForwardRefExoticComponent,
+  memo,
+  useRef,
+  useEffect,
+  type MutableRefObject,
+  type ComponentType,
 } from 'react';
 
 import {useRemoteReceived} from './hooks/remote-received.ts';
@@ -18,19 +20,28 @@ export interface RemoteComponentRendererAdditionalProps {
   readonly [REMOTE_ELEMENT_ATTACHED_PROP]: boolean;
 }
 
+interface Internals extends Pick<RemoteComponentRendererProps, 'receiver'> {
+  id: string;
+  instanceRef: MutableRefObject<unknown>;
+}
+
 export function createRemoteComponentRenderer<
   Props extends Record<string, any> = {},
-  Instance = never,
 >(
-  Component: ForwardRefRenderFunction<Instance, Props>,
+  Component: ComponentType<Props>,
   {name}: {name?: string} = {},
-): ForwardRefExoticComponent<RemoteComponentRendererProps> {
-  const RemoteComponentRenderer = forwardRef<
-    Instance,
-    RemoteComponentRendererProps
-  >(function RemoteComponentRenderer({element, receiver, components}, ref) {
+): ComponentType<RemoteComponentRendererProps> {
+  const RemoteComponentRenderer = memo(function RemoteComponentRenderer({
+    element,
+    receiver,
+    components,
+  }: RemoteComponentRendererProps) {
+    const internalsRef = useRef<Internals>();
+
     const attachedElement = useRemoteReceived(element, receiver);
     const resolvedElement = attachedElement ?? element;
+    const resolvedId = resolvedElement.id;
+
     const props = usePropsForRemoteElement<Props>(resolvedElement, {
       receiver,
       components,
@@ -39,7 +50,33 @@ export function createRemoteComponentRenderer<
     (props as any)[REMOTE_ELEMENT_PROP] = resolvedElement;
     (props as any)[REMOTE_ELEMENT_ATTACHED_PROP] = attachedElement != null;
 
-    return Component(props, ref);
+    if (internalsRef.current == null) {
+      const internals: Internals = {
+        id: resolvedId,
+        receiver,
+      } as any;
+
+      internals.instanceRef = createImplementationRef(internals);
+      internalsRef.current = internals;
+    }
+
+    internalsRef.current.id = resolvedId;
+    internalsRef.current.receiver = receiver;
+
+    useEffect(() => {
+      const node = {id: resolvedId};
+
+      receiver.implement(
+        node,
+        internalsRef.current?.instanceRef.current as any,
+      );
+
+      return () => {
+        receiver.implement(node, null);
+      };
+    }, [resolvedId, receiver]);
+
+    return <Component ref={internalsRef.current.instanceRef} {...props} />;
   });
 
   RemoteComponentRenderer.displayName =
@@ -49,4 +86,20 @@ export function createRemoteComponentRenderer<
     })`;
 
   return RemoteComponentRenderer;
+}
+
+function createImplementationRef(
+  internals: Pick<Internals, 'id' | 'receiver'>,
+): MutableRefObject<unknown> {
+  let current: unknown = null;
+
+  return {
+    get current() {
+      return current;
+    },
+    set current(implementation) {
+      current = implementation;
+      internals.receiver.implement(internals, implementation as any);
+    },
+  };
 }

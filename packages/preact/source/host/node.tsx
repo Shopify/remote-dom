@@ -8,7 +8,6 @@ import type {
   SignalRemoteReceiverNode,
 } from '@remote-dom/signals/receiver';
 
-import {RemoteTextRenderer} from './RemoteTextRenderer.tsx';
 import type {RemoteComponentRendererMap} from './types.ts';
 
 export interface RenderRemoteNodeOptions {
@@ -40,9 +39,7 @@ export function renderRemoteNode(
       );
     }
     case NODE_TYPE_TEXT: {
-      return (
-        <RemoteTextRenderer key={node.id} text={node} receiver={receiver} />
-      );
+      return node.data;
     }
     case NODE_TYPE_COMMENT: {
       return null;

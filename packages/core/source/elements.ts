@@ -23,6 +23,7 @@ export {
   disconnectRemoteNode,
   serializeRemoteNode,
   updateRemoteElementProperty,
+  callRemoteElementMethod,
 } from './elements/internals.ts';
 
 export {remoteSlots} from './elements/decorators/remote-slots.ts';
@@ -32,4 +33,4 @@ export {customElement} from './elements/decorators/custom-element.ts';
 
 export {BooleanOrString} from './elements/property-types/BooleanOrString.ts';
 
-export type {RemoteMutationCallback} from './callback.ts';
+export type {RemoteConnection} from './types.ts';

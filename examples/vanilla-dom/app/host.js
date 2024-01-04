@@ -43,6 +43,6 @@ receiver.bind(uiRoot);
 // provides a `render()` function that will be called in response to this
 // method, with the `Endpoint` taking care of serializing arguments over
 // `postMessage()` to the remote context.
-await remoteEndpoint.call.render(receiver.receive, {
+await remoteEndpoint.call.render(receiver.connection, {
   getMessage: () => textField.value,
 });

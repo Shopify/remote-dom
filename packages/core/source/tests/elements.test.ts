@@ -1,5 +1,5 @@
 import '../polyfill.ts';
-import {describe, it, expect, vi, type Mock} from 'vitest';
+import {describe, it, expect, vi, type MockedObject} from 'vitest';
 
 import {
   RemoteElement,
@@ -12,7 +12,7 @@ import {
 import {RemoteReceiver} from '../receiver/basic.ts';
 import {REMOTE_ID, MUTATION_TYPE_UPDATE_PROPERTY} from '../constants.ts';
 
-describe.skip('RemoteElement', () => {
+describe('RemoteElement', () => {
   describe('properties', () => {
     it('serializes initial properties declared with a static `remoteProperties` field', () => {
       class HelloElement extends RemoteElement {
@@ -29,7 +29,7 @@ describe.skip('RemoteElement', () => {
       const element = new HelloElement();
       element.name = name;
 
-      expect(receiver.receive).not.toHaveBeenCalled();
+      expect(receiver.connection.mutate).not.toHaveBeenCalled();
 
       root.append(element);
 
@@ -59,7 +59,7 @@ describe.skip('RemoteElement', () => {
       const name = 'Winston';
       element.name = name;
 
-      expect(receiver.receive).toHaveBeenLastCalledWith([
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
         [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
       ]);
     });
@@ -74,7 +74,7 @@ describe.skip('RemoteElement', () => {
       const name = 'Winston';
       element.name = name;
 
-      expect(receiver.receive).toHaveBeenLastCalledWith([
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
         [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
       ]);
     });
@@ -92,7 +92,7 @@ describe.skip('RemoteElement', () => {
       const name = 'Winston';
       element.name = name;
 
-      expect(receiver.receive).toHaveBeenLastCalledWith([
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
         [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
       ]);
     });
@@ -108,7 +108,7 @@ describe.skip('RemoteElement', () => {
       const name = 'Winston';
       element.name = name;
 
-      expect(receiver.receive).toHaveBeenLastCalledWith([
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
         [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
       ]);
     });
@@ -125,7 +125,7 @@ describe.skip('RemoteElement', () => {
       const element = new HelloElement();
       element.name = name;
 
-      expect(receiver.receive).not.toHaveBeenCalled();
+      expect(receiver.connection.mutate).not.toHaveBeenCalled();
 
       root.append(element);
 
@@ -154,7 +154,7 @@ describe.skip('RemoteElement', () => {
         element.setAttribute('name', name);
 
         expect(element.name).toBe(name);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
         ]);
       });
@@ -171,7 +171,7 @@ describe.skip('RemoteElement', () => {
         element.setAttribute('name', name);
 
         expect(element.name).toBe(name);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
         ]);
       });
@@ -188,7 +188,7 @@ describe.skip('RemoteElement', () => {
         element.setAttribute('name', name);
 
         expect(element.name).toBe(undefined);
-        expect(receiver.receive).not.toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).not.toHaveBeenLastCalledWith([
           [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
         ]);
       });
@@ -206,7 +206,7 @@ describe.skip('RemoteElement', () => {
         element.removeAttribute('name');
 
         expect(element.name).toBe(undefined);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', undefined],
         ]);
       });
@@ -223,7 +223,7 @@ describe.skip('RemoteElement', () => {
         element.setAttribute('updated-at', updatedAt);
 
         expect(element.updatedAt).toBe(updatedAt);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -246,7 +246,7 @@ describe.skip('RemoteElement', () => {
         element.setAttribute(attribute, updatedAt);
 
         expect(element.updatedAt).toBe(updatedAt);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -268,7 +268,7 @@ describe.skip('RemoteElement', () => {
         element.setAttribute('inventory', String(inventory));
 
         expect(element.inventory).toBe(inventory);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -280,7 +280,7 @@ describe.skip('RemoteElement', () => {
         element.removeAttribute('inventory');
 
         expect(element.inventory).toBe(undefined);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -302,7 +302,7 @@ describe.skip('RemoteElement', () => {
         element.setAttribute('collection', JSON.stringify(collection));
 
         expect(element.collection).toStrictEqual(collection);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -314,7 +314,7 @@ describe.skip('RemoteElement', () => {
         element.removeAttribute('collection');
 
         expect(element.collection).toBe(undefined);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -335,7 +335,7 @@ describe.skip('RemoteElement', () => {
         element.setAttribute('collection', 'foo');
 
         expect(element.collection).toBe(undefined);
-        expect(receiver.receive).not.toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).not.toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -359,7 +359,7 @@ describe.skip('RemoteElement', () => {
         element.setAttribute('collections', JSON.stringify(collections));
 
         expect(element.collections).toStrictEqual(collections);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -371,7 +371,7 @@ describe.skip('RemoteElement', () => {
         element.removeAttribute('collections');
 
         expect(element.collections).toBe(undefined);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -394,7 +394,7 @@ describe.skip('RemoteElement', () => {
         element.setAttribute('collections', 'foo');
 
         expect(element.collections).toBe(undefined);
-        expect(receiver.receive).not.toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).not.toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -428,7 +428,7 @@ describe.skip('RemoteElement', () => {
         element.setAttribute('my-field', value);
 
         expect(element.myField).toBe(`${attributePrefix}${value}`);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -458,7 +458,7 @@ describe.skip('RemoteElement', () => {
         element.addEventListener('press', listener);
 
         expect(element.onPress).toBe(undefined);
-        expect(receiver.receive).not.toHaveBeenCalledWith([
+        expect(receiver.connection.mutate).not.toHaveBeenCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             expect.anything(),
@@ -480,7 +480,7 @@ describe.skip('RemoteElement', () => {
         element.addEventListener('press', listener);
 
         expect(element.onPress).toBeInstanceOf(Function);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -502,7 +502,7 @@ describe.skip('RemoteElement', () => {
         element.addEventListener('press', listener);
 
         expect(element.press).toBeInstanceOf(Function);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -524,7 +524,7 @@ describe.skip('RemoteElement', () => {
         element.addEventListener('click', listener);
 
         expect(element.onPress).toBeInstanceOf(Function);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -546,7 +546,7 @@ describe.skip('RemoteElement', () => {
         element.addEventListener('mouse-enter', listener);
 
         expect(element.onMouseEnter).toBeInstanceOf(Function);
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -613,22 +613,22 @@ describe.skip('RemoteElement', () => {
 
         element.addEventListener('press', firstListener);
 
-        receiver.receive.mockClear();
+        receiver.connection.mutate.mockClear();
 
         element.addEventListener('press', secondListener);
 
         expect(element.onPress).toBeInstanceOf(Function);
-        expect(receiver.receive).not.toHaveBeenCalled();
+        expect(receiver.connection.mutate).not.toHaveBeenCalled();
 
         element.removeEventListener('press', secondListener);
 
         expect(element.onPress).toBeInstanceOf(Function);
-        expect(receiver.receive).not.toHaveBeenCalled();
+        expect(receiver.connection.mutate).not.toHaveBeenCalled();
 
         element.removeEventListener('press', firstListener);
 
         expect(element.onPress).toBeUndefined();
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -653,7 +653,7 @@ describe.skip('RemoteElement', () => {
         element.onPress();
 
         expect(element.onPress).toBeUndefined();
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -679,7 +679,7 @@ describe.skip('RemoteElement', () => {
         abort.abort();
 
         expect(element.onPress).toBeUndefined();
-        expect(receiver.receive).toHaveBeenLastCalledWith([
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
           [
             MUTATION_TYPE_UPDATE_PROPERTY,
             remoteId(element),
@@ -693,17 +693,18 @@ describe.skip('RemoteElement', () => {
 });
 
 class TestRemoteReceiver extends RemoteReceiver {
-  readonly receive: RemoteReceiver['receive'] &
-    Mock<
-      Parameters<RemoteReceiver['receive']>,
-      ReturnType<RemoteReceiver['receive']>
-    >;
+  readonly connection: RemoteReceiver['connection'] &
+    MockedObject<RemoteReceiver['connection']>;
 
   constructor() {
     super();
-    // @ts-expect-error `this.receive` is defined on the superclass,
-    // but `super.receive` isn’t defined. Not sure how else to do this...
-    this.receive = vi.fn(this.receive);
+    this.connection = {
+      // @ts-expect-error `this.connection` is defined on the superclass,
+      // but `super.connection` isn’t defined. Not sure how else to do this...
+      mutate: vi.fn(this.connection.mutate),
+      // @ts-expect-error see above
+      call: vi.fn(this.connection.call),
+    };
   }
 }
 
@@ -723,6 +724,6 @@ function remoteId(node: any) {
 function createAndConnectRemoteRootElement() {
   const root = new RemoteRootElement() as RemoteRootElement;
   const receiver = new TestRemoteReceiver();
-  root.connect(receiver.receive);
+  root.connect(receiver.connection);
   return {root, receiver};
 }

@@ -1,7 +1,4 @@
-import {
-  createRemoteMutationCallback,
-  type RemoteMutationCallback,
-} from '../callback.ts';
+import {createRemoteConnection, type RemoteConnection} from '../connection.ts';
 import {
   NODE_TYPE_COMMENT,
   NODE_TYPE_ELEMENT,
@@ -69,17 +66,29 @@ export class RemoteReceiver {
   >();
 
   private readonly parents = new Map<string, string | typeof ROOT_ID>();
+  private readonly implementations = new Map<
+    string,
+    Record<string, (...args: unknown[]) => unknown>
+  >();
 
-  readonly receive: RemoteMutationCallback;
-
-  get callback() {
-    return this.receive;
-  }
+  readonly connection: RemoteConnection;
 
   constructor({retain, release}: RemoteReceiverOptions = {}) {
     const {attached, parents, subscribers} = this;
 
-    this.receive = createRemoteMutationCallback({
+    this.connection = createRemoteConnection({
+      call: (id, method, ...args) => {
+        const implementation = this.implementations.get(id);
+        const implementationMethod = implementation?.[method];
+
+        if (typeof implementationMethod !== 'function') {
+          throw new Error(
+            `Node ${id} does not implement the ${method}() method`,
+          );
+        }
+
+        return implementationMethod(...args);
+      },
       insertChild: (id, child, index) => {
         const parent = attached.get(id) as Writable<RemoteReceiverParent>;
 
@@ -241,8 +250,19 @@ export class RemoteReceiver {
     return this.attached.get(id) as any;
   }
 
+  implement<T extends RemoteReceiverNodeOrRoot>(
+    {id}: Pick<T, 'id'>,
+    implementation?: Record<string, (...args: unknown[]) => unknown> | null,
+  ) {
+    if (implementation == null) {
+      this.implementations.delete(id);
+    } else {
+      this.implementations.set(id, implementation);
+    }
+  }
+
   subscribe<T extends RemoteReceiverNodeOrRoot>(
-    {id}: T,
+    {id}: Pick<T, 'id'>,
     subscriber: (value: T) => void,
     {signal}: {signal?: AbortSignal} = {},
   ) {
