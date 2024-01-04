@@ -203,9 +203,7 @@ export class UiTextField extends LitElement {
       <div class="TextField">
         <label class="Label" for=${this.id}>${this.label}</label>
         <div class="InputContainer">
-          <input id=${this.id} class="Input" type="text" @change=${
-            this.#handleChange
-          }></input>
+          <input id=${this.id} class="Input" type="text" @change=${this.#handleChange}></input>
           <div class="InputBackdrop"></div>
         </div>
       </div>
