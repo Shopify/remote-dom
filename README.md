@@ -26,7 +26,7 @@ yarn add @remote-dom/core # yarn
 Next, on the “host” HTML page, you will need to create a “receiver”. This object will be responsible for receiving the updates from the remote environment, and mapping them to actual DOM elements. `@remote-ui/core` provides a few different types of receivers, but for now we use the `DOMRemoteReceiver`, which directly mirrors the DOM elements created remotely in the host HTML page. You’ll create a `DOMRemoteReceiver` and connect it to an existing HTML element in order to teach Remote DOM where to render the remote DOM elements:
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <body>
     <div id="root"></div>
@@ -46,7 +46,7 @@ Next, on the “host” HTML page, you will need to create a “receiver”. Thi
 Our host is ready to receive elements to render, but we don’t have a remote environment yet. For this example, we will use a hidden iframe, but the [examples section](#examples) shows alternative sandboxes. We’ll add the iframe to the host HTML page we started above, and we’ll also listen for `postMessage` events from the iframe, in order to pass changes in the remote tree to our receiver:
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <body>
     <div id="root"></div>
@@ -75,7 +75,7 @@ Our host is ready to receive elements to render, but we don’t have a remote en
 Next, let’s create the document that will be loaded into the iframe. It will use another utility provided by `@remote-ui/core`, `RemoteMutationObserver`, which extends the browser’s [`MutationObserver` interface](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) in order to communicate changes to the host.
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <body>
     <div id="root">
@@ -111,7 +111,7 @@ Remote DOM adopts the browser’s [native API for defining custom elements](http
 As an example, let’s create a custom `ui-banner` element that renders an appropriately-styled notice banner on the host page. First, we’ll define a `ui-banner` custom element that will render on the host page. This is the “real” implementation, so we will need to implement the element’s `connectedCallback` in order to render it to the screen:
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <body>
     <div id="root"></div>
@@ -163,7 +163,7 @@ As an example, let’s create a custom `ui-banner` element that renders an appro
 Next, we must also define that the `ui-banner` element exists in the remote environment. Unlike in the host environment, we do not need to render any actual HTML in this element — it is only used as an instruction for the host to render the actual element for you. With this element defined, we can render it, just as we rendered’d a `<span>` before, and it will be rendered as the real `<ui-banner>` on the host page.
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <body>
     <div id="root">
