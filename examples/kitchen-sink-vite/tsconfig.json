@@ -1,5 +1,8 @@
 {
   "extends": "@quilted/typescript/project.json",
+  "compilerOptions": {
+    "outDir": "build/typescript"
+  },
   "include": ["app"],
   "references": [
     {"path": "../../packages/core"},

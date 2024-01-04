@@ -68,6 +68,8 @@ export class UiButton extends LitElement {
     `;
   }
 
+  onPress?: () => void;
+
   render() {
     return html`
       <button @click=${this.#handlePress} class="Button" type="button">
@@ -104,6 +106,8 @@ export class UiStack extends LitElement {
       }
     `;
   }
+
+  spacing?: string;
 
   render() {
     console.log(this.spacing);
@@ -184,6 +188,9 @@ export class UiTextField extends LitElement {
       }
     `;
   }
+
+  label?: string;
+  onChange?: (value: string) => void;
 
   get value() {
     return this.shadowRoot!.querySelector('input')!.value;

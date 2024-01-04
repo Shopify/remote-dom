@@ -31,6 +31,7 @@ const worker = new Worker(
 // some JavaScript executing inside an `iframe`. We can use this object
 // to interact with the `iframe` code without having to worry about using
 // `postMessage()`.
+// @ts-ignore We don’t use this variable, but we want to give it a name for clarity.
 const iframeSandbox = createThreadFromIframe<never, SandboxApi>(iframe);
 
 const workerSandbox = createThreadFromWebWorker<never, SandboxApi>(worker);
