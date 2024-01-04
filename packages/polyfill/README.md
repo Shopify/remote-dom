@@ -1,1 +1,1 @@
-# `@remote-dom/signals`
+# `@remote-dom/polyfill`

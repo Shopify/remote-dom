@@ -1,1 +1,1 @@
-# `@remote-dom/core`
+# `@remote-dom/signals`

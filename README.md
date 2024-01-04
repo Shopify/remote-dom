@@ -11,9 +11,9 @@ To help you use sandboxed JavaScript environments that are less expensive than a
 - [Preact in a web worker](./examples/preact-web-worker/): an example that uses Remote DOM to render a Preact application inside of a web worker.
 - [Svelte in a web worker, rendered by React](./examples/svelte-web-worker/): an example that uses Remote DOM to render a Svelte application inside of a web worker, which is rendered by a React application on the host page.
 
-## Getting started
+## Building a project with Remote DOM
 
-To use Remote DOM, you’ll need a web project that is able to host two different JavaScript environments: the “host” environment, which runs on the main HTML page and renders actual UI elements, and the “remote” environment, which is sandboxed and renders an invisible version of the DOM that will be mirrored by the host. You can [mix-and-match any combination of “host” and “remote” technologies](#examples) — you don’t need to use a particular JavaScript framework or backend technology to use Remote DOM. If you don’t know how to get started, we recommend starting a [Vite project](https://vitejs.dev) using whatever JavaScript library you prefer, as Vite lets you create `<iframe>` and Web Worker sandboxes with no extra configuration.
+To use Remote DOM, you’ll need a web project that is able to run two JavaScript environments: the “host” environment, which runs on the main HTML page and renders actual UI elements, and the “remote” environment, which is sandboxed and renders an invisible version of the DOM that will be mirrored by the host. You can [mix-and-match any combination of “host” and “remote” technologies](#examples) — you don’t need to use a particular JavaScript framework or backend technology to use Remote DOM. If you don’t know how to get started, we recommend starting a [Vite project](https://vitejs.dev) using whatever JavaScript library you prefer, as Vite lets you create `<iframe>` and Web Worker sandboxes with no extra configuration.
 
 Once you have a project, install [`@remote-dom/core`](./packages/core/), which you’ll need to create the connection between host and remote environments:
 
@@ -65,7 +65,7 @@ Our host is ready to receive elements to render, but we don’t have a remote en
       // We will send this message in the next step.
       window.addEventListener('message', ({source, data}) => {
         if (source !== iframe.contentWindow) return;
-        receiver.receive(data);
+        receiver.connection.mutate(data);
       });
     </script>
   </body>
@@ -102,11 +102,11 @@ Next, let’s create the document that will be loaded into the iframe. It will u
 
 And just like that, the `<span>` we rendered in the `iframe` is now rendered in the host HTML page! You can see a [full example of this example here](./examples/minimal-iframes/).
 
-### Custom elements
+### Adding custom elements
 
 Now, just mirroring raw HTML isn’t very useful. Remote DOM works best when you define custom elements for the remote environment to render, which map to more complex, application-specific components on the host page. In fact, most of Remote DOM’s receiver APIs are geared towards you providing an allowlist of custom elements that the remote environment can render, which allows you to keep tight control over the visual appearance of the resulting output.
 
-Remote DOM adopts the browser’s [native API for defining custom elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements) to represent these “remote elements”. To make it easy to define custom elements that can communicate their changes to the host, `@remote-dom/core` provides the `RemoteElement` class. This class, which is a subclass of the browser’s [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement), lets you define how properties, attributes, and event listeners on the element should be transferred.
+Remote DOM adopts the browser’s [native API for defining custom elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements) to represent these “remote elements”. To make it easy to define custom elements that can communicate their changes to the host, `@remote-dom/core` provides the `RemoteElement` class. This class, which is a subclass of the browser’s [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement), lets you define how properties, attributes, methods, and event listeners on the element should be transferred.
 
 As an example, let’s create a custom `ui-banner` element that renders an appropriately-styled notice banner on the host page. First, we’ll define a `ui-banner` custom element that will render on the host page. This is the “real” implementation, so we will need to implement the element’s `connectedCallback` in order to render it to the screen:
 
@@ -153,7 +153,7 @@ As an example, let’s create a custom `ui-banner` element that renders an appro
 
       window.addEventListener('message', ({source, data}) => {
         if (source !== iframe.contentWindow) return;
-        receiver.receive(data);
+        receiver.connection.mutate(data);
       });
     </script>
   </body>
