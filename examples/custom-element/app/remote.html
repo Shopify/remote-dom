@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Minimal iframe (remote) • Remote DOM</title>
+    <meta charset="UTF-8" />
+  </head>
+
+  <body>
+    <div id="root">
+      <ui-button primary>Clicked 0 times</ui-button>
+    </div>
+
+    <script type="module">
+      import {RemoteElement} from '@remote-dom/core/elements';
+
+      // For full details on defining remote elements, see the documentation
+      // for `@remote-dom/core/elements`:
+      // https://github.com/Shopify/remote-ui/tree/main/packages/core#elements
+      class UIButton extends RemoteElement {
+        static get remoteProperties() {
+          return {
+            // A boolean property can be set either by setting the attribute to a non-empty
+            // value, or by setting the property to `true`.
+            primary: {type: Boolean},
+            // Remote DOM will convert the `click` event into an `onClick` property that
+            // is communicated to the host.
+            onClick: {event: true},
+          };
+        }
+
+        static get remoteMethods() {
+          return ['focus'];
+        }
+      }
+
+      customElements.define('ui-button', UIButton);
+
+      let count = 0;
+      const button = document.querySelector('ui-button');
+
+      button.addEventListener('click', () => {
+        count += 1;
+
+        button.textContent = `Clicked ${count} ${
+          count === 1 ? 'time' : 'times'
+        }`;
+
+        if (count === 5) {
+          button.removeAttribute('primary');
+        }
+      });
+    </script>
+
+    <script type="module">
+      import {RemoteMutationObserver} from '@remote-dom/core/elements';
+      import {createThreadFromInsideIframe} from '@quilted/threads';
+
+      const root = document.querySelector('#root');
+
+      createThreadFromInsideIframe({
+        expose: {
+          connect(connection) {
+            const observer = new RemoteMutationObserver(connection);
+            observer.observe(root);
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

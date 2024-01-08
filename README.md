@@ -211,13 +211,15 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
           return ['primary'];
         }
 
+        onClick;
+
         connectedCallback() {
           const primary = this.hasAttribute('primary') ?? false;
 
           const root = this.attachShadow({mode: 'open'});
 
           // We render a <slot> where we want the element’s children to go.
-          root.innerHTML = `<div class="Button"><slot></slot></div>`;
+          root.innerHTML = `<button class="Button"><slot></slot></button>`;
 
           if (primary) {
             root.querySelector('.Button').classList.add('Button--primary');
@@ -232,12 +234,14 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
 
         attributeChangedCallback(name, oldValue, newValue) {
           if (name === 'primary') {
-            const root = this.shadowRoot.querySelector('.Button');
+            const button = this.shadowRoot?.querySelector('.Button');
+
+            if (button == null) return;
 
             if (newValue == null) {
-              root.classList.remove('Button--primary');
+              button.classList.remove('Button--primary');
             } else {
-              root.classList.add('Button--primary');
+              button.classList.add('Button--primary');
             }
           }
         }

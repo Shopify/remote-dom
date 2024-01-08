@@ -142,8 +142,10 @@ function updateRemoteProperty(
 ) {
   if (property in element) {
     (element as any)[property] = value;
-  } else if (value == null) {
+  } else if (value == null || value === false) {
     element.removeAttribute(property);
+  } else if (value === true) {
+    element.setAttribute(property, '');
   } else {
     element.setAttribute(property, String(value));
   }

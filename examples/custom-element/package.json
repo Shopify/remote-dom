@@ -1,5 +1,5 @@
 {
-  "name": "example-minimal-iframe",
+  "name": "example-custom-element",
   "version": "0.0.1",
   "type": "module",
   "private": true,
@@ -7,6 +7,7 @@
     "start": "vite"
   },
   "dependencies": {
+    "@quilted/threads": "^2.1.0",
     "@remote-dom/core": "workspace:*"
   }
 }

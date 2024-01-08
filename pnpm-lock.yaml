@@ -48,6 +48,15 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1(@types/node@20.9.0)(jsdom@23.0.1)
 
+  examples/custom-element:
+    dependencies:
+      '@quilted/threads':
+        specifier: ^2.1.0
+        version: 2.1.0
+      '@remote-dom/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+
   examples/kitchen-sink-vite:
     dependencies:
       '@preact/preset-vite':
@@ -2266,6 +2275,11 @@ packages:
     engines: {node: '>=14.0.0'}
     dev: false
 
+  /@quilted/events@2.0.0:
+    resolution: {integrity: sha512-0Q5w7jgHPj3nD8sTh1o7oa7LFxATK+dH0i4p8Y6BgKBLDOkr9/m01IDUXsbZdZ98XvxQaVkxBF/HUNAFfg/KfA==}
+    engines: {node: '>=14.0.0'}
+    dev: false
+
   /@quilted/graphql@3.0.1:
     resolution: {integrity: sha512-RiceUjn9f78WfhvBMHIr7IU2KNr0syZ5nB3YYdNkn7nPoF8I+uDtR5PDqTEfJyybVmc4FWAg17oNzBjK8ZplXQ==}
     dependencies:
@@ -2393,6 +2407,18 @@ packages:
         optional: true
     dependencies:
       '@quilted/events': 1.0.1
+    dev: false
+
+  /@quilted/threads@2.1.0:
+    resolution: {integrity: sha512-kAJsvb7w/fi8fBAST/ONnKvRv9WlbwL8WSqELb+VPuFrspVX3OZ7VQ1q+i3fp6VhcNVqSiFz3r0o6tPeCy2IuA==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      '@preact/signals-core': ^1.5.0
+    peerDependenciesMeta:
+      '@preact/signals-core':
+        optional: true
+    dependencies:
+      '@quilted/events': 2.0.0
     dev: false
 
   /@quilted/typescript@0.3.0(typescript@5.3.3):
