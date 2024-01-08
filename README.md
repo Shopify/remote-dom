@@ -6,7 +6,7 @@ To help you use sandboxed JavaScript environments that are less expensive than a
 
 ## Examples
 
-- [Minimal iframes](./examples/minimal-iframes/): an example using the smallest number of Remote DOM APIs to mirror basic HTML between a main page and an `<iframe>`.
+- [Minimal iframe](./examples/minimal-iframe/): an example using the smallest number of Remote DOM APIs to mirror basic HTML between a main page and an `<iframe>`.
 - [Custom elements](./examples/custom-elements/): an example that defines custom elements, and synchronizes an HTML tree between a main page and an `<iframe>`.
 - [Preact in a web worker](./examples/preact-web-worker/): an example that uses Remote DOM to render a Preact application inside of a web worker.
 - [Svelte in a web worker, rendered by React](./examples/svelte-web-worker/): an example that uses Remote DOM to render a Svelte application inside of a web worker, which is rendered by a React application on the host page.
@@ -78,7 +78,7 @@ Next, let’s create the document that will be loaded into the iframe. It will u
 <!doctype html>
 <html>
   <body>
-    <div id="root">Something went wrong!</div>
+    <div id="root"></div>
 
     <script type="module">
       import {RemoteMutationObserver} from '@remote-dom/core/elements';
@@ -86,10 +86,25 @@ Next, let’s create the document that will be loaded into the iframe. It will u
       // We will synchronize everything inside this element to the host.
       const root = document.querySelector('#root');
 
+      let count = 0;
+
+      setInterval(() => {
+        count += 1;
+        render();
+      }, 1_000);
+
+      function render() {
+        root.textContent = `Rendered ${count} ${
+          count === 1 ? 'second' : 'seconds'
+        } ago`;
+      }
+
       // Send the mutations to the host via `postMessage`, which we just finished
       // adding a listener for in the previous step.
-      const observer = new RemoteMutationObserver((mutations) => {
-        window.parent.postMessage(mutations, '*');
+      const observer = new RemoteMutationObserver({
+        mutate(mutations) {
+          window.parent.postMessage(mutations, '*');
+        },
       });
 
       observer.observer(root);
@@ -98,7 +113,7 @@ Next, let’s create the document that will be loaded into the iframe. It will u
 </html>
 ```
 
-And just like that, the text we rendered in the `iframe` is now rendered in the host HTML page! You can see a full version of this example in the [“minimal iframes” example](./examples/minimal-iframes/).
+And just like that, the text we render in the `iframe` is now rendered in the host HTML page! You can see a full version of this example in the [“minimal iframe” example](./examples/minimal-iframe/).
 
 ### Adding custom elements
 
@@ -162,8 +177,10 @@ First, we’ll create the remote environment’s version of `ui-button`. The rem
 
       const root = document.querySelector('#root');
 
-      const observer = new RemoteMutationObserver((mutations) => {
-        window.parent.postMessage(mutations, '*');
+      const observer = new RemoteMutationObserver({
+        mutate(mutations) {
+          window.parent.postMessage(mutations, '*');
+        },
       });
 
       observer.observer(root);

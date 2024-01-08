@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Minimal iframe (remote) • Remote DOM</title>
+    <meta charset="UTF-8" />
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <script type="module">
+      import {RemoteMutationObserver} from '@remote-dom/core/elements';
+
+      // We will synchronize changes in this element to the host environment.
+      const root = document.querySelector('#root');
+
+      let count = 0;
+
+      // Update text every second, to demonstrate that Remote DOM can handle
+      // both initial HTML and updates that happen later.
+      setInterval(() => {
+        count += 1;
+        render();
+      }, 1_000);
+
+      render();
+
+      function render() {
+        root.textContent = `Rendered ${count} ${
+          count === 1 ? 'second' : 'seconds'
+        } ago`;
+      }
+
+      // Create a special `MutationObserver` that will map changes
+      // in the HTML to Remote DOM-compatible mutations.
+      const observer = new RemoteMutationObserver({
+        mutate(mutations) {
+          window.parent.postMessage(mutations, '*');
+        },
+      });
+
+      observer.observe(root);
+    </script>
+  </body>
+</html>

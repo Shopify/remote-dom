@@ -85,7 +85,7 @@ importers:
         specifier: ^5.0.10
         version: 5.0.10(@types/node@20.9.0)
 
-  examples/minimal-iframes:
+  examples/minimal-iframe:
     dependencies:
       '@remote-dom/core':
         specifier: workspace:*

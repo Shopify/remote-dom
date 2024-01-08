@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Minimal iframe • Remote DOM</title>
+    <meta charset="UTF-8" />
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <!-- The “remote” environment, which we will render in the element above -->
+    <iframe id="remote-iframe" src="/remote.html" hidden></iframe>
+
+    <script type="module">
+      import {DOMRemoteReceiver} from '@remote-dom/core/receiver';
+
+      const root = document.querySelector('#root');
+      const iframe = document.querySelector('#remote-iframe');
+
+      // A `DOMRemoteReceiver` will automatically synchronize changes
+      // from the remote environment to the host environment as native
+      // HTML elements. We connect it to the `root` element so that it
+      // will insert any content from the remote environment there.
+      const receiver = new DOMRemoteReceiver();
+      receiver.connect(root);
+
+      window.addEventListener('message', ({source, data}) => {
+        // Ensure the message is coming from our iframe
+        if (source !== iframe.contentWindow) return;
+
+        // Communicate the mutation to the `DOMRemoteReceiver`
+        receiver.connection.mutate(data);
+      });
+    </script>
+  </body>
+</html>
