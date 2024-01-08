@@ -14,14 +14,14 @@ customElements.define('remote-fragment', RemoteFragment);
 
 describe('html', () => {
   it('renders a text node', () => {
-    const text = html<Text>`Hello world!`;
+    const text = html`Hello world!` satisfies Text;
 
     expect(text).toBeInstanceOf(Text);
     expect(text.textContent).toBe('Hello world!');
   });
 
   it('renders an element', () => {
-    const element = html<Button>`<ui-button>Press me!</ui-button>`;
+    const element = html`<ui-button>Press me!</ui-button>` satisfies Button;
 
     expect(element).toBeInstanceOf(Button);
     expect(element.localName).toBe('ui-button');
@@ -29,28 +29,34 @@ describe('html', () => {
   });
 
   it('renders an element with attributes', () => {
-    const element = html<Button>`
+    const element = html`
       <ui-button data-id="123">Press me!</ui-button>
-    `;
+    ` satisfies Button;
 
     expect(element.getAttribute('data-id')).toBe('123');
   });
 
   it('renders an element with boolean attributes', () => {
-    const element = html<Button>`<ui-button active>Press me!</ui-button>`;
+    const element = html`<ui-button active
+      >Press me!</ui-button
+    >` satisfies Button;
 
     expect(element.getAttribute('active')).toBe('');
   });
 
   it('renders an element with properties', () => {
-    const element = html<Button>`<ui-button emphasized>Press me!</ui-button>`;
+    const element = html`<ui-button emphasized
+      >Press me!</ui-button
+    >` satisfies Button;
 
     expect(element.emphasized).toBe(true);
   });
 
   it('renders a node passed as a property to a slot with a matching name', () => {
     const icon = html`<ui-icon name="check" />`;
-    const button = html<Button>`<ui-button icon=${icon}>Press me!</ui-button>`;
+    const button = html`<ui-button icon=${icon}
+      >Press me!</ui-button
+    >` satisfies Button;
 
     expect(button.childNodes).toStrictEqual(
       expect.arrayContaining([expect.any(Text), expect.any(RemoteFragment)]),
@@ -60,8 +66,8 @@ describe('html', () => {
   });
 
   it('renders multiple children', () => {
-    const children = html<[Text, Button]>`${'My button: '}
-      <ui-button>Press me!</ui-button>`;
+    const children = html`${'My button: '}
+      <ui-button>Press me!</ui-button>` satisfies [Text, Button];
 
     expect(children).toStrictEqual(
       expect.arrayContaining([expect.any(Text), expect.any(Button)]),
@@ -74,14 +80,16 @@ describe('html', () => {
   it('can embed existing DOM nodes', () => {
     const text = html`Press me!`;
     const icon = html`<ui-icon slot="icon" name="check" />`;
-    const button = html<Button>`<ui-button>${text}${icon}</ui-button>`;
+    const button = html`<ui-button>${text}${icon}</ui-button>` satisfies Button;
 
     expect(button.localName).toBe('ui-button');
     expect(button.childNodes).toEqual([text, icon]);
   });
 
   it('converts numbers passed as children into text nodes', () => {
-    const button = html<Button>`<ui-button>Clicked ${0} times</ui-button>`;
+    const button = html`<ui-button
+      >Clicked ${0} times</ui-button
+    >` satisfies Button;
 
     expect(button.outerHTML).toBe('<ui-button>Clicked 0 times</ui-button>');
     expect(button.childNodes).toEqual([
@@ -93,9 +101,9 @@ describe('html', () => {
   });
 
   it('ignores falsy children', () => {
-    const button = html<Button>`
+    const button = html`
       <ui-button>${false}${null}${undefined}Press me!<//>
-    `;
+    ` satisfies Button;
 
     expect(button.outerHTML).toBe('<ui-button>Press me!</ui-button>');
     expect(button.childNodes).toEqual([expect.any(Text)]);
@@ -104,10 +112,10 @@ describe('html', () => {
   describe('components', () => {
     it('returns the result of calling a component', () => {
       function MyButton({children}: PropertiesWithChildren) {
-        return html<Button>`<ui-button>${children}</ui-button>`;
+        return html`<ui-button>${children}</ui-button>` satisfies Button;
       }
 
-      const button = html<Button>`<${MyButton}>Press me!<//>`;
+      const button = html`<${MyButton}>Press me!<//>` satisfies Button;
 
       expect(button).toBeInstanceOf(Button);
       expect(button.localName).toBe('ui-button');
@@ -128,7 +136,7 @@ describe('html', () => {
         `;
       }
 
-      const descriptions = html<Element[]>`
+      const descriptions = html`
         <${Description} term="Shovel" definition="A tool for digging" />
         <${Description} term="Rake" definition="A tool for cleaning up" />
       `;
@@ -146,7 +154,7 @@ describe('html', () => {
         return null;
       }
 
-      const nothing = html<null>`<${Empty} /><${Empty} />`;
+      const nothing = html`<${Empty} /><${Empty} />`;
 
       expect(nothing).toBeNull();
     });

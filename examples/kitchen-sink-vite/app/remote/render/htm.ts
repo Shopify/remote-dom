@@ -4,7 +4,7 @@ import type {RenderApi} from '../../types.ts';
 export function renderUsingHtm(root: Element, api: RenderApi) {
   let value = '';
 
-  const stack = html<HTMLElement>`
+  const stack = html`
     <ui-stack spacing>
       <ui-text-field
         label="Message for remote environment (rendered using htm)"
@@ -22,7 +22,7 @@ export function renderUsingHtm(root: Element, api: RenderApi) {
         Show alert
       </ui-button>
     </ui-stack>
-  `;
+  ` satisfies HTMLElement;
 
   root.append(stack);
 }
