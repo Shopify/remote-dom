@@ -78,9 +78,7 @@ Next, let’s create the document that will be loaded into the iframe. It will u
 <!doctype html>
 <html>
   <body>
-    <div id="root">
-      <span style="color: red">Something went wrong!</span>
-    </div>
+    <div id="root">Something went wrong!</div>
 
     <script type="module">
       import {RemoteMutationObserver} from '@remote-dom/core/elements';
@@ -100,7 +98,7 @@ Next, let’s create the document that will be loaded into the iframe. It will u
 </html>
 ```
 
-And just like that, the `<span>` we rendered in the `iframe` is now rendered in the host HTML page! You can see a [full example of this example here](./examples/minimal-iframes/).
+And just like that, the text we rendered in the `iframe` is now rendered in the host HTML page! You can see a full version of this example in the [“minimal iframes” example](./examples/minimal-iframes/).
 
 ### Adding custom elements
 
@@ -108,84 +106,58 @@ Now, just mirroring raw HTML isn’t very useful. Remote DOM works best when you
 
 Remote DOM adopts the browser’s [native API for defining custom elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements) to represent these “remote elements”. To make it easy to define custom elements that can communicate their changes to the host, `@remote-dom/core` provides the `RemoteElement` class. This class, which is a subclass of the browser’s [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement), lets you define how properties, attributes, methods, and event listeners on the element should be transferred.
 
-As an example, let’s create a custom `ui-banner` element that renders an appropriately-styled notice banner on the host page. First, we’ll define a `ui-banner` custom element that will render on the host page. This is the “real” implementation, so we will need to implement the element’s `connectedCallback` in order to render it to the screen:
+To demonstrate, let’s imagine that we want to allow our remote environment to render a `ui-button` element. This element will have a `primary` property, which sets it to a more prominent visual style. It will trigger a `click` event, and will also have a `focus()` method, which will focus the button when called.
 
-```html
-<!doctype html>
-<html>
-  <body>
-    <div id="root"></div>
-
-    <iframe id="remote-iframe" src="/remote" hidden></iframe>
-
-    <script type="module">
-      class UIBanner extends HTMLElement {
-        connectedCallback() {
-          // We will allow you to pass a `tone` attribute to the element, which
-          // styles the banner according to our design system. We’ll see how to
-          // use this in the remote environment in the next step.
-          const tone = this.getAttribute('tone') ?? this.tone ?? 'neutral';
-
-          const root = this.attachShadow({mode: 'open'});
-
-          // We render a <slot> where we want the element’s children to go.
-          root.innerHTML = `<div class="Banner Banner--${tone}"><slot></slot></div>`;
-        }
-      }
-
-      customElements.define('ui-banner', UIBanner);
-    </script>
-
-    <script type="module">
-      import {DOMRemoteReceiver} from '@remote-dom/core/receiver';
-
-      const root = document.querySelector('#root');
-      const iframe = document.querySelector('#remote-iframe');
-
-      // In earlier examples, we did not pass any arguments, which allows the DOM
-      // receiver to mirror any element it receives. By passing the `elements` option,
-      // we are restricting the allowed elements to only the ones we list, which in this
-      // case means only our `ui-banner` element can be rendered.
-      const receiver = new DOMRemoteReceiver({
-        elements: ['ui-banner'],
-      });
-      receiver.connect(root);
-
-      window.addEventListener('message', ({source, data}) => {
-        if (source !== iframe.contentWindow) return;
-        receiver.connection.mutate(data);
-      });
-    </script>
-  </body>
-</html>
-```
-
-Next, we must also define that the `ui-banner` element exists in the remote environment. Unlike in the host environment, we do not need to render any actual HTML in this element — it is only used as an instruction for the host to render the actual element for you. With this element defined, we can render it, just as we rendered’d a `<span>` before, and it will be rendered as the real `<ui-banner>` on the host page.
+First, we’ll create the remote environment’s version of `ui-button`. The remote version doesn’t have to worry about rendering any HTML — it’s only a signal to the host environment to render the “real” version. However, we do need to teach this element to communicate its `primary` property and `focus()` method to the host version of that element. We’ll do this using the [`RemoteElement` class provided by `@remote-dom/core`](./packages/core#remoteelement):
 
 ```html
 <!doctype html>
 <html>
   <body>
     <div id="root">
-      <ui-banner tone="warning">Something went wrong!</ui-banner>
+      <ui-button primary="">Clicked 0 times</ui-button>
     </div>
 
     <script type="module">
       import {RemoteElement} from '@remote-dom/core/elements';
 
-      class UIBanner extends RemoteElement {
-        // For full details on defining remote elements, see the documentation
-        // for `@remote-dom/core/elements`:
-        // https://github.com/Shopify/remote-ui/tree/main/packages/core/
+      // For full details on defining remote elements, see the documentation
+      // for `@remote-dom/core/elements`:
+      // https://github.com/Shopify/remote-ui/tree/main/packages/core#elements
+      class UIButton extends RemoteElement {
         static get remoteProperties() {
-          return {tone: {type: String}};
+          return {
+            // A boolean property can be set either by setting the attribute to a non-empty
+            // value, or by setting the property to `true`.
+            primary: {type: Boolean},
+            // Remote DOM will convert the `click` event into an `onClick` property that
+            // is communicated to the host.
+            onClick: {event: true},
+          };
+        }
+
+        static get remoteMethods() {
+          return ['focus'];
         }
       }
 
-      customElements.define('ui-banner', UIBanner);
+      customElements.define('ui-button', UIButton);
+
+      let count = 0;
+      const button = document.querySelector('ui-button');
+
+      button.addEventListener('click', () => {
+        count += 1;
+
+        button.textContent = `Clicked ${count} ${
+          count === 1 ? 'time' : 'times'
+        }`;
+      });
     </script>
 
     <script type="module">
+      // Just like the previous example, we will use a `RemoteMutationObserver` to
+      // communicate the remote elements to the parent HTML page.
       import {RemoteMutationObserver} from '@remote-dom/core/elements';
 
       const root = document.querySelector('#root');
@@ -200,7 +172,94 @@ Next, we must also define that the `ui-banner` element exists in the remote envi
 </html>
 ```
 
-You can see an extended version of this example in the [custom elements example](./examples/custom-elements/).
+Finally, we need to provide a “real” implementation of our `ui-button` element, which will be rendered on the host page. The `DOMRemoteReceiver` we’ve used to receive elements in previous examples will automatically create an element matching the name provided in the remote environment, so we need to have a `ui-button` element defined in the host page. You can implement this element however you like, but for this example we’ll use the custom element APIs directly:
+
+```html
+<!doctype html>
+<html>
+  <body>
+    <div id="root"></div>
+
+    <iframe id="remote-iframe" src="/remote" hidden></iframe>
+
+    <script type="module">
+      class UIButton extends HTMLElement {
+        // By default, `DOMRemoteReceiver` will assign remote properties as properties,
+        // but only if the element has a matching property defined. Otherwise, the remote
+        // properties will be set as attributes. We’ll observe the `primary` attribute
+        // in order to update our rendered content when that attribute changes. We’ll
+        // define a `onClick` method, though, which will be set to the value of the `onClick`
+        // remote property.
+        static get observedAttributes() {
+          return ['primary'];
+        }
+
+        connectedCallback() {
+          const primary = this.hasAttribute('primary') ?? false;
+
+          const root = this.attachShadow({mode: 'open'});
+
+          // We render a <slot> where we want the element’s children to go.
+          root.innerHTML = `<div class="Button"><slot></slot></div>`;
+
+          if (primary) {
+            root.querySelector('.Button').classList.add('Button--primary');
+          }
+
+          // We’ll listen for clicks on our button, and call the remote `onClick`
+          // property when it happens.
+          root.querySelector('button').addEventListener('click', () => {
+            this.onClick?.();
+          });
+        }
+
+        attributeChangedCallback(name, oldValue, newValue) {
+          if (name === 'primary') {
+            const root = this.shadowRoot.querySelector('.Button');
+
+            if (newValue == null) {
+              root.classList.remove('Button--primary');
+            } else {
+              root.classList.add('Button--primary');
+            }
+          }
+        }
+
+        // Remote DOM will automatically call methods on a custom element to satisfy
+        // remote method calls.
+        focus() {
+          this.shadowRoot.querySelector('button').focus();
+        }
+      }
+
+      customElements.define('ui-button', UIButton);
+    </script>
+
+    <script type="module">
+      import {DOMRemoteReceiver} from '@remote-dom/core/receiver';
+
+      const root = document.querySelector('#root');
+      const iframe = document.querySelector('#remote-iframe');
+
+      // In earlier examples, we did not pass any arguments, which allows the DOM
+      // receiver to mirror any element it receives. By passing the `elements` option,
+      // we are restricting the allowed elements to only the ones we list, which in this
+      // case means only our `ui-button` element can be rendered.
+      const receiver = new DOMRemoteReceiver({
+        elements: ['ui-button'],
+      });
+      receiver.connect(root);
+
+      window.addEventListener('message', ({source, data}) => {
+        if (source !== iframe.contentWindow) return;
+        receiver.connection.mutate(data);
+      });
+    </script>
+  </body>
+</html>
+```
+
+With those changes, you should now see your button rendering on the page, and responding to click events by updating its contents. You can see an extended version of this example in the [custom elements example](./examples/custom-elements/).
 
 ## Learn more
 
