@@ -98,6 +98,7 @@ export class NamedNodeMap {
       else this[CHILD] = attr;
       // return null;
     }
+
     // only invoke the protocol if the value changed
     if (!old || old.value !== attr.value) {
       updateElementAttribute(

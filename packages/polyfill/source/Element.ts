@@ -21,12 +21,6 @@ export class Element extends ParentNode {
 
   [ATTRIBUTES]!: NamedNodeMap;
 
-  attributeChangedCallback?: (
-    name: string,
-    oldValue: unknown,
-    newValue: unknown,
-  ) => void;
-
   [anyProperty: string]: any;
 
   get slot() {

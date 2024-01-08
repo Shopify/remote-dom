@@ -252,7 +252,7 @@ export class RemoteReceiver {
 
   implement<T extends RemoteReceiverNodeOrRoot>(
     {id}: Pick<T, 'id'>,
-    implementation?: Record<string, (...args: unknown[]) => unknown> | null,
+    implementation?: Record<string, (...args: any[]) => any> | null,
   ) {
     if (implementation == null) {
       this.implementations.delete(id);

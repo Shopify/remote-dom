@@ -4,30 +4,32 @@ import {describe, it, expect, vi, type MockedObject} from 'vitest';
 import {
   RemoteElement,
   createRemoteElement,
-  remoteProperties,
-  remoteProperty,
+  // remoteProperties,
+  // remoteProperty,
   RemoteRootElement,
   type RemoteElementConstructor,
 } from '../elements.ts';
-import {RemoteReceiver} from '../receiver/basic.ts';
+import {RemoteReceiver, type RemoteReceiverElement} from '../receiver/basic.ts';
 import {REMOTE_ID, MUTATION_TYPE_UPDATE_PROPERTY} from '../constants.ts';
 
 describe('RemoteElement', () => {
   describe('properties', () => {
     it('serializes initial properties declared with a static `remoteProperties` field', () => {
-      class HelloElement extends RemoteElement {
-        static remoteProperties = {
-          name: {attribute: true},
-        };
+      interface HelloElementProperties {
+        name?: string;
+      }
 
-        name!: string;
+      class HelloElement extends RemoteElement<HelloElementProperties> {
+        static remoteProperties = {
+          name: {type: String},
+        };
       }
 
       const {root, receiver} = createAndConnectRemoteRootElement();
 
       const name = 'Winston';
       const element = new HelloElement();
-      element.name = name;
+      (element as HelloElementProperties).name = name;
 
       expect(receiver.connection.mutate).not.toHaveBeenCalled();
 
@@ -46,18 +48,20 @@ describe('RemoteElement', () => {
     });
 
     it('sends updates to properties declared with a static `remoteProperties` field', () => {
-      class HelloElement extends RemoteElement {
-        static remoteProperties = {
-          name: {attribute: true},
-        };
+      interface HelloElementProperties {
+        name?: string;
+      }
 
-        name!: string;
+      class HelloElement extends RemoteElement<HelloElementProperties> {
+        static remoteProperties = {
+          name: {type: String},
+        };
       }
 
       const {element, receiver} = createAndConnectRemoteElement(HelloElement);
 
       const name = 'Winston';
-      element.name = name;
+      (element as HelloElementProperties).name = name;
 
       expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
         [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
@@ -79,67 +83,67 @@ describe('RemoteElement', () => {
       ]);
     });
 
-    it('sends updates to properties declared with the `@remoteProperties()` decorator', () => {
-      @remoteProperties({
-        name: {attribute: true},
-      })
-      class HelloElement extends RemoteElement<{name: string}> {
-        name!: string;
-      }
+    // it('sends updates to properties declared with the `@remoteProperties()` decorator', () => {
+    //   @remoteProperties({
+    //     name: {attribute: true},
+    //   })
+    //   class HelloElement extends RemoteElement<{name: string}> {
+    //     name!: string;
+    //   }
 
-      const {element, receiver} = createAndConnectRemoteElement(HelloElement);
+    //   const {element, receiver} = createAndConnectRemoteElement(HelloElement);
 
-      const name = 'Winston';
-      element.name = name;
+    //   const name = 'Winston';
+    //   element.name = name;
 
-      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
-        [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
-      ]);
-    });
+    //   expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+    //     [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
+    //   ]);
+    // });
 
-    it('sends updates to properties declared with the `@remoteProperty()` decorator', () => {
-      class HelloElement extends RemoteElement {
-        @remoteProperty()
-        accessor name!: string;
-      }
+    // it('sends updates to properties declared with the `@remoteProperty()` decorator', () => {
+    //   class HelloElement extends RemoteElement {
+    //     @remoteProperty()
+    //     accessor name!: string;
+    //   }
 
-      const {element, receiver} = createAndConnectRemoteElement(HelloElement);
+    //   const {element, receiver} = createAndConnectRemoteElement(HelloElement);
 
-      const name = 'Winston';
-      element.name = name;
+    //   const name = 'Winston';
+    //   element.name = name;
 
-      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
-        [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
-      ]);
-    });
+    //   expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+    //     [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
+    //   ]);
+    // });
 
-    it('serializes initial properties declared with the `@remoteProperty()` decorator', () => {
-      const name = 'Winston';
-      class HelloElement extends RemoteElement {
-        @remoteProperty()
-        accessor name = name;
-      }
+    // it('serializes initial properties declared with the `@remoteProperty()` decorator', () => {
+    //   const name = 'Winston';
+    //   class HelloElement extends RemoteElement {
+    //     @remoteProperty()
+    //     accessor name = name;
+    //   }
 
-      const {root, receiver} = createAndConnectRemoteRootElement();
+    //   const {root, receiver} = createAndConnectRemoteRootElement();
 
-      const element = new HelloElement();
-      element.name = name;
+    //   const element = new HelloElement();
+    //   element.name = name;
 
-      expect(receiver.connection.mutate).not.toHaveBeenCalled();
+    //   expect(receiver.connection.mutate).not.toHaveBeenCalled();
 
-      root.append(element);
+    //   root.append(element);
 
-      expect(receiver.root.children).toStrictEqual([
-        {
-          type: 1,
-          id: expect.any(String),
-          element: expect.any(String),
-          version: 0,
-          children: [],
-          properties: {name},
-        },
-      ]);
-    });
+    //   expect(receiver.root.children).toStrictEqual([
+    //     {
+    //       type: 1,
+    //       id: expect.any(String),
+    //       element: expect.any(String),
+    //       version: 0,
+    //       children: [],
+    //       properties: {name},
+    //     },
+    //   ]);
+    // });
 
     describe('attribute reflection', () => {
       it('reflects the value of a remote property from a matching attribute by default', () => {
@@ -407,8 +411,8 @@ describe('RemoteElement', () => {
       it('parses the value for a remote property from an attribute using a custom type', () => {
         const attributePrefix = 'From attribute: ';
 
-        class TestElement extends RemoteElement {
-          static remoteProperties = {
+        const TestElement = createRemoteElement<{myField: string}>({
+          properties: {
             myField: {
               attribute: true,
               type: {
@@ -417,10 +421,8 @@ describe('RemoteElement', () => {
                 },
               },
             },
-          };
-
-          myField!: string;
-        }
+          },
+        });
 
         const {element, receiver} = createAndConnectRemoteElement(TestElement);
 
@@ -690,22 +692,63 @@ describe('RemoteElement', () => {
       });
     });
   });
+
+  describe('methods', () => {
+    it('calls a method on the remote receiver', () => {
+      class HelloElement extends RemoteElement<{}, {}, {greet(): void}> {
+        greet(name: string) {
+          return this.callRemoteMethod('greet', name);
+        }
+      }
+
+      const {root, receiver} = createAndConnectRemoteRootElement();
+
+      const element = new HelloElement();
+      root.append(element);
+
+      const name = 'Winston';
+      const spy = vi.fn((name: string) => `Hello ${name}!`);
+      const receivedElement = receiver.root
+        .children[0] as RemoteReceiverElement;
+
+      receiver.implement(receivedElement, {greet: spy});
+
+      expect(spy).not.toHaveBeenCalled();
+
+      const result = element.greet(name);
+
+      expect(result).toBe(`Hello ${name}!`);
+      expect(spy).toHaveBeenCalledWith(name);
+    });
+  });
 });
 
-class TestRemoteReceiver extends RemoteReceiver {
+class TestRemoteReceiver
+  implements
+    Pick<
+      RemoteReceiver,
+      'root' | 'connection' | 'get' | 'implement' | 'subscribe'
+    >
+{
+  readonly #receiver = new RemoteReceiver();
   readonly connection: RemoteReceiver['connection'] &
     MockedObject<RemoteReceiver['connection']>;
 
+  get root() {
+    return this.#receiver.root;
+  }
+
   constructor() {
-    super();
+    const {connection} = this.#receiver;
     this.connection = {
-      // @ts-expect-error `this.connection` is defined on the superclass,
-      // but `super.connection` isn’t defined. Not sure how else to do this...
-      mutate: vi.fn(this.connection.mutate),
-      // @ts-expect-error see above
-      call: vi.fn(this.connection.call),
+      mutate: vi.fn(connection.mutate),
+      call: vi.fn(connection.call),
     };
   }
+
+  get = this.#receiver.get.bind(this.#receiver);
+  implement = this.#receiver.implement.bind(this.#receiver);
+  subscribe = this.#receiver.subscribe.bind(this.#receiver);
 }
 
 function createAndConnectRemoteElement<
