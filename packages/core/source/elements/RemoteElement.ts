@@ -45,13 +45,20 @@ export type RemoteElementPropertiesDefinition<
 };
 
 export interface RemoteElementSlotDefinition {}
-
 interface RemoteElementSlotNormalizedDefinition {}
+
+export interface RemoteElementMethodDefinition {}
 
 export type RemoteElementSlotsDefinition<
   Slots extends Record<string, any> = {},
 > = {
   [Slot in keyof Slots]: RemoteElementSlotDefinition;
+};
+
+export type RemoteElementMethodsDefinition<
+  Slots extends Record<string, any> = {},
+> = {
+  [Slot in keyof Slots]: RemoteElementMethodDefinition;
 };
 
 export type RemotePropertiesFromElementConstructor<T> = T extends {
@@ -92,6 +99,7 @@ export type RemoteElementConstructor<
     string,
     RemoteElementPropertyNormalizedDefinition
   >;
+  readonly remoteMethods?: Methods | readonly (keyof Methods)[];
   createProperty<Value = unknown>(
     name: string,
     definition?: RemoteElementPropertyDefinition<Value>,
@@ -131,19 +139,8 @@ export function createRemoteElement<
   > {
     static readonly remoteSlots = slots;
     static readonly remoteProperties = properties;
+    static readonly remoteMethods = methods;
   } as any;
-
-  if (methods != null) {
-    if (Array.isArray(methods)) {
-      for (const method of methods) {
-        RemoteElementConstructor.prototype[method] = function (...args: any[]) {
-          return callRemoteElementMethod(this, method, ...args);
-        };
-      }
-    } else {
-      Object.assign(RemoteElementConstructor.prototype, methods);
-    }
-  }
 
   return RemoteElementConstructor;
 }
@@ -164,6 +161,7 @@ type RemoteEventListenerRecord = [
 ];
 
 // Heavily inspired by https://github.com/lit/lit/blob/343187b1acbbdb02ce8d01fa0a0d326870419763/packages/reactive-element/src/reactive-element.ts
+// @ts-ignore-error
 export abstract class RemoteElement<
   Properties extends Record<string, any> = {},
   Slots extends Record<string, any> = {},
@@ -227,7 +225,7 @@ export abstract class RemoteElement<
     }
 
     this.__finalized = true;
-    const {remoteSlots, remoteProperties} = this;
+    const {remoteSlots, remoteProperties, remoteMethods} = this;
 
     // finalize any superclasses
     const SuperConstructor = Object.getPrototypeOf(
@@ -292,6 +290,23 @@ export abstract class RemoteElement<
             eventToPropertyMap,
           );
         });
+      }
+    }
+
+    if (remoteMethods != null) {
+      if (Array.isArray(remoteMethods)) {
+        for (const method of remoteMethods) {
+          // @ts-expect-error We are dynamically defining methods, which TypeScript can’t
+          // really keep track of.
+          this.prototype[method] = function (
+            this: RemoteElement,
+            ...args: any[]
+          ) {
+            return this.callRemoteMethod(method, ...args);
+          };
+        }
+      } else {
+        Object.assign(this, remoteMethods);
       }
     }
 
@@ -517,6 +532,10 @@ export abstract class RemoteElement<
     if (listenerRecord == null) return;
 
     removeRemoteListener.call(this, type, listener, listenerRecord);
+  }
+
+  protected callRemoteMethod(method: string, ...args: any[]) {
+    return callRemoteElementMethod(this, method, ...args);
   }
 }
 
