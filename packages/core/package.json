@@ -2,6 +2,7 @@
   "name": "@remote-dom/core",
   "type": "module",
   "license": "MIT",
+  "description": "A collection of DOM-based utilities for synchronizing elements between JavaScript environments",
   "publishConfig": {
     "access": "public",
     "@remote-dom/registry": "https://registry.npmjs.org"

@@ -67,24 +67,24 @@ export type RemotePropertiesFromElementConstructor<T> = T extends {
   ? Properties
   : never;
 
-export type RemoteSlotsFromElementConstructor<T> = T extends {
-  new (): RemoteElement<any, infer Slots, any>;
-}
-  ? Slots
-  : never;
-
 export type RemoteMethodsFromElementConstructor<T> = T extends {
-  new (): RemoteElement<any, any, infer Methods>;
+  new (): RemoteElement<any, infer Methods, any>;
 }
   ? Methods
   : never;
 
+export type RemoteSlotsFromElementConstructor<T> = T extends {
+  new (): RemoteElement<any, any, infer Slots>;
+}
+  ? Slots
+  : never;
+
 export type RemoteElementConstructor<
   Properties extends Record<string, any> = {},
-  Slots extends Record<string, any> = {},
   Methods extends Record<string, (...args: any[]) => any> = {},
+  Slots extends Record<string, any> = {},
 > = {
-  new (): RemoteElement<Properties, Slots, Methods> & Properties & Methods;
+  new (): RemoteElement<Properties, Methods, Slots> & Properties & Methods;
   readonly remoteSlots?:
     | RemoteElementSlotsDefinition<Slots>
     | readonly (keyof Slots)[];
@@ -108,33 +108,34 @@ export type RemoteElementConstructor<
 
 export interface RemoteElementCreatorOptions<
   Properties extends Record<string, any> = {},
-  Slots extends Record<string, any> = {},
   Methods extends Record<string, (...args: any[]) => any> = {},
+  Slots extends Record<string, any> = {},
 > {
-  slots?: RemoteElementConstructor<Properties, Slots, Methods>['remoteSlots'];
+  slots?: RemoteElementConstructor<Properties, Methods, Slots>['remoteSlots'];
   properties?: RemoteElementConstructor<
     Properties,
-    Slots,
-    Methods
+    Methods,
+    Slots
   >['remoteProperties'];
   methods?: Methods | keyof Methods[];
 }
 
 export function createRemoteElement<
   Properties extends Record<string, any> = {},
-  Slots extends Record<string, any> = {},
   Methods extends Record<string, (...args: any[]) => any> = {},
+  Slots extends Record<string, any> = {},
 >({
   slots,
   properties,
   methods,
 }: RemoteElementCreatorOptions<
   Properties,
-  Slots,
-  Methods
-> = {}): RemoteElementConstructor<Properties, Slots, Methods> {
+  Methods,
+  Slots
+> = {}): RemoteElementConstructor<Properties, Methods, Slots> {
   const RemoteElementConstructor = class extends RemoteElement<
     Properties,
+    Methods,
     Slots
   > {
     static readonly remoteSlots = slots;
@@ -164,8 +165,8 @@ type RemoteEventListenerRecord = [
 // @ts-ignore-error
 export abstract class RemoteElement<
   Properties extends Record<string, any> = {},
-  Slots extends Record<string, any> = {},
   Methods extends Record<string, (...args: any[]) => any> = {},
+  Slots extends Record<string, any> = {},
 > extends HTMLElement {
   static readonly slottable = true;
 
@@ -470,9 +471,9 @@ export abstract class RemoteElement<
             detail: args.length > 1 ? args : args[0],
           });
 
-          const ranWithoutPrevention = this.dispatchEvent(event);
+          this.dispatchEvent(event);
 
-          return event.resolved ? event.result : ranWithoutPrevention;
+          return event.response;
         },
       };
 
@@ -534,7 +535,11 @@ export abstract class RemoteElement<
     removeRemoteListener.call(this, type, listener, listenerRecord);
   }
 
-  protected callRemoteMethod(method: string, ...args: any[]) {
+  updateRemoteProperty(name: string, value?: unknown) {
+    updateRemoteElementProperty(this, name, value);
+  }
+
+  callRemoteMethod(method: string, ...args: any[]) {
     return callRemoteElementMethod(this, method, ...args);
   }
 }

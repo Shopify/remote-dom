@@ -11,18 +11,34 @@ import type {RemoteNodeSerialization} from '../types.ts';
 import type {RemoteReceiverOptions} from './shared.ts';
 
 export class DOMRemoteReceiver {
-  readonly root: DocumentFragment | Element = document.createDocumentFragment();
+  readonly root: DocumentFragment | Element;
   readonly connection: RemoteConnection;
 
   private readonly attached = new Map<string, Node>();
 
-  constructor({retain, release}: RemoteReceiverOptions = {}) {
+  constructor({
+    root,
+    retain,
+    release,
+    call,
+  }: RemoteReceiverOptions & {
+    root?: Element;
+    call?(element: Element, method: string, ...args: any[]): any;
+  } = {}) {
+    this.root = root ?? document.createDocumentFragment();
+
     const {attached} = this;
 
     this.connection = createRemoteConnection({
-      call(id, method, ...args) {
-        const element = attached.get(id)!;
-        return (element as any)[method](...args);
+      call: (id, method, ...args) => {
+        const element =
+          id === ROOT_ID && this.root.nodeType !== 11
+            ? this.root
+            : attached.get(id)!;
+
+        return call
+          ? call(element as any, method, ...args)
+          : (element as any)[method](...args);
       },
       insertChild: (id, child, index) => {
         const parent = id === ROOT_ID ? this.root : attached.get(id)!;

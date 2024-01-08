@@ -6,7 +6,12 @@ import {
 } from '../constants.ts';
 import type {RemoteConnection, RemoteMutationRecord} from '../types.ts';
 
-import {connectRemoteNode, serializeRemoteNode} from './internals.ts';
+import {
+  connectRemoteNode,
+  serializeRemoteNode,
+  updateRemoteElementProperty,
+  callRemoteElementMethod,
+} from './internals.ts';
 
 export class RemoteRootElement extends HTMLElement {
   readonly [REMOTE_ID] = ROOT_ID;
@@ -32,5 +37,13 @@ export class RemoteRootElement extends HTMLElement {
         i,
       ]);
     }
+  }
+
+  updateRemoteProperty(name: string, value?: unknown) {
+    updateRemoteElementProperty(this, name, value);
+  }
+
+  callRemoteMethod(method: string, ...args: any[]) {
+    return callRemoteElementMethod(this, method, ...args);
   }
 }

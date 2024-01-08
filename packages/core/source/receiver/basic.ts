@@ -33,6 +33,7 @@ export interface RemoteReceiverRoot {
   readonly id: typeof ROOT_ID;
   readonly type: typeof NODE_TYPE_ROOT;
   readonly children: readonly RemoteReceiverNode[];
+  readonly properties: NonNullable<RemoteElementSerialization['properties']>;
   readonly version: number;
 }
 
@@ -53,6 +54,7 @@ export class RemoteReceiver {
     type: NODE_TYPE_ROOT,
     children: [],
     version: 0,
+    properties: {},
   };
 
   private readonly attached = new Map<
@@ -73,7 +75,13 @@ export class RemoteReceiver {
 
   readonly connection: RemoteConnection;
 
-  constructor({retain, release}: RemoteReceiverOptions = {}) {
+  constructor({
+    retain,
+    release,
+    methods,
+  }: RemoteReceiverOptions & {
+    methods?: Record<string, (...args: any[]) => any> | null;
+  } = {}) {
     const {attached, parents, subscribers} = this;
 
     this.connection = createRemoteConnection({
@@ -167,6 +175,8 @@ export class RemoteReceiver {
         runSubscribers(text);
       },
     });
+
+    if (methods) this.implement(this.root, methods);
 
     function runSubscribers(attached: RemoteReceiverNodeOrRoot) {
       const subscribed = subscribers.get(attached.id);
