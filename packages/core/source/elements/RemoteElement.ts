@@ -443,6 +443,14 @@ export abstract class RemoteElement<
 
   addEventListener(
     type: string,
+    listener:
+      | ((event: RemoteEvent) => void)
+      | {handleEvent: (event: RemoteEvent) => void}
+      | null,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  addEventListener(
+    type: string,
     listener: EventListenerOrEventListenerObject,
     options?: boolean | AddEventListenerOptions,
   ) {

@@ -7,6 +7,7 @@ import {
   // remoteProperties,
   // remoteProperty,
   RemoteRootElement,
+  type RemoteEvent,
   type RemoteElementConstructor,
 } from '../elements.ts';
 import {RemoteReceiver, type RemoteReceiverElement} from '../receiver/basic.ts';
@@ -558,7 +559,7 @@ describe('RemoteElement', () => {
         ]);
       });
 
-      it('calls event listeners with a CustomEvent containing a single function argument as the detail', () => {
+      it('calls event listeners with a RemoteEvent containing a single function argument as the detail', () => {
         const ButtonElement = createRemoteElement<{onPress(detail: any): void}>(
           {
             properties: {onPress: {}},
@@ -580,7 +581,7 @@ describe('RemoteElement', () => {
         );
       });
 
-      it('calls event listeners with a CustomEvent containing multiple function argument as the detail', () => {
+      it('calls event listeners with a RemoteEvent containing multiple function argument as the detail', () => {
         const ButtonElement = createRemoteElement<{
           onPress(...detail: any[]): void;
         }>({
@@ -600,6 +601,25 @@ describe('RemoteElement', () => {
         expect(listener).toHaveBeenCalledWith(
           expect.objectContaining({type: 'press', detail}),
         );
+      });
+
+      it('returns the resolved value attached to a RemoteEvent', () => {
+        const ButtonElement = createRemoteElement<{
+          onPress(): void;
+        }>({
+          properties: {onPress: {}},
+        });
+
+        const {element} = createAndConnectRemoteElement(ButtonElement);
+
+        const response = 'Hello world';
+        element.addEventListener('press', (event: RemoteEvent) => {
+          event.respondWith(response);
+        });
+
+        const result = element.onPress();
+
+        expect(result).toBe(response);
       });
 
       it('removes an event listener property when the last event listener is removed', () => {
@@ -695,7 +715,7 @@ describe('RemoteElement', () => {
 
   describe('methods', () => {
     it('calls a method on the remote receiver', () => {
-      class HelloElement extends RemoteElement<{}, {}, {greet(): void}> {
+      class HelloElement extends RemoteElement<{}, {greet(): void}> {
         greet(name: string) {
           return this.callRemoteMethod('greet', name);
         }
