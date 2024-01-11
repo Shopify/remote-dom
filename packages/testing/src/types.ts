@@ -72,5 +72,5 @@ type MaybeFunctionReturnType<T> = T extends (...args: any[]) => any
   : unknown;
 
 type MaybeFunctionParameters<T> = T extends (...args: any[]) => any
-  ? ReturnType<T>
+  ? Parameters<T>
   : [];
