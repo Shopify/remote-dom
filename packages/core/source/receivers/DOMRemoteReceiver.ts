@@ -10,8 +10,24 @@ import {
 import type {RemoteNodeSerialization} from '../types.ts';
 import type {RemoteReceiverOptions} from './shared.ts';
 
+/**
+ * Takes care of mapping remote elements to matching HTML elements
+ * on the host page. If you implement your UI with [custom elements](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements),
+ * `DOMRemoteReceiver` is a simple option that avoids much of the
+ * manual work required when using the basic `RemoteReceiver`.
+ */
 export class DOMRemoteReceiver {
+  /**
+   * The root element that will contain the host implementations of
+   * all nodes attached to the remote tree. To connect the receiver to
+   * a new element, call the `connect()` method.
+   */
   readonly root: DocumentFragment | Element;
+
+  /**
+   * A simple object that can be passed to a remote environment in order to
+   * allow it to communicate with this receiver.
+   */
   readonly connection: RemoteConnection;
 
   private readonly attached = new Map<string, Node>();
@@ -22,7 +38,35 @@ export class DOMRemoteReceiver {
     release,
     call,
   }: RemoteReceiverOptions & {
+    /**
+     * The root element for this receiver. This acts as a shortcut for calling
+     * `connect()` after creating the receiver.
+     */
     root?: Element;
+
+    /**
+     * Customizes how [remote methods](https://github.com/Shopify/remote-dom/blob/main/packages/core#remotemethods)
+     * are called. By default, the receiver will call a matching method found on
+     * the HTML element that represents the remote element. However, you may want to
+     * customize this behavior in order to avoid exposing methods on your HTML
+     * elements that should not be callable by the remote environment.
+     *
+     * @param element The HTML element representing the remote element the method is being called on.
+     * @param method The name of the method being called.
+     * @param args Arguments passed to the method from the remote environment.
+     *
+     * @example
+     * const receiver = new DOMRemoteReceiver({
+     *   call(element, method, ...args) {
+     *     // Prevent calling any methods that start with an underscore
+     *     if (method.startsWith('_')) {
+     *       throw new Error(`Cannot call method ${method}`);
+     *     }
+     *
+     *     return element[method](...args);
+     *   },
+     * });
+     */
     call?(element: Element, method: string, ...args: any[]): any;
   } = {}) {
     this.root = root ?? document.createDocumentFragment();
@@ -128,6 +172,12 @@ export class DOMRemoteReceiver {
     }
   }
 
+  /**
+   * Connects the receiver to a new root element. The representation of
+   * any child elements of the remote root will be appended to this node
+   * as children, and the `root` property will be updated to point to the
+   * new element.
+   */
   connect(element: Element) {
     const oldRoot = this.root;
     (this as any).root = element;
@@ -137,6 +187,11 @@ export class DOMRemoteReceiver {
     });
   }
 
+  /**
+   * Disconnects the receiver from its current root element. Any current
+   * children of the root element will be moved to a `DocumentFragment`
+   * instead, so they can be re-attached to a new element later.
+   */
   disconnect() {
     // DocumentFragment
     if (this.root.nodeType === 11) return;

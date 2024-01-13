@@ -14,14 +14,29 @@ import type {
 } from '../types.ts';
 import type {RemoteReceiverOptions} from './shared.ts';
 
+/**
+ * Represents a text node of a remote tree in a plain JavaScript format, with
+ * the addition of a `version` property that is incremented whenever the
+ * node is updated.
+ */
 export interface RemoteReceiverText extends RemoteTextSerialization {
   readonly version: number;
 }
 
+/**
+ * Represents a comment node of a remote tree in a plain JavaScript format, with
+ * the addition of a `version` property that is incremented whenever the
+ * node is updated.
+ */
 export interface RemoteReceiverComment extends RemoteCommentSerialization {
   readonly version: number;
 }
 
+/**
+ * Represents an element node of a remote tree in a plain JavaScript format, with
+ * the addition of a `version` property that is incremented whenever the
+ * node is updated.
+ */
 export interface RemoteReceiverElement
   extends Omit<RemoteElementSerialization, 'children' | 'properties'> {
   readonly properties: NonNullable<RemoteElementSerialization['properties']>;
@@ -29,6 +44,9 @@ export interface RemoteReceiverElement
   readonly version: number;
 }
 
+/**
+ * Represents a the root node of remote tree in a plain JavaScript format.
+ */
 export interface RemoteReceiverRoot {
   readonly id: typeof ROOT_ID;
   readonly type: typeof NODE_TYPE_ROOT;
@@ -37,18 +55,38 @@ export interface RemoteReceiverRoot {
   readonly version: number;
 }
 
+/**
+ * Represents any node that can be stored in the host representation of the remote tree.
+ */
 export type RemoteReceiverNode =
   | RemoteReceiverText
   | RemoteReceiverComment
   | RemoteReceiverElement;
+
+/**
+ * Any node in the remote tree that can have children nodes.
+ */
 export type RemoteReceiverParent = RemoteReceiverElement | RemoteReceiverRoot;
+
 type RemoteReceiverNodeOrRoot = RemoteReceiverNode | RemoteReceiverRoot;
 
 type Writable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
+/**
+ * A `RemoteReceiver` stores remote elements into a basic JavaScript representation,
+ * and allows subscribing to individual elements in the remote environment.
+ * This can be useful for mapping remote elements to components in a JavaScript
+ * framework; for example, the [`@remote-dom/react` library](https://github.com/Shopify/remote-dom/blob/main/packages/react#remoterenderer)
+ * uses this receiver to map remote elements to React components.
+ */
 export class RemoteReceiver {
+  /**
+   * Represents the root node of the remote tree. This node is always defined,
+   * and you will likely be most interested in its `children` property, which
+   * contains the top-level elements of the remote tree.
+   */
   readonly root: RemoteReceiverRoot = {
     id: ROOT_ID,
     type: NODE_TYPE_ROOT,
@@ -56,6 +94,12 @@ export class RemoteReceiver {
     version: 0,
     properties: {},
   };
+
+  /**
+   * A simple object that can be passed to a remote environment in order to
+   * allow it to communicate with this receiver.
+   */
+  readonly connection: RemoteConnection;
 
   private readonly attached = new Map<
     string | typeof ROOT_ID,
@@ -73,13 +117,16 @@ export class RemoteReceiver {
     Record<string, (...args: unknown[]) => unknown>
   >();
 
-  readonly connection: RemoteConnection;
-
   constructor({
     retain,
     release,
     methods,
   }: RemoteReceiverOptions & {
+    /**
+     * A set of [remote methods](https://github.com/Shopify/remote-dom/blob/main/packages/core#remotemethods)
+     * that can be called on the root node of the remote tree. This is a convenience
+     * option that replaces the need to call `implement()` on the root node.
+     */
     methods?: Record<string, (...args: any[]) => any> | null;
   } = {}) {
     const {attached, parents, subscribers} = this;
@@ -256,10 +303,53 @@ export class RemoteReceiver {
     }
   }
 
+  /**
+   * Fetches the latest state of a remote element that has been
+   * received from the remote environment.
+   *
+   * @param node The remote node to fetch.
+   * @returns The current state of the remote node, or `undefined` if the node is not connected to the remote tree.
+   *
+   * @example
+   * import {RemoteReceiver} from '@remote-dom/core/receivers';
+   *
+   * const receiver = new RemoteReceiver();
+   *
+   * receiver.get(receiver.root) === receiver.root; // true
+   */
   get<T extends RemoteReceiverNodeOrRoot>({id}: Pick<T, 'id'>): T | undefined {
     return this.attached.get(id) as any;
   }
 
+  /**
+   * Lets you define how [remote methods](https://github.com/Shopify/remote-dom/blob/main/packages/core#remotemethods)
+   * are implemented for a particular element in the tree.
+   *
+   * @param node The remote node to subscribe for changes.
+   * @param implementation A record containing the methods to implement for the specified node.
+   *
+   * @example
+   * // In the host environment:
+   * import {RemoteReceiver} from '@remote-dom/core/receivers';
+   *
+   * const receiver = new RemoteReceiver();
+   *
+   * receiver.implement(receiver.root, {
+   *   alert(message) {
+   *     window.alert(message);
+   *   },
+   * });
+   *
+   * // In the remote environment:
+   * import {RemoteRootElement} from '@remote-dom/core/elements';
+   *
+   * customElements.define('remote-root', RemoteRootElement);
+   *
+   * const root = document.createElement('remote-root');
+   * root.connect(receiver.connection);
+   *
+   * root.callRemoteMethod('alert', 'Hello, world!');
+   */
   implement<T extends RemoteReceiverNodeOrRoot>(
     {id}: Pick<T, 'id'>,
     implementation?: Record<string, (...args: any[]) => any> | null,
@@ -271,10 +361,42 @@ export class RemoteReceiver {
     }
   }
 
+  /**
+   * Allows you to subscribe to changes in a remote element. This includes
+   * changes to the remote element’s properties and list of children, but
+   * note that you will not receive updates for properties or children of
+   * _nested_ elements.
+   *
+   * @param node The remote node to subscribe for changes.
+   * @param subscriber A function that will be called with the updated node on each change.
+   *
+   * @example
+   * import {RemoteReceiver} from '@remote-dom/core/receivers';
+   *
+   * const abort = new AbortController();
+   * const receiver = new RemoteReceiver();
+   *
+   * // Subscribe to all changes in the top-level children, attached
+   * // directly to the remote “root”.
+   * receiver.subscribe(
+   *   receiver.root,
+   *   (root) => {
+   *     console.log('Root changed!', root);
+   *   },
+   *   {signal: abort.signal},
+   * );
+   */
   subscribe<T extends RemoteReceiverNodeOrRoot>(
     {id}: Pick<T, 'id'>,
     subscriber: (value: T) => void,
-    {signal}: {signal?: AbortSignal} = {},
+    {
+      signal,
+    }: {
+      /**
+       * An optional `AbortSignal` that can be used to unsubscribe from the changes.
+       */
+      signal?: AbortSignal;
+    } = {},
   ) {
     let subscribersSet = this.subscribers.get(id);
 

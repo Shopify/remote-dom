@@ -123,7 +123,7 @@ export interface RemoteConnection {
 }
 
 /**
- * Represents an element node in a remote tree in a plain JavaScript format.
+ * Represents an element node of a remote tree in a plain JavaScript format.
  */
 export interface RemoteElementSerialization {
   /**
@@ -154,6 +154,9 @@ export interface RemoteElementSerialization {
   readonly children: readonly RemoteNodeSerialization[];
 }
 
+/**
+ * Represents a text node of a remote tree in a plain JavaScript format.
+ */
 export interface RemoteTextSerialization {
   /**
    * A unique identifier for the node.
@@ -171,6 +174,9 @@ export interface RemoteTextSerialization {
   readonly data: string;
 }
 
+/**
+ * Represents a comment node of a remote tree in a plain JavaScript format.
+ */
 export interface RemoteCommentSerialization {
   /**
    * A unique identifier for the node.

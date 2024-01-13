@@ -339,7 +339,7 @@ This library provides two kinds of receiver: [`RemoteReceiver`](#remotereceiver)
 
 #### `RemoteReceiver`
 
-`RemoteReceiver` converts remote elements into a basic JavaScript representation, and allows subscribing to individual elements in the remote environment. This can be useful for mapping remote elements to components in a JavaScript framework; the [`@remote-dom/react` library](../react#remoterenderer) uses this receiver to map remote elements to React components.
+A `RemoteReceiver` stores remote elements into a basic JavaScript representation, and allows subscribing to individual elements in the remote environment. This can be useful for mapping remote elements to components in a JavaScript framework; for example, the [`@remote-dom/react` library](../react#remoterenderer) uses this receiver to map remote elements to React components.
 
 An empty remote receiver can be created using the `RemoteReceiver` constructor:
 
@@ -395,7 +395,9 @@ const root = receiver.root;
 
 ##### `RemoteReceiver.subscribe()`
 
-`RemoteReceiver.subscribe()` allows you to subscribe to changes in a remote element. This includes changes to the remote element’s properties and children. The first argument to this function is the remote element you want to subscribe to, and the second is a function that will be called with the updated description of that element on each change:
+`RemoteReceiver.subscribe()` allows you to subscribe to changes in a remote element. This includes changes to the remote element’s properties and list of children, but note that you will not receive updates for properties or children of _nested_ elements.
+
+The first argument to this function is the remote element you want to subscribe to, and the second is a function that will be called with the updated description of that element on each change:
 
 ```ts
 import {RemoteReceiver} from '@remote-dom/core/receivers';
@@ -464,7 +466,7 @@ root.callRemoteMethod('alert', 'Hello, world!');
 
 ##### `RemoteReceiver.get()`
 
-`RemoteReceiver.get()` lets you get the current state of a remote element.
+`RemoteReceiver.get()` fetches the latest state of a remote element that has been received from the remote environment.
 
 ```ts
 import {RemoteReceiver} from '@remote-dom/core/receivers';
