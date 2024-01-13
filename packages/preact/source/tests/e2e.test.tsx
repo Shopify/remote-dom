@@ -23,7 +23,7 @@ import {
   RemoteMutationObserver,
   createRemoteElement,
 } from '@remote-dom/core/elements';
-import {SignalRemoteReceiver} from '@remote-dom/signals/receivers';
+import {SignalRemoteReceiver} from '@remote-dom/signals';
 
 import {createRemoteComponent} from '../index.ts';
 import {RemoteRootRenderer, createRemoteComponentRenderer} from '../host.ts';
