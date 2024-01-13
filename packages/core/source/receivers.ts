@@ -6,6 +6,6 @@ export {
   type RemoteReceiverRoot,
   type RemoteReceiverText,
   type RemoteReceiverComment,
-} from './receiver/basic.ts';
-export {DOMRemoteReceiver} from './receiver/dom.ts';
-export type {RemoteReceiverOptions} from './receiver/shared.ts';
+} from './receivers/RemoteReceiver.ts';
+export {DOMRemoteReceiver} from './receivers/DOMRemoteReceiver.ts';
+export type {RemoteReceiverOptions} from './receivers/shared.ts';

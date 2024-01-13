@@ -1,7 +1,7 @@
 import {
   type RemoteReceiver,
   type RemoteReceiverNode,
-} from '@remote-dom/core/receiver';
+} from '@remote-dom/core/receivers';
 
 import {RemoteTextRenderer} from './RemoteTextRenderer.tsx';
 import type {RemoteComponentRendererMap} from './types.ts';

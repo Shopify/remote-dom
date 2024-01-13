@@ -2,7 +2,7 @@ import type {ComponentType} from 'react';
 import type {
   RemoteReceiver,
   RemoteReceiverElement,
-} from '@remote-dom/core/receiver';
+} from '@remote-dom/core/receivers';
 
 export interface RemoteComponentRendererProps {
   element: RemoteReceiverElement;

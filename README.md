@@ -32,7 +32,7 @@ Next, on the “host” HTML page, you will need to create a “receiver”. Thi
     <div id="root"></div>
 
     <script type="module">
-      import {DOMRemoteReceiver} from '@remote-dom/core/receiver';
+      import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
 
       const root = document.querySelector('#root');
 
@@ -54,7 +54,7 @@ Our host is ready to receive elements to render, but we don’t have a remote en
     <iframe id="remote-iframe" src="/remote" hidden></iframe>
 
     <script type="module">
-      import {DOMRemoteReceiver} from '@remote-dom/core/receiver';
+      import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
 
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');
@@ -257,7 +257,7 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
     </script>
 
     <script type="module">
-      import {DOMRemoteReceiver} from '@remote-dom/core/receiver';
+      import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
 
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');

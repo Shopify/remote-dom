@@ -1,4 +1,4 @@
-import type {SignalRemoteReceiverElement} from '@remote-dom/signals/receiver';
+import type {SignalRemoteReceiverElement} from '@remote-dom/signals/receivers';
 
 import {renderRemoteNode, type RenderRemoteNodeOptions} from '../node.tsx';
 

@@ -2,7 +2,7 @@ import type {ComponentType} from 'preact';
 import type {
   SignalRemoteReceiver,
   SignalRemoteReceiverElement,
-} from '@remote-dom/signals/receiver';
+} from '@remote-dom/signals/receivers';
 
 export interface RemoteComponentRendererProps {
   element: SignalRemoteReceiverElement;

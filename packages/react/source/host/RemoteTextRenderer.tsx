@@ -1,7 +1,7 @@
 import type {
   RemoteReceiver,
   RemoteReceiverText,
-} from '@remote-dom/core/receiver';
+} from '@remote-dom/core/receivers';
 import {useRemoteReceived} from './hooks/remote-received.ts';
 
 export interface RemoteTextRendererProps {

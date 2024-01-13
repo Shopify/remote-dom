@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Custom element • Remote DOM</title>
+    <title>Minimal iframe • Remote DOM</title>
     <meta charset="UTF-8" />
   </head>
 
@@ -12,7 +12,7 @@
     <iframe id="remote-iframe" src="/remote.html" hidden></iframe>
 
     <script type="module">
-      import {DOMRemoteReceiver} from '@remote-dom/core/receiver';
+      import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
 
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');

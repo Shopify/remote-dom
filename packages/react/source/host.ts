@@ -6,7 +6,7 @@ export {
   type RemoteReceiverRoot,
   type RemoteReceiverNode,
   type RemoteReceiverParent,
-} from '@remote-dom/core/receiver';
+} from '@remote-dom/core/receivers';
 
 export {renderRemoteNode, type RenderRemoteNodeOptions} from './host/node.tsx';
 export {

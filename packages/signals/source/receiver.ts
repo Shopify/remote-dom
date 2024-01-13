@@ -13,7 +13,7 @@ import {
   type RemoteCommentSerialization,
   type RemoteElementSerialization,
 } from '@remote-dom/core';
-import type {RemoteReceiverOptions} from '@remote-dom/core/receiver';
+import type {RemoteReceiverOptions} from '@remote-dom/core/receivers';
 
 export interface SignalRemoteReceiverText
   extends Omit<RemoteTextSerialization, 'data'> {

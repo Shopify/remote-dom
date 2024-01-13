@@ -6,7 +6,7 @@ import {
 import type {
   SignalRemoteReceiver,
   SignalRemoteReceiverNode,
-} from '@remote-dom/signals/receiver';
+} from '@remote-dom/signals/receivers';
 
 import type {RemoteComponentRendererMap} from './types.ts';
 

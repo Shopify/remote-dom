@@ -1,4 +1,4 @@
-import {DOMRemoteReceiver} from '@remote-dom/core/receiver';
+import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
 import {
   retain,
   release,

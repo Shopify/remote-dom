@@ -344,7 +344,7 @@ This library provides two kinds of receiver: [`RemoteReceiver`](#remotereceiver)
 An empty remote receiver can be created using the `RemoteReceiver` constructor:
 
 ```ts
-import {RemoteReceiver} from '@remote-dom/core/receiver';
+import {RemoteReceiver} from '@remote-dom/core/receivers';
 
 const receiver = new RemoteReceiver();
 ```
@@ -356,7 +356,7 @@ To support functions being passed over `postMessage`, you may need a way to manu
 // well with it in allowing you to pass functions between
 // JavaScript environments.
 import {retain, release} from '@quilted/threads';
-import {RemoteReceiver} from '@remote-dom/core/receiver';
+import {RemoteReceiver} from '@remote-dom/core/receivers';
 
 const receiver = new RemoteReceiver({retain, release});
 ```
@@ -367,7 +367,7 @@ Each `RemoteReceiver` has a `connection` property, which can be passed to a [`Re
 
 ```ts
 // In the host environment:
-import {RemoteReceiver} from '@remote-dom/core/receiver';
+import {RemoteReceiver} from '@remote-dom/core/receivers';
 
 const receiver = new RemoteReceiver();
 
@@ -382,7 +382,7 @@ const observer = new RemoteMutationObserver(receiver.connection);
 Each `RemoteReceiver` also has a `root` property, which defines the object that all remote element representations will be attached to. This object has a `children` property, which will contain child text and element nodes, which may themselves have additional children.
 
 ```ts
-import {RemoteReceiver} from '@remote-dom/core/receiver';
+import {RemoteReceiver} from '@remote-dom/core/receivers';
 
 const receiver = new RemoteReceiver();
 const root = receiver.root;
@@ -398,7 +398,7 @@ const root = receiver.root;
 `RemoteReceiver.subscribe()` allows you to subscribe to changes in a remote element. This includes changes to the remote element’s properties and children. The first argument to this function is the remote element you want to subscribe to, and the second is a function that will be called with the updated description of that element on each change:
 
 ```ts
-import {RemoteReceiver} from '@remote-dom/core/receiver';
+import {RemoteReceiver} from '@remote-dom/core/receivers';
 
 const receiver = new RemoteReceiver();
 
@@ -412,7 +412,7 @@ receiver.subscribe(receiver.root, (root) => {
 You can pass a third options argument to the `subscribe()` method. Currently, only one option is available: `signal`, which lets you pass an [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that will be used to cancel the subscription:
 
 ```ts
-import {RemoteReceiver} from '@remote-dom/core/receiver';
+import {RemoteReceiver} from '@remote-dom/core/receivers';
 
 const abort = new AbortController();
 const receiver = new RemoteReceiver();
@@ -441,7 +441,7 @@ For example, in the example below, we implement a `alert()` method on the root e
 
 ```ts
 // In the host environment:
-import {RemoteReceiver} from '@remote-dom/core/receiver';
+import {RemoteReceiver} from '@remote-dom/core/receivers';
 
 const receiver = new RemoteReceiver();
 
@@ -467,7 +467,7 @@ root.callRemoteMethod('alert', 'Hello, world!');
 `RemoteReceiver.get()` lets you get the current state of a remote element.
 
 ```ts
-import {RemoteReceiver} from '@remote-dom/core/receiver';
+import {RemoteReceiver} from '@remote-dom/core/receivers';
 
 const receiver = new RemoteReceiver();
 
@@ -481,7 +481,7 @@ receiver.get(receiver.root) === receiver.root; // true
 An empty remote receiver can be created using the `DOMRemoteReceiver` constructor. You’ll then call the `connect()` method with the HTML element that will serve as your “root” element, to which all the synchronized remote elements will be attached:
 
 ```ts
-import {DOMRemoteReceiver} from '@remote-dom/core/receiver';
+import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
 
 const receiver = new DOMRemoteReceiver();
 
@@ -497,7 +497,7 @@ Like with `RemoteReceiver`, you can pass the `retain` and `release` options to t
 // well with it in allowing you to pass functions between
 // JavaScript environments.
 import {retain, release} from '@quilted/threads';
-import {DOMRemoteReceiver} from '@remote-dom/core/receiver';
+import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
 
 const receiver = new DOMRemoteReceiver({retain, release});
 ```
@@ -508,7 +508,7 @@ Like `RemoteReceiver`, each `DOMRemoteReceiver` has a `connection` property, whi
 
 ```ts
 // In the host environment:
-import {DOMRemoteReceiver} from '@remote-dom/core/receiver';
+import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
 
 const receiver = new DOMRemoteReceiver();
 
