@@ -25,8 +25,11 @@ export class DOMRemoteReceiver {
   readonly root: DocumentFragment | Element;
 
   /**
-   * A simple object that can be passed to a remote environment in order to
-   * allow it to communicate with this receiver.
+   * An object that can synchronize a tree of elements between two JavaScript
+   * environments. This object acts as a “thin waist”, allowing for efficient
+   * communication of changes between a “remote” environment (usually, a JavaScript
+   * sandbox, such as an `iframe` or Web Worker) and a “host” environment
+   * (usually, a top-level browser page).
    */
   readonly connection: RemoteConnection;
 

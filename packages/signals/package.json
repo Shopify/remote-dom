@@ -21,22 +21,9 @@
       "quilt:source": "./source/index.ts",
       "quilt:esnext": "./build/esnext/index.esnext",
       "import": "./build/esm/index.mjs"
-    },
-    "./receiver": {
-      "types": "./build/typescript/receiver.d.ts",
-      "quilt:source": "./source/receiver.ts",
-      "quilt:esnext": "./build/esnext/receiver.esnext",
-      "import": "./build/esm/receiver.mjs"
     }
   },
   "types": "./build/typescript/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "receiver": [
-        "./build/typescript/receiver.d.ts"
-      ]
-    }
-  },
   "scripts": {
     "build": "rollup --config ./rollup.config.js"
   },

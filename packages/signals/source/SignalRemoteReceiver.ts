@@ -1,4 +1,4 @@
-import {signal, type ReadonlySignal} from '@preact/signals-core';
+import {signal, batch, type ReadonlySignal} from '@preact/signals-core';
 
 import {
   ROOT_ID,
@@ -68,12 +68,19 @@ export class SignalRemoteReceiver {
     Record<string, (...args: unknown[]) => unknown>
   >();
 
+  /**
+   * An object that can synchronize a tree of elements between two JavaScript
+   * environments. This object acts as a “thin waist”, allowing for efficient
+   * communication of changes between a “remote” environment (usually, a JavaScript
+   * sandbox, such as an `iframe` or Web Worker) and a “host” environment
+   * (usually, a top-level browser page).
+   */
   readonly connection: RemoteConnection;
 
   constructor({retain, release}: RemoteReceiverOptions = {}) {
     const {attached, parents} = this;
 
-    this.connection = createRemoteConnection({
+    const baseConnection = createRemoteConnection({
       call: (id, method, ...args) => {
         const implementation = this.implementations.get(id);
         const implementationMethod = implementation?.[method];
@@ -147,6 +154,15 @@ export class SignalRemoteReceiver {
       },
     });
 
+    this.connection = {
+      call: baseConnection.call,
+      mutate(records) {
+        batch(() => {
+          baseConnection.mutate(records);
+        });
+      },
+    };
+
     function attach(
       child: RemoteNodeSerialization,
       parent: SignalRemoteReceiverParent,
@@ -215,6 +231,35 @@ export class SignalRemoteReceiver {
     }
   }
 
+  /**
+   * Lets you define how [remote methods](https://github.com/Shopify/remote-dom/blob/main/packages/core#remotemethods)
+   * are implemented for a particular element in the tree.
+   *
+   * @param node The remote node to subscribe for changes.
+   * @param implementation A record containing the methods to expose for the passed node.
+   *
+   * @example
+   * // In the host environment:
+   * import {SignalRemoteReceiver} from '@remote-dom/signals';
+   *
+   * const receiver = new SignalRemoteReceiver();
+   *
+   * receiver.implement(receiver.root, {
+   *   alert(message) {
+   *     window.alert(message);
+   *   },
+   * });
+   *
+   * // In the remote environment:
+   * import {RemoteRootElement} from '@remote-dom/core/elements';
+   *
+   * customElements.define('remote-root', RemoteRootElement);
+   *
+   * const root = document.createElement('remote-root');
+   * root.connect(receiver.connection);
+   *
+   * root.callRemoteMethod('alert', 'Hello, world!');
+   */
   implement<T extends SignalRemoteReceiverNodeOrRoot>(
     {id}: Pick<T, 'id'>,
     implementation?: Record<string, (...args: unknown[]) => unknown> | null,
@@ -226,6 +271,20 @@ export class SignalRemoteReceiver {
     }
   }
 
+  /**
+   * Fetches the latest state of a remote element that has been
+   * received from the remote environment.
+   *
+   * @param node The remote node to fetch.
+   * @returns The current state of the remote node, or `undefined` if the node is not connected to the remote tree.
+   *
+   * @example
+   * import {SignalRemoteReceiver} from '@remote-dom/signals';
+   *
+   * const receiver = new SignalRemoteReceiver();
+   *
+   * receiver.get(receiver.root) === receiver.root; // true
+   */
   get<T extends SignalRemoteReceiverNodeOrRoot>({
     id,
   }: Pick<T, 'id'>): T | undefined {
