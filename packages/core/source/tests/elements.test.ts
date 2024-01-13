@@ -10,7 +10,10 @@ import {
   type RemoteEvent,
   type RemoteElementConstructor,
 } from '../elements.ts';
-import {RemoteReceiver, type RemoteReceiverElement} from '../receiver/basic.ts';
+import {
+  RemoteReceiver,
+  type RemoteReceiverElement,
+} from '../receivers/RemoteReceiver.ts';
 import {REMOTE_ID, MUTATION_TYPE_UPDATE_PROPERTY} from '../constants.ts';
 
 describe('RemoteElement', () => {

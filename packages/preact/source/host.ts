@@ -6,7 +6,7 @@ export {
   type SignalRemoteReceiverRoot,
   type SignalRemoteReceiverNode,
   type SignalRemoteReceiverParent,
-} from '@remote-dom/signals/receivers';
+} from '@remote-dom/signals';
 export {renderRemoteNode, type RenderRemoteNodeOptions} from './host/node.tsx';
 export {
   createRemoteComponentRenderer,
