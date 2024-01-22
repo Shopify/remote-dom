@@ -238,6 +238,9 @@ class MyElement extends RemoteElement {
 }
 
 customElements.define('my-element', MyElement);
+
+const element = document.createElement('my-element');
+element.focus();
 ```
 
 #### `createRemoteElement`

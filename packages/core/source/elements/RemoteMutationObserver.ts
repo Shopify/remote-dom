@@ -15,6 +15,23 @@ import {
 } from '../constants.ts';
 import type {RemoteConnection, RemoteMutationRecord} from '../types.ts';
 
+/**
+ * Builds on the browser’s [`MutationObserver`](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver)
+ * to detect changes in a remote element, and to communicate those changes in a way
+ * that Remote DOM can understand. You create this object from a “remote
+ * connection”, which you’ll generally get from the [`@remote-dom/core/receiver`](/packages/core#remote-domcorereceiver)
+ * package. Then, you’ll observe changes in the HTML element that contains your
+ * tree of remote elements.
+ *
+ * @example
+ * import {RemoteMutationObserver} from '@remote-dom/core/elements';
+ *
+ * const observer = new RemoteMutationObserver(connection);
+ *
+ * // Now, any changes to the `body` element will be communicated
+ * // to the host environment.
+ * observer.observe(document.body);
+ */
 export class RemoteMutationObserver extends MutationObserver {
   constructor(private readonly connection: RemoteConnection) {
     super((records) => {
@@ -72,6 +89,11 @@ export class RemoteMutationObserver extends MutationObserver {
     });
   }
 
+  /**
+   * Starts watching changes to the element, and communicates changes to the
+   * host environment. By default, this method will also communicate any initial
+   * children of the element to the host environment.
+   */
   observe(
     target: Node,
     options?: MutationObserverInit & {
