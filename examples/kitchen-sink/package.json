@@ -1,5 +1,5 @@
 {
-  "name": "example-kitchen-sink-vite",
+  "name": "example-kitchen-sink",
   "type": "module",
   "private": true,
   "version": "0.0.0",
@@ -8,10 +8,13 @@
   },
   "dependencies": {
     "@preact/preset-vite": "^2.8.0",
+    "@preact/signals": "^1.2.2",
     "@quilted/threads": "^1.0.3",
-    "@remote-dom/core": "^0.0.1",
-    "@remote-dom/signals": "^0.0.1",
-    "lit": "^2.8.0",
+    "@remote-dom/core": "workspace:*",
+    "@remote-dom/preact": "workspace:*",
+    "@remote-dom/react": "workspace:*",
+    "@remote-dom/signals": "workspace:*",
+    "@sveltejs/vite-plugin-svelte": "^3.0.1",
     "preact": "^10.19.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

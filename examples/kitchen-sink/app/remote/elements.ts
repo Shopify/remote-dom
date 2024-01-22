@@ -4,6 +4,12 @@ import {
   RemoteFragmentElement,
 } from '@remote-dom/core/elements';
 
+import type {
+  ButtonProperties,
+  StackProperties,
+  TextFieldProperties,
+} from '../types.ts';
+
 customElements.define('remote-root', RemoteRootElement);
 customElements.define('remote-fragment', RemoteFragmentElement);
 
@@ -14,22 +20,19 @@ declare global {
   }
 }
 
-const Button = createRemoteElement<{onPress?(): void}>({
+export const Button = createRemoteElement<ButtonProperties>({
   properties: {
     onPress: {event: true},
   },
 });
 
-const Stack = createRemoteElement<{spacing?: boolean}>({
+export const Stack = createRemoteElement<StackProperties>({
   properties: {
     spacing: {type: Boolean},
   },
 });
 
-const TextField = createRemoteElement<{
-  label?: string;
-  onChange?(value: string): void;
-}>({
+export const TextField = createRemoteElement<TextFieldProperties>({
   properties: {
     label: {type: String},
     onChange: {event: true},
