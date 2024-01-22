@@ -2,7 +2,7 @@
   "files": [],
   "include": [],
   "references": [
-    {"path": "./examples/kitchen-sink-vite"},
+    {"path": "./examples/kitchen-sink"},
     {"path": "./packages/core"},
     {"path": "./packages/polyfill"},
     {"path": "./packages/preact"},
