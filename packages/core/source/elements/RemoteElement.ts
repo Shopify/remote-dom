@@ -108,7 +108,7 @@ export type RemoteElementConstructor<
 
 export interface RemoteElementCreatorOptions<
   Properties extends Record<string, any> = {},
-  Methods extends Record<string, (...args: any[]) => any> = {},
+  Methods extends Record<string, any> = {},
   Slots extends Record<string, any> = {},
 > {
   slots?: RemoteElementConstructor<Properties, Methods, Slots>['remoteSlots'];
@@ -117,12 +117,16 @@ export interface RemoteElementCreatorOptions<
     Methods,
     Slots
   >['remoteProperties'];
-  methods?: Methods | keyof Methods[];
+  methods?: RemoteElementConstructor<
+    Properties,
+    Methods,
+    Slots
+  >['remoteMethods'];
 }
 
 export function createRemoteElement<
   Properties extends Record<string, any> = {},
-  Methods extends Record<string, (...args: any[]) => any> = {},
+  Methods extends Record<string, any> = {},
   Slots extends Record<string, any> = {},
 >({
   slots,

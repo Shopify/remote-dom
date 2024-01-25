@@ -1,7 +1,7 @@
-import {render, type ComponentChildren} from 'preact';
-import {useRef, useState} from 'preact/hooks';
+import {render} from 'preact';
 import {
   RemoteRootRenderer,
+  RemoteFragmentRenderer,
   SignalRemoteReceiver,
   createRemoteComponentRenderer,
 } from '@remote-dom/preact/host';
@@ -13,12 +13,8 @@ import {
 } from '@quilted/threads';
 import '@preact/signals';
 
-import type {
-  SandboxAPI,
-  ButtonProperties,
-  StackProperties,
-  TextFieldProperties,
-} from './types.ts';
+import type {SandboxAPI} from './types.ts';
+import {Button, Modal, Stack, Text, TextField} from './host/components.tsx';
 
 const uiRoot = document.querySelector('#root')!;
 const iframe = document.querySelector('iframe')!;
@@ -48,9 +44,12 @@ const receiver = new SignalRemoteReceiver({retain, release});
 
 // TODO
 const components = new Map([
+  ['ui-text', createRemoteComponentRenderer(Text)],
   ['ui-button', createRemoteComponentRenderer(Button)],
   ['ui-stack', createRemoteComponentRenderer(Stack)],
+  ['ui-modal', createRemoteComponentRenderer(Modal)],
   ['ui-text-field', createRemoteComponentRenderer(TextField)],
+  ['remote-fragment', RemoteFragmentRenderer],
 ]);
 
 render(
@@ -65,87 +64,8 @@ render(
 // `postMessage()` to the remote context.
 await workerSandbox.render(receiver.connection, {
   sandbox: 'worker',
-  example: 'vue',
+  example: 'preact',
   async alert(content) {
     window.alert(content);
   },
 });
-
-// Components
-
-export function Button({
-  onPress,
-  children,
-}: {children?: ComponentChildren} & ButtonProperties) {
-  return (
-    <button class="Button" type="button" onClick={() => onPress?.()}>
-      {children}
-    </button>
-  );
-}
-
-export function Stack({
-  spacing,
-  children,
-}: {children?: ComponentChildren} & StackProperties) {
-  return (
-    <div
-      class={['Stack', spacing && 'Stack--spacing'].filter(Boolean).join(' ')}
-    >
-      {children}
-    </div>
-  );
-}
-
-export function TextField({
-  label,
-  value: initialValue = '',
-  onChange,
-}: TextFieldProperties) {
-  const [value, setValue] = useState(initialValue);
-  const id = useId();
-
-  return (
-    <div class="TextField">
-      <label class="Label" for={id}>
-        {label}
-      </label>
-      <div class="InputContainer">
-        <input
-          id={id}
-          class="Input"
-          type="text"
-          onChange={(event) => {
-            setValue(event.currentTarget.value);
-            onChange?.(event.currentTarget.value);
-          }}
-          value={value}
-        ></input>
-        <div class="InputBackdrop"></div>
-      </div>
-    </div>
-  );
-}
-
-function useId() {
-  const ref = useRef<string>();
-  return (ref.current ??= nanoId());
-}
-
-// @see https://github.com/ai/nanoid/blob/main/non-secure/index.js
-
-function nanoId(size = 21) {
-  // This alphabet uses `A-Za-z0-9_-` symbols. The genetic algorithm helped
-  // optimize the gzip compression for this alphabet.
-  const urlAlphabet =
-    'ModuleSymbhasOwnPr-0123456789ABCDEFGHNRVfgctiUvz_KqYTJkLxpZXIjQW';
-
-  let id = '';
-  // A compact alternative for `for (var i = 0; i < step; i++)`.
-  let i = size;
-  while (i--) {
-    // `| 0` is more compact and faster than `Math.floor()`.
-    id += urlAlphabet[(Math.random() * 64) | 0];
-  }
-  return id;
-}

@@ -1,26 +1,38 @@
 <script lang="ts">
-  import {RemoteEvent} from '@remote-dom/core/elements';
+  import type {Modal} from '../elements.ts';
   import type {RenderAPI} from '../../types.ts';
 
   export let api: RenderAPI;
 
-  let value = '';
+  let count = 0;
+  let modal: InstanceType<typeof Modal>;
 
-  function handleChange(event: RemoteEvent<string>) {
-    value = event.detail;
+  function handlePress() {
+    count += 1;
   }
 
-  async function handlePress() {
-    await api.alert(
-      `Current value in remote sandbox: ${JSON.stringify(value)}`,
-    );
+  function handleClose() {
+    count = 0;
+  }
+
+  function handlePrimaryAction() {
+    modal.close();
   }
 </script>
 
 <ui-stack spacing>
-  <ui-text-field
-    label="Message for remote environment (rendered using svelte)"
-    on:change={handleChange}
-  />
-  <ui-button on:press={handlePress}> Show alert </ui-button>
+  <ui-text>Rendering example: <ui-text emphasis>{api.example}</ui-text></ui-text
+  >
+
+  <ui-button>
+    Open modal
+
+    <ui-modal slot="modal" bind:this={modal} on:close={handleClose}>
+      <ui-text>Click count: <ui-text emphasis>{count}</ui-text></ui-text>
+      <ui-button on:press={handlePress}>Click me!</ui-button>
+      <ui-button slot="primaryAction" on:press={handlePrimaryAction}
+        >Close</ui-button
+      >
+    </ui-modal>
+  </ui-button>
 </ui-stack>

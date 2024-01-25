@@ -23,6 +23,12 @@ body {
   padding: 0;
 }
 
+dialog {
+  background: rgb(8, 1, 15);
+  color: rgb(239, 231, 243);
+  border: 1px solid rgb(239, 231, 243);
+}
+
 main {
   max-width: 35rem;
   padding: 1.5em;
@@ -165,4 +171,8 @@ li {
 
 .Input:focus-visible ~ .InputBackdrop {
   box-shadow: 0 0 0 2px rgb(214, 117, 226);
+}
+
+.Text--emphasis {
+  font-weight: bold;
 }

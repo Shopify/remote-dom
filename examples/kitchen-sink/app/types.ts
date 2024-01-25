@@ -50,11 +50,24 @@ export interface SandboxAPI {
 
 // Components
 
+export interface TextProperties {
+  emphasis?: boolean;
+}
+
 /**
  *
  */
 export interface ButtonProperties {
   onPress?(): void;
+}
+
+export interface ModalProperties {
+  onClose?(): void;
+}
+
+export interface ModalMethods {
+  open(): void;
+  close(): void;
 }
 
 export interface StackProperties {

@@ -5,7 +5,10 @@ import {
 } from '@remote-dom/core/elements';
 
 import type {
+  TextProperties,
   ButtonProperties,
+  ModalProperties,
+  ModalMethods,
   StackProperties,
   TextFieldProperties,
 } from '../types.ts';
@@ -20,10 +23,31 @@ declare global {
   }
 }
 
-export const Button = createRemoteElement<ButtonProperties>({
+export const Text = createRemoteElement<TextProperties>({
   properties: {
-    onPress: {event: true},
+    emphasis: {type: Boolean},
   },
+});
+
+export const Button = createRemoteElement<ButtonProperties, {}, {modal?: true}>(
+  {
+    properties: {
+      onPress: {event: true},
+    },
+    slots: ['modal'],
+  },
+);
+
+export const Modal = createRemoteElement<
+  ModalProperties,
+  ModalMethods,
+  {primaryAction?: true}
+>({
+  properties: {
+    onClose: {event: true},
+  },
+  slots: ['primaryAction'],
+  methods: ['open', 'close'],
 });
 
 export const Stack = createRemoteElement<StackProperties>({
@@ -39,14 +63,18 @@ export const TextField = createRemoteElement<TextFieldProperties>({
   },
 });
 
+customElements.define('ui-text', Text);
 customElements.define('ui-button', Button);
+customElements.define('ui-modal', Modal);
 customElements.define('ui-stack', Stack);
 customElements.define('ui-text-field', TextField);
 
 declare global {
   interface HTMLElementTagNameMap {
+    'ui-text': InstanceType<typeof Text>;
     'ui-button': InstanceType<typeof Button>;
     'ui-stack': InstanceType<typeof Stack>;
+    'ui-modal': InstanceType<typeof Modal>;
     'ui-text-field': InstanceType<typeof TextField>;
   }
 }

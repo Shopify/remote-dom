@@ -1,40 +1,64 @@
 import {render} from 'preact';
+import {useRef} from 'preact/hooks';
 import {useSignal} from '@preact/signals';
 import {createRemoteComponent} from '@remote-dom/preact';
 
 import type {RenderAPI} from '../../types.ts';
 import {
+  Text as TextElement,
   Button as ButtonElement,
   Stack as StackElement,
-  TextField as TextFieldElement,
+  Modal as ModalElement,
 } from '../elements.ts';
 
+const Text = createRemoteComponent('ui-text', TextElement);
 const Button = createRemoteComponent('ui-button', ButtonElement);
 const Stack = createRemoteComponent('ui-stack', StackElement);
-const TextField = createRemoteComponent('ui-text-field', TextFieldElement);
+const Modal = createRemoteComponent('ui-modal', ModalElement);
 
 export function renderUsingPreact(root: Element, api: RenderAPI) {
   render(<App api={api} />, root);
 }
 
 function App({api}: {api: RenderAPI}) {
-  const value = useSignal('');
-
   return (
     <Stack spacing>
-      <TextField
-        label="Message for remote environment (rendered using preact)"
-        onChange={function onChange(newValue: string) {
-          value.value = newValue;
-        }}
-      />
-      <Button
-        onPress={async function onPress() {
-          await api.alert(`Current value in remote sandbox: ${value.peek()}`);
-        }}
-      >
-        Show alert
-      </Button>
+      <Text>
+        Rendering example: <Text emphasis>{api.example}</Text>
+      </Text>
+      <Button modal={<CountModal />}>Show modal</Button>
     </Stack>
+  );
+}
+
+function CountModal() {
+  const count = useSignal(0);
+  const modalRef = useRef<InstanceType<typeof ModalElement>>();
+
+  const primaryAction = (
+    <Button onPress={() => modalRef.current?.close()}>Close</Button>
+  );
+
+  return (
+    <Modal
+      ref={modalRef}
+      primaryAction={primaryAction}
+      onClose={() => {
+        count.value = 0;
+      }}
+    >
+      <Stack spacing>
+        <Text>
+          Click count: <Text emphasis>{count}</Text>
+        </Text>
+        <Button
+          onPress={() => {
+            count.value += 1;
+          }}
+        >
+          Click me!
+        </Button>
+      </Stack>
+    </Modal>
   );
 }

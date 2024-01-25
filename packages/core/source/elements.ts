@@ -8,6 +8,7 @@ export {
   type RemoteElementSlotDefinition,
   type RemoteElementSlotsDefinition,
   type RemotePropertiesFromElementConstructor,
+  type RemoteMethodsFromElementConstructor,
   type RemoteSlotsFromElementConstructor,
   type RemoteElementCreatorOptions,
 } from './elements/RemoteElement.ts';

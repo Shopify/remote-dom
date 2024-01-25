@@ -1,13 +1,16 @@
 import {createElement, isValidElement} from 'preact';
+import {forwardRef} from 'preact/compat';
 import type {
   RemoteElement,
   RemoteElementConstructor,
   RemotePropertiesFromElementConstructor,
+  RemoteMethodsFromElementConstructor,
   RemoteSlotsFromElementConstructor,
 } from '@remote-dom/core/elements';
 
 import type {
   RemoteComponentType,
+  RemoteComponentPropsFromElementConstructor,
   RemoteComponentTypeFromElementConstructor,
 } from './types.ts';
 
@@ -27,11 +30,15 @@ export function createRemoteComponent<
   Element: ElementConstructor | undefined = customElements.get(tag) as any,
 ): RemoteComponentType<
   RemotePropertiesFromElementConstructor<ElementConstructor>,
+  RemoteMethodsFromElementConstructor<ElementConstructor>,
   RemoteSlotsFromElementConstructor<ElementConstructor>
 > {
   const RemoteComponent: RemoteComponentTypeFromElementConstructor<ElementConstructor> =
-    function RemoteComponent(props) {
-      const updatedProps: Record<string, any> = {};
+    forwardRef<
+      RemoteMethodsFromElementConstructor<ElementConstructor>,
+      RemoteComponentPropsFromElementConstructor<ElementConstructor>
+    >(function RemoteComponent(props, ref) {
+      const updatedProps: Record<string, any> = {ref};
       const children = toChildren(props.children);
 
       for (const prop in props) {
@@ -65,7 +72,7 @@ export function createRemoteComponent<
       }
 
       return createElement(tag, updatedProps, ...children);
-    };
+    });
 
   RemoteComponent.displayName = `RemoteComponent(${tag})`;
 
