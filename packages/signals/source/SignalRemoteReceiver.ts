@@ -36,6 +36,9 @@ export interface SignalRemoteReceiverElement
 export interface SignalRemoteReceiverRoot {
   readonly id: typeof ROOT_ID;
   readonly type: typeof NODE_TYPE_ROOT;
+  readonly properties: ReadonlySignal<
+    NonNullable<RemoteElementSerialization['properties']>
+  >;
   readonly children: ReadonlySignal<readonly SignalRemoteReceiverNode[]>;
 }
 
@@ -54,6 +57,7 @@ export class SignalRemoteReceiver {
   readonly root: SignalRemoteReceiverRoot = {
     id: ROOT_ID,
     type: NODE_TYPE_ROOT,
+    properties: signal({}),
     children: signal([]),
   };
 

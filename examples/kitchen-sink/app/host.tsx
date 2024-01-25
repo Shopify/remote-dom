@@ -65,7 +65,7 @@ render(
 // `postMessage()` to the remote context.
 await workerSandbox.render(receiver.connection, {
   sandbox: 'worker',
-  example: 'svelte',
+  example: 'vue',
   async alert(content) {
     window.alert(content);
   },

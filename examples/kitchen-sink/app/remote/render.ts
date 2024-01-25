@@ -4,6 +4,7 @@ import {renderUsingVanillaDOM} from './examples/vanilla.ts';
 import {renderUsingHTM} from './examples/htm.ts';
 import {renderUsingPreact} from './examples/preact.tsx';
 import {renderUsingSvelte} from './examples/svelte.ts';
+import {renderUsingVue} from './examples/vue.ts';
 
 const EXAMPLE_MAP = new Map<
   RenderAPI['example'],
@@ -13,9 +14,9 @@ const EXAMPLE_MAP = new Map<
   ['htm', renderUsingHTM],
   ['preact', renderUsingPreact],
   ['svelte', renderUsingSvelte],
+  ['vue', renderUsingVue],
 ]);
 
 export function render(root: Element, api: RenderAPI) {
-  console.log(api);
   return EXAMPLE_MAP.get(api.example)?.(root, api);
 }
