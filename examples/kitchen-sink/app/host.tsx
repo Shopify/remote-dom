@@ -14,7 +14,7 @@ import {
 import '@preact/signals';
 
 import type {
-  SandboxApi,
+  SandboxAPI,
   ButtonProperties,
   StackProperties,
   TextFieldProperties,
@@ -35,9 +35,9 @@ const worker = new Worker(
 // to interact with the `iframe` code without having to worry about using
 // `postMessage()`.
 // @ts-ignore We don’t use this variable, but we want to give it a name for clarity.
-const iframeSandbox = createThreadFromIframe<never, SandboxApi>(iframe);
+const iframeSandbox = createThreadFromIframe<never, SandboxAPI>(iframe);
 
-const workerSandbox = createThreadFromWebWorker<never, SandboxApi>(worker);
+const workerSandbox = createThreadFromWebWorker<never, SandboxAPI>(worker);
 
 // This object will receive messages about UI updates from the remote context
 // and turn them into a matching tree of DOM nodes. We provide a mapping of
@@ -65,7 +65,7 @@ render(
 // `postMessage()` to the remote context.
 await workerSandbox.render(receiver.connection, {
   sandbox: 'worker',
-  framework: 'svelte',
+  example: 'svelte',
   async alert(content) {
     window.alert(content);
   },

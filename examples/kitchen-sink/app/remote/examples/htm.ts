@@ -1,7 +1,7 @@
 import {html} from '@remote-dom/core/html';
-import type {RenderApi} from '../../types.ts';
+import type {RenderAPI} from '../../types.ts';
 
-export function renderUsingHtm(root: Element, api: RenderApi) {
+export function renderUsingHTM(root: Element, api: RenderAPI) {
   let value = '';
 
   const stack = html`

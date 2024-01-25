@@ -1,8 +1,8 @@
 <script lang="ts">
   import {RemoteEvent} from '@remote-dom/core/elements';
-  import type {RenderApi} from '../../types.ts';
+  import type {RenderAPI} from '../../types.ts';
 
-  export let api: RenderApi;
+  export let api: RenderAPI;
 
   let value = '';
 

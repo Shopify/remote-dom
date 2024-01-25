@@ -3,11 +3,11 @@ import {retain, createThreadFromWebWorker} from '@quilted/threads';
 
 import '../elements.ts';
 import {render} from '../render.ts';
-import type {SandboxApi} from '../../types.ts';
+import type {SandboxAPI} from '../../types.ts';
 
 // This creates the “remote” thread — the one that executes inside
 // a web worker, and has no access to the DOM of the main page.
-createThreadFromWebWorker<SandboxApi>(self as any as Worker, {
+createThreadFromWebWorker<SandboxAPI>(self as any as Worker, {
   expose: {
     // `callback` is a function that can be called to update UI on the main
     // page. `()` needs that function to communicate updates

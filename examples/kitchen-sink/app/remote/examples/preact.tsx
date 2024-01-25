@@ -2,7 +2,7 @@ import {render} from 'preact';
 import {useSignal} from '@preact/signals';
 import {createRemoteComponent} from '@remote-dom/preact';
 
-import type {RenderApi} from '../../types.ts';
+import type {RenderAPI} from '../../types.ts';
 import {
   Button as ButtonElement,
   Stack as StackElement,
@@ -13,11 +13,11 @@ const Button = createRemoteComponent('ui-button', ButtonElement);
 const Stack = createRemoteComponent('ui-stack', StackElement);
 const TextField = createRemoteComponent('ui-text-field', TextFieldElement);
 
-export function renderUsingPreact(root: Element, api: RenderApi) {
+export function renderUsingPreact(root: Element, api: RenderAPI) {
   render(<App api={api} />, root);
 }
 
-function App({api}: {api: RenderApi}) {
+function App({api}: {api: RenderAPI}) {
   const value = useSignal('');
 
   return (

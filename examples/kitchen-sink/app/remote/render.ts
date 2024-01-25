@@ -1,19 +1,21 @@
-import type {RenderApi} from '../types.ts';
+import type {RenderAPI} from '../types.ts';
 
-import {renderUsingVanillaDOM} from './render/vanilla.ts';
-import {renderUsingHtm} from './render/htm.ts';
-import {renderUsingPreact} from './render/preact.tsx';
-import {renderUsingSvelte} from './render/svelte.ts';
+import {renderUsingVanillaDOM} from './examples/vanilla.ts';
+import {renderUsingHTM} from './examples/htm.ts';
+import {renderUsingPreact} from './examples/preact.tsx';
+import {renderUsingSvelte} from './examples/svelte.ts';
 
-export function render(root: Element, api: RenderApi) {
-  switch (api.framework) {
-    case 'htm':
-      return renderUsingHtm(root, api);
-    case 'vanilla':
-      return renderUsingVanillaDOM(root, api);
-    case 'preact':
-      return renderUsingPreact(root, api);
-    case 'svelte':
-      return renderUsingSvelte(root, api);
-  }
+const EXAMPLE_MAP = new Map<
+  RenderAPI['example'],
+  (root: Element, api: RenderAPI) => void
+>([
+  ['vanilla', renderUsingVanillaDOM],
+  ['htm', renderUsingHTM],
+  ['preact', renderUsingPreact],
+  ['svelte', renderUsingSvelte],
+]);
+
+export function render(root: Element, api: RenderAPI) {
+  console.log(api);
+  return EXAMPLE_MAP.get(api.example)?.(root, api);
 }
