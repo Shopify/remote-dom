@@ -202,6 +202,26 @@ export function ControlPanel({
   return (
     <div class="ControlPanel">
       <section class="ControlPanel-Section">
+        <h2 class="ControlPanel-SectionHeading">Example</h2>
+        <p class="ControlPanel-SectionDescription">
+          Which example should we render in the sandbox? You can read the source
+          code for the example in <ExampleCodeReference example={example} />
+        </p>
+        <Select
+          id="ControlPanelExample"
+          value={example}
+          label="Example"
+          labelVisibility="hidden"
+        >
+          <option value="vanilla">“Vanilla” DOM</option>
+          <option value="preact">Preact</option>
+          <option value="svelte">Svelte</option>
+          <option value="vue">Vue</option>
+          <option value="htm">htm</option>
+        </Select>
+      </section>
+
+      <section class="ControlPanel-Section">
         <h2 class="ControlPanel-SectionHeading">Sandbox</h2>
         <p class="ControlPanel-SectionDescription">
           What browser technology should we use to sandbox the example? Remote
@@ -221,26 +241,6 @@ export function ControlPanel({
         >
           <option value="worker">Web Worker</option>
           <option value="iframe">iFrame</option>
-        </Select>
-      </section>
-
-      <section class="ControlPanel-Section">
-        <h2 class="ControlPanel-SectionHeading">Example</h2>
-        <p class="ControlPanel-SectionDescription">
-          Which example should we render in the sandbox? You can read the source
-          code for the example in <ExampleCodeReference example={example} />
-        </p>
-        <Select
-          id="ControlPanelExample"
-          value={example}
-          label="Example"
-          labelVisibility="hidden"
-        >
-          <option value="vanilla">“Vanilla” DOM</option>
-          <option value="preact">Preact</option>
-          <option value="svelte">Svelte</option>
-          <option value="vue">Vue</option>
-          <option value="htm">htm</option>
         </Select>
       </section>
     </div>
