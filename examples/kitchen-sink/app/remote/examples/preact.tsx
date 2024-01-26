@@ -29,7 +29,7 @@ function App({api}: {api: RenderAPI}) {
       <Text>
         Running in sandbox: <Text emphasis>{api.sandbox}</Text>
       </Text>
-      <Button modal={<CountModal alert={api.alert} />}>Show modal</Button>
+      <Button modal={<CountModal alert={api.alert} />}>Open modal</Button>
     </Stack>
   );
 }

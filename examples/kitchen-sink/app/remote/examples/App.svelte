@@ -21,8 +21,12 @@
 </script>
 
 <ui-stack spacing>
-  <ui-text>Rendering example: <ui-text emphasis>{api.example}</ui-text></ui-text
-  >
+  <ui-text>
+    Rendering example: <ui-text emphasis>{api.example}</ui-text>
+  </ui-text>
+  <ui-text>
+    Rendering in sandbox: <ui-text emphasis>{api.sandbox}</ui-text>
+  </ui-text>
 
   <ui-button>
     Open modal
