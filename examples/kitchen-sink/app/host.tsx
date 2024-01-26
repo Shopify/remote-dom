@@ -11,13 +11,27 @@ import {
   createThreadFromIframe,
   createThreadFromWebWorker,
 } from '@quilted/threads';
-import '@preact/signals';
+import {signal, effect} from '@preact/signals';
 
-import type {SandboxAPI} from './types.ts';
-import {Button, Modal, Stack, Text, TextField} from './host/components.tsx';
+import {
+  RenderAPI,
+  RenderExample,
+  RenderSandbox,
+  type SandboxAPI,
+} from './types.ts';
+import {
+  Button,
+  Modal,
+  Stack,
+  Text,
+  TextField,
+  ControlPanel,
+} from './host/components.tsx';
 
-const uiRoot = document.querySelector('#root')!;
+const uiRoot = document.querySelector('main')!;
+
 const iframe = document.querySelector('iframe')!;
+const iframeSandbox = createThreadFromIframe<never, SandboxAPI>(iframe);
 
 const worker = new Worker(
   new URL('./remote/worker/sandbox.ts', import.meta.url),
@@ -25,24 +39,42 @@ const worker = new Worker(
     type: 'module',
   },
 );
-
-// This creates an object that represents the remote context — in this case,
-// some JavaScript executing inside an `iframe`. We can use this object
-// to interact with the `iframe` code without having to worry about using
-// `postMessage()`.
-// @ts-ignore We don’t use this variable, but we want to give it a name for clarity.
-const iframeSandbox = createThreadFromIframe<never, SandboxAPI>(iframe);
-
 const workerSandbox = createThreadFromWebWorker<never, SandboxAPI>(worker);
 
-// This object will receive messages about UI updates from the remote context
-// and turn them into a matching tree of DOM nodes. We provide a mapping of
-// the components that are available in the remote context (in this case, only
-// `Button`), and the element to use when the remote context asks to render
-// that component (in this case, our `ui-button` custom element).
-const receiver = new SignalRemoteReceiver({retain, release});
+const initialURL = new URL(window.location.href);
 
-// TODO
+const defaultSandbox = 'worker';
+const allowedSandboxValues = new Set<RenderSandbox>(['iframe', 'worker']);
+const sandboxQueryParam = initialURL.searchParams
+  .get('sandbox')
+  ?.toLowerCase() as RenderSandbox | undefined;
+const sandbox = signal<RenderSandbox>(
+  allowedSandboxValues.has(sandboxQueryParam!)
+    ? sandboxQueryParam!
+    : defaultSandbox,
+);
+
+const defaultExample = 'vanilla';
+const allowedExampleValues = new Set<RenderExample>([
+  'vanilla',
+  'htm',
+  'preact',
+  'svelte',
+  'vue',
+]);
+const exampleQueryParam = initialURL.searchParams
+  .get('example')
+  ?.toLowerCase() as RenderExample | undefined;
+const example = signal<RenderExample>(
+  allowedExampleValues.has(exampleQueryParam!)
+    ? exampleQueryParam!
+    : defaultExample,
+);
+
+const receiver = signal<
+  SignalRemoteReceiver | Error | Promise<SignalRemoteReceiver> | undefined
+>(undefined);
+
 const components = new Map([
   ['ui-text', createRemoteComponentRenderer(Text)],
   ['ui-button', createRemoteComponentRenderer(Button)],
@@ -53,19 +85,111 @@ const components = new Map([
 ]);
 
 render(
-  <RemoteRootRenderer receiver={receiver} components={components} />,
+  <>
+    <ExampleRenderer />
+    <ControlPanel sandbox={sandbox} example={example} />
+  </>,
   uiRoot,
 );
 
-// Here, we are using the `Endpoint` API to call a method that was “exposed”
-// in the remote context. As you’ll see in `./remote.js`, that JavaScript
-// provides a `render()` function that will be called in response to this
-// method, with the `Endpoint` taking care of serializing arguments over
-// `postMessage()` to the remote context.
-await workerSandbox.render(receiver.connection, {
-  sandbox: 'worker',
-  example: 'preact',
-  async alert(content) {
-    window.alert(content);
-  },
+function ExampleRenderer() {
+  const value = receiver.value;
+
+  if (value == null || 'then' in value) {
+    return <div>Rendering example...</div>;
+  }
+
+  if (value instanceof Error) {
+    return <div>Error while rendering example: {value.message}</div>;
+  }
+
+  return (
+    <div>
+      <RemoteRootRenderer receiver={value} components={components} />
+    </div>
+  );
+}
+
+const exampleCache = new Map<
+  string,
+  SignalRemoteReceiver | Error | Promise<SignalRemoteReceiver>
+>();
+
+effect(() => {
+  const sandboxValue = sandbox.value;
+  const exampleValue = example.value;
+
+  const key = `${sandboxValue}:${exampleValue}`;
+  let cached = exampleCache.get(key);
+
+  const newURL = new URL(window.location.href);
+
+  if (sandboxValue === defaultSandbox && exampleValue === defaultExample) {
+    newURL.searchParams.delete('sandbox');
+    newURL.searchParams.delete('example');
+  } else {
+    newURL.searchParams.set('sandbox', sandboxValue);
+    newURL.searchParams.set('example', exampleValue);
+  }
+
+  window.history.replaceState({}, '', newURL.toString());
+
+  if (cached == null) {
+    cached = renderWithOptions({sandbox: sandboxValue, example: exampleValue});
+    exampleCache.set(key, cached);
+  }
+
+  if (typeof (cached as any).then === 'function') {
+    Promise.resolve()
+      .then(() => cached!)
+      .then((receiver) => updateValueAfterRender(receiver))
+      .catch((error) => updateValueAfterRender(error));
+  }
+
+  receiver.value = cached;
+
+  function updateValueAfterRender(value: SignalRemoteReceiver | Error) {
+    exampleCache.set(key, value);
+
+    if (sandboxValue !== sandbox.peek() || exampleValue !== example.peek()) {
+      return value;
+    }
+
+    receiver.value = value;
+
+    return value;
+  }
 });
+
+async function renderWithOptions({
+  example,
+  sandbox,
+}: Pick<RenderAPI, 'example' | 'sandbox'>) {
+  const receiver = new SignalRemoteReceiver({retain, release});
+
+  if (sandbox === 'iframe') {
+    await iframeSandbox.render(receiver.connection, {
+      sandbox,
+      example,
+      async alert(content) {
+        console.log(
+          `Alert API used by example ${example} in the iframe sandbox`,
+        );
+        window.alert(content);
+      },
+    });
+  } else {
+    await workerSandbox.render(receiver.connection, {
+      sandbox,
+      example,
+      async alert(content) {
+        console.log(
+          `Alert API used by example ${example} in the worker sandbox`,
+        );
+        window.alert(content);
+      },
+    });
+  }
+
+  return receiver;
+}

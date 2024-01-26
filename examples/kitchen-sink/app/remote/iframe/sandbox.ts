@@ -18,11 +18,15 @@ createThreadFromInsideIframe<SandboxAPI>({
     // the actual logic will be executed.
     async render(callback, api) {
       retain(callback);
-      retain(api);
+      retain(api.alert);
 
       // We will observe this DOM node, and send any elements within it to be
       // reflected on this "host" page.
       const root = document.createElement('div');
+      root.id = `Example${api.example[0]!.toUpperCase()}${api.example.slice(
+        1,
+      )}${api.sandbox[0]!.toUpperCase()}${api.sandbox.slice(1)}`;
+
       document.body.append(root);
       const observer = new RemoteMutationObserver(callback);
       observer.observe(root);

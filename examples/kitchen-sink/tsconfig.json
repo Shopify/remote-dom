@@ -2,6 +2,7 @@
   "extends": "@quilted/typescript/project.json",
   "compilerOptions": {
     "outDir": "build/typescript",
+    "jsx": "preserve",
     "jsxImportSource": "preact"
   },
   "include": ["app"],

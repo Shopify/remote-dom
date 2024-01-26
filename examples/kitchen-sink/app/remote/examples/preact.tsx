@@ -26,12 +26,15 @@ function App({api}: {api: RenderAPI}) {
       <Text>
         Rendering example: <Text emphasis>{api.example}</Text>
       </Text>
-      <Button modal={<CountModal />}>Show modal</Button>
+      <Text>
+        Running in sandbox: <Text emphasis>{api.sandbox}</Text>
+      </Text>
+      <Button modal={<CountModal alert={api.alert} />}>Show modal</Button>
     </Stack>
   );
 }
 
-function CountModal() {
+function CountModal({alert}: Pick<RenderAPI, 'alert'>) {
   const count = useSignal(0);
   const modalRef = useRef<InstanceType<typeof ModalElement>>();
 
@@ -44,6 +47,7 @@ function CountModal() {
       ref={modalRef}
       primaryAction={primaryAction}
       onClose={() => {
+        alert(`You clicked ${count} times!`);
         count.value = 0;
       }}
     >

@@ -1,6 +1,7 @@
 import {type ComponentChildren} from 'preact';
-import {useRef, useState, useImperativeHandle} from 'preact/hooks';
 import {forwardRef} from 'preact/compat';
+import {useRef, useState, useImperativeHandle} from 'preact/hooks';
+import type {Signal} from '@preact/signals';
 
 import type {
   ButtonProperties,
@@ -9,6 +10,8 @@ import type {
   TextProperties,
   ModalMethods,
   ModalProperties,
+  RenderSandbox,
+  RenderExample,
 } from '../types.ts';
 
 export function Text({
@@ -93,7 +96,7 @@ export function TextField({
   onChange,
 }: TextFieldProperties) {
   const [value, setValue] = useState(initialValue);
-  const id = useId();
+  const id = useID();
 
   return (
     <div class="TextField">
@@ -117,8 +120,14 @@ export function TextField({
   );
 }
 
-function useId() {
+function useID(id?: string) {
   const ref = useRef<string>();
+
+  if (id) {
+    ref.current = id;
+    return id;
+  }
+
   return (ref.current ??= nanoId());
 }
 
@@ -138,4 +147,116 @@ function nanoId(size = 21) {
     id += urlAlphabet[(Math.random() * 64) | 0];
   }
   return id;
+}
+
+function Select({
+  id: explicitID,
+  label,
+  labelVisibility,
+  value,
+  children,
+}: {
+  id?: string;
+  label: string;
+  labelVisibility?: 'visible' | 'hidden';
+  value: Signal<string>;
+} & {
+  children: ComponentChildren;
+}) {
+  const id = useID(explicitID);
+
+  return (
+    <div class="Select">
+      <label
+        class={[
+          'Label',
+          labelVisibility === 'hidden' && 'Label--visually-hidden',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        for={id}
+      >
+        {label}
+      </label>
+      <select
+        id={id}
+        class="Select-Input"
+        value={value.value}
+        onChange={({currentTarget}) => {
+          value.value = currentTarget.value;
+        }}
+      >
+        {children}
+      </select>
+    </div>
+  );
+}
+
+export function ControlPanel({
+  sandbox,
+  example,
+}: {
+  sandbox: Signal<RenderSandbox>;
+  example: Signal<RenderExample>;
+}) {
+  return (
+    <div class="ControlPanel">
+      <section class="ControlPanel-Section">
+        <h2 class="ControlPanel-SectionHeading">Sandbox</h2>
+        <p class="ControlPanel-SectionDescription">
+          What browser technology should we use to sandbox the example? Remote
+          DOM supports being sandboxed in <code>&lt;iframe&gt;</code>s and{' '}
+          <a
+            class="Link"
+            href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API"
+          >
+            Web Workers
+          </a>
+        </p>
+        <Select
+          id="ControlPanelSandbox"
+          value={sandbox}
+          label="Sandbox"
+          labelVisibility="hidden"
+        >
+          <option value="worker">Web Worker</option>
+          <option value="iframe">iFrame</option>
+        </Select>
+      </section>
+
+      <section class="ControlPanel-Section">
+        <h2 class="ControlPanel-SectionHeading">Example</h2>
+        <p class="ControlPanel-SectionDescription">
+          Which example should we render in the sandbox? You can read the source
+          code for the example in <ExampleCodeReference example={example} />
+        </p>
+        <Select
+          id="ControlPanelExample"
+          value={example}
+          label="Example"
+          labelVisibility="hidden"
+        >
+          <option value="vanilla">“Vanilla” DOM</option>
+          <option value="preact">Preact</option>
+          <option value="svelte">Svelte</option>
+          <option value="vue">Vue</option>
+          <option value="htm">htm</option>
+        </Select>
+      </section>
+    </div>
+  );
+}
+
+const EXAMPLE_FILE_NAMES = new Map<RenderExample, string>([
+  ['vanilla', 'vanilla.ts'],
+  ['htm', 'htm.ts'],
+  ['preact', 'preact.tsx'],
+  ['svelte', 'App.svelte'],
+  ['vue', 'App.vue'],
+]);
+
+function ExampleCodeReference({example}: {example: Signal<RenderExample>}) {
+  const value = example.value;
+
+  return <code>app/remote/examples/{EXAMPLE_FILE_NAMES.get(value)}</code>;
 }
