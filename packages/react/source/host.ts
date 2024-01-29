@@ -35,7 +35,6 @@ export {
 } from './host/constants.ts';
 
 export type {
-  RemoteComponentType,
   RemoteComponentProps,
   RemoteComponentTypeFromElementConstructor,
   RemoteComponentPropsFromElementConstructor,

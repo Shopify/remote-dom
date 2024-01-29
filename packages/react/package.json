@@ -33,12 +33,6 @@
       "quilt:source": "./source/html.ts",
       "quilt:esnext": "./build/esnext/html.esnext",
       "import": "./build/esm/html.mjs"
-    },
-    "./polyfill": {
-      "types": "./build/typescript/polyfill.d.ts",
-      "quilt:source": "./source/polyfill.ts",
-      "quilt:esnext": "./build/esnext/polyfill.esnext",
-      "import": "./build/esm/polyfill.mjs"
     }
   },
   "types": "./build/typescript/index.d.ts",
@@ -49,18 +43,10 @@
       ],
       "html": [
         "./build/typescript/html.d.ts"
-      ],
-      "polyfill": [
-        "./build/typescript/polyfill.d.ts"
       ]
     }
   },
-  "sideEffects": [
-    "./source/polyfill.ts",
-    "./build/cjs/polyfill.cjs",
-    "./build/esm/polyfill.mjs",
-    "./build/esnext/polyfill.esnext"
-  ],
+  "sideEffects": false,
   "scripts": {
     "build": "rollup --config rollup.config.js"
   },

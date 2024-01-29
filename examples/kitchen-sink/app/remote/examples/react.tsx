@@ -37,7 +37,7 @@ function App({api}: {api: RenderAPI}) {
 
 function CountModal({alert}: Pick<RenderAPI, 'alert'>) {
   const [count, setCount] = useState(0);
-  const modalRef = useRef<InstanceType<typeof ModalElement>>();
+  const modalRef = useRef<InstanceType<typeof ModalElement>>(null);
 
   const primaryAction = (
     <Button onPress={() => modalRef.current?.close()}>Close</Button>

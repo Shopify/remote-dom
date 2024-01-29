@@ -6,7 +6,6 @@ import {describe, it, expect, vi} from 'vitest';
 
 import {createRoot} from 'react-dom/client';
 import {
-  useState,
   useRef,
   useImperativeHandle,
   forwardRef,
@@ -183,16 +182,16 @@ describe('react', () => {
     const remoteRoot = document.createElement('div');
 
     function Remote() {
-      const [disabled, setDisabled] = useState(false);
+      const ref = useRef<InstanceType<typeof RemoteButtonElement>>(null);
 
       return (
         <RemoteButton
-          disabled={disabled}
+          ref={ref}
           onPress={() => {
-            setDisabled(true);
+            ref.current?.focus();
           }}
         >
-          {disabled ? 'Already disabled' : 'Click to disable'}
+          Press me!
         </RemoteButton>
       );
     }
@@ -211,10 +210,10 @@ describe('react', () => {
       mutationObserver.observe(remoteRoot);
     });
 
-    expect(rendered).toContainReactComponent(HostButton, {disabled: false});
+    const focusSpy = vi.spyOn(rendered.find(HostButton)!.domNode!, 'focus');
 
     rendered.find(HostButton)?.trigger('onPress');
 
-    expect(rendered).toContainReactComponent(HostButton, {disabled: true});
+    expect(focusSpy).toHaveBeenCalled();
   });
 });

@@ -3,13 +3,9 @@ import {forwardRef} from 'preact/compat';
 import type {
   RemoteElement,
   RemoteElementConstructor,
-  RemotePropertiesFromElementConstructor,
-  RemoteMethodsFromElementConstructor,
-  RemoteSlotsFromElementConstructor,
 } from '@remote-dom/core/elements';
 
 import type {
-  RemoteComponentType,
   RemoteComponentPropsFromElementConstructor,
   RemoteComponentTypeFromElementConstructor,
 } from './types.ts';
@@ -30,11 +26,7 @@ export function createRemoteComponent<
 >(
   tag: Tag,
   Element: ElementConstructor | undefined = customElements.get(tag) as any,
-): RemoteComponentType<
-  RemotePropertiesFromElementConstructor<ElementConstructor>,
-  RemoteMethodsFromElementConstructor<ElementConstructor>,
-  RemoteSlotsFromElementConstructor<ElementConstructor>
-> {
+): RemoteComponentTypeFromElementConstructor<ElementConstructor> {
   // @ts-expect-error I can’t make the types work :/
   const RemoteComponent: RemoteComponentTypeFromElementConstructor<ElementConstructor> =
     forwardRef<

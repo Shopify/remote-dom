@@ -1,27 +1,19 @@
 import type {ReactNode, ComponentType, Ref} from 'react';
 import type {
-  RemoteElement,
   RemoteElementConstructor,
   RemotePropertiesFromElementConstructor,
   RemoteMethodsFromElementConstructor,
   RemoteSlotsFromElementConstructor,
 } from '@remote-dom/core/elements';
 
-export type RemoteComponentType<
-  Properties extends Record<string, any> = {},
-  Methods extends Record<string, any> = {},
-  Slots extends Record<string, any> = {},
-> = ComponentType<RemoteComponentProps<Properties, Methods, Slots>>;
-
 export type RemoteComponentProps<
   Properties extends Record<string, any> = {},
-  Methods extends Record<string, any> = {},
+  _Methods extends Record<string, any> = {},
   Slots extends Record<string, any> = {},
 > = Omit<Properties, keyof Slots> & {
   [Slot in keyof Slots]: ReactNode;
 } & {
   children?: ReactNode;
-  ref?: Ref<RemoteElement<Properties, Methods, Slots>>;
 };
 
 export type RemoteComponentPropsFromElementConstructor<
@@ -30,12 +22,10 @@ export type RemoteComponentPropsFromElementConstructor<
   RemotePropertiesFromElementConstructor<ElementConstructor>,
   RemoteMethodsFromElementConstructor<ElementConstructor>,
   RemoteSlotsFromElementConstructor<ElementConstructor>
->;
+> & {ref?: Ref<InstanceType<ElementConstructor>>};
 
 export type RemoteComponentTypeFromElementConstructor<
   ElementConstructor extends RemoteElementConstructor<any, any, any>,
-> = RemoteComponentType<
-  RemotePropertiesFromElementConstructor<ElementConstructor>,
-  RemoteMethodsFromElementConstructor<ElementConstructor>,
-  RemoteSlotsFromElementConstructor<ElementConstructor>
+> = ComponentType<
+  RemoteComponentPropsFromElementConstructor<ElementConstructor>
 >;

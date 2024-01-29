@@ -27,7 +27,6 @@ export type {
 export {REMOTE_ELEMENT_PROP} from './host/constants.ts';
 
 export type {
-  RemoteComponentType,
   RemoteComponentProps,
   RemoteComponentTypeFromElementConstructor,
   RemoteComponentPropsFromElementConstructor,
