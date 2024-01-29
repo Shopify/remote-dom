@@ -49,7 +49,7 @@ export function renderUsingVanillaDOM(root: Element, api: RenderAPI) {
   const [countButton, primaryActionButton] = [
     ...modal.querySelectorAll('ui-button'),
   ];
-  console.log({countButton, primaryActionButton});
+
   countButton!.addEventListener('press', handlePress);
   primaryActionButton!.addEventListener('press', handlePrimaryAction);
 
