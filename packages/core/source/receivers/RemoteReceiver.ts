@@ -45,7 +45,9 @@ export interface RemoteReceiverElement
 }
 
 /**
- * Represents a the root node of remote tree in a plain JavaScript format.
+ * Represents the root node of the remote tree in a plain JavaScript format, with
+ * the addition of a `version` property that is incremented whenever the
+ * root is updated.
  */
 export interface RemoteReceiverRoot {
   readonly id: typeof ROOT_ID;

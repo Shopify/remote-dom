@@ -15,16 +15,28 @@ import {
 } from '@remote-dom/core';
 import type {RemoteReceiverOptions} from '@remote-dom/core/receivers';
 
+/**
+ * Represents a text node of a remote tree in a plain JavaScript format, with
+ * the text content (the `data` property) wrapped in a signal.
+ */
 export interface SignalRemoteReceiverText
   extends Omit<RemoteTextSerialization, 'data'> {
   readonly data: ReadonlySignal<RemoteTextSerialization['data']>;
 }
 
+/**
+ * Represents a comment node of a remote tree in a plain JavaScript format, with
+ * the text content (the `data` property) wrapped in a signal.
+ */
 export interface SignalRemoteReceiverComment
   extends Omit<RemoteCommentSerialization, 'data'> {
   readonly data: ReadonlySignal<RemoteCommentSerialization['data']>;
 }
 
+/**
+ * Represents an element node of a remote tree in a plain JavaScript format, with
+ * the `properties` and `children` properties each wrapped in a signal.
+ */
 export interface SignalRemoteReceiverElement
   extends Omit<RemoteElementSerialization, 'children' | 'properties'> {
   readonly properties: ReadonlySignal<
@@ -33,6 +45,10 @@ export interface SignalRemoteReceiverElement
   readonly children: ReadonlySignal<readonly SignalRemoteReceiverNode[]>;
 }
 
+/**
+ * Represents the root of a remote tree in a plain JavaScript format, with
+ * the `properties` and `children` properties each wrapped in a signal.
+ */
 export interface SignalRemoteReceiverRoot {
   readonly id: typeof ROOT_ID;
   readonly type: typeof NODE_TYPE_ROOT;
@@ -42,6 +58,9 @@ export interface SignalRemoteReceiverRoot {
   readonly children: ReadonlySignal<readonly SignalRemoteReceiverNode[]>;
 }
 
+/**
+ * Represents any node that can be stored in the host representation of the remote tree.
+ */
 export type SignalRemoteReceiverNode =
   | SignalRemoteReceiverText
   | SignalRemoteReceiverComment
@@ -53,13 +72,34 @@ export type SignalRemoteReceiverParent =
   | SignalRemoteReceiverElement
   | SignalRemoteReceiverRoot;
 
+/**
+ * A `SignalRemoteReceiver` stores remote elements into a basic JavaScript representation,
+ * with mutable properties and children stored in signals. This representation allows
+ * for fine-grained subscriptions and computed values based on the contents of the remote
+ * tree. This custom receiver is used by the the [`@remote-dom/preact` library](https://github.com/Shopify/remote-dom/blob/main/packages/preact#remoterenderer)
+ * in order to map the remote tree to Preact components.
+ */
 export class SignalRemoteReceiver {
+  /**
+   * Represents the root node of the remote tree. This node is always defined,
+   * and you will likely be most interested in its `children` property, which
+   * contains the top-level elements of the remote tree.
+   */
   readonly root: SignalRemoteReceiverRoot = {
     id: ROOT_ID,
     type: NODE_TYPE_ROOT,
     properties: signal({}),
     children: signal([]),
   };
+
+  /**
+   * An object that can synchronize a tree of elements between two JavaScript
+   * environments. This object acts as a “thin waist”, allowing for efficient
+   * communication of changes between a “remote” environment (usually, a JavaScript
+   * sandbox, such as an `iframe` or Web Worker) and a “host” environment
+   * (usually, a top-level browser page).
+   */
+  readonly connection: RemoteConnection;
 
   private readonly attached = new Map<
     string | typeof ROOT_ID,
@@ -71,15 +111,6 @@ export class SignalRemoteReceiver {
     string,
     Record<string, (...args: unknown[]) => unknown>
   >();
-
-  /**
-   * An object that can synchronize a tree of elements between two JavaScript
-   * environments. This object acts as a “thin waist”, allowing for efficient
-   * communication of changes between a “remote” environment (usually, a JavaScript
-   * sandbox, such as an `iframe` or Web Worker) and a “host” environment
-   * (usually, a top-level browser page).
-   */
-  readonly connection: RemoteConnection;
 
   constructor({retain, release}: RemoteReceiverOptions = {}) {
     const {attached, parents} = this;

@@ -202,13 +202,14 @@ First, we’ll create the remote environment’s version of `ui-button`. The rem
       // which is a small library that was designed to work well with Remote DOM.
 
       import {RemoteMutationObserver} from '@remote-dom/core/elements';
-      import {createThreadFromInsideIframe} from '@quilted/threads';
+      import {createThreadFromInsideIframe, retain} from '@quilted/threads';
 
       const root = document.querySelector('#root');
 
       createThreadFromInsideIframe({
         expose: {
           connect(connection) {
+            retain(connection);
             const observer = new RemoteMutationObserver(connection);
             observer.observe(root);
           },
@@ -288,7 +289,7 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
 
     <script type="module">
       import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
-      import {createThreadFromIframe} from '@quilted/threads';
+      import {createThreadFromIframe, retain, release} from '@quilted/threads';
 
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');
@@ -298,6 +299,8 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
       // we are restricting the allowed elements to only the ones we list, which in this
       // case means only our `ui-button` element can be rendered.
       const receiver = new DOMRemoteReceiver({
+        retain,
+        release,
         elements: ['ui-button'],
       });
       receiver.connect(root);
