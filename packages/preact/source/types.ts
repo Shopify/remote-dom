@@ -1,5 +1,6 @@
-import type {ComponentChild, ComponentType} from 'preact';
+import type {ComponentChild, ComponentType, Ref} from 'preact';
 import type {
+  RemoteElement,
   RemoteElementConstructor,
   RemotePropertiesFromElementConstructor,
   RemoteMethodsFromElementConstructor,
@@ -14,11 +15,14 @@ export type RemoteComponentType<
 
 export type RemoteComponentProps<
   Properties extends Record<string, any> = {},
-  _Methods extends Record<string, any> = {},
+  Methods extends Record<string, any> = {},
   Slots extends Record<string, any> = {},
 > = Omit<Properties, keyof Slots> & {
   [Slot in keyof Slots]: ComponentChild;
-} & {children?: ComponentChild};
+} & {
+  children?: ComponentChild;
+  ref?: Ref<RemoteElement<Properties, Methods, Slots>>;
+};
 
 export type RemoteComponentPropsFromElementConstructor<
   ElementConstructor extends RemoteElementConstructor<any, any, any>,

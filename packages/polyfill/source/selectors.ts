@@ -15,6 +15,7 @@ const enum Combinator {
 
 const enum MatcherType {
   Unknown,
+  Element,
   Id,
   Class,
   Attribute,
@@ -32,6 +33,8 @@ interface Matcher {
   name: string;
   value?: string;
 }
+
+const ELEMENT_SELECTOR_TEST = /[a-z]/;
 
 export function querySelector(within: ParentNode, selector: string) {
   const parts = parseSelector(selector);
@@ -64,7 +67,7 @@ export function parseSelector(selector: string) {
   let part: Part = {combinator: Combinator.Inner, matchers: []};
   const parts = [part];
   const tokenizer =
-    /\s*?([>\s+~]?)\s*?(?:(?:\[\s*([^\]=]+)(?:=(['"])(.*?)\3)?\s*\])|([#.])([^\s#.[>:]+)|:(\w+)(?:\((.*?)\))?)/gi;
+    /\s*?([>\s+~]?)\s*?(?:(?:\[\s*([^\]=]+)(?:=(['"])(.*?)\3)?\s*\])|([#.]?)([^\s#.[>:]+)|:(\w+)(?:\((.*?)\))?)/gi;
   let token;
   while ((token = tokenizer.exec(selector))) {
     // [1]: ancestor/parent/sibling/adjacent
@@ -92,6 +95,8 @@ export function parseSelector(selector: string) {
       type = token[5] === '#' ? MatcherType.Id : MatcherType.Class;
     } else if (token[7]) {
       type = token[8] == null ? MatcherType.Pseudo : MatcherType.Function;
+    } else if (token[6] && ELEMENT_SELECTOR_TEST.test(token[6])) {
+      type = MatcherType.Element;
     }
     part.matchers.push({
       type,
@@ -108,13 +113,6 @@ function matchesSelector(element: Element, selector: string) {
   while ((part = parsed.pop())) {
     if (!matchesSelectorPart(element, part)) return false;
   }
-  // let part = parsed.pop();
-  // if (!part || !matchesSelectorPart(element, part)) {
-  //   return false;
-  // }
-  // while ((part = parsed.pop())) {
-  //   if (!matchesSelectorPart(element, part)) return false;
-  // }
   return true;
 }
 
@@ -205,7 +203,8 @@ function matchesSelectorMatcher(
   }
   const {type, name, value} = matcher;
   switch (type) {
-    // case 'id': case 'class': return element.getAttribute(matcher.type) === matcher.name;
+    case MatcherType.Element:
+      return element.localName === name;
     case MatcherType.Id:
       return element.getAttribute('id') === name;
     case MatcherType.Class:

@@ -18,12 +18,14 @@ export function createRemoteComponent<
   Tag extends keyof HTMLElementTagNameMap,
   ElementConstructor extends RemoteElementConstructor<
     any,
+    any,
     any
   > = HTMLElementTagNameMap[Tag] extends RemoteElement<
     infer Properties,
+    infer Methods,
     infer Slots
   >
-    ? RemoteElementConstructor<Properties, Slots>
+    ? RemoteElementConstructor<Properties, Methods, Slots>
     : never,
 >(
   tag: Tag,
@@ -33,9 +35,10 @@ export function createRemoteComponent<
   RemoteMethodsFromElementConstructor<ElementConstructor>,
   RemoteSlotsFromElementConstructor<ElementConstructor>
 > {
+  // @ts-expect-error I can’t make the types work :/
   const RemoteComponent: RemoteComponentTypeFromElementConstructor<ElementConstructor> =
     forwardRef<
-      RemoteMethodsFromElementConstructor<ElementConstructor>,
+      InstanceType<ElementConstructor>,
       RemoteComponentPropsFromElementConstructor<ElementConstructor>
     >(function RemoteComponent(props, ref) {
       const updatedProps: Record<string, any> = {ref};

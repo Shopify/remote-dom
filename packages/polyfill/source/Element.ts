@@ -44,6 +44,26 @@ export class Element extends ParentNode {
     return attributes;
   }
 
+  get firstElementChild() {
+    return this.children[0] ?? null;
+  }
+
+  get lastElementChild() {
+    return this.children[this.children.length - 1] ?? null;
+  }
+
+  get nextElementSibling() {
+    let sib = this.nextSibling;
+    while (sib && sib.nodeType !== 1) sib = sib.nextSibling;
+    return sib;
+  }
+
+  get previewElementSibling() {
+    let sib = this.previousSibling;
+    while (sib && sib.nodeType !== 1) sib = sib.previousSibling;
+    return sib;
+  }
+
   setAttribute(name: string, value: string) {
     this.attributes.setNamedItem(new Attr(name, String(value)));
   }

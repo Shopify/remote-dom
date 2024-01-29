@@ -1,37 +1,44 @@
-import {useRef, useLayoutEffect, createElement, isValidElement} from 'react';
+import {
+  useRef,
+  useLayoutEffect,
+  createElement,
+  forwardRef,
+  isValidElement,
+} from 'react';
 import type {
   RemoteElement,
   RemoteElementConstructor,
-  RemotePropertiesFromElementConstructor,
-  RemoteSlotsFromElementConstructor,
 } from '@remote-dom/core/elements';
 
 import type {
-  RemoteComponentType,
   RemoteComponentTypeFromElementConstructor,
+  RemoteComponentPropsFromElementConstructor,
 } from './types.ts';
 
 export function createRemoteComponent<
   Tag extends keyof HTMLElementTagNameMap,
   ElementConstructor extends RemoteElementConstructor<
     any,
+    any,
     any
   > = HTMLElementTagNameMap[Tag] extends RemoteElement<
     infer Properties,
+    infer Methods,
     infer Slots
   >
-    ? RemoteElementConstructor<Properties, Slots>
+    ? RemoteElementConstructor<Properties, Methods, Slots>
     : never,
 >(
   tag: Tag,
   Element: ElementConstructor | undefined = customElements.get(tag) as any,
-): RemoteComponentType<
-  RemotePropertiesFromElementConstructor<ElementConstructor>,
-  RemoteSlotsFromElementConstructor<ElementConstructor>
-> {
+): RemoteComponentTypeFromElementConstructor<ElementConstructor> {
+  // @ts-expect-error I can’t make the types work :/
   const RemoteComponent: RemoteComponentTypeFromElementConstructor<ElementConstructor> =
-    function RemoteComponent(props) {
-      const ref = useRef<any>();
+    forwardRef<
+      InstanceType<ElementConstructor>,
+      RemoteComponentPropsFromElementConstructor<ElementConstructor>
+    >(function RemoteComponent(props, ref) {
+      const internalRef = useRef<any>();
       const lastRemotePropertiesRef = useRef<Record<string, any>>();
 
       const remoteProperties: Record<string, any> = {};
@@ -63,20 +70,30 @@ export function createRemoteComponent<
       }
 
       useLayoutEffect(() => {
-        if (ref.current == null) return;
+        if (internalRef.current == null) return;
 
         const propsToUpdate =
           lastRemotePropertiesRef.current ?? remoteProperties;
 
         for (const prop in propsToUpdate) {
-          ref.current[prop] = remoteProperties[prop];
+          internalRef.current[prop] = remoteProperties[prop];
         }
 
         lastRemotePropertiesRef.current = remoteProperties;
       });
 
-      return createElement(tag, {ref}, ...children);
-    };
+      return createElement(
+        tag,
+        {
+          ref: (refValue: any) => {
+            internalRef.current = refValue;
+            if (typeof ref === 'function') ref(refValue);
+            else if (ref != null) ref.current = refValue;
+          },
+        },
+        ...children,
+      );
+    });
 
   RemoteComponent.displayName = `RemoteComponent(${tag})`;
 
