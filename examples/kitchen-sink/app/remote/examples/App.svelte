@@ -12,6 +12,7 @@
   }
 
   function handleClose() {
+    api.alert(`You clicked ${count} times!`);
     count = 0;
   }
 
@@ -34,9 +35,9 @@
     <ui-modal slot="modal" bind:this={modal} on:close={handleClose}>
       <ui-text>Click count: <ui-text emphasis>{count}</ui-text></ui-text>
       <ui-button on:press={handlePress}>Click me!</ui-button>
-      <ui-button slot="primaryAction" on:press={handlePrimaryAction}
-        >Close</ui-button
-      >
+      <ui-button slot="primaryAction" on:press={handlePrimaryAction}>
+        Close
+      </ui-button>
     </ui-modal>
   </ui-button>
 </ui-stack>

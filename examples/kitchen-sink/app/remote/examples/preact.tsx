@@ -27,7 +27,7 @@ function App({api}: {api: RenderAPI}) {
         Rendering example: <Text emphasis>{api.example}</Text>
       </Text>
       <Text>
-        Running in sandbox: <Text emphasis>{api.sandbox}</Text>
+        Rendering in sandbox: <Text emphasis>{api.sandbox}</Text>
       </Text>
       <Button modal={<CountModal alert={api.alert} />}>Open modal</Button>
     </Stack>
