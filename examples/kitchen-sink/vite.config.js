@@ -1,7 +1,7 @@
 import {defineConfig} from 'vite';
 import preact from '@preact/preset-vite';
-import {svelte, vitePreprocess} from '@sveltejs/vite-plugin-svelte';
 import vue from '@vitejs/plugin-vue';
+import {svelte, vitePreprocess} from '@sveltejs/vite-plugin-svelte';
 
 export default defineConfig({
   root: 'app',

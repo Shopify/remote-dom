@@ -1,16 +1,15 @@
 <!doctype html>
 <html>
   <head>
-    <title>Custom element (remote) • Remote DOM</title>
     <meta charset="UTF-8" />
+    <link rel="icon" href="https://fav.farm/🛰️" />
+    <title>Getting started (remote) • Remote DOM</title>
   </head>
 
   <body>
     <div id="root"></div>
 
     <script type="module">
-      import {RemoteMutationObserver} from '@remote-dom/core/elements';
-
       // We will synchronize changes in this element to the host environment.
       const root = document.querySelector('#root');
 
@@ -30,6 +29,13 @@
           count === 1 ? 'second' : 'seconds'
         } ago`;
       }
+    </script>
+
+    <script type="module">
+      import {RemoteMutationObserver} from '@remote-dom/core/elements';
+
+      // We will synchronize changes in this element to the host environment.
+      const root = document.querySelector('#root');
 
       // Create a special `MutationObserver` that will map changes
       // in the HTML to Remote DOM-compatible mutations.

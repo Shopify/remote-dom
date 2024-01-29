@@ -1,8 +1,9 @@
 <!doctype html>
 <html>
   <head>
-    <title>Minimal iframe • Remote DOM</title>
     <meta charset="UTF-8" />
+    <link rel="icon" href="https://fav.farm/🛰️" />
+    <title>Custom element • Remote DOM</title>
   </head>
 
   <body>
@@ -103,6 +104,10 @@
       });
       receiver.connect(root);
 
+      // We use the `@quilted/threads` library to create a “thread” for our iframe,
+      // which lets us communicate over `postMessage` without having to worry about
+      // most of its limitations. This includes the ability to send functions between
+      // environments, which we rely on for the `click` event listener.
       const thread = createThreadFromIframe(iframe);
       thread.connect(receiver.connection);
     </script>

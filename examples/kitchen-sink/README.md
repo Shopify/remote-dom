@@ -1,22 +1,20 @@
-# Example: remote-dom using Vite and a variety of DOM-friendly JavaScript libraries
+# “Kitchen sink” example
+
+This example shows most of Remote DOM’s features in action. It includes multiple custom elements with properties, event listeners, and methods. It also shows how you can choose between using an `<iframe>` to sandbox remote code, or use Remote DOM’s polyfill to run DOM libraries in a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/).
+
+To show how thin a layer Remote DOM is on top of the basic DOM APIs you may already know, this example implements the “remote” code using a variety of techniques and libraries. In the [`app/remote/examples` directory](/examples/kitchen-sink/app/remote/examples/) You can see the same UI built using:
+
+- “Vanilla” JavaScript, where we use standard DOM APIs to create our tree of elements
+- [htm](https://github.com/developit/htm)
+- [Preact](https://preactjs.com)
+- [React](https://react.dev)
+- [Svelte](https://svelte.dev)
+- [Vue](https://vuejs.org)
+
+## Running this example
+
+From the root of the repository, run the following command:
 
 ```bash
-# Run this command from the root of the repo:
-pnpm run example:kitchen-sink-vite
+pnpm --filter example-kitchen-sink start
 ```
-
-This example shows how you can use remote-dom to implement off-main-thread rendering using a variety of JavaScript libraries and execution environments.
-
-Using [Vite](https://vitejs.dev/), this example shows how to render DOM elements with remote-dom in two different sandboxing environments:
-
-- An `iframe`
-- A Web Worker
-
-Because remote-dom is based on DOM APIs, the sandboxed code can use a variety of JavaScript libraries that are designed to work with the DOM. This example allows switching between the same UI, authored using four different libraries:
-
-- “Vanilla” JavaScript
-- React
-- Preact
-- Svelte
-
-This example imports the local in-repo version of `@remote-dom` packages, so it is useful when working on changes to the libraries.
