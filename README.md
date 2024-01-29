@@ -1,15 +1,14 @@
 # Remote DOM
 
-Remote DOM lets you recreate a tree of [DOM elements](https://developer.mozilla.org/en-US/docs/Web/API/Document_object_model/Using_the_Document_Object_Model) between JavaScript environments. You can think of it as an alternative to using an [`<iframe>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe): with Remote DOM, a developer builds up a tree of DOM elements in a sandboxed environment to render their user interface, just as they do inside an `<iframe>`. However, unlike an `<iframe>`, Remote DOM renders those DOM elements as part of the top-level HTML document, allowing UI elements to be more consistent, and preventing the need to load potentially-large JavaScript and CSS assets multiple times.
+Remote DOM lets you recreate a tree of [DOM elements](https://developer.mozilla.org/en-US/docs/Web/API/Document_object_model/Using_the_Document_Object_Model) between JavaScript environments. You can think of it as an alternative to using an [`<iframe>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe): with Remote DOM, a developer builds up a tree of DOM elements in a sandboxed environment to render their user interface, just as they do inside an `<iframe>`. However, unlike an `<iframe>`, Remote DOM renders those DOM elements as part of the top-level HTML document, allowing you to control what UI elements are rendered, and preventing the need to load potentially-large JavaScript and CSS assets multiple times.
 
 To help you use sandboxed JavaScript environments that are less expensive than a full `<iframe>`, Remote DOM also offers a minimal polyfill of key DOM APIs. This lets you use frameworks that would usually need to be run on the top-level HTML page, like [Preact](https://preactjs.com) and [Svelte](https://svelte.dev), inside of a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API).
 
 ## Examples
 
-- [Minimal iframe](./examples/minimal-iframe/): an example using the smallest number of Remote DOM APIs to mirror basic HTML between a main page and an `<iframe>`.
-- [Custom elements](./examples/custom-elements/): an example that defines custom elements, and synchronizes an HTML tree between a main page and an `<iframe>`.
-- [Preact in a web worker](./examples/preact-web-worker/): an example that uses Remote DOM to render a Preact application inside of a web worker.
-- [Svelte in a web worker, rendered by React](./examples/svelte-web-worker/): an example that uses Remote DOM to render a Svelte application inside of a web worker, which is rendered by a React application on the host page.
+- [Getting started](./examples/getting-started/), where we show the most basic usage of Remote DOM in order to synchronize the text content of an element between a main page and an `<iframe>`.
+- [Custom elements](./examples/custom-elements/), where we extend the first example to allow the sandboxed environment to render custom button element.
+- [“The kitchen sink”](./examples/kitchen-sink/), where we show off a more fully-featured implementation of Remote DOM. This includes custom elements with properties, events, and methods, and the ability to sandbox UI in a web worker. The same sandboxed example is implemented in “vanilla” JavaScript, [htm](https://github.com/developit/htm), [Preact](https://preactjs.com), [React](https://react.dev), [Svelte](https://svelte.dev), and [Vue](https://vuejs.org).
 
 ## Building a project with Remote DOM
 
@@ -23,7 +22,11 @@ pnpm install @remote-dom/core --save # pnpm
 yarn add @remote-dom/core # yarn
 ```
 
-Next, on the “host” HTML page, you will need to create a “receiver”. This object will be responsible for receiving the updates from the remote environment, and mapping them to actual DOM elements. `@remote-ui/core` provides a few different types of receivers, but for now we use the `DOMRemoteReceiver`, which directly mirrors the DOM elements created remotely in the host HTML page. You’ll create a `DOMRemoteReceiver` and connect it to an existing HTML element in order to teach Remote DOM where to render the remote DOM elements:
+Next, on the “host” HTML page, you will need to create a “receiver”. This object will be responsible for receiving the updates from the remote environment, and mapping them to actual DOM elements.
+
+`@remote-ui/core` provides a few different types of receivers, but for now we use the `DOMRemoteReceiver`, which directly mirrors the DOM elements created remotely in the host HTML page. That is, if the remote environment renders a `ui-button` custom element, a matching `ui-button` custom element will be created on the host page.
+
+Create a `DOMRemoteReceiver` and call its `connect()` method on the element that should contain any children rendered by the remote environment:
 
 ```html
 <!doctype html>
@@ -43,7 +46,7 @@ Next, on the “host” HTML page, you will need to create a “receiver”. Thi
 </html>
 ```
 
-Our host is ready to receive elements to render, but we don’t have a remote environment yet. For this example, we will use a hidden iframe, but the [examples section](#examples) shows alternative sandboxes. We’ll add the iframe to the host HTML page we started above, and we’ll also listen for `postMessage` events from the iframe, in order to pass changes in the remote tree to our receiver:
+Our host is ready to receive elements to render, but we don’t have a remote environment yet. For this example, we will use a hidden iframe, but the [examples section](#examples) shows alternative sandboxes, like Web Workers. We’ll add the iframe to the host HTML page we started above, and we’ll also listen for `postMessage` events from the iframe, in order to pass changes in the remote tree to our receiver:
 
 ```html
 <!doctype html>
@@ -72,7 +75,7 @@ Our host is ready to receive elements to render, but we don’t have a remote en
 </html>
 ```
 
-Next, let’s create the document that will be loaded into the iframe. It will use another utility provided by `@remote-ui/core`, `RemoteMutationObserver`, which extends the browser’s [`MutationObserver` interface](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) in order to communicate changes to the host.
+Next, let’s create the document that will be loaded into the iframe. It will use another utility provided by `@remote-ui/core`, `RemoteMutationObserver`, which extends the browser’s [`MutationObserver` interface](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) in order to communicate changes to the host. Create a `RemoteMutationObserver`, and call its `observe()` method on the element that contains the elements you want to synchronize with the host:
 
 ```html
 <!doctype html>
@@ -85,19 +88,6 @@ Next, let’s create the document that will be loaded into the iframe. It will u
 
       // We will synchronize everything inside this element to the host.
       const root = document.querySelector('#root');
-
-      let count = 0;
-
-      setInterval(() => {
-        count += 1;
-        render();
-      }, 1_000);
-
-      function render() {
-        root.textContent = `Rendered ${count} ${
-          count === 1 ? 'second' : 'seconds'
-        } ago`;
-      }
 
       // Send the mutations to the host via `postMessage`, which we just finished
       // adding a listener for in the previous step.
@@ -113,17 +103,50 @@ Next, let’s create the document that will be loaded into the iframe. It will u
 </html>
 ```
 
-And just like that, the text we render in the `iframe` is now rendered in the host HTML page! You can see a full version of this example in the [“minimal iframe” example](./examples/minimal-iframe/).
+In our example, we’re not current rendering any content in our “root” element. Let’s fix that by adding some text that will be update over time:
+
+```html
+<!doctype html>
+<html>
+  <body>
+    <div id="root"></div>
+
+    <script type="module">
+      // Previous script’s contents, excluded for brevity.
+      // ...
+    </script>
+
+    <script type="module">
+      const root = document.querySelector('#root');
+
+      let count = 0;
+
+      setInterval(() => {
+        count += 1;
+        render();
+      }, 1_000);
+
+      function render() {
+        root.textContent = `Rendered ${count} ${
+          count === 1 ? 'second' : 'seconds'
+        } ago`;
+      }
+    </script>
+  </body>
+</html>
+```
+
+And just like that, the text we render in the `iframe` is now rendered in the host HTML page! You can see a full version of this example in the [“getting started” example](./examples/getting-started/).
 
 ### Adding custom elements
 
 Now, just mirroring raw HTML isn’t very useful. Remote DOM works best when you define custom elements for the remote environment to render, which map to more complex, application-specific components on the host page. In fact, most of Remote DOM’s receiver APIs are geared towards you providing an allowlist of custom elements that the remote environment can render, which allows you to keep tight control over the visual appearance of the resulting output.
 
-Remote DOM adopts the browser’s [native API for defining custom elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements) to represent these “remote elements”. To make it easy to define custom elements that can communicate their changes to the host, `@remote-dom/core` provides the `RemoteElement` class. This class, which is a subclass of the browser’s [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement), lets you define how properties, attributes, methods, and event listeners on the element should be transferred.
+Remote DOM adopts the browser’s [native API for defining custom elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements) to represent these “remote elements”. To make it easy to define custom elements that can communicate their changes to the host, `@remote-dom/core` provides the [`RemoteElement` class](./packages/core/README.md#remoteelement). This class, which is a subclass of the browser’s [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement), lets you define how properties, attributes, methods, and event listeners on the element should be transferred.
 
-To demonstrate, let’s imagine that we want to allow our remote environment to render a `ui-button` element. This element will have a `primary` property, which sets it to a more prominent visual style. It will trigger a `click` event, and will also have a `focus()` method, which will focus the button when called.
+To demonstrate, let’s imagine that we want to allow our remote environment to render a `ui-button` element. This element will have a `primary` property, which sets it to a more prominent visual style. It will also trigger a `click` event when clicked.
 
-First, we’ll create the remote environment’s version of `ui-button`. The remote version doesn’t have to worry about rendering any HTML — it’s only a signal to the host environment to render the “real” version. However, we do need to teach this element to communicate its `primary` property and `focus()` method to the host version of that element. We’ll do this using the [`RemoteElement` class provided by `@remote-dom/core`](./packages/core#remoteelement):
+First, we’ll create the remote environment’s version of `ui-button`. The remote version doesn’t have to worry about rendering any HTML — it’s only a signal to the host environment to render the “real” version. However, we do need to teach this element to communicate its `primary` property and `click` event to the host version of that element. We’ll do this using the [`RemoteElement` class provided by `@remote-dom/core`](./packages/core#remoteelement):
 
 ```html
 <!doctype html>
@@ -150,13 +173,15 @@ First, we’ll create the remote environment’s version of `ui-button`. The rem
             onClick: {event: true},
           };
         }
-
-        static get remoteMethods() {
-          return ['focus'];
-        }
       }
 
       customElements.define('ui-button', UIButton);
+    </script>
+
+    <script type="module">
+      // Now, we’ll render an instance of this button in the remote environment,
+      // with its updates synchronized to the host based on the properties
+      // we defined above.
 
       let count = 0;
       const button = document.querySelector('ui-button');
@@ -171,19 +196,24 @@ First, we’ll create the remote environment’s version of `ui-button`. The rem
     </script>
 
     <script type="module">
-      // Just like the previous example, we will use a `RemoteMutationObserver` to
-      // communicate the remote elements to the parent HTML page.
+      // In order to proxy function properties and methods between environments,
+      // we need a library that can serialize functions over `postMessage`. You can
+      // use any library you wish, but this example will use [`@quilted/threads`](https://github.com/lemonmade/quilt/tree/main/packages/threads),
+      // which is a small library that was designed to work well with Remote DOM.
+
       import {RemoteMutationObserver} from '@remote-dom/core/elements';
+      import {createThreadFromInsideIframe} from '@quilted/threads';
 
       const root = document.querySelector('#root');
 
-      const observer = new RemoteMutationObserver({
-        mutate(mutations) {
-          window.parent.postMessage(mutations, '*');
+      createThreadFromInsideIframe({
+        expose: {
+          connect(connection) {
+            const observer = new RemoteMutationObserver(connection);
+            observer.observe(root);
+          },
         },
       });
-
-      observer.observer(root);
     </script>
   </body>
 </html>
@@ -258,6 +288,7 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
 
     <script type="module">
       import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
+      import {createThreadFromIframe} from '@quilted/threads';
 
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');
@@ -271,10 +302,10 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
       });
       receiver.connect(root);
 
-      window.addEventListener('message', ({source, data}) => {
-        if (source !== iframe.contentWindow) return;
-        receiver.connection.mutate(data);
-      });
+      // Like our previous example, we need to use a library that can serialize
+      // function properties over `postMessage`.
+      const thread = createThreadFromIframe(iframe);
+      thread.connect(receiver.connection);
     </script>
   </body>
 </html>
