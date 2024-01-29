@@ -79,7 +79,7 @@
   },
   "devDependencies": {
     "@quilted/react-testing": "^0.6.5",
-    "@types/react-dom": "^18.2.0",
+    "@types/react-dom": "^18.2.18",
     "preact": "^10.19.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
