@@ -1,12 +1,11 @@
 import {type ComponentChildren} from 'preact';
 import {forwardRef} from 'preact/compat';
-import {useRef, useState, useImperativeHandle} from 'preact/hooks';
+import {useRef, useImperativeHandle} from 'preact/hooks';
 import type {Signal} from '@preact/signals';
 
 import type {
   ButtonProperties,
   StackProperties,
-  TextFieldProperties,
   TextProperties,
   ModalMethods,
   ModalProperties,
@@ -90,65 +89,6 @@ export const Modal = forwardRef<
   );
 });
 
-export function TextField({
-  label,
-  value: initialValue = '',
-  onChange,
-}: TextFieldProperties) {
-  const [value, setValue] = useState(initialValue);
-  const id = useID();
-
-  return (
-    <div class="TextField">
-      <label class="Label" for={id}>
-        {label}
-      </label>
-      <div class="InputContainer">
-        <input
-          id={id}
-          class="Input"
-          type="text"
-          onChange={(event) => {
-            setValue(event.currentTarget.value);
-            onChange?.(event.currentTarget.value);
-          }}
-          value={value}
-        ></input>
-        <div class="InputBackdrop"></div>
-      </div>
-    </div>
-  );
-}
-
-function useID(id?: string) {
-  const ref = useRef<string>();
-
-  if (id) {
-    ref.current = id;
-    return id;
-  }
-
-  return (ref.current ??= nanoId());
-}
-
-// @see https://github.com/ai/nanoid/blob/main/non-secure/index.js
-
-function nanoId(size = 21) {
-  // This alphabet uses `A-Za-z0-9_-` symbols. The genetic algorithm helped
-  // optimize the gzip compression for this alphabet.
-  const urlAlphabet =
-    'ModuleSymbhasOwnPr-0123456789ABCDEFGHNRVfgctiUvz_KqYTJkLxpZXIjQW';
-
-  let id = '';
-  // A compact alternative for `for (var i = 0; i < step; i++)`.
-  let i = size;
-  while (i--) {
-    // `| 0` is more compact and faster than `Math.floor()`.
-    id += urlAlphabet[(Math.random() * 64) | 0];
-  }
-  return id;
-}
-
 function Select({
   id: explicitID,
   label,
@@ -215,6 +155,7 @@ export function ControlPanel({
         >
           <option value="vanilla">“Vanilla” DOM</option>
           <option value="preact">Preact</option>
+          <option value="react">React</option>
           <option value="svelte">Svelte</option>
           <option value="vue">Vue</option>
           <option value="htm">htm</option>
@@ -259,4 +200,35 @@ function ExampleCodeReference({example}: {example: Signal<RenderExample>}) {
   const value = example.value;
 
   return <code>app/remote/examples/{EXAMPLE_FILE_NAMES.get(value)}</code>;
+}
+
+// Helpers
+
+function useID(id?: string) {
+  const ref = useRef<string>();
+
+  if (id) {
+    ref.current = id;
+    return id;
+  }
+
+  return (ref.current ??= nanoId());
+}
+
+// @see https://github.com/ai/nanoid/blob/main/non-secure/index.js
+
+function nanoId(size = 21) {
+  // This alphabet uses `A-Za-z0-9_-` symbols. The genetic algorithm helped
+  // optimize the gzip compression for this alphabet.
+  const urlAlphabet =
+    'ModuleSymbhasOwnPr-0123456789ABCDEFGHNRVfgctiUvz_KqYTJkLxpZXIjQW';
+
+  let id = '';
+  // A compact alternative for `for (var i = 0; i < step; i++)`.
+  let i = size;
+  while (i--) {
+    // `| 0` is more compact and faster than `Math.floor()`.
+    id += urlAlphabet[(Math.random() * 64) | 0];
+  }
+  return id;
 }

@@ -10,7 +10,6 @@ import type {
   ModalProperties,
   ModalMethods,
   StackProperties,
-  TextFieldProperties,
 } from '../types.ts';
 
 customElements.define('remote-root', RemoteRootElement);
@@ -56,18 +55,10 @@ export const Stack = createRemoteElement<StackProperties>({
   },
 });
 
-export const TextField = createRemoteElement<TextFieldProperties>({
-  properties: {
-    label: {type: String},
-    onChange: {event: true},
-  },
-});
-
 customElements.define('ui-text', Text);
 customElements.define('ui-button', Button);
 customElements.define('ui-modal', Modal);
 customElements.define('ui-stack', Stack);
-customElements.define('ui-text-field', TextField);
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -75,6 +66,5 @@ declare global {
     'ui-button': InstanceType<typeof Button>;
     'ui-stack': InstanceType<typeof Stack>;
     'ui-modal': InstanceType<typeof Modal>;
-    'ui-text-field': InstanceType<typeof TextField>;
   }
 }

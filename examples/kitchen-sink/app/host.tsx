@@ -19,14 +19,7 @@ import {
   RenderSandbox,
   type SandboxAPI,
 } from './types.ts';
-import {
-  Button,
-  Modal,
-  Stack,
-  Text,
-  TextField,
-  ControlPanel,
-} from './host/components.tsx';
+import {Button, Modal, Stack, Text, ControlPanel} from './host/components.tsx';
 
 const uiRoot = document.querySelector('main')!;
 
@@ -59,6 +52,7 @@ const allowedExampleValues = new Set<RenderExample>([
   'vanilla',
   'htm',
   'preact',
+  'react',
   'svelte',
   'vue',
 ]);
@@ -80,7 +74,6 @@ const components = new Map([
   ['ui-button', createRemoteComponentRenderer(Button)],
   ['ui-stack', createRemoteComponentRenderer(Stack)],
   ['ui-modal', createRemoteComponentRenderer(Modal)],
-  ['ui-text-field', createRemoteComponentRenderer(TextField)],
   ['remote-fragment', RemoteFragmentRenderer],
 ]);
 

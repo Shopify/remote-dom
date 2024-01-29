@@ -19,7 +19,13 @@ export type RenderSandbox =
  * Describes the example used to render the UI in the sandboxed environment.
  * Each item in this list should have a corresponding example in the `app/examples`
  */
-export type RenderExample = 'vanilla' | 'htm' | 'preact' | 'svelte' | 'vue';
+export type RenderExample =
+  | 'vanilla'
+  | 'htm'
+  | 'preact'
+  | 'react'
+  | 'svelte'
+  | 'vue';
 
 /**
  * The object that the “host” page will pass to the “remote” environment. This
@@ -54,9 +60,6 @@ export interface TextProperties {
   emphasis?: boolean;
 }
 
-/**
- *
- */
 export interface ButtonProperties {
   onPress?(): void;
 }
@@ -72,10 +75,4 @@ export interface ModalMethods {
 
 export interface StackProperties {
   spacing?: boolean;
-}
-
-export interface TextFieldProperties {
-  label?: string;
-  value?: string;
-  onChange?(value: string): void;
 }
