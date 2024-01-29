@@ -192,6 +192,7 @@ const EXAMPLE_FILE_NAMES = new Map<RenderExample, string>([
   ['vanilla', 'vanilla.ts'],
   ['htm', 'htm.ts'],
   ['preact', 'preact.tsx'],
+  ['react', 'react.tsx'],
   ['svelte', 'App.svelte'],
   ['vue', 'App.vue'],
 ]);
