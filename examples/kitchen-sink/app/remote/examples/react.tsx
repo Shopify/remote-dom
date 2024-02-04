@@ -49,7 +49,10 @@ function CountModal({alert}: Pick<RenderAPI, 'alert'>) {
       ref={modalRef}
       primaryAction={primaryAction}
       onClose={() => {
-        alert(`You clicked ${count} times!`);
+        if (count > 0) {
+          alert(`You clicked ${count} times!`);
+        }
+
         setCount(0);
       }}
     >

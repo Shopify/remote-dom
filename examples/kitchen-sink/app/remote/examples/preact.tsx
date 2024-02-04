@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import {render} from 'preact';
 import {useRef} from 'preact/hooks';
 import {useSignal} from '@preact/signals';
@@ -47,7 +50,10 @@ function CountModal({alert}: Pick<RenderAPI, 'alert'>) {
       ref={modalRef}
       primaryAction={primaryAction}
       onClose={() => {
-        alert(`You clicked ${count} times!`);
+        if (count.peek() > 0) {
+          alert(`You clicked ${count} times!`);
+        }
+
         count.value = 0;
       }}
     >

@@ -13,7 +13,10 @@ function handlePress() {
 }
 
 function handleClose() {
-  api.alert(`You clicked ${count.value} times!`);
+  if (count.value > 0) {
+    api.alert(`You clicked ${count.value} times!`);
+  }
+
   count.value = 0;
 }
 

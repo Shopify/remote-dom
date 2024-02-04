@@ -6,12 +6,14 @@ import {svelte, vitePreprocess} from '@sveltejs/vite-plugin-svelte';
 export default defineConfig({
   root: 'app',
   resolve: {
+    // Alias the `@remote-dom` packages to their source files
     conditions: ['quilt:source'],
   },
-  // We need to disable fast refresh for the Preact plugin, as it doesn’t work in workers
-  // as it tries to access `window`
   plugins: [
-    preact({prefreshEnabled: false}),
+    preact({
+      // We manually set the JSX transformation to apply to examples per-file
+      exclude: ['remote/examples/*.tsx'],
+    }),
     svelte({
       preprocess: vitePreprocess(),
     }),

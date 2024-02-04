@@ -11,7 +11,10 @@ export function renderUsingHTM(root: Element, api: RenderAPI) {
   }
 
   function handleClose() {
-    api.alert(`You clicked ${count} times!`);
+    if (count > 0) {
+      api.alert(`You clicked ${count} times!`);
+    }
+
     updateCount(0);
   }
 

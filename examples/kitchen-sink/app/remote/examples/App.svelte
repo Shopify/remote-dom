@@ -12,7 +12,10 @@
   }
 
   function handleClose() {
-    api.alert(`You clicked ${count} times!`);
+    if (count > 0) {
+      api.alert(`You clicked ${count} times!`);
+    }
+
     count = 0;
   }
 
