@@ -5,25 +5,31 @@ import '../elements.ts';
 import {render} from '../render.ts';
 import type {SandboxAPI} from '../../types.ts';
 
-// This creates the “remote” thread — the one that executes inside
-// a web worker, and has no access to the DOM of the main page.
+// We use the `@quilted/threads` library to create a “thread” for our iframe,
+// which lets us communicate over `postMessage` without having to worry about
+// most of its complexities.
+//
+// This block exposes the `render` method that was used by the host application,
+// in `index.html`. We receive the `RemoteConnection` object, and start synchronizing
+// changes to a `<remote-root>` element that contains our UI.
 createThreadFromWebWorker<SandboxAPI>(self as any as Worker, {
   expose: {
-    // `callback` is a function that can be called to update UI on the main
-    // page. `()` needs that function to communicate updates
-    // on the remote tree of UI components.
-    //
-    // `api` is an object that the main page will pass with additional methods
-    // we can call. These methods will be proxied to the main thread, where
-    // the actual logic will be executed.
-    async render(callback, api) {
-      retain(callback);
-      retain(api);
+    async render(connection, api) {
+      // `connection` contains functions that were transferred over `postMessage`.
+      // In order to call these functions later, we need to mark them as used in
+      // order to prevent garbage collection.
+      retain(connection);
+
+      // Similarly, `api.alert` is a function we will call later, so we also need
+      // to mark it as used.
+      retain(api.alert);
 
       // We will observe this DOM node, and send any elements within it to be
-      // reflected on this "host" page.
+      // reflected on this "host" page. This element is defined by the Remote DOM
+      // library, and provides a convenient `connect()` method that starts
+      // synchronizing its children over a `RemoteConnection`.
       const root = document.createElement('remote-root');
-      root.connect(callback);
+      root.connect(connection);
 
       render(root, api);
     },

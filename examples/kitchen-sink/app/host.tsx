@@ -2,30 +2,29 @@ import {render} from 'preact';
 import {
   RemoteRootRenderer,
   RemoteFragmentRenderer,
-  SignalRemoteReceiver,
   createRemoteComponentRenderer,
 } from '@remote-dom/preact/host';
 import {
-  retain,
-  release,
   createThreadFromIframe,
   createThreadFromWebWorker,
 } from '@quilted/threads';
-import {signal, effect} from '@preact/signals';
 
-import {
-  RenderAPI,
-  RenderExample,
-  RenderSandbox,
-  type SandboxAPI,
-} from './types.ts';
+import type {SandboxAPI} from './types.ts';
 import {Button, Modal, Stack, Text, ControlPanel} from './host/components.tsx';
+import {createState} from './host/state.ts';
 
+// We will put any remote elements we want to render in this root element.
 const uiRoot = document.querySelector('main')!;
 
+// We use the `@quilted/threads` library to create a “thread” for our iframe,
+// which lets us communicate over `postMessage` without having to worry about
+// most of its complexities.
 const iframe = document.querySelector('iframe')!;
 const iframeSandbox = createThreadFromIframe<never, SandboxAPI>(iframe);
 
+// We also use the `@quilted/threads` library to create a “thread” around a Web
+// Worker. We’ll run the same example code in both, depending on the `sandbox`
+// state chosen by the user.
 const worker = new Worker(
   new URL('./remote/worker/sandbox.ts', import.meta.url),
   {
@@ -34,49 +33,64 @@ const worker = new Worker(
 );
 const workerSandbox = createThreadFromWebWorker<never, SandboxAPI>(worker);
 
-const initialURL = new URL(window.location.href);
-
-const defaultSandbox = 'worker';
-const allowedSandboxValues = new Set<RenderSandbox>(['iframe', 'worker']);
-const sandboxQueryParam = initialURL.searchParams
-  .get('sandbox')
-  ?.toLowerCase() as RenderSandbox | undefined;
-const sandbox = signal<RenderSandbox>(
-  allowedSandboxValues.has(sandboxQueryParam!)
-    ? sandboxQueryParam!
-    : defaultSandbox,
-);
-
-const defaultExample = 'vanilla';
-const allowedExampleValues = new Set<RenderExample>([
-  'vanilla',
-  'htm',
-  'preact',
-  'react',
-  'svelte',
-  'vue',
-]);
-const exampleQueryParam = initialURL.searchParams
-  .get('example')
-  ?.toLowerCase() as RenderExample | undefined;
-const example = signal<RenderExample>(
-  allowedExampleValues.has(exampleQueryParam!)
-    ? exampleQueryParam!
-    : defaultExample,
-);
-
-const receiver = signal<
-  SignalRemoteReceiver | Error | Promise<SignalRemoteReceiver> | undefined
->(undefined);
-
+// We will use Preact to render remote elements in this example. The Preact
+// helper library lets you do this by mapping the name of a remote element to
+// a local Preact component. We’ve implemented the actual UI of our components in
+// the `./host/components.tsx` file, but we need to wrap each one in the `createRemoteComponentRenderer()`
+// helper function in order to get some Preact niceties, like automatic conversion
+// of slots to element props, and using the instance of a Preact component as the
+// target for methods called on matching remote elements.
 const components = new Map([
   ['ui-text', createRemoteComponentRenderer(Text)],
   ['ui-button', createRemoteComponentRenderer(Button)],
   ['ui-stack', createRemoteComponentRenderer(Stack)],
   ['ui-modal', createRemoteComponentRenderer(Modal)],
+  // The `remote-fragment` element is a special element created by Remote DOM when
+  // it needs an unstyled container for a list of elements. This is primarily used
+  // to convert elements passed as a prop to React or Preact components into a slotted
+  // element. The `RemoteFragmentRenderer` component is provided to render this element
+  // on the host.
   ['remote-fragment', RemoteFragmentRenderer],
 ]);
 
+// We offload most of the complex state logic to this `createState()` function. We’re
+// just leaving the key bit in this file: when the example or sandbox changes, we render
+// the example in the chosen sandbox. The `createState()` passes us a fresh `receiver`
+// each time. This object, a `SignalRemoteReceiver`, keeps track of the tree of elements
+// rendered by the remote environment. We use this object later to render these trees
+// to Preact components using the `RemoteRootRenderer` component.
+
+const {receiver, example, sandbox} = createState(
+  async ({receiver, example, sandbox}) => {
+    if (sandbox === 'iframe') {
+      await iframeSandbox.render(receiver.connection, {
+        sandbox,
+        example,
+        async alert(content) {
+          console.log(
+            `Alert API used by example ${example} in the iframe sandbox`,
+          );
+          window.alert(content);
+        },
+      });
+    } else {
+      await workerSandbox.render(receiver.connection, {
+        sandbox,
+        example,
+        async alert(content) {
+          console.log(
+            `Alert API used by example ${example} in the worker sandbox`,
+          );
+          window.alert(content);
+        },
+      });
+    }
+  },
+);
+
+// We render our Preact application, including the part that renders any remote
+// elements for the current example, and the control panel that lets us change
+// the framework or JavaScript sandbox being used.
 render(
   <>
     <ExampleRenderer />
@@ -88,7 +102,9 @@ render(
 function ExampleRenderer() {
   const value = receiver.value;
 
-  if (value == null || 'then' in value) {
+  if (value == null) return <div>Loading...</div>;
+
+  if ('then' in value) {
     return <div>Rendering example...</div>;
   }
 
@@ -101,88 +117,4 @@ function ExampleRenderer() {
       <RemoteRootRenderer receiver={value} components={components} />
     </div>
   );
-}
-
-const exampleCache = new Map<
-  string,
-  SignalRemoteReceiver | Error | Promise<SignalRemoteReceiver>
->();
-
-effect(() => {
-  const sandboxValue = sandbox.value;
-  const exampleValue = example.value;
-
-  const key = `${sandboxValue}:${exampleValue}`;
-  let cached = exampleCache.get(key);
-
-  const newURL = new URL(window.location.href);
-
-  if (sandboxValue === defaultSandbox && exampleValue === defaultExample) {
-    newURL.searchParams.delete('sandbox');
-    newURL.searchParams.delete('example');
-  } else {
-    newURL.searchParams.set('sandbox', sandboxValue);
-    newURL.searchParams.set('example', exampleValue);
-  }
-
-  window.history.replaceState({}, '', newURL.toString());
-
-  if (cached == null) {
-    cached = renderWithOptions({sandbox: sandboxValue, example: exampleValue});
-    exampleCache.set(key, cached);
-  }
-
-  if (typeof (cached as any).then === 'function') {
-    Promise.resolve()
-      .then(() => cached!)
-      .then((receiver) => updateValueAfterRender(receiver))
-      .catch((error) => updateValueAfterRender(error));
-  }
-
-  receiver.value = cached;
-
-  function updateValueAfterRender(value: SignalRemoteReceiver | Error) {
-    exampleCache.set(key, value);
-
-    if (sandboxValue !== sandbox.peek() || exampleValue !== example.peek()) {
-      return value;
-    }
-
-    receiver.value = value;
-
-    return value;
-  }
-});
-
-async function renderWithOptions({
-  example,
-  sandbox,
-}: Pick<RenderAPI, 'example' | 'sandbox'>) {
-  const receiver = new SignalRemoteReceiver({retain, release});
-
-  if (sandbox === 'iframe') {
-    await iframeSandbox.render(receiver.connection, {
-      sandbox,
-      example,
-      async alert(content) {
-        console.log(
-          `Alert API used by example ${example} in the iframe sandbox`,
-        );
-        window.alert(content);
-      },
-    });
-  } else {
-    await workerSandbox.render(receiver.connection, {
-      sandbox,
-      example,
-      async alert(content) {
-        console.log(
-          `Alert API used by example ${example} in the worker sandbox`,
-        );
-        window.alert(content);
-      },
-    });
-  }
-
-  return receiver;
 }

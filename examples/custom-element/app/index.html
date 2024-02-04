@@ -106,10 +106,15 @@
 
       // We use the `@quilted/threads` library to create a “thread” for our iframe,
       // which lets us communicate over `postMessage` without having to worry about
-      // most of its limitations. This includes the ability to send functions between
+      // most of its complexities. This includes the ability to send functions between
       // environments, which we rely on for the `click` event listener.
       const thread = createThreadFromIframe(iframe);
-      thread.connect(receiver.connection);
+
+      // We will call the `render` method on the thread, which will send the iframe
+      // the `receiver.connection` object. This object, called a `RemoteConnection`,
+      // allows the remote environment to synchronize its tree of UI elements into
+      // the `root` element we connected our `receiver` to above.
+      thread.render(receiver.connection);
     </script>
   </body>
 </html>

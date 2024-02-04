@@ -12,15 +12,11 @@ import type {
   StackProperties,
 } from '../types.ts';
 
-customElements.define('remote-root', RemoteRootElement);
-customElements.define('remote-fragment', RemoteFragmentElement);
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'remote-root': InstanceType<typeof RemoteRootElement>;
-    'remote-fragment': InstanceType<typeof RemoteFragmentElement>;
-  }
-}
+// In this file we will define the custom elements that can be rendered in the
+// remote environment. Note that none of these elements have any real implementation —
+// they just act as placeholders that will be communicated to the host environment.
+// The host environment contains the actual implementation of these elements (in this case,
+// they have been implemented using Preact, in the `host/components.tsx` file).
 
 export const Text = createRemoteElement<TextProperties>({
   properties: {
@@ -66,5 +62,23 @@ declare global {
     'ui-button': InstanceType<typeof Button>;
     'ui-stack': InstanceType<typeof Stack>;
     'ui-modal': InstanceType<typeof Modal>;
+  }
+}
+
+// We use the Remote DOM `RemoteRootElement` class as the `<remote-root>` element.
+// This element provides a convenient `connect()` method that starts synchronizing
+// its children over a `RemoteConnection`, which we will use in the worker sandbox.
+customElements.define('remote-root', RemoteRootElement);
+
+// We use the Remote DOM `RemoteFragmentElement` class as the `<remote-fragment>` element.
+// This element is used by the Preact and React helper libraries, in order to allow
+// React elements passed as props to be automatically converted into the `slot`-ted elements
+// that the Remote DOM library expects.
+customElements.define('remote-fragment', RemoteFragmentElement);
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'remote-root': InstanceType<typeof RemoteRootElement>;
+    'remote-fragment': InstanceType<typeof RemoteFragmentElement>;
   }
 }

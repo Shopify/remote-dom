@@ -14,6 +14,9 @@
     <script type="module">
       import {RemoteElement} from '@remote-dom/core/elements';
 
+      // We need to define our `ui-button` element so it can be synchronized
+      // with the host environment.
+      //
       // For full details on defining remote elements, see the documentation
       // for `@remote-dom/core/elements`:
       // https://github.com/Shopify/remote-ui/tree/main/packages/core#elements
@@ -28,14 +31,14 @@
             onClick: {event: true},
           };
         }
-
-        static get remoteMethods() {
-          return ['focus'];
-        }
       }
 
       customElements.define('ui-button', UIButton);
+    </script>
 
+    <script type="module">
+      // To make this example dynamic, we’ll add an event listener to the button
+      // that updates the button’s text content and removes the `primary` attribute
       let count = 0;
       const button = document.querySelector('ui-button');
 
@@ -54,13 +57,28 @@
 
     <script type="module">
       import {RemoteMutationObserver} from '@remote-dom/core/elements';
-      import {createThreadFromInsideIframe} from '@quilted/threads';
+      import {retain, createThreadFromInsideIframe} from '@quilted/threads';
 
       const root = document.querySelector('#root');
 
+      // We use the `@quilted/threads` library to create a “thread” for our iframe,
+      // which lets us communicate over `postMessage` without having to worry about
+      // most of its complexities.
+      //
+      // This block exposes the `render` method that was used by the host application,
+      // in `index.html`. We receive the `RemoteConnection` object, and start synchronizing
+      // changes to the `<div id="root">` element that contains our UI.
       createThreadFromInsideIframe({
         expose: {
-          connect(connection) {
+          render(connection) {
+            // `connection` contains functions that were transferred over `postMessage`.
+            // In order to call these functions later, we need to mark them as used in
+            // order to prevent garbage collection.
+            retain(connection);
+
+            // We use the `RemoteMutationObserver` class, which extends the native DOM
+            // `MutationObserver`, to send any changes to a tree of DOM elements over
+            // a `RemoteConnection`.
             const observer = new RemoteMutationObserver(connection);
             observer.observe(root);
           },
