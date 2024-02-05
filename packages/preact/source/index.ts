@@ -1,4 +1,7 @@
-export {createRemoteComponent} from './component.tsx';
+export {
+  createRemoteComponent,
+  type RemoteComponentOptions,
+} from './component.tsx';
 export type {
   RemoteComponentProps,
   RemoteComponentTypeFromElementConstructor,

@@ -10,11 +10,26 @@ import type {
 
 import type {RemoteComponentRendererMap} from './types.ts';
 
+/**
+ * The context needed to render a remote node on the host.
+ */
 export interface RenderRemoteNodeOptions {
+  /**
+   * The object that maintains the state of the remote tree on the host.
+   */
   receiver: SignalRemoteReceiver;
+
+  /**
+   * A map of Preact components that can render remote elements.
+   */
   components: RemoteComponentRendererMap<any>;
 }
 
+/**
+ * Renders a remote node to the host using Preact.
+ *
+ * @param node The remote node to render using Preact
+ */
 export function renderRemoteNode(
   node: SignalRemoteReceiverNode,
   {receiver, components}: RenderRemoteNodeOptions,
@@ -39,9 +54,11 @@ export function renderRemoteNode(
       );
     }
     case NODE_TYPE_TEXT: {
+      // @preact/signals knows how to convert a string signal to a text node
       return node.data;
     }
     case NODE_TYPE_COMMENT: {
+      // Don’t both rendering comments
       return null;
     }
     default: {

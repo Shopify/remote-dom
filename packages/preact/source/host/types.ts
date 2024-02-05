@@ -4,12 +4,35 @@ import type {
   SignalRemoteReceiverElement,
 } from '@remote-dom/signals';
 
+/**
+ * The props that are passed to a Preact component in order to render
+ *  a remote element.
+ */
 export interface RemoteComponentRendererProps {
+  /**
+   * The element being rendered.
+   */
   element: SignalRemoteReceiverElement;
+
+  /**
+   * The object that maintains the state of the remote tree on the host.
+   */
   receiver: SignalRemoteReceiver;
+
+  /**
+   * A map of Preact components that can render remote elements.
+   */
   components: RemoteComponentRendererMap<any>;
 }
 
+/**
+ * A map of Preact components that can render remote elements. The keys are strings
+ * that correspond to the names of the elements used in the remote environment, and
+ * the values are Preact components that will accept the remote elements and render
+ * DOM elements. To create these components, you can use the `createRemoteComponentRenderer()`
+ * utility, which takes care of subscribing to changes in the element and passing their
+ * properties along to your Preact implementation.
+ */
 export type RemoteComponentRendererMap<Elements extends string = string> = Map<
   Elements,
   ComponentType<RemoteComponentRendererProps>

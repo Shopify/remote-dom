@@ -65,9 +65,14 @@ export type SignalRemoteReceiverNode =
   | SignalRemoteReceiverText
   | SignalRemoteReceiverComment
   | SignalRemoteReceiverElement;
+
 export type SignalRemoteReceiverNodeOrRoot =
   | SignalRemoteReceiverNode
   | SignalRemoteReceiverRoot;
+
+/**
+ * Represents any node that can be a parent in the remote tree.
+ */
 export type SignalRemoteReceiverParent =
   | SignalRemoteReceiverElement
   | SignalRemoteReceiverRoot;

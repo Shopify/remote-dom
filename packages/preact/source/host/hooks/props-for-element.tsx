@@ -2,6 +2,11 @@ import type {SignalRemoteReceiverElement} from '@remote-dom/signals';
 
 import {renderRemoteNode, type RenderRemoteNodeOptions} from '../node.tsx';
 
+/**
+ * Converts a remote element into props for a React element. In addition to passing along
+ * the `properties` of that element, this hook will convert any child elements with a `slot`
+ * property into a prop of the same name, with the value rendered to a Preact element.
+ */
 export function usePropsForRemoteElement<
   Props extends Record<string, any> = {},
 >(

@@ -2,6 +2,7 @@
   "name": "@remote-dom/preact",
   "type": "module",
   "license": "MIT",
+  "description": "Utilities for rendering Remote DOM elements using Preact",
   "publishConfig": {
     "access": "public",
     "@remote-dom/registry": "https://registry.npmjs.org"
