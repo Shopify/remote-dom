@@ -9,6 +9,7 @@ import {
   useRef,
   useImperativeHandle,
   forwardRef,
+  type ReactNode,
   type PropsWithChildren,
 } from 'react';
 
@@ -22,7 +23,11 @@ import {
 import {RemoteReceiver} from '@remote-dom/core/receivers';
 
 import {createRemoteComponent} from '../index.ts';
-import {RemoteRootRenderer, createRemoteComponentRenderer} from '../host.ts';
+import {
+  RemoteRootRenderer,
+  RemoteFragmentRenderer,
+  createRemoteComponentRenderer,
+} from '../host.ts';
 
 expect.extend(matchers);
 
@@ -36,20 +41,13 @@ interface ButtonProps {
   onPress?(): void;
 }
 
-const HostButton = forwardRef(function HostButton(
-  {children, disabled, onPress}: PropsWithChildren<ButtonProps>,
-  ref,
-) {
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  useImperativeHandle(ref, () => ({
-    focus() {
-      buttonRef.current?.focus();
-    },
-  }));
-
+const HostButton = forwardRef(function HostButton({
+  children,
+  disabled,
+  onPress,
+}: PropsWithChildren<ButtonProps>) {
   return (
-    <button ref={buttonRef} disabled={disabled} onClick={() => onPress?.()}>
+    <button disabled={disabled} onClick={() => onPress?.()}>
       {children}
     </button>
   );
@@ -63,22 +61,70 @@ const RemoteButtonElement = createRemoteElement<ButtonProps>({
   methods: ['focus'],
 });
 
+const HostModal = forwardRef(function HostModal(
+  {
+    children,
+    action,
+  }: PropsWithChildren<{
+    action?: ReactNode;
+  }>,
+  ref,
+) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    open() {
+      dialogRef.current?.showModal();
+    },
+    close() {
+      dialogRef.current?.close();
+    },
+  }));
+
+  return (
+    <dialog ref={dialogRef}>
+      {children}
+      <div>{action}</div>
+    </dialog>
+  );
+});
+
+const RemoteModalElement = createRemoteElement<
+  {},
+  {
+    open(): void;
+    close(): void;
+  },
+  {
+    action?: true;
+  }
+>({
+  methods: ['open', 'close'],
+  slots: ['action'],
+});
+
 customElements.define('remote-button', RemoteButtonElement);
+customElements.define('remote-modal', RemoteModalElement);
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'remote-button': InstanceType<typeof RemoteButtonElement>;
+    'remote-modal': InstanceType<typeof RemoteModalElement>;
+  }
+}
 
 const RemoteButton = createRemoteComponent(
   'remote-button',
   RemoteButtonElement,
 );
 
+const RemoteModal = createRemoteComponent('remote-modal', RemoteModalElement);
+
 const components = new Map([
   ['remote-button', createRemoteComponentRenderer(HostButton)],
+  ['remote-modal', createRemoteComponentRenderer(HostModal)],
+  ['remote-fragment', RemoteFragmentRenderer],
 ]);
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'remote-button': InstanceType<typeof RemoteButtonElement>;
-  }
-}
 
 describe('react', () => {
   it('can render simple remote DOM elements', async () => {
@@ -157,22 +203,26 @@ describe('react', () => {
     const mutationObserver = new RemoteMutationObserver(receiver.connection);
 
     const remoteRoot = document.createElement('div');
+    const remoteModal = document.createElement('remote-modal');
     const remoteButton = document.createElement('remote-button');
+    remoteButton.slot = 'action';
     remoteButton.onPress = () => {
-      remoteButton.focus();
+      remoteModal.close();
     };
-    remoteRoot.append(remoteButton);
+    remoteModal.append(remoteButton);
+    remoteRoot.append(remoteModal);
     mutationObserver.observe(remoteRoot);
 
     const rendered = render(
       <RemoteRootRenderer receiver={receiver} components={components} />,
     );
 
-    const focusSpy = vi.spyOn(rendered.find(HostButton)!.domNode!, 'focus');
+    const closeSpy = vi.fn();
+    Object.assign(rendered.find(HostModal)!.domNode!, {close: closeSpy});
 
     rendered.find(HostButton)?.trigger('onPress');
 
-    expect(focusSpy).toHaveBeenCalled();
+    expect(closeSpy).toHaveBeenCalled();
   });
 
   it('can render remote DOM elements wrapped as React components', async () => {
@@ -182,17 +232,23 @@ describe('react', () => {
     const remoteRoot = document.createElement('div');
 
     function Remote() {
-      const ref = useRef<InstanceType<typeof RemoteButtonElement>>(null);
+      const ref = useRef<InstanceType<typeof RemoteModalElement>>(null);
 
       return (
-        <RemoteButton
+        <RemoteModal
           ref={ref}
-          onPress={() => {
-            ref.current?.focus();
-          }}
+          action={
+            <RemoteButton
+              onPress={() => {
+                ref.current?.close();
+              }}
+            >
+              Close
+            </RemoteButton>
+          }
         >
-          Press me!
-        </RemoteButton>
+          Modal body
+        </RemoteModal>
       );
     }
 
@@ -210,10 +266,83 @@ describe('react', () => {
       mutationObserver.observe(remoteRoot);
     });
 
-    const focusSpy = vi.spyOn(rendered.find(HostButton)!.domNode!, 'focus');
+    const closeSpy = vi.fn();
+    Object.assign(rendered.find(HostModal)!.domNode!, {close: closeSpy});
 
     rendered.find(HostButton)?.trigger('onPress');
 
-    expect(focusSpy).toHaveBeenCalled();
+    expect(closeSpy).toHaveBeenCalled();
+  });
+
+  it('can remove the wrapper element on elements passed as properties to remote Preact components', async () => {
+    const RemoteModalWithoutWrappers = createRemoteComponent(
+      'remote-modal',
+      RemoteModalElement,
+      {
+        slotProps: {wrapper: false},
+      },
+    );
+
+    function Remote() {
+      const ref = useRef<InstanceType<typeof RemoteModalElement>>(null);
+
+      return (
+        <RemoteModalWithoutWrappers
+          ref={ref}
+          action={
+            <RemoteButton
+              onPress={() => {
+                ref.current?.close();
+              }}
+            >
+              Close
+            </RemoteButton>
+          }
+        >
+          Modal body
+        </RemoteModalWithoutWrappers>
+      );
+    }
+
+    const rendered = render(<Remote />);
+
+    expect(rendered).not.toContainReactComponent('remote-fragment');
+    expect(rendered).toContainReactComponent(RemoteButton, {slot: 'action'});
+  });
+
+  it('can change the wrapper element on elements passed as properties to remote Preact components', async () => {
+    const RemoteModalWithoutWrappers = createRemoteComponent(
+      'remote-modal',
+      RemoteModalElement,
+      {
+        slotProps: {wrapper: 'remote-box'},
+      },
+    );
+
+    function Remote() {
+      const ref = useRef<InstanceType<typeof RemoteModalElement>>(null);
+
+      return (
+        <RemoteModalWithoutWrappers
+          ref={ref}
+          action={
+            <RemoteButton
+              onPress={() => {
+                ref.current?.close();
+              }}
+            >
+              Close
+            </RemoteButton>
+          }
+        >
+          Modal body
+        </RemoteModalWithoutWrappers>
+      );
+    }
+
+    const rendered = render(<Remote />);
+
+    expect(rendered).not.toContainReactComponent('remote-fragment');
+    expect(rendered).toContainReactComponent('remote-box');
   });
 });

@@ -12,6 +12,9 @@ interface ReceivedState<T extends RemoteReceiverNode | RemoteReceiverRoot> {
   value?: T;
 }
 
+/**
+ * Subscribes to a remote node’s updates and returns its current value.
+ */
 export function useRemoteReceived<
   T extends RemoteReceiverNode | RemoteReceiverRoot,
 >(remote: T, receiver: RemoteReceiver): T | undefined {

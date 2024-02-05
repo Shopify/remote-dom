@@ -1,6 +1,7 @@
-import {renderRemoteNode, type RenderRemoteNodeOptions} from './node.tsx';
+import {renderRemoteNode} from './node.tsx';
+import type {RemoteNodeRenderOptions} from './types.ts';
 
-export interface RemoteRootRendererProps extends RenderRemoteNodeOptions {}
+export interface RemoteRootRendererProps extends RemoteNodeRenderOptions {}
 
 /**
  * A component that can be used to render a tree of UI elements from a remote

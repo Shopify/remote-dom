@@ -1,19 +1,16 @@
-import {
-  type RemoteReceiver,
-  type RemoteReceiverNode,
-} from '@remote-dom/core/receivers';
+import {type RemoteReceiverNode} from '@remote-dom/core/receivers';
 
 import {RemoteTextRenderer} from './RemoteTextRenderer.tsx';
-import type {RemoteComponentRendererMap} from './types.ts';
+import type {RemoteNodeRenderOptions} from './types.ts';
 
-export interface RenderRemoteNodeOptions {
-  receiver: RemoteReceiver;
-  components: RemoteComponentRendererMap<any>;
-}
-
+/**
+ * Renders a remote node to the host using React.
+ *
+ * @param node The remote node to render using React
+ */
 export function renderRemoteNode(
   node: RemoteReceiverNode,
-  {receiver, components}: RenderRemoteNodeOptions,
+  {receiver, components}: RemoteNodeRenderOptions,
 ) {
   switch (node.type) {
     case 1: {

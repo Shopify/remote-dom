@@ -15,7 +15,13 @@ import {
 } from './constants.ts';
 import type {RemoteComponentRendererProps} from './types.ts';
 
+/**
+ * Additional props that are added to Preact components rendered by `createRemoteComponentRenderer`.
+ */
 export interface RemoteComponentRendererAdditionalProps {
+  /**
+   * The remote element that this component is rendering.
+   */
   readonly [REMOTE_ELEMENT_PROP]: RemoteReceiverElement;
   readonly [REMOTE_ELEMENT_ATTACHED_PROP]: boolean;
 }
@@ -25,6 +31,12 @@ interface Internals extends Pick<RemoteComponentRendererProps, 'receiver'> {
   instanceRef: MutableRefObject<unknown>;
 }
 
+/**
+ * Takes a React component, and returns a new component that can be used to render that
+ * component from a remote element. This wrapper will handle subscribing to changes in that
+ * element, and will normalize the properties on that remote element before passing them
+ * to your React component.
+ */
 export function createRemoteComponentRenderer<
   Props extends Record<string, any> = {},
 >(

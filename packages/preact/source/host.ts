@@ -7,7 +7,7 @@ export {
   type SignalRemoteReceiverNode,
   type SignalRemoteReceiverParent,
 } from '@remote-dom/signals';
-export {renderRemoteNode, type RenderRemoteNodeOptions} from './host/node.tsx';
+export {renderRemoteNode} from './host/node.tsx';
 export {
   createRemoteComponentRenderer,
   type RemoteComponentRendererAdditionalProps,
@@ -21,6 +21,7 @@ export {
 export {usePropsForRemoteElement} from './host/hooks.ts';
 
 export type {
+  RemoteNodeRenderOptions,
   RemoteComponentRendererMap,
   RemoteComponentRendererProps,
 } from './host/types.ts';

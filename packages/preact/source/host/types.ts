@@ -5,15 +5,9 @@ import type {
 } from '@remote-dom/signals';
 
 /**
- * The props that are passed to a Preact component in order to render
- *  a remote element.
+ * The context needed to render a remote node on the host.
  */
-export interface RemoteComponentRendererProps {
-  /**
-   * The element being rendered.
-   */
-  element: SignalRemoteReceiverElement;
-
+export interface RemoteNodeRenderOptions {
   /**
    * The object that maintains the state of the remote tree on the host.
    */
@@ -23,6 +17,17 @@ export interface RemoteComponentRendererProps {
    * A map of Preact components that can render remote elements.
    */
   components: RemoteComponentRendererMap<any>;
+}
+
+/**
+ * The props that are passed to a Preact component in order to render
+ * a remote element.
+ */
+export interface RemoteComponentRendererProps extends RemoteNodeRenderOptions {
+  /**
+   * The element being rendered.
+   */
+  element: SignalRemoteReceiverElement;
 }
 
 /**

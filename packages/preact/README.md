@@ -182,6 +182,7 @@ render(
     receiver={receiver}
     components={new Map([['ui-card', Card]])}
   />,
+  document.querySelector('#root'),
 );
 ```
 
@@ -213,5 +214,6 @@ render(
       ])
     }
   />,
+  document.querySelector('#root'),
 );
 ```

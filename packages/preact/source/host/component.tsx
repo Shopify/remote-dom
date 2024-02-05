@@ -10,6 +10,9 @@ import type {RemoteComponentRendererProps} from './types.ts';
  * Additional props that are added to Preact components rendered by `createRemoteComponentRenderer`.
  */
 export interface RemoteComponentRendererAdditionalProps {
+  /**
+   * The remote element that this component is rendering.
+   */
   readonly [REMOTE_ELEMENT_PROP]: RemoteReceiverElement;
 }
 

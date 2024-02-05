@@ -308,7 +308,7 @@ describe('preact', () => {
   });
 
   it('can change the wrapper element on elements passed as properties to remote Preact components', async () => {
-    const RemoteModalWithoutWrappers = createRemoteComponent(
+    const RemoteModalWithBoxWrapper = createRemoteComponent(
       'remote-modal',
       RemoteModalElement,
       {
@@ -320,7 +320,7 @@ describe('preact', () => {
       const ref = useRef<InstanceType<typeof RemoteModalElement>>(null);
 
       return (
-        <RemoteModalWithoutWrappers
+        <RemoteModalWithBoxWrapper
           ref={ref}
           action={
             <RemoteButton
@@ -333,7 +333,7 @@ describe('preact', () => {
           }
         >
           Modal body
-        </RemoteModalWithoutWrappers>
+        </RemoteModalWithBoxWrapper>
       );
     }
 

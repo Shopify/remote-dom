@@ -3,27 +3,9 @@ import {
   NODE_TYPE_TEXT,
   NODE_TYPE_COMMENT,
 } from '@remote-dom/core';
-import type {
-  SignalRemoteReceiver,
-  SignalRemoteReceiverNode,
-} from '@remote-dom/signals';
+import type {SignalRemoteReceiverNode} from '@remote-dom/signals';
 
-import type {RemoteComponentRendererMap} from './types.ts';
-
-/**
- * The context needed to render a remote node on the host.
- */
-export interface RenderRemoteNodeOptions {
-  /**
-   * The object that maintains the state of the remote tree on the host.
-   */
-  receiver: SignalRemoteReceiver;
-
-  /**
-   * A map of Preact components that can render remote elements.
-   */
-  components: RemoteComponentRendererMap<any>;
-}
+import type {RemoteNodeRenderOptions} from './types.ts';
 
 /**
  * Renders a remote node to the host using Preact.
@@ -32,7 +14,7 @@ export interface RenderRemoteNodeOptions {
  */
 export function renderRemoteNode(
   node: SignalRemoteReceiverNode,
-  {receiver, components}: RenderRemoteNodeOptions,
+  {receiver, components}: RemoteNodeRenderOptions,
 ) {
   switch (node.type) {
     case NODE_TYPE_ELEMENT: {
