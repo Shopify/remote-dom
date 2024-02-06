@@ -2,6 +2,7 @@
   "name": "@remote-dom/polyfill",
   "type": "module",
   "license": "MIT",
+  "description": "A polyfill for the browser APIs used by Remote DOM",
   "publishConfig": {
     "access": "public",
     "@remote-dom/registry": "https://registry.npmjs.org"

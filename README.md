@@ -208,7 +208,11 @@ First, we’ll create the remote environment’s version of `ui-button`. The rem
 
       createThreadFromInsideIframe({
         expose: {
-          connect(connection) {
+          // This `render()` method will kick off the process of synchronizing
+          // changes between environments. It will be called on the host with a
+          // `RemoteConnection` object, which you’ll generally get from one of
+          // Remote DOM’s `Receiver` classes.
+          render(connection) {
             retain(connection);
             const observer = new RemoteMutationObserver(connection);
             observer.observe(root);
@@ -308,7 +312,7 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
       // Like our previous example, we need to use a library that can serialize
       // function properties over `postMessage`.
       const thread = createThreadFromIframe(iframe);
-      thread.connect(receiver.connection);
+      thread.render(receiver.connection);
     </script>
   </body>
 </html>

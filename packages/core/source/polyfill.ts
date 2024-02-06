@@ -1,9 +1,4 @@
-import {
-  hooks,
-  Window,
-  installWindowAsGlobal,
-  type Hooks,
-} from '@remote-dom/polyfill';
+import {hooks, Window, type Hooks} from '@remote-dom/polyfill';
 
 import {
   REMOTE_CONNECTION,
@@ -23,7 +18,7 @@ import {
 
 const window = new Window();
 
-installWindowAsGlobal(window);
+Window.setGlobal(window);
 
 hooks.insertChild = (parent, node, index) => {
   const connection = (parent as RemoteConnectedNode)[REMOTE_CONNECTION];
