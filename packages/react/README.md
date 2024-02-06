@@ -137,14 +137,14 @@ import {createRoot} from 'react-dom/client';
 import {
   createRemoteComponentRenderer,
   RemoteRootRenderer,
-  SignalRemoteReceiver,
+  RemoteReceiver,
 } from '@remote-dom/react/host';
 
 // Create wrapper elements to render our actual UI components in response
 // to remote elements. See the `createRemoteComponentRenderer()` section above.
 const Card = createRemoteComponentRenderer(UICard);
 
-const receiver = new SignalRemoteReceiver();
+const receiver = new RemoteReceiver();
 // TODO: send the `receiver.connection` object to the remote environment,
 // so it can send us updates about the tree of remote elements.
 
