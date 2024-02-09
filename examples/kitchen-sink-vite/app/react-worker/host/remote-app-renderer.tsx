@@ -9,7 +9,7 @@ import {
 
 import {createEndpoint, fromWebWorker} from '@remote-ui/rpc';
 
-import {Button} from './components';
+import {Button, File} from './components';
 import {Endpoint} from '../types';
 
 export function RemoteAppRenderer({
@@ -17,7 +17,7 @@ export function RemoteAppRenderer({
 }: {
   inputRef: React.RefObject<HTMLInputElement>;
 }) {
-  const controller = useMemo(() => createController({Button}), []);
+  const controller = useMemo(() => createController({Button, File}), []);
   const receiver = useMemo(() => createRemoteReceiver(), []);
 
   useEffect(() => {

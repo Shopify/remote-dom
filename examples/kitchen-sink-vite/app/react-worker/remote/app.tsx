@@ -1,6 +1,7 @@
 import {useState} from 'react';
 
 const Button = 'Button' as any;
+const File = 'File' as any;
 
 export function RemoteApp({getMessage}: {getMessage: () => Promise<string>}) {
   const [message, setMessage] = useState('');
@@ -17,6 +18,12 @@ export function RemoteApp({getMessage}: {getMessage: () => Promise<string>}) {
       >
         Log message in remote environment
       </Button>
+      <File
+        onChange={(files) => {
+          const file = files[0];
+          console.log(URL.createObjectURL(file));
+        }}
+      ></File>
     </>
   );
 }

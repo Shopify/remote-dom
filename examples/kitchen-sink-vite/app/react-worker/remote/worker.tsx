@@ -9,7 +9,9 @@ endpoint.expose({
   async render(receiver, api) {
     retain(receiver);
     retain(api);
-    const remoteRoot = createRemoteRoot(receiver, {components: ['Button']});
+    const remoteRoot = createRemoteRoot(receiver, {
+      components: ['Button', 'File'],
+    });
     const root = createRoot(remoteRoot);
     root.render(<RemoteApp {...api} />);
     await remoteRoot.mount();

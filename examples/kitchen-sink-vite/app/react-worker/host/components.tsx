@@ -1,4 +1,4 @@
-import React, {useMemo, forwardRef} from 'react';
+import React, {useMemo, forwardRef, useRef} from 'react';
 
 export const Button = ({
   onPress,
@@ -11,6 +11,32 @@ export const Button = ({
     {children}
   </button>
 );
+
+export const File = ({onChange}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  class A {
+    constructor() {
+      console.log('A constructor');
+    }
+
+    testMe() {
+      return 12;
+    }
+  }
+
+  return (
+    <input
+      type="file"
+      ref={fileInputRef}
+      onChange={() => {
+        if (fileInputRef.current && fileInputRef.current.files) {
+          onChange(Array.from(fileInputRef.current.files));
+        }
+      }}
+    />
+  );
+};
 
 export const TextField = forwardRef<HTMLInputElement, {label: string}>(
   ({label}, ref) => {

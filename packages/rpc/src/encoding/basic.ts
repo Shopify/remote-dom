@@ -144,10 +144,6 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
         return value as any;
       }
 
-      if (value instanceof ArrayBuffer) {
-        return value;
-      }
-
       if (Array.isArray(value)) {
         return value.map((value) => decode(value, retainedBy));
       }
@@ -209,13 +205,15 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
         return proxy as any;
       }
 
-      return Object.keys(value).reduce(
-        (object, key) => ({
-          ...object,
-          [key]: decode((value as any)[key], retainedBy),
-        }),
-        {},
-      ) as any;
+      if (isBasicObject(value)) {
+        return Object.keys(value).reduce(
+          (object, key) => ({
+            ...object,
+            [key]: decode((value as any)[key], retainedBy),
+          }),
+          {},
+        ) as any;
+      }
     }
 
     return value as any;
