@@ -83,8 +83,8 @@ export const Modal = forwardRef<
 
   return (
     <dialog ref={dialogRef} class="Modal" onClose={() => onClose?.()}>
-      <div class="Modal__Content">{children}</div>
-      {primaryAction && <div class="Modal__Actions">{primaryAction}</div>}
+      <div class="Modal-Content">{children}</div>
+      {primaryAction && <div class="Modal-Actions">{primaryAction}</div>}
     </dialog>
   );
 });

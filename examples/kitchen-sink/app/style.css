@@ -7,8 +7,12 @@ html {
   height: -webkit-fill-available;
 }
 
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
 body {
-  background: rgb(8, 1, 15);
+  background: rgb(23, 19, 31);
   color: rgb(239, 231, 243);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
     Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
@@ -21,12 +25,6 @@ body {
   min-height: -webkit-fill-available;
   margin: 0;
   padding: 0;
-}
-
-dialog {
-  background: rgb(8, 1, 15);
-  color: rgb(239, 231, 243);
-  border: 1px solid rgb(239, 231, 243);
 }
 
 main {
@@ -71,52 +69,32 @@ li {
 }
 
 .Button {
-  outline: none;
+  display: inline-flex;
+  justify-content: center;
+  max-inline-size: max-content;
   position: relative;
   appearance: none;
-  border: none;
-  background: rgb(27, 9, 47);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgb(91, 79, 115);
   color: inherit;
-  display: block;
-  width: 100%;
   border-radius: 8px;
   font-size: 1em;
-  padding: 0.5em;
+  padding: 0.5rem 1rem;
   transition: background 0.15s ease;
 }
 
-.Button::after {
-  --Button-focus-ring-offset: 2px;
-
-  content: '';
-  position: absolute;
-  z-index: 1;
-  top: calc(-1 * var(--Button-focus-ring-offset));
-  right: calc(-1 * var(--Button-focus-ring-offset));
-  bottom: calc(-1 * var(--Button-focus-ring-offset));
-  left: calc(-1 * var(--Button-focus-ring-offset));
-  display: block;
-  pointer-events: none;
-  box-shadow: 0 0 0 0 transparent;
-  transition: box-shadow 0.15s ease;
-  border-radius: calc(8px + var(--Button-focus-ring-offset));
-}
-
 .Button:focus {
-  outline: 1px solid transparent;
-}
-
-.Button:focus-visible::after {
-  box-shadow: 0 0 0 2px rgb(214, 117, 226);
+  outline: 2px solid rgb(171, 135, 237);
+  outline-offset: 2px;
 }
 
 .Button:hover,
 .Button:focus-visible {
-  background: rgb(59, 19, 104);
+  background: rgb(110, 96, 139);
 }
 
 .Button:active {
-  background: rgb(51, 16, 90);
+  background: rgb(125, 109, 157);
 }
 
 .Stack {
@@ -158,44 +136,60 @@ li {
   transition: background 0.15s ease;
 }
 
-.InputContainer {
-  position: relative;
+.Modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  block-size: auto;
+  inline-size: 30rem;
+  max-inline-size: 90%;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  background: rgb(30, 25, 41);
+  color: rgb(239, 231, 243);
+  border: none;
+  border-radius: 10px;
+  box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px, rgba(0, 0, 0, 0.3) 0px 10px 15px -3px, rgba(0, 0, 0, 0.5) 0px 4px 6px -4px;
 }
 
-.Input {
-  display: block;
-  width: 100%;
-  appearance: none;
-  background: transparent;
-  border: 1px solid rgb(212, 169, 205);
-  color: inherit;
-  font-size: 1em;
-  padding: 0.5em 1em;
-  border-radius: 8px;
+.Modal::backdrop {
+  background: rgba(9, 9, 11, 0.65);
 }
 
-.Input:focus {
-  outline: 1px solid transparent;
+.Modal[open] {
+  animation: OpenModal 0.2s ease normal;
 }
 
-.InputBackdrop {
-  --TextField-focus-ring-offset: 2px;
-
-  position: absolute;
-  z-index: 1;
-  top: calc(-1 * var(--TextField-focus-ring-offset));
-  right: calc(-1 * var(--TextField-focus-ring-offset));
-  bottom: calc(-1 * var(--TextField-focus-ring-offset));
-  left: calc(-1 * var(--TextField-focus-ring-offset));
-  display: block;
-  pointer-events: none;
-  box-shadow: 0 0 0 0 transparent;
-  transition: box-shadow 0.15s ease;
-  border-radius: calc(8px + var(--TextField-focus-ring-offset));
+.Modal:not([open]) {
+  display: none;
 }
 
-.Input:focus-visible ~ .InputBackdrop {
-  box-shadow: 0 0 0 2px rgb(214, 117, 226);
+@keyframes OpenModal {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(3rem - 50%));
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.Modal-Content {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  justify-content: start;
+}
+
+.Modal-Actions {
+  padding: 1rem;
+  border-block-start: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: end;
 }
 
 .Text--emphasis {

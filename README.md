@@ -6,9 +6,9 @@ To help you use sandboxed JavaScript environments that are less expensive than a
 
 ## Examples
 
-- [Getting started](./examples/getting-started/), where we show the most basic usage of Remote DOM in order to synchronize the text content of an element between a main page and an `<iframe>`.
-- [Custom elements](./examples/custom-elements/), where we extend the first example to allow the sandboxed environment to render custom button element.
-- [“The kitchen sink”](./examples/kitchen-sink/), where we show off a more fully-featured implementation of Remote DOM. This includes custom elements with properties, events, and methods, and the ability to sandbox UI in a web worker. The same sandboxed example is implemented in “vanilla” JavaScript, [htm](https://github.com/developit/htm), [Preact](https://preactjs.com), [React](https://react.dev), [Svelte](https://svelte.dev), and [Vue](https://vuejs.org).
+- [Getting started](./examples/getting-started/), where we show the most basic usage of Remote DOM in order to synchronize the text content of an element between a main page and an `<iframe>`. Run `pnpm example:getting-started` to see this example in your browser.
+- [Custom elements](./examples/custom-elements/), where we extend the first example to allow the sandboxed environment to render custom button element. Run `pnpm example:custom-elements` to see this example in your browser.
+- [The “kitchen sink”](./examples/kitchen-sink/), where we show off a more fully-featured implementation of Remote DOM. This includes custom elements with properties, events, and methods, and the ability to sandbox UI in a web worker. The same sandboxed example is implemented in “vanilla” JavaScript, [htm](https://github.com/developit/htm), [Preact](https://preactjs.com), [React](https://react.dev), [Svelte](https://svelte.dev), and [Vue](https://vuejs.org). Run `pnpm example:kitchen-sink` to see this example in your browser.
 
 ## Building a project with Remote DOM
 
