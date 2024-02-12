@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.5
+
+### Patch Changes
+
+- [#255](https://github.com/Shopify/remote-ui/pull/255) [`c89ffb7`](https://github.com/Shopify/remote-ui/commit/c89ffb780660bda113c5e76ca10e46d4ffaf6072) Thanks [@robin-drexler](https://github.com/robin-drexler)! - allow File and other object types to be send over the RPC layer
+
 ## 1.4.4
 
 ### Patch Changes
