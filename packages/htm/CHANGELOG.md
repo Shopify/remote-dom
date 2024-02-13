@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.2
+
+### Patch Changes
+
+- Updated dependencies [[`2873c5e`](https://github.com/Shopify/remote-ui/commit/2873c5efc1f885e5cc906fa07cb11bcc2753c1d7)]:
+  - @remote-ui/core@2.2.4
+
 ## 2.3.1
 
 ### Patch Changes

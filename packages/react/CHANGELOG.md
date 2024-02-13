@@ -1,5 +1,15 @@
 # Changelog
 
+## 5.0.3
+
+### Patch Changes
+
+- [#257](https://github.com/Shopify/remote-ui/pull/257) [`2873c5e`](https://github.com/Shopify/remote-ui/commit/2873c5efc1f885e5cc906fa07cb11bcc2753c1d7) Thanks [@robin-drexler](https://github.com/robin-drexler)! - bump rpc dep versions
+
+- Updated dependencies [[`2873c5e`](https://github.com/Shopify/remote-ui/commit/2873c5efc1f885e5cc906fa07cb11bcc2753c1d7)]:
+  - @remote-ui/async-subscription@2.1.15
+  - @remote-ui/core@2.2.4
+
 ## 5.0.2
 
 ### Patch Changes
