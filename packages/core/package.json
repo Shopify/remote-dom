@@ -20,7 +20,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@remote-ui/rpc": "^1.4.3",
+    "@remote-ui/rpc": "^1.4.5",
     "@remote-ui/types": "^1.1.3"
   }
 }

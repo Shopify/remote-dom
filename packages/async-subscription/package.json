@@ -20,6 +20,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@remote-ui/rpc": "^1.4.3"
+    "@remote-ui/rpc": "^1.4.5"
   }
 }
