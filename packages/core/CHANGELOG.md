@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.4
+
+### Patch Changes
+
+- [#257](https://github.com/Shopify/remote-ui/pull/257) [`2873c5e`](https://github.com/Shopify/remote-ui/commit/2873c5efc1f885e5cc906fa07cb11bcc2753c1d7) Thanks [@robin-drexler](https://github.com/robin-drexler)! - bump rpc dep versions
+
 ## 2.2.3
 
 ### Patch Changes
