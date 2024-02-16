@@ -326,6 +326,62 @@ describe('root', () => {
       expect(funcOne).not.toHaveBeenCalled();
       expect(funcTwo).toHaveBeenCalled();
     });
+
+    it('hot-swaps arrays of primitive values', () => {
+      const receiver = createDelayedReceiver();
+
+      const root = createRemoteRoot(receiver.receive);
+      const component = root.createComponent('MyComponent', {
+        array1: [1, 2, 3, 4],
+        array2: [1, 2, 3, 4],
+      });
+
+      root.append(component);
+      root.mount();
+
+      component.updateProps({
+        array1: [1, 2, 3, 4],
+        array2: [1, 3, 4],
+      });
+
+      receiver.flush();
+
+      const {array2} = (receiver.children[0] as any).props;
+
+      expect(array2).toStrictEqual([1, 3, 4]);
+    });
+
+    it('hot-swaps arrays of primitive values nested in objects and arrays', () => {
+      const receiver = createDelayedReceiver();
+
+      const root = createRemoteRoot(receiver.receive);
+      const component = root.createComponent('MyComponent', {
+        arrays: [
+          {
+            array1: [1, 2, 3, 4],
+            array2: [1, 2, 3, 4],
+          },
+        ],
+      });
+
+      root.append(component);
+      root.mount();
+
+      component.updateProps({
+        arrays: [
+          {
+            array1: [1, 2, 3, 4],
+            array2: [1, 3, 4],
+          },
+        ],
+      });
+
+      receiver.flush();
+
+      const {arrays} = (receiver.children[0] as any).props;
+
+      expect(arrays[0].array2).toStrictEqual(expect.arrayContaining([1, 3, 4]));
+    });
   });
 });
 
