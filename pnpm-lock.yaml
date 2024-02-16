@@ -124,7 +124,7 @@ importers:
   packages/core:
     dependencies:
       '@remote-dom/polyfill':
-        specifier: ^0.0.1
+        specifier: ^0.0.2
         version: link:../polyfill
       htm:
         specifier: ^3.1.1
