@@ -20,14 +20,14 @@ npm install @remote-ui/react --save
 
 This package also has peer dependencies on a few React-related packages, but the versions you need depend on the version of React you are using:
 
-**React 17.x.x**: you will need to have React installed. Additionally, if you are in the “remote” environment, you will need a dependency on `react-reconciler` between greater than or equal to `0.26.0`, and less than `0.28.0`:
+**React 17.x.x**: you will need to have React installed. Additionally, if you are in the “remote” environment, you will need a dependency on `react-reconciler` greater than or equal to `0.26.0`, and less than `0.27.0`:
 
 ```
-yarn add react@^17.0.0 react-reconciler@^0.27.0
+yarn add react@^17.0.0 react-reconciler@~0.26.0
 
 # or, with `npm`:
 
-npm install react@^17.0.0 react-reconciler@^0.27.0 --save
+npm install react@^17.0.0 react-reconciler@~0.26.0 --save
 ```
 
 **React 18.x.x and later**: you will need to have React installed. Additionally, if you are in the “remote” environment, you will need a dependency on `react-reconciler` greater than or equal to `0.28.0`:
