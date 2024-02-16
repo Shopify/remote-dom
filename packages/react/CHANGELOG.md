@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.0.4
+
+### Patch Changes
+
+- [#261](https://github.com/Shopify/remote-ui/pull/261) [`4c7ba1a`](https://github.com/Shopify/remote-ui/commit/4c7ba1a2528711f5771bba18d03e63d79c3be202) Thanks [@lemonmade](https://github.com/lemonmade)! - Fix React `children` type for remote components without children
+
 ## 5.0.3
 
 ### Patch Changes

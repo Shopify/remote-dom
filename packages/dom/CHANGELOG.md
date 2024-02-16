@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.19
+
+### Patch Changes
+
+- [#133](https://github.com/Shopify/remote-ui/pull/133) [`f278ca1`](https://github.com/Shopify/remote-ui/commit/f278ca11764afc80884cdb2fdecb7e7c3827cd43) Thanks [@clauderic](https://github.com/clauderic)! - Fix default `withEventListeners` behavior
+
 ## 1.3.18
 
 ### Patch Changes
