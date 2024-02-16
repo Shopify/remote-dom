@@ -39,7 +39,9 @@ export function createEventListenerApplyProperty({
     typeof test === 'function' ? test : (prop: string) => test.test(prop);
 
   return ({type, element, property, value}) => {
-    if (!normalizedTest(property, type)) return;
+    if (!normalizedTest(property, type)) {
+      return false;
+    }
 
     const options =
       eventListenerOptions == null || typeof eventListenerOptions === 'object'
@@ -47,6 +49,8 @@ export function createEventListenerApplyProperty({
         : eventListenerOptions(property, type);
 
     element.addEventListener(normalize(property, type), value as any, options);
+
+    return true;
   };
 }
 
