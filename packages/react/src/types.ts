@@ -16,11 +16,18 @@ type RemoteFragmentToReactElement<T> = T extends RemoteFragment<infer R>
   ? ReactElement | false | RemoteFragment<R>
   : T;
 
+/* eslint-disable @typescript-eslint/ban-types */
 export type ReactPropsFromRemoteComponentType<
   Type extends RemoteComponentType<string, any, any>,
-> = PropsForRemoteComponent<Type> & {
-  children?: ReactNode;
-};
+> = PropsForRemoteComponent<Type> &
+  (Type extends RemoteComponentType<string, any, infer Children>
+    ? false extends Children
+      ? {}
+      : {
+          children?: ReactNode;
+        }
+    : {});
+/* eslint-enable @typescript-eslint/ban-types */
 
 export type ReactComponentTypeFromRemoteComponentType<
   Type extends RemoteComponentType<string, any, any>,
