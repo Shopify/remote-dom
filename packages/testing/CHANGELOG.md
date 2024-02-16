@@ -1,11 +1,5 @@
 # Changelog
 
-## 1.4.2
-
-### Patch Changes
-
-- [#253](https://github.com/Shopify/remote-ui/pull/253) Fixes parameter type for Node.trigger.
-
 ## 1.4.1
 
 ### Patch Changes
