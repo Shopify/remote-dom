@@ -8,8 +8,8 @@ All contributors **must** adhere to the code of conduct. Read the [full text](./
 
 There are many ways to contribute to remote-ui, some of which are:
 
-- Filing bug reports or requesting new features by [opening an issue](https://github.com/Shopify/remote-ui/issues/new)
-- Hacking on an issue from our [backlog](https://github.com/Shopify/remote-ui/issues)
+- Filing bug reports or requesting new features by [opening an issue](https://github.com/Shopify/remote-dom/issues/new)
+- Hacking on an issue from our [backlog](https://github.com/Shopify/remote-dom/issues)
 - Improving tests, documentation, or examples
 
 ## Development
@@ -44,7 +44,7 @@ To build all the package outputs for the repo, run `pnpm build`. This command us
 
 If this is your first contribution to a project on GitHub, you may find this [free video series on contributing to open source useful](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github).
 
-If you are fixing a minor issue, feel free to send a pull request directly. If you are working on a non-trivial bug or feature, though, we’d appreciate if you could first [open an issue](https://github.com/Shopify/remote-ui/issues) so we can make sure the process goes smoothly. If you are taking on an issue, please leave a comment stating that you intend to work on it.
+If you are fixing a minor issue, feel free to send a pull request directly. If you are working on a non-trivial bug or feature, though, we’d appreciate if you could first [open an issue](https://github.com/Shopify/remote-dom/issues) so we can make sure the process goes smoothly. If you are taking on an issue, please leave a comment stating that you intend to work on it.
 
 **Before submitting a pull request**, please:
 

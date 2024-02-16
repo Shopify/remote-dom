@@ -62,7 +62,7 @@ customElements.define('ui-button', Button);
 
 ## Update your host code to use the new `Receiver` classes
 
-`remote-ui` provided a [`createRemoteReceiver()` utility](https://github.com/Shopify/remote-ui/tree/main/packages/core#createremotereceiver) for creating the object that will receive updates from the remote environment. In Remote DOM, this utility is replaced with the [`RemoteReceiver`](/packages/core/README.md#remotereceiver), [`DOMRemoteReceiver`](/packages/core/README.md#domremotereceiver), or [`SignalRemoteReceiver`](/packages/signals/README.md#signalremotereceiver) classes.
+`remote-ui` provided a [`createRemoteReceiver()` utility](https://github.com/Shopify/remote-dom/tree/remote-ui/packages/core#createremotereceiver) for creating the object that will receive updates from the remote environment. In Remote DOM, this utility is replaced with the [`RemoteReceiver`](/packages/core/README.md#remotereceiver), [`DOMRemoteReceiver`](/packages/core/README.md#domremotereceiver), or [`SignalRemoteReceiver`](/packages/signals/README.md#signalremotereceiver) classes.
 
 ```ts
 // Replace this:
@@ -85,7 +85,7 @@ sendToRemoteEnvironment(receiver.connection);
 
 ## Update your remote code to use DOM elements instead of the `RemoteRoot` object
 
-`remote-ui` provided a [`createRemoteRoot()` utility](https://github.com/Shopify/remote-ui/tree/main/packages/core#createremoteroot) for creating the root node for a tree of remote elements. This root node managed the top-level children of the tree, and had methods for creating components to be inserted into the tree. In Remote DOM, this API is removed in favor of native DOM APIs.
+`remote-ui` provided a [`createRemoteRoot()` utility](https://github.com/Shopify/remote-dom/tree/remote-ui/packages/core#createremoteroot) for creating the root node for a tree of remote elements. This root node managed the top-level children of the tree, and had methods for creating components to be inserted into the tree. In Remote DOM, this API is removed in favor of native DOM APIs.
 
 ```ts
 // Replace this:

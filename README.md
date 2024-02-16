@@ -2,7 +2,7 @@
 
 Remote DOM lets you recreate a tree of [DOM elements](https://developer.mozilla.org/en-US/docs/Web/API/Document_object_model/Using_the_Document_Object_Model) between JavaScript environments. You can think of it as an alternative to using an [`<iframe>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe): with Remote DOM, a developer builds up a tree of DOM elements in a sandboxed environment to render their user interface, just as they do inside an `<iframe>`. However, unlike an `<iframe>`, Remote DOM renders those DOM elements as part of the top-level HTML document, allowing you to control what UI elements are rendered, and preventing the need to load potentially-large JavaScript and CSS assets multiple times.
 
-To help you use sandboxed JavaScript environments that are less expensive than a full `<iframe>`, Remote DOM also offers a minimal polyfill of key DOM APIs. This lets you use frameworks that would usually need to be run on the top-level HTML page, like [Preact](https://preactjs.com) and [Svelte](https://svelte.dev), inside of a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API).
+To help you use sandboxed JavaScript environments that are less expensive than a full `<iframe>`, Remote DOM also offers a [minimal polyfill of key DOM APIs](/packages/core/README.md#remote-domcorepolyfill). This lets you use frameworks that would usually need to be run on the top-level HTML page, like [Preact](https://preactjs.com) and [Svelte](https://svelte.dev), inside of a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API).
 
 ## Examples
 
@@ -161,7 +161,7 @@ First, we’ll create the remote environment’s version of `ui-button`. The rem
 
       // For full details on defining remote elements, see the documentation
       // for `@remote-dom/core/elements`:
-      // https://github.com/Shopify/remote-ui/tree/main/packages/core#elements
+      // https://github.com/Shopify/remote-dom/tree/main/packages/core#elements
       class UIButton extends RemoteElement {
         static get remoteProperties() {
           return {
