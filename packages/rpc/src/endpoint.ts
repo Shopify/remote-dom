@@ -26,6 +26,10 @@ interface MessageMap {
   [FUNCTION_RESULT]: [string, Error?, any?];
 }
 
+type MessageData = {
+  [K in keyof MessageMap]: [K, MessageMap[K]];
+}[keyof MessageMap];
+
 export interface CreateEndpointOptions<T = unknown> {
   uuid?(): string;
   createEncoder?(api: EncodingStrategyApi): EncodingStrategy;
@@ -162,7 +166,7 @@ export function createEndpoint<T>(
   async function listener(event: MessageEvent) {
     const {data} = event;
 
-    if (data == null || !Array.isArray(data)) {
+    if (!isMessageData(data)) {
       return;
     }
 
@@ -173,7 +177,7 @@ export function createEndpoint<T>(
       }
       case CALL: {
         const stackFrame = new StackFrame();
-        const [id, property, args] = data[1] as MessageMap[typeof CALL];
+        const [id, property, args] = data[1];
         const func = activeApi.get(property);
 
         try {
@@ -199,31 +203,26 @@ export function createEndpoint<T>(
         break;
       }
       case RESULT: {
-        const [callId] = data[1] as MessageMap[typeof RESULT];
+        const [callId] = data[1];
 
-        callIdsToResolver.get(callId)!(
-          ...(data[1] as MessageMap[typeof RESULT]),
-        );
+        callIdsToResolver.get(callId)!(...data[1]);
         callIdsToResolver.delete(callId);
         break;
       }
       case RELEASE: {
-        const [id] = data[1] as MessageMap[typeof RELEASE];
+        const [id] = data[1];
         encoder.release(id);
         break;
       }
       case FUNCTION_RESULT: {
-        const [callId] = data[1] as MessageMap[typeof FUNCTION_RESULT];
+        const [callId] = data[1];
 
-        callIdsToResolver.get(callId)!(
-          ...(data[1] as MessageMap[typeof FUNCTION_RESULT]),
-        );
+        callIdsToResolver.get(callId)!(...data[1]);
         callIdsToResolver.delete(callId);
         break;
       }
       case FUNCTION_APPLY: {
-        const [callId, funcId, args] =
-          data[1] as MessageMap[typeof FUNCTION_APPLY];
+        const [callId, funcId, args] = data[1];
 
         try {
           const result = await encoder.call(funcId, args);
@@ -344,4 +343,12 @@ function createCallable<T>(
   }
 
   return call;
+}
+
+function isMessageData(value: unknown): value is MessageData {
+  return (
+    Array.isArray(value) &&
+    typeof value[0] === 'number' &&
+    (value[1] == null || Array.isArray(value[1]))
+  );
 }
