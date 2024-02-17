@@ -1,5 +1,13 @@
 # @remote-dom/preact
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`9576a72`](https://github.com/Shopify/remote-ui/commit/9576a72fa354481621c53efde4169829fe9bfabf)]:
+  - @remote-dom/core@0.1.1
+  - @remote-dom/signals@1.0.1
+
 ## 0.1.0
 
 ### Minor Changes
