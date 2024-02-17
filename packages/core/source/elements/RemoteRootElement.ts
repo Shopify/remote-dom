@@ -37,6 +37,8 @@ export class RemoteRootElement extends HTMLElement {
         i,
       ]);
     }
+
+    connection.mutate(records);
   }
 
   updateRemoteProperty(name: string, value?: unknown) {
