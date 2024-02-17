@@ -1,5 +1,11 @@
 # @remote-dom/core
 
+## 0.1.1
+
+### Patch Changes
+
+- [#268](https://github.com/Shopify/remote-ui/pull/268) [`9576a72`](https://github.com/Shopify/remote-ui/commit/9576a72fa354481621c53efde4169829fe9bfabf) Thanks [@shopify-github-actions-access](https://github.com/apps/shopify-github-actions-access)! - Send initial tree of UI elements when connecting a `RemoteRootElement`
+
 ## 0.1.0
 
 ### Minor Changes
