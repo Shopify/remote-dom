@@ -1,5 +1,11 @@
 # @remote-dom/react
 
+## 0.1.2
+
+### Patch Changes
+
+- [#269](https://github.com/Shopify/remote-ui/pull/269) [`e4629a7`](https://github.com/Shopify/remote-ui/commit/e4629a7e50057eb57f8a2f90b393fba6688d0d19) Thanks [@shopify-github-actions-access](https://github.com/apps/shopify-github-actions-access)! - Add React-specific polyfills
+
 ## 0.1.1
 
 ### Patch Changes
