@@ -1,5 +1,11 @@
 # @remote-dom/react
 
+## 0.1.3
+
+### Patch Changes
+
+- [`7398741`](https://github.com/Shopify/remote-ui/commit/7398741dc42f474d344ed98ea634bc6a255d6650) Thanks [@lemonmade](https://github.com/lemonmade)! - Mark React polyfill as having side effects
+
 ## 0.1.2
 
 ### Patch Changes
