@@ -55,7 +55,11 @@
       ]
     }
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "./source/polyfill.ts",
+    "./build/esnext/polyfill.esnext",
+    "./build/esm/polyfill.mjs"
+  ],
   "scripts": {
     "build": "rollup --config rollup.config.js"
   },
