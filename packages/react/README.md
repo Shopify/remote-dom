@@ -14,7 +14,7 @@ yarn add @remote-dom/core @remote-dom/react # yarn
 
 This library provides helpers for both the “host” and “remote” environments.
 
-The `@remote-dom/react` entry provides wrappers for [`RemoteElement` subclasses](../core/README.md#remoteelement) that add some nice React-specific features on top of core Remote DOM library. Additionally, React DOM checks for a few browser globals that are not covered in the [core DOM polyfill](/packages/core/README.md#remote-domcorepolyfill). If you are using React in a Web Worker, you will also need to import [`@remote-dom/react/polyfill`](#polyfill) *before* `react-dom` to ensure that these globals are available.
+The `@remote-dom/react` entry provides wrappers for [`RemoteElement` subclasses](../core/README.md#remoteelement) that add some nice React-specific features on top of core Remote DOM library. Additionally, React DOM checks for a few browser globals that are not covered in the [core DOM polyfill](/packages/core/README.md#remote-domcorepolyfill). If you are using React in a Web Worker, you will also need to import [`@remote-dom/react/polyfill`](#polyfill) _before_ `react-dom` to ensure that these globals are available.
 
 The `@remote-dom/react/host` provides the [`RemoteReceiver` class](../core/README.md#remotereceiver) and [`RemoteRootRenderer` component](#remoterootreceiver), which are used to render a tree of remote elements to the host environment using React.
 
@@ -22,7 +22,7 @@ The `@remote-dom/react/host` provides the [`RemoteReceiver` class](../core/READM
 
 #### Polyfill
 
-Some versions of React DOM check for a few specific browser globals on initialization. If you are polyfilling the DOM using [`@remote-dom/core/polyfill`](/packages/core/README.md#remote-domcorepolyfill), you will also need to import `@remote-dom/react/polyfill` *before* `react-dom` to ensure that these globals are available.
+Some versions of React DOM check for a few specific browser globals on initialization. If you are polyfilling the DOM using [`@remote-dom/core/polyfill`](/packages/core/README.md#remote-domcorepolyfill), you will also need to import `@remote-dom/react/polyfill` _before_ `react-dom` to ensure that these globals are available.
 
 ```tsx
 import '@remote-dom/core/polyfill';
