@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [main, remote-dom]
+    branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
