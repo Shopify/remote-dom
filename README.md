@@ -24,7 +24,7 @@ yarn add @remote-dom/core # yarn
 
 Next, on the “host” HTML page, you will need to create a “receiver”. This object will be responsible for receiving the updates from the remote environment, and mapping them to actual DOM elements.
 
-`@remote-ui/core` provides a few different types of receivers, but for now we use the `DOMRemoteReceiver`, which directly mirrors the DOM elements created remotely in the host HTML page. That is, if the remote environment renders a `ui-button` custom element, a matching `ui-button` custom element will be created on the host page.
+`@remote-dom/core` provides a few different types of receivers, but for now we use the `DOMRemoteReceiver`, which directly mirrors the DOM elements created remotely in the host HTML page. That is, if the remote environment renders a `ui-button` custom element, a matching `ui-button` custom element will be created on the host page.
 
 Create a `DOMRemoteReceiver` and call its `connect()` method on the element that should contain any children rendered by the remote environment:
 
@@ -75,7 +75,7 @@ Our host is ready to receive elements to render, but we don’t have a remote en
 </html>
 ```
 
-Next, let’s create the document that will be loaded into the iframe. It will use another utility provided by `@remote-ui/core`, `RemoteMutationObserver`, which extends the browser’s [`MutationObserver` interface](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) in order to communicate changes to the host. Create a `RemoteMutationObserver`, and call its `observe()` method on the element that contains the elements you want to synchronize with the host:
+Next, let’s create the document that will be loaded into the iframe. It will use another utility provided by `@remote-dom/core`, `RemoteMutationObserver`, which extends the browser’s [`MutationObserver` interface](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) in order to communicate changes to the host. Create a `RemoteMutationObserver`, and call its `observe()` method on the element that contains the elements you want to synchronize with the host:
 
 ```html
 <!doctype html>

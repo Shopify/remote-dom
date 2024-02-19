@@ -1,11 +1,11 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@2.2.0/schema.json",
-  "changelog": ["@changesets/changelog-github", {"repo": "Shopify/remote-ui"}],
+  "changelog": ["@changesets/changelog-github", {"repo": "Shopify/remote-dom"}],
   "commit": false,
   "fixed": [],
   "linked": [],
   "access": "public",
-  "baseBranch": "remote-dom",
+  "baseBranch": "main",
   "updateInternalDependencies": "minor",
   "ignore": []
 }

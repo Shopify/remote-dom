@@ -6,7 +6,7 @@ All contributors **must** adhere to the code of conduct. Read the [full text](./
 
 ## Ways to contribute
 
-There are many ways to contribute to remote-ui, some of which are:
+There are many ways to contribute to Remote DOM:
 
 - Filing bug reports or requesting new features by [opening an issue](https://github.com/Shopify/remote-dom/issues/new)
 - Hacking on an issue from our [backlog](https://github.com/Shopify/remote-dom/issues)
@@ -50,7 +50,7 @@ If you are fixing a minor issue, feel free to send a pull request directly. If y
 
 1. Fork the repository and create your branch from `main`
 1. Run `pnpm install` from the repository root
-1. Make sure your changes do not cause errors to be thrown when running `pnpm test`, `pnpm lint`, or `pnpm type-check` (these will also be checked automatically when you open your pull request, as they run as part of remote-ui’s [GitHub Action-based CI](./.github/workflows/ci.yml))
+1. Make sure your changes do not cause errors to be thrown when running `pnpm test`, `pnpm lint`, or `pnpm type-check` (these will also be checked automatically when you open your pull request, as they run as part of Remote DOM’s [GitHub Action-based CI](./.github/workflows/ci.yml))
 1. Add a description of your changes to package’s `CHANGELOG.md`
 1. Add a [changeset using `pnpm changeset add`](#releasing-changes)
 1. If you haven’t already, [sign a Contributor License Agreement](https://cla.shopify.com/)
