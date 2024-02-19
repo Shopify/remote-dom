@@ -1,5 +1,16 @@
 # @remote-dom/react
 
+## 1.0.0
+
+### Major Changes
+
+- [`37be652`](https://github.com/Shopify/remote-dom/commit/37be652f288d1eec170c0be13b2da516f8db5dcf) Thanks [@lemonmade](https://github.com/lemonmade)! - First release of Remote DOM. Read more about this [refactor of remote-ui on native DOM APIs](https://github.com/Shopify/remote-dom/discussions/267), and take a look at the [updated documentation](/README.md).
+
+### Patch Changes
+
+- Updated dependencies [[`37be652`](https://github.com/Shopify/remote-dom/commit/37be652f288d1eec170c0be13b2da516f8db5dcf)]:
+  - @remote-dom/core@1.0.0
+
 ## 0.1.3
 
 ### Patch Changes
