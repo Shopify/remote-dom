@@ -3,8 +3,7 @@ name: Changesets
 on:
   push:
     branches:
-      - main
-      - 4.5.x
+      - remote-ui
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
