@@ -7,7 +7,7 @@
     "access": "public",
     "@remote-dom/registry": "https://registry.npmjs.org"
   },
-  "version": "0.1.1",
+  "version": "1.0.0",
   "engines": {
     "node": ">=14.0.0"
   },
@@ -76,7 +76,7 @@
     "build": "rollup --config ./rollup.config.js"
   },
   "dependencies": {
-    "@remote-dom/polyfill": "^0.1.0",
+    "@remote-dom/polyfill": "^1.0.0",
     "htm": "^3.1.1"
   },
   "peerDependencies": {
