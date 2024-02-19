@@ -1,8 +1,8 @@
 # Remote DOM
 
-Remote DOM lets you recreate a tree of [DOM elements](https://developer.mozilla.org/en-US/docs/Web/API/Document_object_model/Using_the_Document_Object_Model) between JavaScript environments. You can think of it as an alternative to using an [`<iframe>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe): with Remote DOM, a developer builds up a tree of DOM elements in a sandboxed environment to render their user interface, just as they do inside an `<iframe>`. However, unlike an `<iframe>`, Remote DOM renders those DOM elements as part of the top-level HTML document, allowing you to control what UI elements are rendered, and preventing the need to load potentially-large JavaScript and CSS assets multiple times.
+Remote DOM lets you take a tree of [DOM elements](https://developer.mozilla.org/en-US/docs/Web/API/Document_object_model/Using_the_Document_Object_Model) created in a sandboxed JavaScript environment, and render them to the DOM in a different JavaScript environment. This allows you to isolate potentially-untrusted code off the [main thread](https://developer.mozilla.org/en-US/docs/Glossary/Main_thread), but still allow that code to render a controlled set of UI elements to the main page.
 
-To help you use sandboxed JavaScript environments that are less expensive than a full `<iframe>`, Remote DOM also offers a [minimal polyfill of key DOM APIs](/packages/core/README.md#remote-domcorepolyfill). This lets you use frameworks that would usually need to be run on the top-level HTML page, like [Preact](https://preactjs.com) and [Svelte](https://svelte.dev), inside of a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API).
+The easiest way to use Remote DOM is to synchronize elements between a hidden [`<iframe>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) and the top-level page. To help you create more lightweight sandboxed JavaScript environments, Remote DOM also offers a [minimal polyfill of key DOM APIs](/packages/core/README.md#remote-domcorepolyfill). This lets you use a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API) to run JavaScript libraries that would usually need to be run on the top-level HTML page, like [Preact](https://preactjs.com) and [Svelte](https://svelte.dev).
 
 ## Examples
 
@@ -17,14 +17,17 @@ To use Remote DOM, you’ll need a web project that is able to run two JavaScrip
 Once you have a project, install [`@remote-dom/core`](./packages/core/), which you’ll need to create the connection between host and remote environments:
 
 ```bash
-npm install @remote-dom/core --save # npm
-pnpm install @remote-dom/core --save # pnpm
-yarn add @remote-dom/core # yarn
+# npm
+npm install @remote-dom/core --save
+# pnpm
+pnpm install @remote-dom/core --save
+# yarn
+yarn add @remote-dom/core
 ```
 
 Next, on the “host” HTML page, you will need to create a “receiver”. This object will be responsible for receiving the updates from the remote environment, and mapping them to actual DOM elements.
 
-`@remote-dom/core` provides a few different types of receivers, but for now we use the `DOMRemoteReceiver`, which directly mirrors the DOM elements created remotely in the host HTML page. That is, if the remote environment renders a `ui-button` custom element, a matching `ui-button` custom element will be created on the host page.
+`@remote-dom/core` provides a few different types of receivers, but for now we will use the [`DOMRemoteReceiver`](/packages/core/README.md#domremotereceiver), which directly mirrors the DOM elements created remotely in the host HTML page. That is, if the remote environment renders a `ui-button` custom element, a matching `ui-button` custom element will be created on the host page.
 
 Create a `DOMRemoteReceiver` and call its `connect()` method on the element that should contain any children rendered by the remote environment:
 
@@ -75,7 +78,7 @@ Our host is ready to receive elements to render, but we don’t have a remote en
 </html>
 ```
 
-Next, let’s create the document that will be loaded into the iframe. It will use another utility provided by `@remote-dom/core`, `RemoteMutationObserver`, which extends the browser’s [`MutationObserver` interface](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) in order to communicate changes to the host. Create a `RemoteMutationObserver`, and call its `observe()` method on the element that contains the elements you want to synchronize with the host:
+Next, let’s create the document that will be loaded into the iframe. It will use another utility provided by `@remote-dom/core`, [`RemoteMutationObserver`](/packages/core/README.md#remotemutationobserver), which extends the browser’s [`MutationObserver` interface](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) in order to communicate changes to the host. Create a `RemoteMutationObserver`, and call its `observe()` method on the element that contains the elements you want to synchronize with the host:
 
 ```html
 <!doctype html>
@@ -140,13 +143,13 @@ And just like that, the text we render in the `iframe` is now rendered in the ho
 
 ### Adding custom elements
 
-Now, just mirroring raw HTML isn’t very useful. Remote DOM works best when you define custom elements for the remote environment to render, which map to more complex, application-specific components on the host page. In fact, most of Remote DOM’s receiver APIs are geared towards you providing an allowlist of custom elements that the remote environment can render, which allows you to keep tight control over the visual appearance of the resulting output.
+Now, just mirroring HTML strings isn’t very useful. Remote DOM works best when you define custom elements for the remote environment to render, which map to more complex, application-specific components on the host page. In fact, most of Remote DOM’s receiver APIs are geared towards you providing an allowlist of custom elements that the remote environment can render, which allows you to keep tight control over the visual appearance of the resulting output.
 
-Remote DOM adopts the browser’s [native API for defining custom elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements) to represent these “remote elements”. To make it easy to define custom elements that can communicate their changes to the host, `@remote-dom/core` provides the [`RemoteElement` class](./packages/core/README.md#remoteelement). This class, which is a subclass of the browser’s [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement), lets you define how properties, attributes, methods, and event listeners on the element should be transferred.
+Remote DOM adopts the browser’s [native API for defining custom elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements) to represent these “remote custom elements”. To make it easy to define custom elements that can communicate their changes to the host, `@remote-dom/core` provides the [`RemoteElement` class](/packages/core/README.md#remoteelement). This class, which is a subclass of the browser’s [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement), lets you define how properties, attributes, methods, and event listeners on the element should be transferred.
 
 To demonstrate, let’s imagine that we want to allow our remote environment to render a `ui-button` element. This element will have a `primary` property, which sets it to a more prominent visual style. It will also trigger a `click` event when clicked.
 
-First, we’ll create the remote environment’s version of `ui-button`. The remote version doesn’t have to worry about rendering any HTML — it’s only a signal to the host environment to render the “real” version. However, we do need to teach this element to communicate its `primary` property and `click` event to the host version of that element. We’ll do this using the [`RemoteElement` class provided by `@remote-dom/core`](./packages/core#remoteelement):
+First, we’ll create the remote environment’s version of `ui-button`. The remote version doesn’t have to worry about rendering any HTML — it’s only a signal to the host environment to render the “real” version. However, we do need to teach this element to communicate its `primary` property and `click` event to the host version of that element. We’ll do this using the [`RemoteElement` class provided by `@remote-dom/core`](/packages/core#remoteelement):
 
 ```html
 <!doctype html>
@@ -279,12 +282,6 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
               button.classList.add('Button--primary');
             }
           }
-        }
-
-        // Remote DOM will automatically call methods on a custom element to satisfy
-        // remote method calls.
-        focus() {
-          this.shadowRoot.querySelector('button').focus();
         }
       }
 
