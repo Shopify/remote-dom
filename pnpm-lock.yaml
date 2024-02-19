@@ -142,10 +142,10 @@ importers:
   packages/preact:
     dependencies:
       '@remote-dom/core':
-        specifier: workspace:^
+        specifier: workspace:^1.0.0
         version: link:../core
       '@remote-dom/signals':
-        specifier: workspace:^
+        specifier: workspace:^1.0.0
         version: link:../signals
       htm:
         specifier: ^3.1.1
@@ -167,7 +167,7 @@ importers:
   packages/react:
     dependencies:
       '@remote-dom/core':
-        specifier: workspace:^
+        specifier: workspace:^1.0.0
         version: link:../core
       '@types/react':
         specifier: ^18.0.0
@@ -198,7 +198,7 @@ importers:
         specifier: ^1.5.0
         version: 1.5.0
       '@remote-dom/core':
-        specifier: workspace:^
+        specifier: workspace:^1.0.0
         version: link:../core
 
 packages:
