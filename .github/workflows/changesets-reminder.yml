@@ -17,7 +17,7 @@ jobs:
     if: ${{ !github.event.pull_request.draft && !startsWith(github.head_ref, 'changeset-release/') }}
     steps:
       - uses: actions/checkout@v4
-      - uses: mskelton/changelog-reminder-action@v2
+      - uses: mskelton/changelog-reminder-action@v3
         with:
           changelogRegex: "\\.changeset"
           message: >
