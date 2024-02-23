@@ -8,11 +8,106 @@
 
   <body>
     <div id="root">
-      <ui-button primary>Clicked 0 times</ui-button>
+      <ui-button primary>Clicked 5 times</ui-button>
+      <custom-foo primary>Clicked 0 times</custom-foo>
     </div>
+
+    <script>
+      const myCustomElements = {};
+    </script>
 
     <script type="module">
       import {RemoteElement} from '@remote-dom/core/elements';
+
+      const originalCustomElementDefine =
+        customElements.define.bind(customElements);
+      customElements.define = (name, constructor) => {
+        if (name.indexOf('custom-') === 0) {
+          class CustomElement extends RemoteElement {
+            static get remoteProperties() {
+              return constructor.remoteProperties;
+            }
+          }
+          myCustomElements[name] = constructor;
+          originalCustomElementDefine(name, CustomElement);
+          originalCustomElementDefine(`internal-${name}`, constructor);
+        } else {
+          originalCustomElementDefine(name, constructor);
+        }
+      };
+
+      class CustomFoo extends HTMLElement {
+        static get remoteProperties() {
+          return {
+            primary: {type: Boolean},
+            onClick: {event: true},
+          };
+        }
+
+        static get observedAttributes() {
+          return ['primary'];
+        }
+
+        onClick;
+
+        connectedCallback() {
+          const primary = this.hasAttribute('primary') ?? false;
+
+          const root = this.attachShadow({mode: 'open'});
+
+          // We render a <slot> where we want the element’s children to go.
+          root.innerHTML = `
+            <style>
+              .Button {
+                appearance: none;
+                font-size: 1rem;
+                padding: 0.5rem 1rem;
+                background: transparent;
+                border: 1px solid gray;
+                border-radius: 0.5rem;
+              }
+
+              .Button--primary {
+                background: blue;
+                color: white;
+              }
+            </style>
+            <button class="Button"><slot></slot></button>
+          `;
+
+          if (primary) {
+            root.querySelector('.Button').classList.add('Button--primary');
+          }
+
+          // We’ll listen for clicks on our button, and call the remote `onClick`
+          // property when it happens.
+          root.querySelector('button').addEventListener('click', () => {
+            this.onClick?.();
+          });
+        }
+
+        attributeChangedCallback(name, oldValue, newValue) {
+          if (name === 'primary') {
+            const button = this.shadowRoot?.querySelector('.Button');
+
+            if (button == null) return;
+
+            if (newValue == null) {
+              button.classList.remove('Button--primary');
+            } else {
+              button.classList.add('Button--primary');
+            }
+          }
+        }
+
+        // Remote DOM will automatically call methods on a custom element to satisfy
+        // remote method calls.
+        focus() {
+          this.shadowRoot.querySelector('button').focus();
+        }
+      }
+
+      customElements.define('custom-foo', CustomFoo);
 
       // We need to define our `ui-button` element so it can be synchronized
       // with the host environment.
@@ -70,6 +165,20 @@
       // changes to the `<div id="root">` element that contains our UI.
       createThreadFromInsideIframe({
         expose: {
+          defineCustomElement(callback) {
+            Object.keys(myCustomElements).forEach((name) => {
+              const {remoteProperties} = myCustomElements[name];
+              callback(name, remoteProperties, (connection) => {
+                retain(connection);
+                const observer = new RemoteMutationObserver(connection);
+                // const subRoot = document.createElement(`internal-${name}`);
+                const div = document.createElement('div');
+                div.appendChild(document.createElement('span'));
+                document.appendChild(div);
+                observer.observe(subRoot);
+              });
+            });
+          },
           render(connection) {
             // `connection` contains functions that were transferred over `postMessage`.
             // In order to call these functions later, we need to mark them as used in

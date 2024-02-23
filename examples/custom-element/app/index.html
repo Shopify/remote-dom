@@ -110,6 +110,29 @@
       // environments, which we rely on for the `click` event listener.
       const thread = createThreadFromIframe(iframe);
 
+      thread.defineCustomElement((name, remoteProperties, render) => {
+        console.log('eeeeee host', name, remoteProperties);
+        class CustomElement extends HTMLElement {
+          static get observedAttributes() {
+            return Object.keys(remoteProperties);
+          }
+
+          connectedCallback() {
+            const subRoot = this.attachShadow({mode: 'open'});
+            const receiver = new DOMRemoteReceiver();
+            receiver.connect(subRoot);
+            render(receiver.connection);
+          }
+
+          attributeChangedCallback(name, oldValue, newValue) {
+            console.log('zzzzzzzzz attribute', name, newValue);
+            //
+          }
+        }
+
+        customElements.define(name, CustomElement);
+      });
+
       // We will call the `render` method on the thread, which will send the iframe
       // the `receiver.connection` object. This object, called a `RemoteConnection`,
       // allows the remote environment to synchronize its tree of UI elements into
