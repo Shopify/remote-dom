@@ -117,7 +117,8 @@ export class Node extends EventTarget {
       const sibling = node[NEXT];
       if (sibling) walk(sibling);
     }
-    walk(this);
+    const child = this[CHILD];
+    if (child) walk(child);
     return text;
   }
 
