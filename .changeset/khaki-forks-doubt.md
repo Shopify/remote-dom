@@ -1,5 +1,5 @@
 ---
-"@remote-dom/polyfill": patch
+'@remote-dom/polyfill': patch
 ---
 
 Fix missing createElement hook call
