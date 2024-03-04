@@ -1,5 +1,13 @@
 # @remote-dom/polyfill
 
+## 1.0.1
+
+### Patch Changes
+
+- [#281](https://github.com/Shopify/remote-dom/pull/281) [`0c51bbc`](https://github.com/Shopify/remote-dom/commit/0c51bbc2c7419ce23e1b8d02d4a0323c5b180672) Thanks [@santala](https://github.com/santala)! - Fix missing createElement hook call
+
+- [#281](https://github.com/Shopify/remote-dom/pull/281) [`6768867`](https://github.com/Shopify/remote-dom/commit/6768867ac4f24059c30daeaf9d6dc1f4809b0155) Thanks [@santala](https://github.com/santala)! - Fix Node.textContent incorrectly appending the textContent of subsequent siblings
+
 ## 1.0.0
 
 ### Major Changes
