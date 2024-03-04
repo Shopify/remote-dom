@@ -1,3 +1,5 @@
+> **Note:** remote-ui has been completely rewritten to use native DOM APIs and now has a new name, [Remote DOM](https://github.com/Shopify/remote-dom/discussions/267). The original `@remote-ui` libraries documented here will continue to work, but only bugfixes will be made on this project going forward. We recommend you [follow the migration guide](https://github.com/Shopify/remote-dom/blob/main/documentation/migrations/remote-ui-to-remote-dom.md) to adopt the new, more flexible DOM environment used by Remote DOM.
+
 # remote-ui
 
 remote-ui allows you to create custom component APIs in JavaScript that can be used to render UI from a context other than the UI thread, like a web worker. This technique can be a powerful performance optimization by isolating application code on a background thread, leaving only the platform-native components on the UI thread. It can also be used as a way for third party code to generate UI in a safe, dynamic, and highly-performant way, without relying on iframes.
