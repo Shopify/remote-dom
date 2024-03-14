@@ -243,7 +243,7 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
         // but only if the element has a matching property defined. Otherwise, the remote
         // properties will be set as attributes. We’ll observe the `primary` attribute
         // in order to update our rendered content when that attribute changes. We’ll
-        // define a `onClick` method, though, which will be set to the value of the `onClick`
+        // define an `onClick` method, though, which will be set to the value of the `onClick`
         // remote property.
         static get observedAttributes() {
           return ['primary'];
