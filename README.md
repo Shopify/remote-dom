@@ -106,7 +106,7 @@ Next, let’s create the document that will be loaded into the iframe. It will u
 </html>
 ```
 
-In our example, we’re not currently rendering any content in our “root” element. Let’s fix that by adding some text that will be update over time:
+In our example, we’re not currently rendering any content in our “root” element. Let’s fix that by adding some text that will be updated over time:
 
 ```html
 <!doctype html>
