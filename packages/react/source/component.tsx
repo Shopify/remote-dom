@@ -130,7 +130,7 @@ export function createRemoteComponent<
           lastRemotePropertiesRef.current ?? remoteProperties;
 
         for (const prop in propsToUpdate) {
-          internalRef.current[prop] = remoteProperties[prop];
+          internalRef.current.setAttribute(prop, remoteProperties[prop]);
         }
 
         lastRemotePropertiesRef.current = remoteProperties;
