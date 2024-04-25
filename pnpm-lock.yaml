@@ -36,8 +36,8 @@ importers:
         specifier: ^4.9.0
         version: 4.9.2
       tsx:
-        specifier: ^4.7.0
-        version: 4.7.0
+        specifier: ^4.7.3
+        version: 4.7.3
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
@@ -5937,8 +5937,8 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /tsx@4.7.0:
-    resolution: {integrity: sha512-I+t79RYPlEYlHn9a+KzwrvEwhJg35h/1zHsLC2JXvhC2mdynMv6Zxzvhv5EMV6VF5qJlLlkSnMVvdZV3PSIGcg==}
+  /tsx@4.7.3:
+    resolution: {integrity: sha512-+fQnMqIp/jxZEXLcj6WzYy9FhcS5/Dfk8y4AtzJ6ejKcKqmfTF8Gso/jtrzDggCF2zTU20gJa6n8XqPYwDAUYQ==}
     engines: {node: '>=18.0.0'}
     hasBin: true
     dependencies:
