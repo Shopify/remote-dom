@@ -7,7 +7,7 @@ The easiest way to use Remote DOM is to synchronize elements between a hidden [`
 ## Examples
 
 - [Getting started](./examples/getting-started/), where we show the most basic usage of Remote DOM in order to synchronize the text content of an element between a main page and an `<iframe>`. Run `pnpm example:getting-started` to see this example in your browser.
-- [Custom elements](./examples/custom-elements/), where we extend the first example to allow the sandboxed environment to render custom button element. Run `pnpm example:custom-elements` to see this example in your browser.
+- [Custom element](./examples/custom-element/), where we extend the first example to allow the sandboxed environment to render custom button element. Run `pnpm example:custom-element` to see this example in your browser.
 - [The “kitchen sink”](./examples/kitchen-sink/), where we show off a more fully-featured implementation of Remote DOM. This includes custom elements with properties, events, and methods, and the ability to sandbox UI in a web worker. The same sandboxed example is implemented in “vanilla” JavaScript, [htm](https://github.com/developit/htm), [Preact](https://preactjs.com), [React](https://react.dev), [Svelte](https://svelte.dev), and [Vue](https://vuejs.org). Run `pnpm example:kitchen-sink` to see this example in your browser.
 
 ## Building a project with Remote DOM
@@ -315,7 +315,7 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
 </html>
 ```
 
-With those changes, you should now see your button rendering on the page, and responding to click events by updating its contents. You can see an extended version of this example in the [custom elements example](./examples/custom-elements/).
+With those changes, you should now see your button rendering on the page, and responding to click events by updating its contents. You can see an extended version of this example in the [custom element example](./examples/custom-element/).
 
 ## Learn more
 
