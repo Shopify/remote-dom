@@ -32,7 +32,7 @@
     "rollup": "^4.9.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
-    "vite": "^5.0.12",
+    "vite": "^5.2.12",
     "vitest": "^1.2.2"
   },
   "packageManager": "pnpm@8.10.2+sha256.487609e857f1c11780cc98dd0bfe4c8a8b11c7f23bc3a4493ac7d263d6fb6c8c",
