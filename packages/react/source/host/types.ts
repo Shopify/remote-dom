@@ -14,13 +14,13 @@ export interface RemoteNodeRenderOptions {
   receiver: RemoteReceiver;
 
   /**
-   * A map of Preact components that can render remote elements.
+   * A map of React components that can render remote elements.
    */
   components: RemoteComponentRendererMap<any>;
 }
 
 /**
- * The props that are passed to a Preact component in order to render
+ * The props that are passed to a React component in order to render
  * a remote element.
  */
 export interface RemoteComponentRendererProps extends RemoteNodeRenderOptions {
