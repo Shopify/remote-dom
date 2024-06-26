@@ -1,5 +1,11 @@
 # @remote-dom/polyfill
 
+## 1.0.2
+
+### Patch Changes
+
+- [`7d5327c`](https://github.com/Shopify/remote-dom/commit/7d5327ca3fd02f625bb404d43d9b0f7c9a3b079d) Thanks [@lemonmade](https://github.com/lemonmade)! - Fix making `window` non-configurable in polyfill
+
 ## 1.0.1
 
 ### Patch Changes
