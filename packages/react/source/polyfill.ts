@@ -25,14 +25,30 @@ class CSSStyleDeclaration {
 }
 
 // React ues the `location` property when printing help text in development.
-window.location = globalThis.location;
+if (!window.location) {
+  Object.defineProperty(window, 'location', {
+    value: globalThis.location ?? {protocol: 'https:'},
+    configurable: true,
+  });
+}
+
+if (!window.navigator) {
+  Object.defineProperty(window, 'navigator', {
+    value: globalThis.navigator ?? {userAgent: ''},
+    configurable: true,
+  });
+}
 
 // React checks whether elements are Iframes on initialization.
-(window as any).HTMLIFrameElement = HTMLIFrameElement;
+Object.defineProperty(window, 'HTMLIFrameElement', {
+  value: HTMLIFrameElement,
+  configurable: true,
+});
 
 // React checks for a few properties in `document.createElement('div').style`
 const STYLE = Symbol('style');
 Object.defineProperty(Element.prototype, 'style', {
+  configurable: true,
   get() {
     let style = this[STYLE];
     if (!style) {
