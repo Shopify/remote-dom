@@ -37,7 +37,7 @@ export class Document extends ParentNode {
     }
   }
 
-  createElementNS(localName: string, namespaceURI?: NamespaceURI) {
+  createElementNS(namespaceURI: NamespaceURI, localName: string) {
     if (namespaceURI === NamespaceURI.SVG) {
       return createElement(new SVGElement(), this, localName);
     }
