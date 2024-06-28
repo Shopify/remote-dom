@@ -1,5 +1,12 @@
 # example-custom-element
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies [[`ee5e843`](https://github.com/Shopify/remote-dom/commit/ee5e843a85c1d213420ae25cb2fc248484ca04f3)]:
+  - @remote-dom/core@1.0.1
+
 ## 0.0.5
 
 ### Patch Changes

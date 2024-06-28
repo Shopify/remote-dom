@@ -1,5 +1,11 @@
 # @remote-dom/core
 
+## 1.0.1
+
+### Patch Changes
+
+- [`ee5e843`](https://github.com/Shopify/remote-dom/commit/ee5e843a85c1d213420ae25cb2fc248484ca04f3) Thanks [@lemonmade](https://github.com/lemonmade)! - Force upgrade polyfill dependency to fix `createElementNS` errors
+
 ## 1.0.0
 
 ### Major Changes
