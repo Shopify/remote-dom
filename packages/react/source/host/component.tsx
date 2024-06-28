@@ -16,7 +16,7 @@ import {
 import type {RemoteComponentRendererProps} from './types.ts';
 
 /**
- * Additional props that are added to Preact components rendered by `createRemoteComponentRenderer`.
+ * Additional props that are added to React components rendered by `createRemoteComponentRenderer`.
  */
 export interface RemoteComponentRendererAdditionalProps {
   /**

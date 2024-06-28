@@ -7,9 +7,9 @@ import type {
 } from '@remote-dom/core/elements';
 
 /**
- * The props that will be passed to a Preact component when it is rendered
+ * The props that will be passed to a React component when it is rendered
  * in response to a remote element. This type includes all the remote properties
- * of the underlying element, and any slotted children, converted to Preact elements
+ * of the underlying element, and any slotted children, converted to React elements
  * passed as properties with the same name as their slot.
  */
 export type RemoteComponentProps<
@@ -23,7 +23,7 @@ export type RemoteComponentProps<
 };
 
 /**
- * Converts the type for a remote element into the full set of Preact props that
+ * Converts the type for a remote element into the full set of React props that
  * will be passed to a component that renders that element.
  */
 export type RemoteComponentPropsFromElementConstructor<
@@ -35,7 +35,7 @@ export type RemoteComponentPropsFromElementConstructor<
 > & {ref?: Ref<InstanceType<ElementConstructor>>; slot?: string};
 
 /**
- * Converts the type for a remote element into the type of a Preact component that
+ * Converts the type for a remote element into the type of a React component that
  * can be used to render that element.
  */
 export type RemoteComponentTypeFromElementConstructor<

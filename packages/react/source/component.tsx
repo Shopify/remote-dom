@@ -18,9 +18,9 @@ import type {
 
 export interface RemoteComponentOptions {
   /**
-   * Customize how Preact props are mapped to slotted child elements. By default,
+   * Customize how React props are mapped to slotted child elements. By default,
    * any prop that is listed in the remote element’s class definition, and which
-   * contains a valid Preact element, is turned into a `<remote-fragment>` element
+   * contains a valid React element, is turned into a `<remote-fragment>` element
    * with a `slot` attribute set to the name of the prop. You disable this behavior
    * entirely by setting this option to `false`, or customize the tag name of the
    * wrapper element by passing the `wrapper` option.
@@ -32,7 +32,7 @@ export interface RemoteComponentOptions {
     | {
         /**
          * Customizes the wrapper element used on a slotted element. If `true` or omitted,
-         * the wrapper element will be a `<remote-fragment>` element. If `false`, the Preact
+         * the wrapper element will be a `<remote-fragment>` element. If `false`, the React
          * element will be cloned with a `slot` prop. If a string, that wrapper element will
          * be created.
          *
@@ -43,9 +43,9 @@ export interface RemoteComponentOptions {
 }
 
 /**
- * Creates a Preact component that renders a remote DOM element. This component will pass
- * through all the props from the Preact component to the remote DOM element, and will
- * convert any props that are Preact elements into a `remote-fragment` element with a `slot`
+ * Creates a React component that renders a remote DOM element. This component will pass
+ * through all the props from the React component to the remote DOM element, and will
+ * convert any props that are React elements into a `remote-fragment` element with a `slot`
  * attribute that matches the prop name.
  *
  * @param tag The name of the remote DOM element to render
