@@ -1,5 +1,13 @@
 # @remote-dom/polyfill
 
+## 1.0.3
+
+### Patch Changes
+
+- [`549a423`](https://github.com/Shopify/remote-dom/commit/549a423b31d89354fa8ef91e8533eff69953d695) Thanks [@lemonmade](https://github.com/lemonmade)! - Consult custom elements in `createElementNS`
+
+- [`31f8720`](https://github.com/Shopify/remote-dom/commit/31f8720e916ce8ac69bc079ba8e2aac089313605) Thanks [@lemonmade](https://github.com/lemonmade)! - Fix `createElementNS` argument ordering
+
 ## 1.0.2
 
 ### Patch Changes
