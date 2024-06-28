@@ -22,27 +22,11 @@ export class Document extends ParentNode {
   }
 
   createElement(localName: string) {
-    const lowerName = String(localName).toLowerCase();
-
-    if (lowerName === 'template') {
-      return createElement(new HTMLTemplateElement(), this, 'template');
-    }
-
-    const CustomElement = this.defaultView.customElements.get(localName);
-
-    if (CustomElement) {
-      return createElement(new CustomElement() as any, this, localName);
-    } else {
-      return createElement(new Element(), this, localName);
-    }
+    return createElement(this, localName);
   }
 
   createElementNS(namespaceURI: NamespaceURI, localName: string) {
-    if (namespaceURI === NamespaceURI.SVG) {
-      return createElement(new SVGElement(), this, localName);
-    }
-
-    return createElement(new Element(), this, localName, namespaceURI);
+    return createElement(this, localName, namespaceURI);
   }
 
   createTextNode(data: any) {
@@ -86,11 +70,22 @@ export function createNode<T extends Node>(node: T, ownerDocument: Document) {
 }
 
 export function createElement<T extends Element>(
-  element: T,
   ownerDocument: Document,
   name: string,
   namespace?: NamespaceURI,
 ) {
+  let element: T;
+  const lowerName = String(name).toLowerCase();
+
+  if (namespace === NamespaceURI.SVG) {
+    element = new SVGElement() as any;
+  } else if (lowerName === 'template') {
+    element = new HTMLTemplateElement() as any;
+  } else {
+    const CustomElement = document.defaultView!.customElements.get(name);
+    element = CustomElement ? (new CustomElement() as any) : new Element();
+  }
+
   createNode(element, ownerDocument);
 
   Object.defineProperty(element, NAME, {value: name});
