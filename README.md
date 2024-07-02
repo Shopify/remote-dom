@@ -100,7 +100,7 @@ Next, let’s create the document that will be loaded into the iframe. It will u
         },
       });
 
-      observer.observer(root);
+      observer.observe(root);
     </script>
   </body>
 </html>
