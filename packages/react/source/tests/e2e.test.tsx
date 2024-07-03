@@ -29,6 +29,7 @@ import {
   createRemoteComponentRenderer,
 } from '../host.ts';
 
+// @ts-expect-error Some inconsistencies between Jest and Vitest types
 expect.extend(matchers);
 
 declare module 'vitest' {

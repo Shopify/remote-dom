@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@remote-dom/core": "workspace:^1.0.0",
-    "@preact/signals-core": "^1.5.0"
+    "@preact/signals-core": "^1.6.0"
   },
   "browserslist": [
     "defaults and not dead"

@@ -1,5 +1,5 @@
 {
-  "extends": "@quilted/typescript/project.json",
+  "extends": "@quilted/typescript/tsconfig.project.json",
   "compilerOptions": {
     "outDir": "build/typescript",
     "jsx": "react-jsx",
