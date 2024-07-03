@@ -29,6 +29,14 @@ export class CustomElementRegistryImplementation
     return this.registry.get(name);
   }
 
+  getName(Constructor: CustomElementConstructor) {
+    for (const [name, value] of this.registry) {
+      if (value === Constructor) return name;
+    }
+
+    return null;
+  }
+
   whenDefined(name: string) {
     const Constructor = this.registry.get(name);
 
