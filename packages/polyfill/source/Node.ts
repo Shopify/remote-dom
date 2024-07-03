@@ -137,4 +137,14 @@ export class Node extends EventTarget {
   cloneNode(deep?: boolean) {
     return cloneNode(this, deep);
   }
+
+  contains(node: Node | null) {
+    let currentNode: Node | null = node;
+
+    while (true) {
+      if (currentNode == null) return false;
+      if (currentNode === this) return true;
+      currentNode = node!.parentNode;
+    }
+  }
 }
