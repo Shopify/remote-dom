@@ -274,7 +274,7 @@ describe('react', () => {
     expect(closeSpy).toHaveBeenCalled();
   });
 
-  it('can remove the wrapper element on elements passed as properties to remote Preact components', async () => {
+  it('can remove the wrapper element on elements passed as properties to remote React components', async () => {
     const RemoteModalWithoutWrappers = createRemoteComponent(
       'remote-modal',
       RemoteModalElement,
@@ -310,7 +310,7 @@ describe('react', () => {
     expect(rendered).toContainReactComponent(RemoteButton, {slot: 'action'});
   });
 
-  it('can change the wrapper element on elements passed as properties to remote Preact components', async () => {
+  it('can change the wrapper element on elements passed as properties to remote React components', async () => {
     const RemoteModalWithoutWrappers = createRemoteComponent(
       'remote-modal',
       RemoteModalElement,
