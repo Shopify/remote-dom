@@ -1,5 +1,13 @@
 # @remote-dom/polyfill
 
+## 1.0.4
+
+### Patch Changes
+
+- [`72304d6`](https://github.com/Shopify/remote-dom/commit/72304d6a76d28712c62698803d6ec65d9ac29614) Thanks [@lemonmade](https://github.com/lemonmade)! - Add `Node.contains()` method used by React
+
+- [`e6deda6`](https://github.com/Shopify/remote-dom/commit/e6deda6b90c4c6cff94cac60619a7ef1deb7524e) Thanks [@lemonmade](https://github.com/lemonmade)! - Add missing `CustomElementRegistry.getName()` function
+
 ## 1.0.3
 
 ### Patch Changes
