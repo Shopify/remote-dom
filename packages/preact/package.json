@@ -71,7 +71,7 @@
   },
   "devDependencies": {
     "@preact/signals": "^1.2.0",
-    "@preact/signals-core": "^1.5.0",
+    "@preact/signals-core": "^1.6.1",
     "@quilted/preact-testing": "^0.1.7",
     "preact": "^10.22.0"
   },

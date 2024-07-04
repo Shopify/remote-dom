@@ -131,7 +131,7 @@ importers:
         version: 3.1.1
     devDependencies:
       '@preact/signals-core':
-        specifier: ^1.6.0
+        specifier: ^1.6.1
         version: 1.6.1
       '@quilted/testing':
         specifier: ^0.1.6
@@ -155,8 +155,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.2(preact@10.22.1)
       '@preact/signals-core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: ^1.6.1
+        version: 1.6.1
       '@quilted/preact-testing':
         specifier: ^0.1.7
         version: 0.1.7(preact@10.22.1)
@@ -192,7 +192,7 @@ importers:
   packages/signals:
     devDependencies:
       '@preact/signals-core':
-        specifier: ^1.6.0
+        specifier: ^1.6.1
         version: 1.6.1
       '@remote-dom/core':
         specifier: workspace:^1.0.0
@@ -2454,10 +2454,6 @@ packages:
       - preact
       - supports-color
     dev: false
-
-  /@preact/signals-core@1.5.0:
-    resolution: {integrity: sha512-U2diO1Z4i1n2IoFgMYmRdHWGObNrcuTRxyNEn7deSq2cru0vj0583HYQZHsAqcs7FE+hQyX3mjIV7LAfHCvy8w==}
-    dev: true
 
   /@preact/signals-core@1.6.1:
     resolution: {integrity: sha512-KXEEmJoKDlo0Igju/cj9YvKIgyaWFDgnprShQjzimUd5VynAAdTWMshawEOjUVeKbsI0aR58V6WOQp+DNcKApw==}
