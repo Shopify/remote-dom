@@ -152,8 +152,8 @@ importers:
         version: 3.1.1
     devDependencies:
       '@preact/signals':
-        specifier: ^1.2.0
-        version: 1.2.2(preact@10.22.1)
+        specifier: ^1.2.3
+        version: 1.2.3(preact@10.22.1)
       '@preact/signals-core':
         specifier: ^1.5.0
         version: 1.5.0
@@ -2462,15 +2462,6 @@ packages:
   /@preact/signals-core@1.6.1:
     resolution: {integrity: sha512-KXEEmJoKDlo0Igju/cj9YvKIgyaWFDgnprShQjzimUd5VynAAdTWMshawEOjUVeKbsI0aR58V6WOQp+DNcKApw==}
 
-  /@preact/signals@1.2.2(preact@10.22.1):
-    resolution: {integrity: sha512-ColCqdo4cRP18bAuIR4Oik5rDpiyFtPIJIygaYPMEAwTnl4buWkBOflGBSzhYyPyJfKpkwlekrvK+1pzQ2ldWw==}
-    peerDependencies:
-      preact: 10.x
-    dependencies:
-      '@preact/signals-core': 1.6.1
-      preact: 10.22.1
-    dev: true
-
   /@preact/signals@1.2.3(preact@10.22.1):
     resolution: {integrity: sha512-M2DXse3Wi8HwjI1d2vQWOLJ3lHogvqTsJYvl4ofXRXgMFQzJ7kmlZvlt5i8x5S5VwgZu0ghru4HkLqOoFfU2JQ==}
     peerDependencies:
@@ -2478,7 +2469,6 @@ packages:
     dependencies:
       '@preact/signals-core': 1.6.1
       preact: 10.22.1
-    dev: false
 
   /@prefresh/babel-plugin@0.5.1:
     resolution: {integrity: sha512-uG3jGEAysxWoyG3XkYfjYHgaySFrSsaEb4GagLzYaxlydbuREtaX+FTxuIidp241RaLl85XoHg9Ej6E4+V1pcg==}
