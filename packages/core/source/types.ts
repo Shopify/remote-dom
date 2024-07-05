@@ -6,6 +6,9 @@ import type {
   MUTATION_TYPE_REMOVE_CHILD,
   MUTATION_TYPE_UPDATE_TEXT,
   MUTATION_TYPE_UPDATE_PROPERTY,
+  UPDATE_PROPERTY_TYPE_PROPERTY,
+  UPDATE_PROPERTY_TYPE_LISTENER,
+  UPDATE_PROPERTY_TYPE_ATTRIBUTE,
 } from './constants.ts';
 
 /**
@@ -68,7 +71,8 @@ export type RemoteMutationRecordUpdateText = [
 ];
 
 /**
- * Describes an update to the property of a remote element.
+ * Describes an update to the property of a remote element. A “remote property”
+ * represents either an HTML element property, event listener, or attribute.
  */
 export type RemoteMutationRecordUpdateProperty = [
   type: typeof MUTATION_TYPE_UPDATE_PROPERTY,
@@ -81,12 +85,21 @@ export type RemoteMutationRecordUpdateProperty = [
   /**
    * The name of the property being updated.
    */
-  property: string,
+  name: string,
 
   /**
    * The new value of the property.
    */
   value: unknown,
+
+  /**
+   * The kind of property being updated.
+   * @default UPDATE_PROPERTY_TYPE_PROPERTY
+   */
+  kind?:
+    | typeof UPDATE_PROPERTY_TYPE_PROPERTY
+    | typeof UPDATE_PROPERTY_TYPE_LISTENER
+    | typeof UPDATE_PROPERTY_TYPE_ATTRIBUTE,
 ];
 
 /**
@@ -147,6 +160,18 @@ export interface RemoteElementSerialization {
    * between the remote and host environments.
    */
   readonly properties?: Record<string, unknown>;
+
+  /**
+   * The attributes of the element that should be synchronized between the
+   * remote and host environments.
+   */
+  readonly attributes?: Record<string, string>;
+
+  /**
+   * The event listeners that should be synchronized between the remote and
+   * host environments.
+   */
+  readonly eventListeners?: Record<string, (...args: any) => any>;
 
   /**
    * The list of child nodes of this element.

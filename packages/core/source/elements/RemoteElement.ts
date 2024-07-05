@@ -1,6 +1,7 @@
-import {REMOTE_PROPERTIES} from '../constants.ts';
+import {REMOTE_PROPERTIES, REMOTE_ATTRIBUTES} from '../constants.ts';
 import {RemoteEvent} from './RemoteEvent.ts';
 import {
+  updateRemoteElementAttribute,
   updateRemoteElementProperty,
   callRemoteElementMethod,
 } from './internals.ts';
@@ -45,7 +46,10 @@ export type RemoteElementPropertiesDefinition<
 };
 
 export interface RemoteElementSlotDefinition {}
-interface RemoteElementSlotNormalizedDefinition {}
+
+export interface RemoteElementAttributeDefinition {}
+
+export interface RemoteElementEventListenerDefinition {}
 
 export interface RemoteElementMethodDefinition {}
 
@@ -88,10 +92,8 @@ export type RemoteElementConstructor<
   readonly remoteSlots?:
     | RemoteElementSlotsDefinition<Slots>
     | readonly (keyof Slots)[];
-  readonly remoteSlotDefinitions: Map<
-    string,
-    RemoteElementSlotNormalizedDefinition
-  >;
+  readonly remoteSlotDefinitions: Map<string, RemoteElementSlotDefinition>;
+
   readonly remoteProperties?:
     | RemoteElementPropertiesDefinition<Properties>
     | readonly (keyof Properties)[];
@@ -99,6 +101,19 @@ export type RemoteElementConstructor<
     string,
     RemoteElementPropertyNormalizedDefinition
   >;
+
+  readonly remoteAttributes?: readonly string[];
+  readonly remoteAttributeDefinitions: Map<
+    string,
+    RemoteElementAttributeDefinition
+  >;
+
+  readonly remoteEventListeners?: readonly string[];
+  readonly remoteEventListenerDefinitions: Map<
+    string,
+    RemoteElementEventListenerDefinition
+  >;
+
   readonly remoteMethods?: Methods | readonly (keyof Methods)[];
   createProperty<Value = unknown>(
     name: string,
@@ -117,12 +132,24 @@ export interface RemoteElementCreatorOptions<
     Methods,
     Slots
   >['remoteProperties'];
+  attributes?: RemoteElementConstructor<
+    Properties,
+    Methods,
+    Slots
+  >['remoteAttributes'];
+  eventListeners?: RemoteElementConstructor<
+    Properties,
+    Methods,
+    Slots
+  >['remoteEventListeners'];
   methods?: RemoteElementConstructor<
     Properties,
     Methods,
     Slots
   >['remoteMethods'];
 }
+
+const EMPTY_DEFINITION = Object.freeze({});
 
 export function createRemoteElement<
   Properties extends Record<string, any> = {},
@@ -131,6 +158,8 @@ export function createRemoteElement<
 >({
   slots,
   properties,
+  attributes,
+  eventListeners,
   methods,
 }: RemoteElementCreatorOptions<
   Properties,
@@ -144,6 +173,8 @@ export function createRemoteElement<
   > {
     static readonly remoteSlots = slots;
     static readonly remoteProperties = properties;
+    static readonly remoteAttributes = attributes;
+    static readonly remoteEventListeners = eventListeners;
     static readonly remoteMethods = methods;
   } as any;
 
@@ -176,6 +207,8 @@ export abstract class RemoteElement<
 
   static readonly remoteSlots?: any;
   static readonly remoteProperties?: any;
+  static readonly remoteAttributes?: any;
+  static readonly remoteEventListeners?: any;
   static readonly remoteMethods?: any;
 
   static get observedAttributes() {
@@ -189,10 +222,21 @@ export abstract class RemoteElement<
     return this.finalize().__remotePropertyDefinitions;
   }
 
-  static get remoteSlotDefinitions(): Map<
+  static get remoteAttributeDefinitions(): Map<
     string,
-    RemoteElementSlotNormalizedDefinition
+    RemoteElementAttributeDefinition
   > {
+    return this.finalize().__remoteAttributeDefinitions;
+  }
+
+  static get remoteEventListenerDefinitions(): Map<
+    string,
+    RemoteElementEventListenerDefinition
+  > {
+    return this.finalize().__remoteEventListenerDefinitions;
+  }
+
+  static get remoteSlotDefinitions(): Map<string, RemoteElementSlotDefinition> {
     return this.finalize().__remoteSlotDefinitions;
   }
 
@@ -204,9 +248,17 @@ export abstract class RemoteElement<
     string,
     RemoteElementPropertyNormalizedDefinition
   >();
+  private static readonly __remoteAttributeDefinitions = new Map<
+    string,
+    RemoteElementAttributeDefinition
+  >();
+  private static readonly __remoteEventListenerDefinitions = new Map<
+    string,
+    RemoteElementEventListenerDefinition
+  >();
   private static readonly __remoteSlotDefinitions = new Map<
     string,
-    RemoteElementSlotNormalizedDefinition
+    RemoteElementSlotDefinition
   >();
 
   static createProperty<Value = unknown>(
@@ -230,33 +282,64 @@ export abstract class RemoteElement<
     }
 
     this.__finalized = true;
-    const {remoteSlots, remoteProperties, remoteMethods} = this;
+    const {
+      remoteSlots,
+      remoteProperties,
+      remoteAttributes,
+      remoteEventListeners,
+      remoteMethods,
+    } = this;
 
     // finalize any superclasses
     const SuperConstructor = Object.getPrototypeOf(
       this,
     ) as typeof RemoteElement;
 
-    const observedAttributes: string[] = [];
+    const observedAttributes = new Set<string>();
     const attributeToPropertyMap = new Map<string, string>();
     const eventToPropertyMap = new Map<string, string>();
     const remoteSlotDefinitions = new Map<
       string,
-      RemoteElementSlotNormalizedDefinition
+      RemoteElementSlotDefinition
     >();
     const remotePropertyDefinitions = new Map<
       string,
       RemoteElementPropertyNormalizedDefinition
     >();
+    const remoteAttributeDefinitions = new Map<
+      string,
+      RemoteElementAttributeDefinition
+    >();
+    const remoteEventListenerDefinitions = new Map<
+      string,
+      RemoteElementEventListenerDefinition
+    >();
 
     if (typeof SuperConstructor.finalize === 'function') {
       SuperConstructor.finalize();
-      observedAttributes.push(...SuperConstructor.observedAttributes);
+
+      SuperConstructor.observedAttributes.forEach((attribute) => {
+        observedAttributes.add(attribute);
+      });
+
       SuperConstructor.remotePropertyDefinitions.forEach(
         (definition, property) => {
           remotePropertyDefinitions.set(property, definition);
         },
       );
+
+      SuperConstructor.remoteAttributeDefinitions.forEach(
+        (definition, event) => {
+          remoteAttributeDefinitions.set(event, definition);
+        },
+      );
+
+      SuperConstructor.remoteEventListenerDefinitions.forEach(
+        (definition, event) => {
+          remoteEventListenerDefinitions.set(event, definition);
+        },
+      );
+
       SuperConstructor.remoteSlotDefinitions.forEach((definition, slot) => {
         remoteSlotDefinitions.set(slot, definition);
       });
@@ -268,7 +351,7 @@ export abstract class RemoteElement<
         : Object.keys(remoteSlots);
 
       slotNames.forEach((slotName) => {
-        remoteSlotDefinitions.set(slotName, {});
+        remoteSlotDefinitions.set(slotName, EMPTY_DEFINITION);
       });
     }
 
@@ -298,6 +381,19 @@ export abstract class RemoteElement<
       }
     }
 
+    if (remoteAttributes != null) {
+      remoteAttributes.forEach((attribute: string) => {
+        remoteAttributeDefinitions.set(attribute, EMPTY_DEFINITION);
+        observedAttributes.add(attribute);
+      });
+    }
+
+    if (remoteEventListeners != null) {
+      remoteEventListeners.forEach((event: string) => {
+        remoteEventListenerDefinitions.set(event, EMPTY_DEFINITION);
+      });
+    }
+
     if (remoteMethods != null) {
       if (Array.isArray(remoteMethods)) {
         for (const method of remoteMethods) {
@@ -317,7 +413,7 @@ export abstract class RemoteElement<
 
     Object.defineProperties(this, {
       __observedAttributes: {
-        value: observedAttributes,
+        value: [...observedAttributes],
         enumerable: false,
       },
       __remoteSlotDefinitions: {
@@ -326,6 +422,14 @@ export abstract class RemoteElement<
       },
       __remotePropertyDefinitions: {
         value: remotePropertyDefinitions,
+        enumerable: false,
+      },
+      __remoteAttributeDefinitions: {
+        value: remoteAttributeDefinitions,
+        enumerable: false,
+      },
+      __remoteEventListenerDefinitions: {
+        value: remoteEventListenerDefinitions,
         enumerable: false,
       },
       __attributeToPropertyMap: {
@@ -357,7 +461,7 @@ export abstract class RemoteElement<
       return;
     }
 
-    updateRemoteElementProperty(this, SLOT_PROPERTY, this.slot);
+    updateRemoteElementAttribute(this, SLOT_PROPERTY, this.slot);
   }
 
   // Just need to use these types so TS doesn’t lose track of them.
@@ -371,6 +475,7 @@ export abstract class RemoteElement<
   __methods?: Methods;
 
   private [REMOTE_PROPERTIES]!: Properties;
+  private [REMOTE_ATTRIBUTES]!: Record<string, string>;
   private [REMOTE_EVENTS]?: {
     readonly events: Map<string, RemoteEventRecord>;
     readonly listeners: WeakMap<
@@ -384,6 +489,14 @@ export abstract class RemoteElement<
     (this.constructor as typeof RemoteElement).finalize();
 
     const propertyDescriptors: PropertyDescriptorMap = {};
+
+    const remoteAttributes: Record<string, string> = {};
+    propertyDescriptors[REMOTE_ATTRIBUTES] = {
+      value: remoteAttributes,
+      writable: true,
+      configurable: true,
+      enumerable: false,
+    };
 
     const remoteProperties: Record<string, unknown> = {};
     propertyDescriptors[REMOTE_PROPERTIES] = {
@@ -426,13 +539,27 @@ export abstract class RemoteElement<
     Object.defineProperties(this, propertyDescriptors);
   }
 
-  attributeChangedCallback(key: string, _oldValue: any, newValue: any) {
+  attributeChangedCallback(attribute: string, _oldValue: any, newValue: any) {
     const {
       remotePropertyDefinitions,
+      remoteAttributeDefinitions,
       __attributeToPropertyMap: attributeToPropertyMap,
     } = this.constructor as typeof RemoteElement;
 
-    const property = attributeToPropertyMap.get(key);
+    if (remoteAttributeDefinitions.has(attribute)) {
+      const remoteAttributes = this[REMOTE_ATTRIBUTES];
+
+      if (newValue == null) {
+        delete remoteAttributes[attribute];
+      } else {
+        remoteAttributes[attribute] = newValue;
+      }
+
+      updateRemoteElementAttribute(this, attribute, newValue);
+      return;
+    }
+
+    const property = attributeToPropertyMap.get(attribute);
 
     const propertyDefinition =
       property == null ? property : remotePropertyDefinitions.get(property);
@@ -551,6 +678,10 @@ export abstract class RemoteElement<
     updateRemoteElementProperty(this, name, value);
   }
 
+  updateRemoteAttribute(name: string, value?: string) {
+    updateRemoteElementAttribute(this, name, value);
+  }
+
   callRemoteMethod(method: string, ...args: any[]) {
     return callRemoteElementMethod(this, method, ...args);
   }
@@ -603,7 +734,7 @@ function removeRemoteListener(
 function saveRemoteProperty<Value = unknown>(
   name: string,
   description: RemoteElementPropertyDefinition<Value> | undefined,
-  observedAttributes: string[],
+  observedAttributes: Set<string> | string[],
   remotePropertyDefinitions: Map<
     string,
     RemoteElementPropertyNormalizedDefinition
@@ -655,7 +786,12 @@ function saveRemoteProperty<Value = unknown>(
   }
 
   if (attributeName) {
-    observedAttributes.push(attributeName);
+    if (Array.isArray(observedAttributes)) {
+      observedAttributes.push(attributeName);
+    } else {
+      observedAttributes.add(attributeName);
+    }
+
     attributeToPropertyMap.set(attributeName, name);
   }
 
