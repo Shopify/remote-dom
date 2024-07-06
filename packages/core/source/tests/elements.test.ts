@@ -4,10 +4,10 @@ import {describe, it, expect, vi, type MockedObject} from 'vitest';
 import {
   RemoteElement,
   createRemoteElement,
+  RemoteEvent,
   // remoteProperties,
   // remoteProperty,
   RemoteRootElement,
-  type RemoteEvent,
   type RemoteElementConstructor,
 } from '../elements.ts';
 import {
@@ -20,6 +20,7 @@ import {
   UPDATE_PROPERTY_TYPE_PROPERTY,
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
   MUTATION_TYPE_INSERT_CHILD,
+  UPDATE_PROPERTY_TYPE_LISTENER,
 } from '../constants.ts';
 
 describe('RemoteElement', () => {
@@ -498,7 +499,7 @@ describe('RemoteElement', () => {
       });
     });
 
-    describe.skip('event listeners', () => {
+    describe('event listeners', () => {
       it('does not create a property for an unrecognized event', () => {
         const ButtonElement = createRemoteElement<{
           onPress(): void;
@@ -545,6 +546,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'onPress',
             element.onPress,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -567,6 +569,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'press',
             element.press,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -589,6 +592,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'onPress',
             element.onPress,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -611,6 +615,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'onMouseEnter',
             element.onMouseEnter,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -630,28 +635,6 @@ describe('RemoteElement', () => {
         const detail = {hello: 'world'};
 
         element.onPress(detail);
-
-        expect(listener).toHaveBeenCalledWith(expect.any(CustomEvent));
-        expect(listener).toHaveBeenCalledWith(
-          expect.objectContaining({type: 'press', detail}),
-        );
-      });
-
-      it('calls event listeners with a RemoteEvent containing multiple function argument as the detail', () => {
-        const ButtonElement = createRemoteElement<{
-          onPress(...detail: any[]): void;
-        }>({
-          properties: {onPress: {}},
-        });
-
-        const {element} = createAndConnectRemoteElement(ButtonElement);
-
-        const listener = vi.fn();
-        element.addEventListener('press', listener);
-
-        const detail = ['123', {hello: 'world'}];
-
-        element.onPress(...detail);
 
         expect(listener).toHaveBeenCalledWith(expect.any(CustomEvent));
         expect(listener).toHaveBeenCalledWith(
@@ -712,6 +695,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'onPress',
             undefined,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -737,6 +721,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'onPress',
             undefined,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -763,6 +748,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'onPress',
             undefined,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -845,6 +831,199 @@ describe('RemoteElement', () => {
           UPDATE_PROPERTY_TYPE_ATTRIBUTE,
         ],
       ]);
+    });
+  });
+
+  describe('event listeners', () => {
+    it('proxies event listeners, passing along the original first argument of the caller and returning the result of event.response', async () => {
+      const ButtonElement = createRemoteElement({
+        eventListeners: ['press'],
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const listener = vi.fn((event: RemoteEvent) => {
+        event.respondWith(Promise.resolve(`Detail: ${event.detail}`));
+      });
+
+      element.addEventListener('press', listener);
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          expect.any(Function),
+          UPDATE_PROPERTY_TYPE_LISTENER,
+        ],
+      ]);
+
+      const dispatchFunction = receiver.connection.mutate.mock.calls
+        .at(-1)!
+        .at(0)!
+        .at(0)!
+        .at(3) as Function;
+      const result = await dispatchFunction('Hello world');
+
+      expect(listener).toHaveBeenCalledWith(expect.any(RemoteEvent));
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: 'Hello world',
+        }),
+      );
+      expect(result).toBe('Detail: Hello world');
+    });
+
+    it('uses a custom event provided by a `call()` event listener description', async () => {
+      class CustomRemoteEvent extends RemoteEvent {}
+
+      const dispatchListener = vi.fn();
+
+      const ButtonElement = createRemoteElement({
+        eventListeners: {
+          press: {
+            dispatchEvent(detail: string) {
+              dispatchListener(this, detail);
+
+              return new CustomRemoteEvent('press', {
+                detail: `Detail: ${detail}`,
+              });
+            },
+          },
+        },
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const listener = vi.fn();
+
+      element.addEventListener('press', listener);
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          expect.any(Function),
+          UPDATE_PROPERTY_TYPE_LISTENER,
+        ],
+      ]);
+
+      const dispatchFunction = receiver.connection.mutate.mock.calls
+        .at(-1)!
+        .at(0)!
+        .at(0)!
+        .at(3) as Function;
+      await dispatchFunction('Hello world');
+
+      expect(dispatchListener).toHaveBeenCalledWith(element, 'Hello world');
+      expect(listener).toHaveBeenCalledWith(expect.any(CustomRemoteEvent));
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: 'Detail: Hello world',
+        }),
+      );
+    });
+
+    it('removes an event listener when the last event listener is removed', () => {
+      const ButtonElement = createRemoteElement({
+        eventListeners: ['press'],
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const firstListener = vi.fn();
+      const secondListener = vi.fn();
+
+      element.addEventListener('press', firstListener);
+
+      receiver.connection.mutate.mockClear();
+
+      element.addEventListener('press', secondListener);
+
+      expect(receiver.connection.mutate).not.toHaveBeenCalled();
+
+      element.removeEventListener('press', secondListener);
+
+      expect(receiver.connection.mutate).not.toHaveBeenCalled();
+
+      element.removeEventListener('press', firstListener);
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          undefined,
+          UPDATE_PROPERTY_TYPE_LISTENER,
+        ],
+      ]);
+
+      element.dispatchEvent(new RemoteEvent('press'));
+
+      expect(firstListener).not.toHaveBeenCalled();
+      expect(secondListener).not.toHaveBeenCalled();
+    });
+
+    it('removes an event listener declared with once', () => {
+      const ButtonElement = createRemoteElement({
+        eventListeners: ['press'],
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const listener = vi.fn();
+
+      element.addEventListener('press', listener, {once: true});
+
+      element.dispatchEvent(new RemoteEvent('press'));
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          undefined,
+          UPDATE_PROPERTY_TYPE_LISTENER,
+        ],
+      ]);
+
+      expect(listener).toHaveBeenCalledTimes(1);
+
+      listener.mockClear();
+
+      element.dispatchEvent(new RemoteEvent('press'));
+
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it('removes an event listener declared with an abort signal', () => {
+      const ButtonElement = createRemoteElement({
+        eventListeners: ['press'],
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const listener = vi.fn();
+      const abort = new AbortController();
+
+      element.addEventListener('press', listener, {signal: abort.signal});
+
+      abort.abort();
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          undefined,
+          UPDATE_PROPERTY_TYPE_LISTENER,
+        ],
+      ]);
+
+      element.dispatchEvent(new RemoteEvent('press'));
+
+      expect(listener).not.toHaveBeenCalled();
     });
   });
 

@@ -96,7 +96,7 @@ export type RemoteMutationRecordUpdateProperty = [
    * The kind of property being updated.
    * @default UPDATE_PROPERTY_TYPE_PROPERTY
    */
-  kind?:
+  updateType?:
     | typeof UPDATE_PROPERTY_TYPE_PROPERTY
     | typeof UPDATE_PROPERTY_TYPE_LISTENER
     | typeof UPDATE_PROPERTY_TYPE_ATTRIBUTE,

@@ -7,6 +7,7 @@ export {
   type RemoteElementPropertiesDefinition,
   type RemoteElementAttributeDefinition,
   type RemoteElementEventListenerDefinition,
+  type RemoteElementEventListenersDefinition,
   type RemoteElementSlotDefinition,
   type RemoteElementSlotsDefinition,
   type RemotePropertiesFromElementConstructor,

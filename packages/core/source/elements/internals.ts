@@ -7,6 +7,7 @@ import {
   MUTATION_TYPE_UPDATE_PROPERTY,
   UPDATE_PROPERTY_TYPE_PROPERTY,
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+  UPDATE_PROPERTY_TYPE_LISTENER,
 } from '../constants.ts';
 import type {RemoteConnection, RemoteNodeSerialization} from '../types.ts';
 
@@ -145,9 +146,21 @@ export function updateRemoteElementProperty(
  */
 export function updateRemoteElementAttribute(
   node: Element,
-  property: string,
+  attribute: string,
   value?: string,
 ) {
+  const remoteAttributes = (node as RemoteConnectedNode)[REMOTE_ATTRIBUTES];
+
+  if (remoteAttributes) {
+    if (remoteAttributes[attribute] === value) return;
+
+    if (value == null) {
+      delete remoteAttributes[attribute];
+    } else {
+      remoteAttributes[attribute] = value;
+    }
+  }
+
   const connection = (node as RemoteConnectedNode)[REMOTE_CONNECTION];
 
   if (connection == null) return;
@@ -156,9 +169,48 @@ export function updateRemoteElementAttribute(
     [
       MUTATION_TYPE_UPDATE_PROPERTY,
       remoteId(node),
-      property,
+      attribute,
       value,
       UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+    ],
+  ]);
+}
+
+/**
+ * Updates a single remote event listener on an element node. If the element is
+ * connected to a remote root, this function will also make a `mutate()` call
+ * to communicate the change to the host.
+ */
+export function updateRemoteElementEventListener(
+  node: Element,
+  event: string,
+  listener?: (...args: any[]) => any,
+) {
+  const remoteEventListeners = (node as RemoteConnectedNode)[
+    REMOTE_EVENT_LISTENERS
+  ];
+
+  if (remoteEventListeners) {
+    if (remoteEventListeners[event] === listener) return;
+
+    if (listener == null) {
+      delete remoteEventListeners[event];
+    } else {
+      remoteEventListeners[event] = listener;
+    }
+  }
+
+  const connection = (node as RemoteConnectedNode)[REMOTE_CONNECTION];
+
+  if (connection == null) return;
+
+  connection.mutate([
+    [
+      MUTATION_TYPE_UPDATE_PROPERTY,
+      remoteId(node),
+      event,
+      listener,
+      UPDATE_PROPERTY_TYPE_LISTENER,
     ],
   ]);
 }
