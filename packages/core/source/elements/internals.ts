@@ -7,7 +7,7 @@ import {
   MUTATION_TYPE_UPDATE_PROPERTY,
   UPDATE_PROPERTY_TYPE_PROPERTY,
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
-  UPDATE_PROPERTY_TYPE_LISTENER,
+  UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
 } from '../constants.ts';
 import type {RemoteConnection, RemoteNodeSerialization} from '../types.ts';
 
@@ -210,7 +210,7 @@ export function updateRemoteElementEventListener(
       remoteId(node),
       event,
       listener,
-      UPDATE_PROPERTY_TYPE_LISTENER,
+      UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
     ],
   ]);
 }

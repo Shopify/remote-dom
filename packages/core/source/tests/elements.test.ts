@@ -20,7 +20,7 @@ import {
   UPDATE_PROPERTY_TYPE_PROPERTY,
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
   MUTATION_TYPE_INSERT_CHILD,
-  UPDATE_PROPERTY_TYPE_LISTENER,
+  UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
 } from '../constants.ts';
 
 describe('RemoteElement', () => {
@@ -54,6 +54,8 @@ describe('RemoteElement', () => {
           version: 0,
           children: [],
           properties: {name},
+          attributes: {},
+          eventListeners: {},
         },
       ]);
     });
@@ -764,7 +766,7 @@ describe('RemoteElement', () => {
       const receiver = new TestRemoteReceiver();
 
       const root = new RemoteRootElement();
-      const element = new ProductElement();
+      const element = createRemoteHTMLElement(ProductElement);
       root.append(element);
 
       const name = 'Fiddle leaf fig';
@@ -837,7 +839,7 @@ describe('RemoteElement', () => {
   describe('event listeners', () => {
     it('proxies event listeners, passing along the original first argument of the caller and returning the result of event.response', async () => {
       const ButtonElement = createRemoteElement({
-        eventListeners: ['press'],
+        events: ['press'],
       });
 
       const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
@@ -854,7 +856,7 @@ describe('RemoteElement', () => {
           remoteId(element),
           'press',
           expect.any(Function),
-          UPDATE_PROPERTY_TYPE_LISTENER,
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
         ],
       ]);
 
@@ -880,7 +882,7 @@ describe('RemoteElement', () => {
       const dispatchListener = vi.fn();
 
       const ButtonElement = createRemoteElement({
-        eventListeners: {
+        events: {
           press: {
             dispatchEvent(detail: string) {
               dispatchListener(this, detail);
@@ -905,7 +907,7 @@ describe('RemoteElement', () => {
           remoteId(element),
           'press',
           expect.any(Function),
-          UPDATE_PROPERTY_TYPE_LISTENER,
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
         ],
       ]);
 
@@ -927,7 +929,7 @@ describe('RemoteElement', () => {
 
     it('removes an event listener when the last event listener is removed', () => {
       const ButtonElement = createRemoteElement({
-        eventListeners: ['press'],
+        events: ['press'],
       });
 
       const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
@@ -955,7 +957,7 @@ describe('RemoteElement', () => {
           remoteId(element),
           'press',
           undefined,
-          UPDATE_PROPERTY_TYPE_LISTENER,
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
         ],
       ]);
 
@@ -967,7 +969,7 @@ describe('RemoteElement', () => {
 
     it('removes an event listener declared with once', () => {
       const ButtonElement = createRemoteElement({
-        eventListeners: ['press'],
+        events: ['press'],
       });
 
       const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
@@ -984,7 +986,7 @@ describe('RemoteElement', () => {
           remoteId(element),
           'press',
           undefined,
-          UPDATE_PROPERTY_TYPE_LISTENER,
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
         ],
       ]);
 
@@ -999,7 +1001,7 @@ describe('RemoteElement', () => {
 
     it('removes an event listener declared with an abort signal', () => {
       const ButtonElement = createRemoteElement({
-        eventListeners: ['press'],
+        events: ['press'],
       });
 
       const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
@@ -1017,7 +1019,7 @@ describe('RemoteElement', () => {
           remoteId(element),
           'press',
           undefined,
-          UPDATE_PROPERTY_TYPE_LISTENER,
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
         ],
       ]);
 
@@ -1089,9 +1091,18 @@ function createAndConnectRemoteElement<
   ElementType extends RemoteElementConstructor,
 >(ElementConstructor: ElementType) {
   const {receiver, root} = createAndConnectRemoteRootElement();
-  const element = new ElementConstructor() as InstanceType<ElementType>;
+  const element = createRemoteHTMLElement(ElementConstructor);
   root.append(element);
   return {root, element, receiver};
+}
+
+function createRemoteHTMLElement<ElementType extends RemoteElementConstructor>(
+  ElementConstructor: ElementType,
+  tagName: string = 'test-custom-element',
+) {
+  const element = new ElementConstructor() as InstanceType<ElementType>;
+  Object.defineProperty(element, 'nodeName', {value: tagName});
+  return element;
 }
 
 function remoteId(node: any) {

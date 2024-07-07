@@ -6,7 +6,7 @@ import {
   NODE_TYPE_TEXT,
   ROOT_ID,
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
-  UPDATE_PROPERTY_TYPE_LISTENER,
+  UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
   UPDATE_PROPERTY_TYPE_PROPERTY,
 } from '../constants.ts';
 import type {
@@ -44,7 +44,9 @@ export interface RemoteReceiverElement
   extends Omit<RemoteElementSerialization, 'children' | 'properties'> {
   readonly properties: NonNullable<RemoteElementSerialization['properties']>;
   readonly attributes: NonNullable<RemoteElementSerialization['attributes']>;
-  readonly eventListeners: NonNullable<RemoteElementSerialization['eventListeners']>;
+  readonly eventListeners: NonNullable<
+    RemoteElementSerialization['eventListeners']
+  >;
   readonly children: readonly RemoteReceiverNode[];
   readonly version: number;
 }
@@ -191,7 +193,12 @@ export class RemoteReceiver {
 
         detach(removed!);
       },
-      updateProperty: (id, property, value, type = UPDATE_PROPERTY_TYPE_PROPERTY) => {
+      updateProperty: (
+        id,
+        property,
+        value,
+        type = UPDATE_PROPERTY_TYPE_PROPERTY,
+      ) => {
         const element = attached.get(id) as Writable<RemoteReceiverElement>;
 
         retain?.(value);
@@ -205,7 +212,7 @@ export class RemoteReceiver {
           case UPDATE_PROPERTY_TYPE_ATTRIBUTE:
             updateObject = element.attributes;
             break;
-          case UPDATE_PROPERTY_TYPE_LISTENER:
+          case UPDATE_PROPERTY_TYPE_EVENT_LISTENER:
             updateObject = element.eventListeners;
             break;
         }
@@ -280,7 +287,15 @@ export class RemoteReceiver {
           break;
         }
         case NODE_TYPE_ELEMENT: {
-          const {id, type, element, children, properties, attributes, eventListeners} = child;
+          const {
+            id,
+            type,
+            element,
+            children,
+            properties,
+            attributes,
+            eventListeners,
+          } = child;
           retain?.(properties);
           retain?.(eventListeners);
 

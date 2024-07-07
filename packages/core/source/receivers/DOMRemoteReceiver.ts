@@ -9,7 +9,7 @@ import {
   REMOTE_EVENT_LISTENERS,
   UPDATE_PROPERTY_TYPE_PROPERTY,
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
-  UPDATE_PROPERTY_TYPE_LISTENER,
+  UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
 } from '../constants.ts';
 import type {RemoteNodeSerialization} from '../types.ts';
 import type {RemoteReceiverOptions} from './shared.ts';
@@ -172,7 +172,7 @@ export class DOMRemoteReceiver {
                 normalizedChild as Element,
                 event,
                 listener,
-                UPDATE_PROPERTY_TYPE_LISTENER,
+                UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
               );
             }
           } else {
@@ -260,7 +260,7 @@ function updateRemoteProperty(
   type:
     | typeof UPDATE_PROPERTY_TYPE_PROPERTY
     | typeof UPDATE_PROPERTY_TYPE_ATTRIBUTE
-    | typeof UPDATE_PROPERTY_TYPE_LISTENER,
+    | typeof UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
 ) {
   switch (type) {
     case UPDATE_PROPERTY_TYPE_PROPERTY: {
@@ -276,7 +276,7 @@ function updateRemoteProperty(
 
       break;
     }
-    case UPDATE_PROPERTY_TYPE_LISTENER: {
+    case UPDATE_PROPERTY_TYPE_EVENT_LISTENER: {
       const remoteListeners = (element as any)[REMOTE_EVENT_LISTENERS];
       const existing = remoteListeners?.[property];
 

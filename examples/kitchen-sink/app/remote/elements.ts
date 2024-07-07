@@ -31,7 +31,7 @@ export const Button = createRemoteElement<
   {modal?: true},
   {press(event: RemoteEvent): void}
 >({
-  eventListeners: ['press'],
+  events: ['press'],
   slots: ['modal'],
 });
 
@@ -41,7 +41,7 @@ export const Modal = createRemoteElement<
   {primaryAction?: true},
   {open(event: RemoteEvent): void; close(event: RemoteEvent): void}
 >({
-  eventListeners: ['close'],
+  events: ['close'],
   slots: ['primaryAction'],
   methods: ['open', 'close'],
 });

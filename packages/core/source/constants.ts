@@ -9,8 +9,8 @@ export const MUTATION_TYPE_UPDATE_TEXT = 2;
 export const MUTATION_TYPE_UPDATE_PROPERTY = 3;
 
 export const UPDATE_PROPERTY_TYPE_PROPERTY = 1;
-export const UPDATE_PROPERTY_TYPE_LISTENER = 2;
-export const UPDATE_PROPERTY_TYPE_ATTRIBUTE = 3;
+export const UPDATE_PROPERTY_TYPE_ATTRIBUTE = 2;
+export const UPDATE_PROPERTY_TYPE_EVENT_LISTENER = 3;
 
 export const REMOTE_ID = Symbol.for('remote.id');
 export const REMOTE_CONNECTION = Symbol.for('remote.connection');

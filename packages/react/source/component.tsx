@@ -160,6 +160,8 @@ export function createRemoteComponent<
         if (element == null) return;
 
         for (const prop in remoteProperties) {
+          if (prop === 'children') continue;
+
           const oldValue = lastRemotePropertiesRef.current?.[prop];
           const newValue = remoteProperties[prop];
 
