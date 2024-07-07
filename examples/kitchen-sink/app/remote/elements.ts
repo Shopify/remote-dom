@@ -2,6 +2,7 @@ import {
   createRemoteElement,
   RemoteRootElement,
   RemoteFragmentElement,
+  type RemoteEvent,
 } from '@remote-dom/core/elements';
 
 import type {
@@ -24,23 +25,23 @@ export const Text = createRemoteElement<TextProperties>({
   },
 });
 
-export const Button = createRemoteElement<ButtonProperties, {}, {modal?: true}>(
-  {
-    properties: {
-      onPress: {event: true},
-    },
-    slots: ['modal'],
-  },
-);
+export const Button = createRemoteElement<
+  ButtonProperties,
+  {},
+  {modal?: true},
+  {press(event: RemoteEvent): void}
+>({
+  eventListeners: ['press'],
+  slots: ['modal'],
+});
 
 export const Modal = createRemoteElement<
   ModalProperties,
   ModalMethods,
-  {primaryAction?: true}
+  {primaryAction?: true},
+  {open(event: RemoteEvent): void; close(event: RemoteEvent): void}
 >({
-  properties: {
-    onClose: {event: true},
-  },
+  eventListeners: ['close'],
   slots: ['primaryAction'],
   methods: ['open', 'close'],
 });

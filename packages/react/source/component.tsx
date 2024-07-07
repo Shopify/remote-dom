@@ -9,6 +9,7 @@ import {
 import type {
   RemoteElement,
   RemoteElementConstructor,
+  RemoteEventListenersFromElementConstructor,
 } from '@remote-dom/core/elements';
 
 import type {
@@ -16,7 +17,15 @@ import type {
   RemoteComponentPropsFromElementConstructor,
 } from './types.ts';
 
-export interface RemoteComponentOptions {
+export interface RemoteComponentOptions<
+  Constructor extends RemoteElementConstructor<
+    any,
+    any,
+    any,
+    any
+  > = RemoteElementConstructor<any, any, any, any>,
+  Props extends Record<string, any> = Record<string, any>,
+> {
   /**
    * Customize how React props are mapped to slotted child elements. By default,
    * any prop that is listed in the remote element’s class definition, and which
@@ -40,6 +49,27 @@ export interface RemoteComponentOptions {
          */
         wrapper?: boolean | string;
       };
+
+  /**
+   * Customizes the props your wrapper React component will have for event listeners
+   * on the underlying custom element. The key is the prop name on the React component,
+   * and the value is an options object containing the event name on the custom element.
+   *
+   * @example
+   * ```tsx
+   * const Button = createRemoteComponent('ui-button', ButtonElement, {
+   *   eventProps: {
+   *     onClick: {event: 'click'},
+   *   },
+   * });
+   * ```
+   */
+  eventProps?: Record<
+    keyof Props,
+    {
+      event: keyof RemoteEventListenersFromElementConstructor<Constructor>;
+    }
+  >;
 }
 
 /**
@@ -57,18 +87,24 @@ export function createRemoteComponent<
   ElementConstructor extends RemoteElementConstructor<
     any,
     any,
+    any,
     any
   > = HTMLElementTagNameMap[Tag] extends RemoteElement<
     infer Properties,
     infer Methods,
-    infer Slots
+    infer Slots,
+    infer EventListeners
   >
-    ? RemoteElementConstructor<Properties, Methods, Slots>
+    ? RemoteElementConstructor<Properties, Methods, Slots, EventListeners>
     : never,
+  Props extends Record<string, any> = {},
 >(
   tag: Tag,
   Element: ElementConstructor | undefined = customElements.get(tag) as any,
-  {slotProps = true}: RemoteComponentOptions = {},
+  {
+    slotProps = true,
+    eventProps = {} as any,
+  }: RemoteComponentOptions<ElementConstructor, Props> = {},
 ): RemoteComponentTypeFromElementConstructor<ElementConstructor> {
   const normalizeSlotProps = Boolean(slotProps);
   const slotPropWrapperOption =
@@ -100,37 +136,53 @@ export function createRemoteComponent<
           continue;
         }
 
-        if (normalizeSlotProps) {
-          if (
-            Element.remoteSlotDefinitions.has(prop) &&
-            isValidElement(propValue)
-          ) {
-            if (!slotPropWrapper) {
-              children.push(cloneElement(propValue as any, {slot: prop}));
-            } else {
-              children.push(
-                createElement(slotPropWrapper, {slot: prop}, propValue),
-              );
-            }
-            continue;
+        if (
+          normalizeSlotProps &&
+          Element.remoteSlotDefinitions.has(prop) &&
+          isValidElement(propValue)
+        ) {
+          if (!slotPropWrapper) {
+            children.push(cloneElement(propValue as any, {slot: prop}));
+          } else {
+            children.push(
+              createElement(slotPropWrapper, {slot: prop}, propValue),
+            );
           }
+
+          continue;
         }
 
-        const definition = Element.remotePropertyDefinitions.get(prop);
-
-        if (definition) {
-          remoteProperties[prop] = propValue;
-        }
+        remoteProperties[prop] = propValue;
       }
 
       useLayoutEffect(() => {
-        if (internalRef.current == null) return;
+        const element = internalRef.current;
+        if (element == null) return;
 
-        const propsToUpdate =
-          lastRemotePropertiesRef.current ?? remoteProperties;
+        for (const prop in remoteProperties) {
+          const oldValue = lastRemotePropertiesRef.current?.[prop];
+          const newValue = remoteProperties[prop];
 
-        for (const prop in propsToUpdate) {
-          internalRef.current[prop] = remoteProperties[prop];
+          if (oldValue === newValue) continue;
+
+          const eventProp = eventProps[prop];
+          if (eventProp) {
+            const eventName = eventProp.event;
+            if (oldValue) element.removeEventListener(eventName, oldValue);
+            if (newValue) element.addEventListener(eventName, newValue);
+            continue;
+          }
+
+          if (prop in element) {
+            element[prop] = remoteProperties[prop];
+            continue;
+          }
+
+          if (newValue == null) {
+            element.removeAttribute(prop);
+          } else {
+            element.setAttribute(prop, String(newValue));
+          }
         }
 
         lastRemotePropertiesRef.current = remoteProperties;

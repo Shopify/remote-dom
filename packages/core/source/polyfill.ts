@@ -59,7 +59,7 @@ hooks.setText = (text, data) => {
 hooks.setAttribute = (element, name, value) => {
   // Custom elements need to define their own logic for handling attribute
   // updates.
-  if (!element.tagName.includes('-')) return;
+  if (element.tagName.includes('-')) return;
 
   updateRemoteElementAttribute(element, name, value);
 };
@@ -67,7 +67,7 @@ hooks.setAttribute = (element, name, value) => {
 hooks.removeAttribute = (element, name) => {
   // Custom elements need to define their own logic for handling attribute
   // updates.
-  if (!element.tagName.includes('-')) return;
+  if (element.tagName.includes('-')) return;
 
   updateRemoteElementAttribute(element, name);
 };

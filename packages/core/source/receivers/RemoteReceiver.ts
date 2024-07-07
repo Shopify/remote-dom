@@ -5,6 +5,9 @@ import {
   NODE_TYPE_ROOT,
   NODE_TYPE_TEXT,
   ROOT_ID,
+  UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+  UPDATE_PROPERTY_TYPE_LISTENER,
+  UPDATE_PROPERTY_TYPE_PROPERTY,
 } from '../constants.ts';
 import type {
   RemoteTextSerialization,
@@ -40,6 +43,8 @@ export interface RemoteReceiverComment extends RemoteCommentSerialization {
 export interface RemoteReceiverElement
   extends Omit<RemoteElementSerialization, 'children' | 'properties'> {
   readonly properties: NonNullable<RemoteElementSerialization['properties']>;
+  readonly attributes: NonNullable<RemoteElementSerialization['attributes']>;
+  readonly eventListeners: NonNullable<RemoteElementSerialization['eventListeners']>;
   readonly children: readonly RemoteReceiverNode[];
   readonly version: number;
 }
@@ -186,14 +191,28 @@ export class RemoteReceiver {
 
         detach(removed!);
       },
-      updateProperty: (id, property, value) => {
+      updateProperty: (id, property, value, type = UPDATE_PROPERTY_TYPE_PROPERTY) => {
         const element = attached.get(id) as Writable<RemoteReceiverElement>;
 
         retain?.(value);
 
-        const oldValue = element.properties[property];
+        let updateObject: Record<string, any>;
 
-        element.properties[property] = value;
+        switch (type) {
+          case UPDATE_PROPERTY_TYPE_PROPERTY:
+            updateObject = element.properties;
+            break;
+          case UPDATE_PROPERTY_TYPE_ATTRIBUTE:
+            updateObject = element.attributes;
+            break;
+          case UPDATE_PROPERTY_TYPE_LISTENER:
+            updateObject = element.eventListeners;
+            break;
+        }
+
+        const oldValue = updateObject[property];
+
+        updateObject[property] = value;
         element.version += 1;
 
         let parentForUpdate: Writable<RemoteReceiverParent> | undefined;
@@ -261,8 +280,9 @@ export class RemoteReceiver {
           break;
         }
         case NODE_TYPE_ELEMENT: {
-          const {id, type, element, children, properties} = child;
+          const {id, type, element, children, properties, attributes, eventListeners} = child;
           retain?.(properties);
+          retain?.(eventListeners);
 
           const resolvedChildren: RemoteReceiverNode[] = [];
 
@@ -273,6 +293,8 @@ export class RemoteReceiver {
             version: 0,
             children: resolvedChildren as readonly RemoteReceiverNode[],
             properties: {...properties},
+            attributes: {...attributes},
+            eventListeners: {...eventListeners},
           } satisfies RemoteReceiverElement;
 
           for (const grandChild of children) {
@@ -296,8 +318,9 @@ export class RemoteReceiver {
       attached.delete(child.id);
       parents.delete(child.id);
 
-      if (release && 'properties' in child) {
-        release(child.properties);
+      if (release) {
+        if ('properties' in child) release(child.properties);
+        if ('eventListeners' in child) release(child.eventListeners);
       }
 
       if ('children' in child) {

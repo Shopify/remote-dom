@@ -13,6 +13,7 @@ export {
   type RemotePropertiesFromElementConstructor,
   type RemoteMethodsFromElementConstructor,
   type RemoteSlotsFromElementConstructor,
+  type RemoteEventListenersFromElementConstructor,
   type RemoteElementCreatorOptions,
 } from './elements/RemoteElement.ts';
 export {RemoteFragmentElement} from './elements/RemoteFragmentElement.ts';

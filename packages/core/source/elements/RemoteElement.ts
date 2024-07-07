@@ -64,8 +64,10 @@ export interface RemoteElementEventListenerDefinition {
   ) => Event | undefined | void;
 }
 
-export type RemoteElementEventListenersDefinition = {
-  [event: string]: RemoteElementEventListenerDefinition;
+export type RemoteElementEventListenersDefinition<
+  EventListeners extends Record<string, any> = {},
+> = {
+  [Event in keyof EventListeners]: RemoteElementEventListenerDefinition;
 };
 
 export interface RemoteElementMethodDefinition {}
@@ -83,29 +85,38 @@ export type RemoteElementMethodsDefinition<
 };
 
 export type RemotePropertiesFromElementConstructor<T> = T extends {
-  new (): RemoteElement<infer Properties, any, any>;
+  new (): RemoteElement<infer Properties, any, any, any>;
 }
   ? Properties
   : never;
 
 export type RemoteMethodsFromElementConstructor<T> = T extends {
-  new (): RemoteElement<any, infer Methods, any>;
+  new (): RemoteElement<any, infer Methods, any, any>;
 }
   ? Methods
   : never;
 
 export type RemoteSlotsFromElementConstructor<T> = T extends {
-  new (): RemoteElement<any, any, infer Slots>;
+  new (): RemoteElement<any, any, infer Slots, any>;
 }
   ? Slots
+  : never;
+
+export type RemoteEventListenersFromElementConstructor<T> = T extends {
+  new (): RemoteElement<any, any, any, infer EventListeners>;
+}
+  ? EventListeners
   : never;
 
 export type RemoteElementConstructor<
   Properties extends Record<string, any> = {},
   Methods extends Record<string, (...args: any[]) => any> = {},
   Slots extends Record<string, any> = {},
+  EventListeners extends Record<string, any> = {},
 > = {
-  new (): RemoteElement<Properties, Methods, Slots> & Properties & Methods;
+  new (): RemoteElement<Properties, Methods, Slots, EventListeners> &
+    Properties &
+    Methods;
   readonly remoteSlots?:
     | RemoteElementSlotsDefinition<Slots>
     | readonly (keyof Slots)[];
@@ -126,8 +137,8 @@ export type RemoteElementConstructor<
   >;
 
   readonly remoteEventListeners?:
-    | RemoteElementEventListenersDefinition
-    | readonly string[];
+    | RemoteElementEventListenersDefinition<EventListeners>
+    | readonly (keyof EventListeners)[];
   readonly remoteEventListenerDefinitions: Map<
     string,
     RemoteElementEventListenerDefinition
@@ -144,27 +155,37 @@ export interface RemoteElementCreatorOptions<
   Properties extends Record<string, any> = {},
   Methods extends Record<string, any> = {},
   Slots extends Record<string, any> = {},
+  EventListeners extends Record<string, any> = {},
 > {
-  slots?: RemoteElementConstructor<Properties, Methods, Slots>['remoteSlots'];
+  slots?: RemoteElementConstructor<
+    Properties,
+    Methods,
+    Slots,
+    EventListeners
+  >['remoteSlots'];
   properties?: RemoteElementConstructor<
     Properties,
     Methods,
-    Slots
+    Slots,
+    EventListeners
   >['remoteProperties'];
   attributes?: RemoteElementConstructor<
     Properties,
     Methods,
-    Slots
+    Slots,
+    EventListeners
   >['remoteAttributes'];
   eventListeners?: RemoteElementConstructor<
     Properties,
     Methods,
-    Slots
+    Slots,
+    EventListeners
   >['remoteEventListeners'];
   methods?: RemoteElementConstructor<
     Properties,
     Methods,
-    Slots
+    Slots,
+    EventListeners
   >['remoteMethods'];
 }
 
@@ -174,6 +195,7 @@ export function createRemoteElement<
   Properties extends Record<string, any> = {},
   Methods extends Record<string, any> = {},
   Slots extends Record<string, any> = {},
+  EventListeners extends Record<string, any> = {},
 >({
   slots,
   properties,
@@ -183,12 +205,14 @@ export function createRemoteElement<
 }: RemoteElementCreatorOptions<
   Properties,
   Methods,
-  Slots
-> = {}): RemoteElementConstructor<Properties, Methods, Slots> {
+  Slots,
+  EventListeners
+> = {}): RemoteElementConstructor<Properties, Methods, Slots, EventListeners> {
   const RemoteElementConstructor = class extends RemoteElement<
     Properties,
     Methods,
-    Slots
+    Slots,
+    EventListeners
   > {
     static readonly remoteSlots = slots;
     static readonly remoteProperties = properties;
@@ -222,6 +246,7 @@ export abstract class RemoteElement<
   Properties extends Record<string, any> = {},
   Methods extends Record<string, (...args: any[]) => any> = {},
   Slots extends Record<string, any> = {},
+  EventListeners extends Record<string, any> = {},
 > extends HTMLElement {
   static readonly slottable = true;
 
@@ -502,6 +527,9 @@ export abstract class RemoteElement<
 
   /** @internal */
   __methods?: Methods;
+
+  /** @internal */
+  __eventListeners?: EventListeners;
 
   private [REMOTE_PROPERTIES]!: Properties;
   // @ts-expect-error used by helpers in the `internals.ts` file

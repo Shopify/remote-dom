@@ -1,4 +1,4 @@
-import {signal, batch, type ReadonlySignal} from '@preact/signals-core';
+import {signal, batch, type ReadonlySignal, type Signal} from '@preact/signals-core';
 
 import {
   ROOT_ID,
@@ -6,6 +6,9 @@ import {
   NODE_TYPE_ELEMENT,
   NODE_TYPE_COMMENT,
   NODE_TYPE_TEXT,
+  UPDATE_PROPERTY_TYPE_PROPERTY,
+  UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+  UPDATE_PROPERTY_TYPE_LISTENER,
   createRemoteConnection,
   type RemoteConnection,
   type RemoteNodeSerialization,
@@ -38,9 +41,15 @@ export interface SignalRemoteReceiverComment
  * the `properties` and `children` properties each wrapped in a signal.
  */
 export interface SignalRemoteReceiverElement
-  extends Omit<RemoteElementSerialization, 'children' | 'properties'> {
+  extends Omit<RemoteElementSerialization, 'children' | 'properties' | 'attributes' | 'eventListeners'> {
   readonly properties: ReadonlySignal<
     NonNullable<RemoteElementSerialization['properties']>
+  >;
+  readonly attributes: ReadonlySignal<
+    NonNullable<RemoteElementSerialization['attributes']>
+  >;
+  readonly eventListeners: ReadonlySignal<
+    NonNullable<RemoteElementSerialization['eventListeners']>
   >;
   readonly children: ReadonlySignal<readonly SignalRemoteReceiverNode[]>;
 }
@@ -158,18 +167,33 @@ export class SignalRemoteReceiver {
 
         detach(removed!);
       },
-      updateProperty: (id, property, value) => {
+      updateProperty: (id, property, value, type = UPDATE_PROPERTY_TYPE_PROPERTY) => {
         const element = attached.get(id) as SignalRemoteReceiverElement;
-        const oldProperties = element.properties.peek();
-        const oldValue = oldProperties[property];
+
+        let updateSignal: Signal<Record<string, any>>;
+
+        switch (type) {
+          case UPDATE_PROPERTY_TYPE_PROPERTY:
+            updateSignal = element.properties;
+            break;
+          case UPDATE_PROPERTY_TYPE_ATTRIBUTE:
+            updateSignal = element.attributes;
+            break;
+          case UPDATE_PROPERTY_TYPE_LISTENER:
+            updateSignal = element.eventListeners;
+            break;
+        }
+
+        const oldUpdateObject = updateSignal.peek();
+        const oldValue = oldUpdateObject[property];
 
         if (Object.is(oldValue, value)) return;
 
         retain?.(value);
 
-        const newProperties = {...oldProperties};
-        newProperties[property] = value;
-        (element.properties as any).value = newProperties;
+        const newUpdateObject = {...oldUpdateObject};
+        newUpdateObject[property] = value;
+        (updateSignal).value = newUpdateObject;
 
         // If the slot changes, inform parent nodes so they can
         // re-parent it appropriately.
@@ -223,8 +247,9 @@ export class SignalRemoteReceiver {
           break;
         }
         case NODE_TYPE_ELEMENT: {
-          const {id, type, element, children, properties} = child;
+          const {id, type, element, children, properties, attributes, eventListeners} = child;
           retain?.(properties);
+          retain?.(eventListeners);
 
           const resolvedChildren: SignalRemoteReceiverNode[] = [];
 
@@ -236,6 +261,8 @@ export class SignalRemoteReceiver {
               resolvedChildren as readonly SignalRemoteReceiverNode[],
             ),
             properties: signal(properties ?? {}),
+            attributes: signal(attributes ?? {}),
+            eventListeners: signal(eventListeners ?? {}),
           } satisfies SignalRemoteReceiverElement;
 
           for (const grandChild of children) {
