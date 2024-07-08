@@ -82,7 +82,7 @@ import {createRemoteComponent} from '@remote-dom/preact';
 
 const Card = createRemoteComponent('ui-card', CardElement, {
   eventProps: {
-    onExpand: 'expand',
+    onExpand: {event: 'expand'},
   },
 });
 
