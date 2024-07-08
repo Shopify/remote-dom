@@ -352,7 +352,7 @@ element.focus();
 
 #### `createRemoteElement`
 
-`createRemoteElement` lets you define a remote element class without having to subclass `RemoteElement`. Instead, you’ll just provide the remote `properties`, `attributes`, `events`, and methods for your element using the `properties` and `methods` options:
+`createRemoteElement` lets you define a remote element class without having to subclass `RemoteElement`. Instead, you’ll just provide the remote `properties`, `attributes`, `events`, and `methods` for your element as options to the function:
 
 ```ts
 import {createRemoteElement} from '@remote-dom/core/elements';
