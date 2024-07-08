@@ -35,9 +35,67 @@ import {createRoot} from 'react-dom/client';
 
 #### `createRemoteComponent()`
 
-As of version 18, React has minimal support for custom elements. To make the React integration a bit more seamless, Remote DOM provides the `createRemoteComponent()` function to create a React wrapper component around a custom element. This wrapper component will automatically have the TypeScript prop types it should, given the custom element definition you pass in. It will also ensure React props are passed along as element properties, and will convert any React elements passed as props to slotted children.
+As of version 18, React has minimal support for custom elements. To make the React integration a bit more seamless, Remote DOM provides the `createRemoteComponent()` function to create a React wrapper component around a custom element. This wrapper component will automatically have the TypeScript prop types it should, and will correctly assign the props on the component to either attributes, properties, or event listeners.
 
-For example, imagine a `ui-card` custom element that takes a `header` slot, which should be used on a `ui-heading` custom element:
+```tsx
+import {createRoot} from 'react-dom/client';
+import {createRemoteComponent} from '@remote-dom/react';
+
+const MyElementComponent = createRemoteComponent('my-element', MyElement);
+
+createRoot(document.querySelector('#root')).render(
+  <MyElementComponent label="Hello, world!" />,
+);
+```
+
+More importantly, though, this wrapper will also take care of adapting some parts of the custom element API to be feel more natural in a Preact application.
+
+##### Event listener props
+
+Custom React components generally expose events as callback props on the component. To support this pattern, the `createRemoteComponent()` wrapper can map specific props on the resulting Preact component to event listeners on underlying custom element.
+
+Imagine a `ui-card` element with a clickable header. When clicked, the header will emit an `expand` event to the remote environment, and reveal the children of the `ui-card` element to the user. First, we define our custom element:
+
+```ts
+import {RemoteElement} from '@remote-dom/core/elements';
+
+class Card extends RemoteElement {
+  static get remoteEvents() {
+    return ['expand'];
+  }
+}
+
+customElements.define('ui-card', Card);
+```
+
+Then, we use the `createRemoteComponent()` helper function to create a wrapper React component with an `onExpand` prop, mapped to the `expand` event:
+
+```tsx
+import {createRemoteComponent} from '@remote-dom/preact';
+
+const Card = createRemoteComponent('ui-card', CardElement, {
+  eventProps: {
+    onExpand: 'expand',
+  },
+});
+
+render(
+  <Card
+    onExpand={() => {
+      console.log('Card expanded!');
+    }}
+  >
+    This is the body of the card.
+  </Card>,
+  document.querySelector('#root'),
+);
+```
+
+##### Slotted children to React elements
+
+The `createRemoteComponent` helper also supports mapping slotted children to React elements. Each top-level slot of the element’s children will be mapped to a prop with the same name on the React component.
+
+For example, our `ui-card` custom element could take a `header` slot for customizing the title of the card:
 
 ```ts
 import {RemoteElement} from '@remote-dom/core/elements';
@@ -48,10 +106,10 @@ class Card extends RemoteElement {
   }
 }
 
-class Heading extends RemoteElement {}
+class Text extends RemoteElement {}
 
 customElements.define('ui-card', Card);
-customElements.define('ui-heading', Heading);
+customElements.define('ui-text', Text);
 ```
 
 The `createRemoteComponent()` wrapper will allow you to pass a `header` prop to the resulting React component, which can be any other React element:
@@ -61,10 +119,10 @@ import {createRoot} from 'react-dom/client';
 import {createRemoteComponent} from '@remote-dom/react';
 
 const Card = createRemoteComponent('ui-card', CardElement);
-const Heading = createRemoteComponent('ui-heading', HeadingElement);
+const Text = createRemoteComponent('ui-text', TextElement);
 
 createRoot(document.querySelector('#root')).render(
-  <Card header={<Heading>Hello, world!</Heading>}>
+  <Card header={<Text>Hello, world!</Text>}>
     This is the body of the card.
   </Card>,
 );
@@ -79,7 +137,7 @@ createRoot(document.querySelector('#root')).render(
   <ui-card>
     This is the body of the card.
     <remote-fragment slot="header">
-      <ui-heading>Hello, world!</ui-heading>
+      <ui-text>Hello, world!</ui-text>
     </remote-fragment>
   </ui-card>,
 );
@@ -97,10 +155,10 @@ const Card = createRemoteComponent('ui-card', CardElement, {
   },
 });
 
-const Heading = createRemoteComponent('ui-heading', HeadingElement);
+const Text = createRemoteComponent('ui-text', TextElement);
 
 createRoot(document.querySelector('#root')).render(
-  <Card header={<Heading>Hello, world!</Heading>}>
+  <Card header={<Text>Hello, world!</Text>}>
     This is the body of the card.
   </Card>,
 );
@@ -108,7 +166,7 @@ createRoot(document.querySelector('#root')).render(
 // Now, renders this tree of HTML elements:
 // <ui-card>
 //   This is the body of the card.
-//   <ui-heading slot="header">Hello, world!</ui-heading>
+//   <ui-text slot="header">Hello, world!</ui-text>
 // </ui-card>
 ```
 
@@ -120,7 +178,12 @@ The `@remote-dom/react/host` package re-exports the [`RemoteReceiver` class from
 
 #### `createRemoteComponentRenderer()`
 
-The [`RemoteRootRenderer` component](#remoterootrenderer) needs a map of which React components to render for each remote element. These components will receive a description of the remote element, but not much more. The `createRemoteComponentRenderer()` function can be used to create a wrapper React component that will automatically update whenever the properties or children of the associated remote element change. It will also provide some helpful transformations, like mapping child elements with `slot` attributes into props.
+The [`RemoteRootRenderer` component](#remoterootrenderer) needs a map of which React components to render for each remote element. These components will receive a description of the remote element, but not much more. The `createRemoteComponentRenderer()` function can be used to create a wrapper React component that will automatically update whenever the properties or children of the associated remote element change. The props passed to your React component will be the combined result of:
+
+- The `properties` of the remote element
+- The `attributes` of the remote element
+- The `eventListeners` of the remote element, with each event listener being mapped to a prop named in the format `onEventName`
+- The `children` of the remote element, where any children with a `slot` attribute are mapped to a prop with the same name
 
 ```tsx
 import {createRemoteComponentRenderer} from '@remote-dom/react/host';
@@ -132,11 +195,33 @@ import {createRemoteComponentRenderer} from '@remote-dom/react/host';
 const Card = createRemoteComponentRenderer(function Card({
   header,
   subdued,
+  onExpand,
   children,
 }) {
+  const [isExpanded, setIsExpanded] = useIsExpanded();
+
   return (
-    <div class={['Card', subdued && 'Card--subdued'].filter(Boolean).join(' ')}>
-      {header && <div class="Card__Header">{header}</div>}
+    <div
+      class={[
+        'Card',
+        isExpanded && 'Card--expanded',
+        subdued && 'Card--subdued',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      {header && (
+        <button
+          class="Card__Header"
+          onClick={() => {
+            const isExpanded = !isExpanded;
+            setIsExpanded(isExpanded);
+            if (isExpanded && onExpand) onExpand();
+          }}
+        >
+          {header}
+        </button>
+      )}
       {children}
     </div>
   );
