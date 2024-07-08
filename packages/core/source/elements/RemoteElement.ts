@@ -59,7 +59,7 @@ export interface RemoteElementAttributeDefinition {}
 
 export interface RemoteElementEventListenerDefinition {
   dispatchEvent?: (
-    this: RemoteElement<any, any, any>,
+    this: RemoteElement<any, any, any, any>,
     arg: any,
   ) => Event | undefined | void;
 }
