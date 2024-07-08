@@ -91,7 +91,7 @@
     }
   },
   "devDependencies": {
-    "@preact/signals-core": "^1.6.0",
+    "@preact/signals-core": "^1.7.0",
     "@quilted/testing": "^0.1.6"
   },
   "browserslist": [
