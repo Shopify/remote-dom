@@ -6,7 +6,7 @@
 '@remote-dom/core': minor
 ---
 
-Added native support for synchronizing attributes and event listeners
+## Added native support for synchronizing attributes and event listeners
 
 Previously, Remote DOM only offered “remote properties” as a way to synchronize element state between the host and and remote environments. These remote properties effectively synchronize a subset of a custom element’s instance properties. The `RemoteElement` class offers [a declarative way to define the properties that should be synchronized](/packages/core/README.md#remote-properties).
 
