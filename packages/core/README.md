@@ -324,6 +324,25 @@ const root = document.createElement('remote-root');
 root.connect(connection);
 ```
 
+#### `BatchingRemoteConnection`
+
+The `RemoteConnection` object you receive from `RemoteReceiver.connection` is a simple object that immediately communicates all updates to the host environment. When using `RemoteMutationObserver`, documented above, this is not a major issue, since the `MutationObserver` API automatically batches DOM mutations. However, it can be more of a problem when using Remote DOM in a web worker (typically, with the `RemoteRootElement` wrapper), where no such batching is performed.
+
+To improve performance in these cases, you can use the `BatchingRemoteConnection` class, which batches updates from the remote environment that happen in the same JavaScript task. This class is a subclass of `RemoteConnection`, and can be used directly in place of the original connection object:
+
+```ts
+import {
+  BatchingRemoteConnection,
+  RemoteRootElement,
+} from '@remote-dom/core/elements';
+
+customElements.define('remote-root', RemoteRootElement);
+
+const root = document.createElement('remote-root');
+
+root.connect(new BatchingRemoteConnection(connection));
+```
+
 #### `RemoteFragmentElement`
 
 Some APIs in [`@remote-dom/preact`](../preact) and [`@remote-dom/react`](../react) need to create an HTML element as a generic container. This element is not defined by default, so if you use these features, you must define a matching custom element for this container. Remote DOM calls this element `remote-fragment`, and you can define this element using the `RemoteFragmentElement` constructor:
