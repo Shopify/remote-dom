@@ -1,5 +1,11 @@
 # @remote-dom/core
 
+## 1.1.0
+
+### Minor Changes
+
+- [#394](https://github.com/Shopify/remote-dom/pull/394) [`22e6512`](https://github.com/Shopify/remote-dom/commit/22e6512f797d97d2106f181d730d995f37c6edaf) Thanks [@lemonmade](https://github.com/lemonmade)! - Add `BatchingRemoteConnection` helper for batching changes to a polyfilled DOM
+
 ## 1.0.1
 
 ### Patch Changes
