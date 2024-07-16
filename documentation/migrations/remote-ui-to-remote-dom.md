@@ -29,7 +29,7 @@ The following `@remote-ui` packages have been removed, and have no `@remote-dom`
 - [`@remote-ui/dom`](https://www.npmjs.com/package/@remote-ui/dom). The [`@remote-dom/core` package](/packages/core/) now provides all DOM-related utilities.
 - [`@remote-ui/htm`](https://www.npmjs.com/package/@remote-ui/htm). The [`@remote-dom/core/html`](/packages/core/README.md#remote-domcorehtml) package exports an [`htm`](https://www.npmjs.com/package/htm) function for building trees of DOM nodes.
 - [`@remote-ui/mini-react`](https://www.npmjs.com/package/@remote-ui/react). This library was an adapted version of [Preact](https://preactjs.com/), which is a popular alternative to React. The new DOM-based API works great with Preact, so you can use Preact directly instead. We’ve also introduced a [`@remote-dom/preact`](/packages/preact/) package that provides a few convenience utilities for using Preact with Remote DOM.
-- [`@remote-ui/vue`](https://www.npmjs.com/package/@remote-ui/vue). This library was always poorly maintained. The new DOM-based API works well with Vite without any additional configuration, so we’ve removed this dedicated integration.
+- [`@remote-ui/vue`](https://www.npmjs.com/package/@remote-ui/vue). This library was always poorly maintained. The new DOM-based API works well with Vue without any additional configuration, so we’ve removed this dedicated integration.
 - [`@remote-ui/traversal`](https://www.npmjs.com/package/@remote-ui/traversal). The tree traversal utilities provided by this library are all supported natively by the DOM.
 - [`@remote-ui/testing`](https://www.npmjs.com/package/@remote-ui/testing). There are many other great libraries for testing DOM code.
 
@@ -206,7 +206,7 @@ createRoot(remoteRoot).render(<App />);
 
 // With this:
 
-import {createRoot} from 'remote-dom/client';
+import {createRoot} from 'react-dom/client';
 
 const root = document.createElement('remote-root');
 createRoot(root).render(<App />);
