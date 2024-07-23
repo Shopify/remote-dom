@@ -40,6 +40,7 @@ export class DOMRemoteReceiver {
     retain,
     release,
     call,
+    cache,
   }: RemoteReceiverOptions & {
     /**
      * The root element for this receiver. This acts as a shortcut for calling
@@ -71,6 +72,17 @@ export class DOMRemoteReceiver {
      * });
      */
     call?(element: Element, method: string, ...args: any[]): any;
+
+    /**
+     * Controls how DOM elements created in based on remote elements are retained
+     * once they are disconnected from the remote environment.
+     */
+    cache?: {
+      /**
+       * A timeout in milliseconds after which a detached element will be released.
+       */
+      maxAge?: number;
+    };
   } = {}) {
     this.root = root ?? document.createDocumentFragment();
 
@@ -95,7 +107,14 @@ export class DOMRemoteReceiver {
         const parent = id === ROOT_ID ? this.root : attached.get(id)!;
         const child = parent.childNodes[index]!;
         child.remove();
-        detach(child);
+
+        if (cache?.maxAge) {
+          setTimeout(() => {
+            detach(child);
+          }, cache.maxAge);
+        } else {
+          detach(child);
+        }
       },
       updateProperty: (id, property, value) => {
         const element = attached.get(id)!;
@@ -197,7 +216,7 @@ export class DOMRemoteReceiver {
    */
   disconnect() {
     // DocumentFragment
-    if (this.root.nodeType === 11) return;
+    if (this.root.nodeType === 11) return this.root as DocumentFragment;
 
     const oldRoot = this.root;
     const fragment = new DocumentFragment();
@@ -206,6 +225,8 @@ export class DOMRemoteReceiver {
     oldRoot.childNodes.forEach((node) => {
       fragment.appendChild(node);
     });
+
+    return fragment;
   }
 }
 
