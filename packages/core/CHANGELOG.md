@@ -1,5 +1,13 @@
 # @remote-dom/core
 
+## 1.2.0
+
+### Minor Changes
+
+- [`040e7c5`](https://github.com/Shopify/remote-dom/commit/040e7c5dde658596ccbf883e2d3810955790eff0) Thanks [@lemonmade](https://github.com/lemonmade)! - Add `cache` option to `DOMRemoteReceiver` to preserve host elements
+
+- [`894d6f3`](https://github.com/Shopify/remote-dom/commit/894d6f3396ebb2e1de7e91b1a445aa0a39195bb9) Thanks [@lemonmade](https://github.com/lemonmade)! - Return `DocumentFragment` from `DOMRemoteReceiver.disconnect()`
+
 ## 1.1.0
 
 ### Minor Changes
