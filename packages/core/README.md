@@ -526,6 +526,20 @@ import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
 const receiver = new DOMRemoteReceiver({retain, release});
 ```
 
+##### Caching DOM nodes
+
+By default, `DOMRemoteReceiver` will create a new DOM node each time a remote element is attached to a new parent, which is done to release memory related to the remote environment as quickly as possible. However, this can be inefficient if you’re frequently moving elements between different parents, as this “re-parenting” will create separate elements on the host page each time the parent is changed. If this is a case you need to optimize for, you can pass the `cache.maxAge` option to the `DOMRemoteReceiver` constructor, which will re-use an existing host element representing a remote element when the remote element is re-attached within the specified number of milliseconds:
+
+```ts
+import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
+
+const receiver = new DOMRemoteReceiver({
+  // Preserve host elements for 1 second after they are
+  // detached from the tree
+  cache: {maxAge: 1_000},
+});
+```
+
 ##### `DOMRemoteReceiver.connection`
 
 Like `RemoteReceiver`, each `DOMRemoteReceiver` has a `connection` property, which can be passed to a [`RemoteMutationObserver`](#remotemutationobserver) or [`RemoteRootElement`](#remoterootelement) in the remote environment.

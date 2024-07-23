@@ -87,6 +87,7 @@ export class DOMRemoteReceiver {
     this.root = root ?? document.createDocumentFragment();
 
     const {attached} = this;
+    const destroyTimeouts = new Map<string, number>();
 
     this.connection = createRemoteConnection({
       call: (id, method, ...args) => {
@@ -101,6 +102,10 @@ export class DOMRemoteReceiver {
       },
       insertChild: (id, child, index) => {
         const parent = id === ROOT_ID ? this.root : attached.get(id)!;
+
+        const existingTimeout = destroyTimeouts.get(id);
+        if (existingTimeout) clearTimeout(existingTimeout);
+
         parent.insertBefore(attach(child), parent.childNodes[index] || null);
       },
       removeChild: (id, index) => {
@@ -109,9 +114,13 @@ export class DOMRemoteReceiver {
         child.remove();
 
         if (cache?.maxAge) {
-          setTimeout(() => {
+          const existingTimeout = destroyTimeouts.get(id);
+          if (existingTimeout) clearTimeout(existingTimeout);
+
+          const timeout = setTimeout(() => {
             detach(child);
           }, cache.maxAge);
+          destroyTimeouts.set(id, timeout as any);
         } else {
           detach(child);
         }
@@ -136,6 +145,9 @@ export class DOMRemoteReceiver {
     });
 
     function attach(node: RemoteNodeSerialization) {
+      const existingNode = attached.get(node.id);
+      if (existingNode) return existingNode;
+
       let normalizedChild: Node;
 
       switch (node.type) {
