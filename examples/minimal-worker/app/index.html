@@ -22,7 +22,7 @@
           setInterval(() => {
             console.log('dispatching foo');
             this.dispatchEvent(new Event('foo', {
-              bubbles: false,
+              bubbles: true,
               composed: true,
             }));
           }, 1000);

@@ -34,9 +34,9 @@ createThreadFromWebWorker(self, {
 
       const test = document.createElement('test-element');
 
-      test.addEventListener('foo', () => {
-        console.log('foo listener on test');
-      });
+      // test.addEventListener('foo', () => {
+      //   console.log('foo listener on test');
+      // });
 
       testParent.append(test);
 
