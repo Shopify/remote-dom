@@ -9,7 +9,7 @@ import {
 customElements.define('remote-root', RemoteRootElement);
 
 const TestElement = createRemoteElement({
-  events: ['foo']
+  attributes: ['foo'],
 });
 
 customElements.define('test-element', TestElement);
@@ -28,15 +28,14 @@ createThreadFromWebWorker(self, {
 
       const testParent = document.createElement('test-parent-element');
 
-      testParent.addEventListener('foo', () => {
-        console.log('foo listener on test-parent');
-      });
-
       const test = document.createElement('test-element');
 
-      // test.addEventListener('foo', () => {
-      //   console.log('foo listener on test');
-      // });
+      test.setAttribute('foo', 'bar');
+      test.setAttribute('hello', 'world');
+
+      setInterval(() => {
+        console.log('attribute in remote:', test.getAttribute('foo'));
+      }, 1000);
 
       testParent.append(test);
 
