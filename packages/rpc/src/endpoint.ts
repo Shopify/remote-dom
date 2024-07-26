@@ -15,21 +15,28 @@ export const RELEASE = 3;
 export const FUNCTION_APPLY = 5;
 export const FUNCTION_RESULT = 6;
 
+const BREADCRUMB_PREFIX = 'remote-ui';
+
 type AnyFunction = (...args: any[]) => any;
+
+interface ErrorWithBreadcrumbs extends Error {
+  breadcrumbs?: string;
+}
 
 interface MessageMap {
   [CALL]: [string, string | number, any];
-  [RESULT]: [string, Error?, any?];
+  [RESULT]: [string, ErrorWithBreadcrumbs?, any?];
   [TERMINATE]: void;
   [RELEASE]: [string];
   [FUNCTION_APPLY]: [string, string, any];
-  [FUNCTION_RESULT]: [string, Error?, any?];
+  [FUNCTION_RESULT]: [string, ErrorWithBreadcrumbs?, any?];
 }
 
 export interface CreateEndpointOptions<T = unknown> {
   uuid?(): string;
   createEncoder?(api: EncodingStrategyApi): EncodingStrategy;
   callable?: (keyof T)[];
+  logCallback?(message?: string): void;
 }
 
 export interface Endpoint<T> {
@@ -69,10 +76,12 @@ export function createEndpoint<T>(
     uuid = defaultUuid,
     createEncoder = createBasicEncoder,
     callable,
+    logCallback,
   }: CreateEndpointOptions<T> = {},
 ): Endpoint<T> {
   let terminated = false;
   let messenger = initialMessenger;
+  const breadcrumbs: string[] = [];
 
   const activeApi = new Map<string | number, AnyFunction>();
   const callIdsToResolver = new Map<
@@ -101,6 +110,7 @@ export function createEndpoint<T>(
   });
 
   messenger.addEventListener('message', listener);
+  breadcrumbs.push(`${BREADCRUMB_PREFIX}::endpoint listener added`);
 
   return {
     call,
@@ -112,6 +122,7 @@ export function createEndpoint<T>(
       newMessenger.addEventListener('message', listener);
     },
     expose(api) {
+      breadcrumbs.push(`${BREADCRUMB_PREFIX}::expose-started`);
       for (const key of Object.keys(api)) {
         const value = api[key];
 
@@ -121,6 +132,10 @@ export function createEndpoint<T>(
           activeApi.delete(key);
         }
       }
+      const activeApiKeys = Array.from(activeApi.keys());
+      breadcrumbs.push(
+        `${BREADCRUMB_PREFIX}::expose-completed ${activeApiKeys.join(', ')}`,
+      );
     },
     callable(...newCallable) {
       // If no callable methods are supplied initially, we use a Proxy instead,
@@ -190,7 +205,10 @@ export function createEndpoint<T>(
           send(RESULT, [id, undefined, encoded], transferables);
         } catch (error) {
           const {name, message, stack} = error as Error;
-          send(RESULT, [id, {name, message, stack}]);
+          send(RESULT, [
+            id,
+            {name, message, stack, breadcrumbs: breadcrumbs.join(' ')},
+          ]);
           throw error;
         } finally {
           stackFrame.release();
@@ -231,7 +249,10 @@ export function createEndpoint<T>(
           send(FUNCTION_RESULT, [callId, undefined, encoded], transferables);
         } catch (error) {
           const {name, message, stack} = error as Error;
-          send(FUNCTION_RESULT, [callId, {name, message, stack}]);
+          send(FUNCTION_RESULT, [
+            callId,
+            {name, message, stack, breadcrumbs: breadcrumbs.join(' ')},
+          ]);
           throw error;
         }
 
@@ -274,6 +295,7 @@ export function createEndpoint<T>(
         if (errorResult == null) {
           resolve(value && encoder.decode(value, retainedBy));
         } else {
+          logCallback?.(errorResult?.breadcrumbs);
           const error = new Error();
           Object.assign(error, errorResult);
           reject(error);
