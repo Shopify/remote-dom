@@ -1,0 +1,13 @@
+{
+  "name": "example-minimal-worker",
+  "version": "0.0.5",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "vite"
+  },
+  "dependencies": {
+    "@quilted/threads": "^2.1.0",
+    "@remote-dom/core": "workspace:*"
+  }
+}

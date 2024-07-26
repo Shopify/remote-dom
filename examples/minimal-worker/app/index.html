@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="https://fav.farm/🛰️" />
+    <title>Custom element • Remote DOM</title>
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <script type="module">
+      import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
+      import {retain, release, createThreadFromWebWorker} from '@quilted/threads';
+
+      class TestElement extends HTMLElement {
+        constructor() {
+          super();
+          const shadow = this.attachShadow({mode: 'closed'});
+          shadow.innerHTML = `<h1>Hello, world!</h1><slot></slot>`;
+
+          setInterval(() => {
+            console.log('dispatching foo');
+            this.dispatchEvent(new Event('foo', {
+              bubbles: false,
+              composed: true,
+            }));
+          }, 1000);
+        }
+      }
+
+      customElements.define('test-element', TestElement);
+
+      class TestParentElement extends HTMLElement {
+        constructor() {
+          super();
+          const shadow = this.attachShadow({mode: 'closed'});
+          shadow.innerHTML = `<slot></slot>`;
+        }
+      }
+
+      customElements.define('test-parent-element', TestParentElement);
+
+      const root = document.querySelector('#root');
+
+      const receiver = new DOMRemoteReceiver({
+        retain,
+        release,
+      });
+
+      receiver.connect(root);
+
+      const w = new Worker("./worker.js", {type: "module"});
+      const thread = createThreadFromWebWorker(w);
+      thread.render(receiver.connection);
+    </script>
+  </body>
+</html>
