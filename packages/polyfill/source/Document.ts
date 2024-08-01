@@ -22,9 +22,9 @@ export class Document extends ParentNode {
   constructor(public defaultView: Window) {
     super();
     this[OWNER_DOCUMENT] = this;
-    this.documentElement = this.createElement('html');
-    this.body = this.createElement('body');
-    this.head = this.createElement('head');
+    this.documentElement = new Element('html');
+    this.body = new Element('body');
+    this.head = new Element('head');
 
     this.documentElement.appendChild(this.head);
     this.documentElement.appendChild(this.body);
@@ -91,7 +91,7 @@ export function createElement<T extends Element>(
   } else if (lowerName === 'template') {
     element = new HTMLTemplateElement() as any;
   } else {
-    const CustomElement = document.defaultView!.customElements.get(name);
+    const CustomElement = ownerDocument.defaultView.customElements.get(name);
     element = CustomElement ? (new CustomElement() as any) : new Element();
   }
 

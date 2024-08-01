@@ -64,6 +64,10 @@ export class Element extends ParentNode {
     return sib;
   }
 
+  constructor(name: string = '') {
+    super(name);
+  }
+
   setAttribute(name: string, value: string) {
     this.attributes.setNamedItem(new Attr(name, String(value)));
   }

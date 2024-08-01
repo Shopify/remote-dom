@@ -22,7 +22,7 @@ export class Node extends EventTarget {
   nodeType = NodeType.NODE;
 
   [OWNER_DOCUMENT]!: Document;
-  [NAME] = '';
+  [NAME]: string;
   [PARENT]: ParentNode | null = null;
   [CHILD]: Node | null = null;
   [PREV]: Node | null = null;
@@ -132,6 +132,11 @@ export class Node extends EventTarget {
       }
       this.append(data);
     }
+  }
+
+  constructor(name: string = '') {
+    super();
+    this[NAME] = name;
   }
 
   cloneNode(deep?: boolean) {
