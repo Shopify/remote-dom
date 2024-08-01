@@ -15,10 +15,19 @@ import {isParentNode, cloneNode} from './shared.ts';
 export class Document extends ParentNode {
   nodeType = NodeType.DOCUMENT_NODE;
   [NAME] = '#document';
+  body: Element;
+  head: Element;
+  documentElement: Element;
 
   constructor(public defaultView: Window) {
     super();
     this[OWNER_DOCUMENT] = this;
+    this.documentElement = this.createElement('html');
+    this.body = this.createElement('body');
+    this.head = this.createElement('head');
+
+    this.documentElement.appendChild(this.head);
+    this.documentElement.appendChild(this.body);
   }
 
   createElement(localName: string) {
