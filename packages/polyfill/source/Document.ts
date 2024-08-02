@@ -5,6 +5,7 @@ import type {Node} from './Node.ts';
 import {Event} from './Event.ts';
 import {ParentNode} from './ParentNode.ts';
 import {Element} from './Element.ts';
+import {HTMLElement} from './HTMLElement.ts';
 import {SVGElement} from './SVGElement.ts';
 import {Text} from './Text.ts';
 import {Comment} from './Comment.ts';
@@ -22,9 +23,9 @@ export class Document extends ParentNode {
   constructor(public defaultView: Window) {
     super();
     this[OWNER_DOCUMENT] = this;
-    this.documentElement = new Element('html');
-    this.body = new Element('body');
-    this.head = new Element('head');
+    this.documentElement = createNode(new HTMLElement('html'), this);
+    this.body = createNode(new HTMLElement('body'), this);
+    this.head = createNode(new HTMLElement('head'), this);
 
     this.documentElement.appendChild(this.head);
     this.documentElement.appendChild(this.body);
