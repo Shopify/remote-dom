@@ -66,6 +66,7 @@ export class ParentNode extends ChildNode {
       children.splice(children.indexOf(child), 1);
     }
 
+    (child as any).disconnectedCallback?.();
     hooks.removeChild?.(this as any, child as any, childNodesIndex);
   }
 
@@ -153,6 +154,7 @@ export class ParentNode extends ChildNode {
       if (isElement) this.children.push(child);
     }
 
+    (child as any).connectedCallback?.();
     hooks.insertChild?.(this as any, child as any, insertIndex);
   }
 }
