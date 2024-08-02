@@ -15,8 +15,11 @@ import {DocumentFragment} from './DocumentFragment.ts';
 import {HTMLTemplateElement} from './HTMLTemplateElement.ts';
 import {CustomElementRegistryImplementation} from './CustomElementRegistry.ts';
 import {MutationObserver} from './MutationObserver.ts';
+import {HOOKS} from './constants.ts';
+import type {Hooks} from './hooks.ts';
 
 export class Window extends EventTarget {
+  [HOOKS]: Partial<Hooks> = {};
   name = '';
   parent = this;
   self = this;

@@ -1,4 +1,3 @@
-import {hooks} from './hooks.ts';
 import {
   CHILD,
   NEXT,
@@ -6,6 +5,7 @@ import {
   PARENT,
   OWNER_DOCUMENT,
   NodeType,
+  HOOKS,
 } from './constants.ts';
 import type {Node} from './Node.ts';
 import {ChildNode, toNode} from './ChildNode.ts';
@@ -66,7 +66,11 @@ export class ParentNode extends ChildNode {
       children.splice(children.indexOf(child), 1);
     }
 
-    hooks.removeChild?.(this as any, child as any, childNodesIndex);
+    this.ownerDocument.defaultView[HOOKS].removeChild?.(
+      this as any,
+      child as any,
+      childNodesIndex,
+    );
   }
 
   replaceChild(newChild: Node, oldChild: Node) {
@@ -153,6 +157,10 @@ export class ParentNode extends ChildNode {
       if (isElement) this.children.push(child);
     }
 
-    hooks.insertChild?.(this as any, child as any, insertIndex);
+    this.ownerDocument.defaultView[HOOKS].insertChild?.(
+      this as any,
+      child as any,
+      insertIndex,
+    );
   }
 }

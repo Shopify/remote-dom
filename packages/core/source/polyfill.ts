@@ -1,4 +1,4 @@
-import {hooks, Window, type Hooks} from '@remote-dom/polyfill';
+import {Window, HOOKS, type Hooks} from '@remote-dom/polyfill';
 
 import {
   REMOTE_CONNECTION,
@@ -17,6 +17,7 @@ import {
 } from './elements/internals.ts';
 
 const window = new Window();
+const hooks = window[HOOKS];
 
 Window.setGlobal(window);
 
