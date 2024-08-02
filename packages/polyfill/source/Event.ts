@@ -1,4 +1,4 @@
-import {IS_TRUSTED, LISTENERS} from './constants.ts';
+import {PATH, IS_TRUSTED, LISTENERS} from './constants.ts';
 import type {EventTarget} from './EventTarget.ts';
 
 export const enum EventPhase {
@@ -43,9 +43,9 @@ export class Event {
   cancelBubble = false;
   immediatePropagationStopped = false;
   eventPhase: EventPhase = 0;
-  path: EventTarget[] = [];
   // private inPassiveListener = false;
   data?: any;
+  [PATH]: EventTarget[] = [];
   [IS_TRUSTED]!: boolean;
 
   constructor(
@@ -60,12 +60,12 @@ export class Event {
     }
   }
 
-  get composedPath() {
-    return this.path;
-  }
-
   get isTrusted() {
     return this[IS_TRUSTED];
+  }
+
+  composedPath() {
+    return this[PATH];
   }
 
   stopPropagation() {

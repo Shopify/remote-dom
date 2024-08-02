@@ -1,5 +1,5 @@
 import {hooks} from './hooks.ts';
-import {LISTENERS} from './constants.ts';
+import {PATH, LISTENERS} from './constants.ts';
 import {fireEvent, EventPhase} from './Event.ts';
 import {CAPTURE_MARKER, type Event} from './Event.ts';
 import type {ChildNode} from './ChildNode.ts';
@@ -94,7 +94,7 @@ export class EventTarget {
     // }
     event.target = this;
     event.srcElement = this;
-    event.path = path;
+    event[PATH] = path;
     let defaultPrevented = false;
     for (let i = path.length; --i; ) {
       if (fireEvent(event, path[i]!, EventPhase.CAPTURING_PHASE)) {
@@ -104,9 +104,11 @@ export class EventTarget {
     if (fireEvent(event, this, EventPhase.AT_TARGET)) {
       defaultPrevented = true;
     }
-    for (let i = 1; i < path.length; i++) {
-      if (fireEvent(event, path[i]!, EventPhase.BUBBLING_PHASE)) {
-        defaultPrevented = true;
+    if (event.bubbles) {
+      for (let i = 1; i < path.length; i++) {
+        if (fireEvent(event, path[i]!, EventPhase.BUBBLING_PHASE)) {
+          defaultPrevented = true;
+        }
       }
     }
     return !defaultPrevented;
