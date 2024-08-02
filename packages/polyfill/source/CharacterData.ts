@@ -1,4 +1,4 @@
-import {DATA, HOOKS, OWNER_DOCUMENT} from './constants.ts';
+import {DATA, HOOKS} from './constants.ts';
 import {ChildNode} from './ChildNode.ts';
 
 export class CharacterData extends ChildNode {
