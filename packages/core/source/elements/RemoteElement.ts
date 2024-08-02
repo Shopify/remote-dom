@@ -58,6 +58,7 @@ export interface RemoteElementSlotDefinition {}
 export interface RemoteElementAttributeDefinition {}
 
 export interface RemoteElementEventListenerDefinition {
+  bubbles?: boolean;
   dispatchEvent?: (
     this: RemoteElement<any, any, any, any>,
     arg: any,
@@ -621,6 +622,29 @@ export abstract class RemoteElement<
     );
   }
 
+  connectedCallback() {
+    // Ensure a connection is made with the host environment, so that
+    // the event will be emitted even if no listener is directly attached
+    // to this element.
+    for (const [event, descriptor] of (
+      this.constructor as typeof RemoteElement
+    ).remoteEventDefinitions.entries()) {
+      if (descriptor.bubbles) {
+        this.addEventListener(event, noopBubblesEventListener);
+      }
+    }
+  }
+
+  disconnectedCallback() {
+    for (const [event, descriptor] of (
+      this.constructor as typeof RemoteElement
+    ).remoteEventDefinitions.entries()) {
+      if (descriptor.bubbles) {
+        this.removeEventListener(event, noopBubblesEventListener);
+      }
+    }
+  }
+
   addEventListener(
     type: string,
     listener:
@@ -660,7 +684,10 @@ export abstract class RemoteElement<
         dispatch: (arg: any) => {
           const event =
             listenerDefinition?.dispatchEvent?.call(this, arg) ??
-            new RemoteEvent(type, {detail: arg});
+            new RemoteEvent(type, {
+              detail: arg,
+              bubbles: listenerDefinition?.bubbles,
+            });
 
           this.dispatchEvent(event);
 
@@ -895,3 +922,5 @@ function convertAttributeValueToProperty<Value = unknown>(
 function camelToKebabCase(str: string) {
   return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
+
+function noopBubblesEventListener() {}

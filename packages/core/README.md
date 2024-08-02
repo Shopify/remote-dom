@@ -134,6 +134,34 @@ element.addEventListener('change', (event) => {
 });
 ```
 
+Remote events do not bubble by default. As an extension of this behavior, the remote element will not even request that the host inform it of a particular non-bubbling event, unless an event listener for that event is specifically added to the element.
+
+To listen for events in the host regardless of whether the remote element has an event listener, you can use the `bubbles` option when defining your remote event:
+
+```ts
+import {RemoteElement} from '@remote-dom/core/elements';
+
+class MyElement extends RemoteElement {
+  static get remoteEvents() {
+    return {
+      change: {
+        bubbles: true,
+      },
+    };
+  }
+}
+
+customElements.define('my-element', MyElement);
+
+const parent = document.createElement('parent-element');
+const element = document.createElement('my-element');
+parent.append(element);
+
+parent.addEventListener('change', (event) => {
+  console.log('Nested element changed!', event.target, event.bubbles);
+});
+```
+
 ##### Remote properties
 
 Remote DOM converts an allowlist of element instance properties into a dedicated object that can be communicated to the host environment. We refer to this object as an element’s “remote properties”, and it can be used to synchronize additional state that can’t be represented by attributes or event listeners.

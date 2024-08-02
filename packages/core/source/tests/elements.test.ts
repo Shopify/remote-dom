@@ -848,6 +848,17 @@ describe('RemoteElement', () => {
         event.respondWith(Promise.resolve(`Detail: ${event.detail}`));
       });
 
+      // We haven’t added a listener yet, so we should not have informed the host yet
+      expect(receiver.connection.mutate).not.toHaveBeenCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          expect.any(Function),
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+        ],
+      ]);
+
       element.addEventListener('press', listener);
 
       expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
@@ -860,23 +871,51 @@ describe('RemoteElement', () => {
         ],
       ]);
 
-      const dispatchFunction = receiver.connection.mutate.mock.calls
-        .at(-1)!
-        .at(0)!
-        .at(0)!
-        .at(3) as Function;
-      const result = await dispatchFunction('Hello world');
+      const dispatchFunction = receiver.get<RemoteReceiverElement>({
+        id: remoteId(element),
+      })?.eventListeners.press;
+      const result = await dispatchFunction?.('Hello world');
 
       expect(listener).toHaveBeenCalledWith(expect.any(RemoteEvent));
       expect(listener).toHaveBeenCalledWith(
         expect.objectContaining({
+          type: 'press',
           detail: 'Hello world',
         }),
       );
       expect(result).toBe('Detail: Hello world');
     });
 
-    it('uses a custom event provided by a `call()` event listener description', async () => {
+    it('supports a `bubbles` event option that automatically listens for an event and marks it as bubbling', async () => {
+      const ButtonElement = createRemoteElement({
+        events: {
+          press: {
+            bubbles: true,
+          },
+        },
+      });
+
+      const {receiver, root, element} =
+        createAndConnectRemoteElement(ButtonElement);
+
+      // Attaching a listener to the root, to verify bubbling behavior.
+      const listener = vi.fn();
+      root.addEventListener('press', listener);
+
+      const dispatchFunction = receiver.get<RemoteReceiverElement>({
+        id: remoteId(element),
+      })?.eventListeners.press;
+      await dispatchFunction?.('Hello world');
+
+      expect(listener).toHaveBeenCalledWith(expect.any(RemoteEvent));
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bubbles: true,
+        }),
+      );
+    });
+
+    it('uses a custom event provided by a `dispatchEvent()` event listener description', async () => {
       class CustomRemoteEvent extends RemoteEvent {}
 
       const dispatchListener = vi.fn();
@@ -911,12 +950,10 @@ describe('RemoteElement', () => {
         ],
       ]);
 
-      const dispatchFunction = receiver.connection.mutate.mock.calls
-        .at(-1)!
-        .at(0)!
-        .at(0)!
-        .at(3) as Function;
-      await dispatchFunction('Hello world');
+      const dispatchFunction = receiver.get<RemoteReceiverElement>({
+        id: remoteId(element),
+      })?.eventListeners.press;
+      await dispatchFunction?.('Hello world');
 
       expect(dispatchListener).toHaveBeenCalledWith(element, 'Hello world');
       expect(listener).toHaveBeenCalledWith(expect.any(CustomRemoteEvent));
@@ -1082,7 +1119,7 @@ class TestRemoteReceiver
     };
   }
 
-  get = this.#receiver.get.bind(this.#receiver);
+  get: RemoteReceiver['get'] = this.#receiver.get.bind(this.#receiver);
   implement = this.#receiver.implement.bind(this.#receiver);
   subscribe = this.#receiver.subscribe.bind(this.#receiver);
 }
