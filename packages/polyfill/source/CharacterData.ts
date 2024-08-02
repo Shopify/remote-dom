@@ -1,5 +1,4 @@
-import {hooks} from './hooks.ts';
-import {DATA} from './constants.ts';
+import {DATA, HOOKS, OWNER_DOCUMENT} from './constants.ts';
 import {ChildNode} from './ChildNode.ts';
 
 export class CharacterData extends ChildNode {
@@ -16,7 +15,9 @@ export class CharacterData extends ChildNode {
       str = typeof data === 'string' ? data : String(data);
     }
     this[DATA] = str;
-    hooks.setText?.(this as any, str);
+    setTimeout(() =>
+      this.ownerDocument.defaultView[HOOKS].setText?.(this as any, str),
+    );
   }
 
   get data() {

@@ -24,5 +24,3 @@ export interface Hooks {
     options?: boolean | EventListenerOptions,
   ): void;
 }
-
-export const hooks: Partial<Hooks> = {};
