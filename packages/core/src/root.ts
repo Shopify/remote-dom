@@ -1,5 +1,5 @@
 import type {RemoteComponentType} from '@remote-ui/types';
-import {isBasicObject} from '@remote-ui/rpc';
+import {isBasicObject, retain} from '@remote-ui/rpc';
 
 import {
   ACTION_MOUNT,
@@ -679,6 +679,7 @@ function makeValueHotSwappable(
 
   if (typeof value === 'function') {
     const wrappedFunction: HotSwappableFunction<any> = ((...args: any[]) => {
+      retainCallableFunctions(...args);
       return wrappedFunction[FUNCTION_CURRENT_IMPLEMENTATION_KEY](...args);
     }) as any;
 
@@ -1215,4 +1216,25 @@ function tryHotSwappingArrayValues(
   }
 
   return [hasChanged ? normalizedNewValue : IGNORE, hotSwaps];
+}
+
+export function retainCallableFunctions(...args: any[]): void {
+  for (const arg of args) {
+    if (typeof arg === 'function') {
+      retain(arg);
+      return;
+    }
+
+    if (Array.isArray(arg)) {
+      retainCallableFunctions(...arg);
+    }
+
+    if (isBasicObject(arg)) {
+      for (const key in arg) {
+        if (Object.hasOwnProperty.call(arg, key)) {
+          retainCallableFunctions((arg as Record<string, any>)[key]);
+        }
+      }
+    }
+  }
 }
