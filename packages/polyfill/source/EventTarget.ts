@@ -95,23 +95,20 @@ export class EventTarget {
     event.target = this;
     event.srcElement = this;
     event[PATH] = path;
-    let defaultPrevented = false;
-    for (let i = path.length; --i; ) {
-      if (fireEvent(event, path[i]!, EventPhase.CAPTURING_PHASE)) {
-        defaultPrevented = true;
-      }
+
+    for (let i = path.length; i--; ) {
+      fireEvent(event, path[i]!, EventPhase.CAPTURING_PHASE);
+      if (event.cancelBubble) return event.defaultPrevented;
     }
-    if (fireEvent(event, this, EventPhase.AT_TARGET)) {
-      defaultPrevented = true;
+
+    const bubblePath = event.bubbles ? path : path.slice(0, 1);
+
+    for (let i = 0; i < bubblePath.length; i++) {
+      fireEvent(event, bubblePath[i]!, EventPhase.BUBBLING_PHASE);
+      if (event.cancelBubble) return event.defaultPrevented;
     }
-    if (event.bubbles) {
-      for (let i = 1; i < path.length; i++) {
-        if (fireEvent(event, path[i]!, EventPhase.BUBBLING_PHASE)) {
-          defaultPrevented = true;
-        }
-      }
-    }
-    return !defaultPrevented;
+
+    return event.defaultPrevented;
   }
 }
 

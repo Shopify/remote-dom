@@ -105,20 +105,19 @@ export class Event {
 export function fireEvent(
   event: Event,
   target: EventTarget,
-  phase: EventPhase,
-) {
+  phase: EventPhase.BUBBLING_PHASE | EventPhase.CAPTURING_PHASE,
+): void {
   const listeners = target[LISTENERS];
   const list = listeners?.get(
     `${event.type}${
       phase === EventPhase.CAPTURING_PHASE ? CAPTURE_MARKER : ''
     }`,
   );
-  if (!list) return false;
 
-  let defaultPrevented = false;
+  if (!list) return;
 
   for (const listener of list) {
-    event.eventPhase = phase;
+    event.eventPhase = event.target === target ? EventPhase.AT_TARGET : phase;
     event.currentTarget = target;
 
     try {
@@ -131,14 +130,8 @@ export function fireEvent(
       setTimeout(thrower, 0, err);
     }
 
-    if (event.defaultPrevented === true) {
-      defaultPrevented = true;
-    }
-
     if (event[STOP_IMMEDIATE_PROPAGATION]) break;
   }
-
-  return defaultPrevented;
 }
 
 function thrower(error: any) {
