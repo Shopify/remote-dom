@@ -79,6 +79,7 @@ export class Event {
 
   stopImmediatePropagation() {
     this[STOP_IMMEDIATE_PROPAGATION] = true;
+    this.cancelBubble = true;
   }
 
   preventDefault() {
