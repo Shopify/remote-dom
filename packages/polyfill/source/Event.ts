@@ -1,4 +1,9 @@
-import {PATH, IS_TRUSTED, LISTENERS} from './constants.ts';
+import {
+  PATH,
+  IS_TRUSTED,
+  LISTENERS,
+  STOP_IMMEDIATE_PROPAGATION,
+} from './constants.ts';
 import type {EventTarget} from './EventTarget.ts';
 
 export const enum EventPhase {
@@ -41,12 +46,12 @@ export class Event {
   composed = false;
   defaultPrevented = false;
   cancelBubble = false;
-  immediatePropagationStopped = false;
   eventPhase: EventPhase = 0;
   // private inPassiveListener = false;
   data?: any;
   [PATH]: EventTarget[] = [];
   [IS_TRUSTED]!: boolean;
+  [STOP_IMMEDIATE_PROPAGATION] = false;
 
   constructor(
     public type: string,
@@ -73,7 +78,7 @@ export class Event {
   }
 
   stopImmediatePropagation() {
-    this.immediatePropagationStopped = true;
+    this[STOP_IMMEDIATE_PROPAGATION] = true;
   }
 
   preventDefault() {
@@ -129,9 +134,7 @@ export function fireEvent(
       defaultPrevented = true;
     }
 
-    if (event.immediatePropagationStopped) {
-      break;
-    }
+    if (event[STOP_IMMEDIATE_PROPAGATION]) break;
   }
 
   return defaultPrevented;
