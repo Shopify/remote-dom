@@ -121,15 +121,6 @@ importers:
         specifier: ^5.3.0
         version: 5.3.3(@types/node@20.11.16)(lightningcss@1.22.1)
 
-  examples/minimal-worker:
-    dependencies:
-      '@quilted/threads':
-        specifier: ^2.1.0
-        version: 2.2.0(@preact/signals-core@1.6.1)
-      '@remote-dom/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-
   packages/core:
     dependencies:
       '@remote-dom/polyfill':
