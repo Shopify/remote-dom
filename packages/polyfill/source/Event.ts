@@ -104,10 +104,10 @@ export class Event {
 
 export function fireEvent(
   event: Event,
-  target: EventTarget,
+  currentTarget: EventTarget,
   phase: EventPhase.BUBBLING_PHASE | EventPhase.CAPTURING_PHASE,
 ): void {
-  const listeners = target[LISTENERS];
+  const listeners = currentTarget[LISTENERS];
   const list = listeners?.get(
     `${event.type}${
       phase === EventPhase.CAPTURING_PHASE ? CAPTURE_MARKER : ''
@@ -117,14 +117,15 @@ export function fireEvent(
   if (!list) return;
 
   for (const listener of list) {
-    event.eventPhase = event.target === target ? EventPhase.AT_TARGET : phase;
-    event.currentTarget = target;
+    event.eventPhase =
+      event.target === currentTarget ? EventPhase.AT_TARGET : phase;
+    event.currentTarget = currentTarget;
 
     try {
       if (typeof listener === 'object') {
         listener.handleEvent(event as any);
       } else {
-        listener.call(target, event as any);
+        listener.call(currentTarget, event as any);
       }
     } catch (err) {
       setTimeout(thrower, 0, err);
