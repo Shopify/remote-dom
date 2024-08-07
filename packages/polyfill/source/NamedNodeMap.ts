@@ -5,6 +5,7 @@ import {
   NEXT,
   NamespaceURI,
   HOOKS,
+  OWNER_DOCUMENT,
 } from './constants.ts';
 import type {Attr} from './Attr.ts';
 import type {Element} from './Element.ts';
@@ -66,7 +67,7 @@ export class NamedNodeMap {
         if (prev) prev[NEXT] = attr[NEXT];
         if (this[CHILD] === attr) this[CHILD] = attr[NEXT];
         updateElementAttribute(ownerElement, attr.name, attr.value, null);
-        ownerElement.ownerDocument.defaultView[HOOKS].removeAttribute?.(
+        ownerElement[OWNER_DOCUMENT].defaultView[HOOKS].removeAttribute?.(
           ownerElement as any,
           name,
           namespaceURI,
@@ -118,7 +119,7 @@ export class NamedNodeMap {
         attr.value,
       );
 
-      ownerElement.ownerDocument.defaultView[HOOKS].setAttribute?.(
+      ownerElement[OWNER_DOCUMENT].defaultView[HOOKS].setAttribute?.(
         ownerElement as any,
         attr.name,
         attr.value,
