@@ -12,6 +12,9 @@ import {Comment} from './Comment.ts';
 import {DocumentFragment} from './DocumentFragment.ts';
 import {HTMLTemplateElement} from './HTMLTemplateElement.ts';
 import {isParentNode, cloneNode} from './shared.ts';
+import {HTMLBodyElement} from './HTMLBodyElement.ts';
+import {HTMLHeadElement} from './HTMLHeadElement.ts';
+import {HTMLHtmlElement} from './HTMLHtmlElement.ts';
 
 export class Document extends ParentNode {
   nodeType = NodeType.DOCUMENT_NODE;
@@ -19,13 +22,15 @@ export class Document extends ParentNode {
   body: Element;
   head: Element;
   documentElement: Element;
+  defaultView: Window;
 
-  constructor(public defaultView: Window) {
+  constructor(defaultView: Window) {
     super();
+    this.defaultView = defaultView;
     this[OWNER_DOCUMENT] = this;
-    this.documentElement = createNode(new HTMLElement('html'), this);
-    this.body = createNode(new HTMLElement('body'), this);
-    this.head = createNode(new HTMLElement('head'), this);
+    this.documentElement = setupElement(new HTMLHtmlElement(), this, 'html');
+    this.body = setupElement(new HTMLBodyElement(), this, 'body');
+    this.head = setupElement(new HTMLHeadElement(), this, 'head');
 
     this.documentElement.appendChild(this.head);
     this.documentElement.appendChild(this.body);
@@ -96,6 +101,15 @@ export function createElement<T extends Element>(
     element = CustomElement ? (new CustomElement() as any) : new Element();
   }
 
+  return setupElement(element, ownerDocument, name, namespace);
+}
+
+export function setupElement<T extends Element>(
+  element: T,
+  ownerDocument: Document,
+  name: string,
+  namespace?: NamespaceURI,
+) {
   createNode(element, ownerDocument);
 
   Object.defineProperty(element, NAME, {value: name});
