@@ -7,6 +7,7 @@ import {
   NamespaceURI,
   NodeType,
   HOOKS,
+  OWNER_DOCUMENT,
 } from './constants.ts';
 import {Node} from './Node.ts';
 import type {Element} from './Element.ts';
@@ -45,7 +46,7 @@ export class Attr extends Node {
     this[VALUE] = str;
     const ownerElement = this[OWNER_ELEMENT];
     if (!ownerElement) return;
-    this.ownerElement?.ownerDocument.defaultView[HOOKS].setAttribute?.(
+    this[OWNER_DOCUMENT].defaultView[HOOKS].setAttribute?.(
       ownerElement as any,
       this[NAME],
       str,

@@ -66,7 +66,7 @@ export class ParentNode extends ChildNode {
       children.splice(children.indexOf(child), 1);
     }
 
-    this.ownerDocument.defaultView[HOOKS].removeChild?.(
+    this[OWNER_DOCUMENT].defaultView[HOOKS].removeChild?.(
       this as any,
       child as any,
       childNodesIndex,
@@ -157,7 +157,7 @@ export class ParentNode extends ChildNode {
       if (isElement) this.children.push(child);
     }
 
-    this.ownerDocument.defaultView[HOOKS].insertChild?.(
+    this[OWNER_DOCUMENT].defaultView[HOOKS].insertChild?.(
       this as any,
       child as any,
       insertIndex,
