@@ -5,7 +5,6 @@ import type {Node} from './Node.ts';
 import {Event} from './Event.ts';
 import {ParentNode} from './ParentNode.ts';
 import {Element} from './Element.ts';
-import {HTMLElement} from './HTMLElement.ts';
 import {SVGElement} from './SVGElement.ts';
 import {Text} from './Text.ts';
 import {Comment} from './Comment.ts';
