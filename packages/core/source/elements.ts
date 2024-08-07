@@ -35,3 +35,5 @@ export {customElement} from './elements/decorators/custom-element.ts';
 export {BooleanOrString} from './elements/property-types/BooleanOrString.ts';
 
 export type {RemoteConnection} from './types.ts';
+
+export {BatchingRemoteConnection} from './elements/connection.ts';
