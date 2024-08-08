@@ -1,5 +1,11 @@
 # @remote-dom/core
 
+## 1.2.1
+
+### Patch Changes
+
+- [#405](https://github.com/Shopify/remote-dom/pull/405) [`6b38a37`](https://github.com/Shopify/remote-dom/commit/6b38a379ef2f0644bff18390708a48b4f6d3fa5d) Thanks [@vividviolet](https://github.com/vividviolet)! - Export BatchingRemoteConnection so it can be used
+
 ## 1.2.0
 
 ### Minor Changes
