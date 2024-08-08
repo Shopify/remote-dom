@@ -19,7 +19,7 @@ export class CharacterData extends ChildNode {
       this[OWNER_DOCUMENT].defaultView[HOOKS].setText?.(this as any, str);
     } else {
       setTimeout(() =>
-        this[OWNER_DOCUMENT].defaultView[HOOKS].setText?.(this as any, str),
+        this[OWNER_DOCUMENT]?.defaultView[HOOKS].setText?.(this as any, str),
       );
     }
   }
