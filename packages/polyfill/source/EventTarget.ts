@@ -56,7 +56,7 @@ export class EventTarget {
       listeners.set(key, list);
     }
 
-    list.add(normalizedListener);
+    if (list.has(normalizedListener)) return;
 
     signal?.addEventListener(
       'abort',
@@ -66,6 +66,7 @@ export class EventTarget {
       {once: true},
     );
 
+    list.add(normalizedListener);
     hooks.addEventListener?.(this as any, type, listener, options);
   }
 
