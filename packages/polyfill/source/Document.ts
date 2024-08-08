@@ -11,14 +11,28 @@ import {Comment} from './Comment.ts';
 import {DocumentFragment} from './DocumentFragment.ts';
 import {HTMLTemplateElement} from './HTMLTemplateElement.ts';
 import {isParentNode, cloneNode} from './shared.ts';
+import {HTMLBodyElement} from './HTMLBodyElement.ts';
+import {HTMLHeadElement} from './HTMLHeadElement.ts';
+import {HTMLHtmlElement} from './HTMLHtmlElement.ts';
 
 export class Document extends ParentNode {
   nodeType = NodeType.DOCUMENT_NODE;
   [NAME] = '#document';
+  body: HTMLBodyElement;
+  head: HTMLHeadElement;
+  documentElement: HTMLHtmlElement;
+  defaultView: Window;
 
-  constructor(public defaultView: Window) {
+  constructor(defaultView: Window) {
     super();
+    this.defaultView = defaultView;
     this[OWNER_DOCUMENT] = this;
+    this.documentElement = setupElement(new HTMLHtmlElement(), this, 'html');
+    this.body = setupElement(new HTMLBodyElement(), this, 'body');
+    this.head = setupElement(new HTMLHeadElement(), this, 'head');
+
+    this.documentElement.appendChild(this.head);
+    this.documentElement.appendChild(this.body);
   }
 
   createElement(localName: string) {
@@ -82,10 +96,19 @@ export function createElement<T extends Element>(
   } else if (lowerName === 'template') {
     element = new HTMLTemplateElement() as any;
   } else {
-    const CustomElement = document.defaultView!.customElements.get(name);
+    const CustomElement = ownerDocument.defaultView.customElements.get(name);
     element = CustomElement ? (new CustomElement() as any) : new Element();
   }
 
+  return setupElement(element, ownerDocument, name, namespace);
+}
+
+export function setupElement<T extends Element>(
+  element: T,
+  ownerDocument: Document,
+  name: string,
+  namespace?: NamespaceURI,
+) {
   createNode(element, ownerDocument);
 
   Object.defineProperty(element, NAME, {value: name});
