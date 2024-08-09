@@ -15,6 +15,7 @@ import {
   type RemoteReceiverElement,
 } from '../receivers/RemoteReceiver.ts';
 import {REMOTE_ID, MUTATION_TYPE_UPDATE_PROPERTY} from '../constants.ts';
+import {OWNER_DOCUMENT} from '../../../polyfill/source/constants.ts';
 
 describe('RemoteElement', () => {
   describe('properties', () => {
@@ -32,7 +33,7 @@ describe('RemoteElement', () => {
       const {root, receiver} = createAndConnectRemoteRootElement();
 
       const name = 'Winston';
-      const element = new HelloElement();
+      const element = createNode(new HelloElement());
       (element as HelloElementProperties).name = name;
 
       expect(receiver.connection.mutate).not.toHaveBeenCalled();
@@ -788,8 +789,21 @@ function remoteId(node: any) {
 }
 
 function createAndConnectRemoteRootElement() {
-  const root = new RemoteRootElement() as RemoteRootElement;
+  const root = createNode(new RemoteRootElement() as RemoteRootElement);
   const receiver = new TestRemoteReceiver();
   root.connect(receiver.connection);
   return {root, receiver};
+}
+
+export function createNode<T extends Node>(
+  node: T,
+  ownerDocument: Document = window.document,
+) {
+  Object.defineProperty(node, OWNER_DOCUMENT, {
+    value: ownerDocument,
+    writable: true,
+    enumerable: false,
+  });
+
+  return node;
 }
