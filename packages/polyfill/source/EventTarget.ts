@@ -9,6 +9,10 @@ const ONCE_LISTENERS = Symbol('onceListeners');
 export class EventTarget {
   [LISTENERS]?: Map<string, Set<EventListenerOrEventListenerObject>>;
   [ONCE_LISTENERS]?: WeakMap<EventListenerOrEventListenerObject, EventListener>;
+  /**
+   * Property set by entities that extend this class that are part of the DOM tree.
+   * @internal
+   */
   [OWNER_DOCUMENT]?: Document;
 
   addEventListener(

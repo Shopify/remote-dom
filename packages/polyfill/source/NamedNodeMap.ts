@@ -5,7 +5,6 @@ import {
   NEXT,
   NamespaceURI,
   HOOKS,
-  OWNER_DOCUMENT,
 } from './constants.ts';
 import type {Attr} from './Attr.ts';
 import type {Element} from './Element.ts';
