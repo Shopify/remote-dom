@@ -147,9 +147,9 @@ Now, just mirroring HTML strings isn’t very useful. Remote DOM works best when
 
 Remote DOM adopts the browser’s [native API for defining custom elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements) to represent these “remote custom elements”. To make it easy to define custom elements that can communicate their changes to the host, `@remote-dom/core` provides the [`RemoteElement` class](/packages/core/README.md#remoteelement). This class, which is a subclass of the browser’s [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement), lets you define how properties, attributes, methods, and event listeners on the element should be transferred.
 
-To demonstrate, let’s imagine that we want to allow our remote environment to render a `ui-button` element. This element will have a `primary` property, which sets it to a more prominent visual style. It will also trigger a `click` event when clicked.
+To demonstrate, let’s imagine that we want to allow our remote environment to render a `ui-button` element. This element will have a `primary` attribute, which sets it to a more prominent visual style. It will also trigger a `click` event when clicked.
 
-First, we’ll create the remote environment’s version of `ui-button`. The remote version doesn’t have to worry about rendering any HTML — it’s only a signal to the host environment to render the “real” version. However, we do need to teach this element to communicate its `primary` property and `click` event to the host version of that element. We’ll do this using the [`RemoteElement` class provided by `@remote-dom/core`](/packages/core#remoteelement):
+First, we’ll create the remote environment’s version of `ui-button`. The remote version doesn’t have to worry about rendering any HTML — it’s only a signal to the host environment to render the “real” version. However, we do need to teach this element to communicate its `primary` attribute and `click` event to the host version of that element. We’ll do this using the [`RemoteElement` class provided by `@remote-dom/core`](/packages/core#remoteelement):
 
 ```html
 <!doctype html>
@@ -166,15 +166,12 @@ First, we’ll create the remote environment’s version of `ui-button`. The rem
       // for `@remote-dom/core/elements`:
       // https://github.com/Shopify/remote-dom/tree/main/packages/core#elements
       class UIButton extends RemoteElement {
-        static get remoteProperties() {
-          return {
-            // A boolean property can be set either by setting the attribute to a non-empty
-            // value, or by setting the property to `true`.
-            primary: {type: Boolean},
-            // Remote DOM will convert the `click` event into an `onClick` property that
-            // is communicated to the host.
-            onClick: {event: true},
-          };
+        static get remoteAttributes() {
+          return ['primary'];
+        }
+
+        static get remoteEvents() {
+          return ['click'];
         }
       }
 
@@ -249,8 +246,6 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
           return ['primary'];
         }
 
-        onClick;
-
         connectedCallback() {
           const primary = this.hasAttribute('primary') ?? false;
 
@@ -262,12 +257,6 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
           if (primary) {
             root.querySelector('.Button').classList.add('Button--primary');
           }
-
-          // We’ll listen for clicks on our button, and call the remote `onClick`
-          // property when it happens.
-          root.querySelector('button').addEventListener('click', () => {
-            this.onClick?.();
-          });
         }
 
         attributeChangedCallback(name, oldValue, newValue) {

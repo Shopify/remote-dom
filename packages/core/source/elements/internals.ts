@@ -2,7 +2,12 @@ import {
   REMOTE_ID,
   REMOTE_CONNECTION,
   REMOTE_PROPERTIES,
+  REMOTE_ATTRIBUTES,
+  REMOTE_EVENT_LISTENERS,
   MUTATION_TYPE_UPDATE_PROPERTY,
+  UPDATE_PROPERTY_TYPE_PROPERTY,
+  UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+  UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
 } from '../constants.ts';
 import type {RemoteConnection, RemoteNodeSerialization} from '../types.ts';
 
@@ -28,6 +33,16 @@ export interface RemoteConnectedNodeProperties {
    * The properties to synchronize between this node and its host representation.
    */
   [REMOTE_PROPERTIES]?: Record<string, unknown>;
+
+  /**
+   * The attributes to synchronize between this node and its host representation.
+   */
+  [REMOTE_ATTRIBUTES]?: Record<string, string>;
+
+  /**
+   * The event listeners to synchronize between this node and its host representation.
+   */
+  [REMOTE_EVENT_LISTENERS]?: Record<string, (...args: any[]) => any>;
 }
 
 /**
@@ -51,22 +66,41 @@ export function remoteId(node: RemoteConnectedNode) {
 
 /**
  * Gets the remote properties of an element node. If the node is not an element
- * node, this method returns `undefined`. If the element does not have any remote
- * properties, this method will instead return the `attributes` of the element,
- * converted into a simple object form. This makes it easy for you to represent
- * “standard” HTML elements, such as `<div>` or `<span>`, as remote elements.
+ * node, this method returns `undefined`, or if it does not have any remote properties,
+ * it will return undefined.
  */
 export function remoteProperties(node: RemoteConnectedNode) {
-  if (node[REMOTE_PROPERTIES] != null) return node[REMOTE_PROPERTIES];
+  return node[REMOTE_PROPERTIES];
+}
+
+/**
+ * Gets the remote attributes of an element node. If the node is not an element
+ * node, this method returns `undefined`. If the element does not have any remote
+ * attributes explicitly defined, this method will instead return the `attributes`
+ * of the element, converted into a simple object form. This makes it easy for you
+ * to represent “standard” HTML elements, such as `<div>` or `<span>`, as remote
+ * elements.
+ */
+export function remoteAttributes(node: RemoteConnectedNode) {
+  if (node[REMOTE_ATTRIBUTES] != null) return node[REMOTE_ATTRIBUTES];
   if ((node as any).attributes == null) return undefined;
 
-  const properties: Record<string, string> = {};
+  const attributes: Record<string, string> = {};
 
   for (const {name, value} of (node as Element).attributes) {
-    properties[name] = value;
+    attributes[name] = value;
   }
 
-  return properties;
+  return attributes;
+}
+
+/**
+ * Gets the remote event listeners of an element node. If the node is not an element
+ * node, or does not have explicitly defined remote event listeners, this method returns
+ * `undefined`.
+ */
+export function remoteEventListeners(node: RemoteConnectedNode) {
+  return node[REMOTE_EVENT_LISTENERS];
 }
 
 /**
@@ -95,7 +129,89 @@ export function updateRemoteElementProperty(
   if (connection == null) return;
 
   connection.mutate([
-    [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(node), property, value],
+    [
+      MUTATION_TYPE_UPDATE_PROPERTY,
+      remoteId(node),
+      property,
+      value,
+      UPDATE_PROPERTY_TYPE_PROPERTY,
+    ],
+  ]);
+}
+
+/**
+ * Updates a single remote attribute on an element node. If the element is
+ * connected to a remote root, this function will also make a `mutate()` call
+ * to communicate the change to the host.
+ */
+export function updateRemoteElementAttribute(
+  node: Element,
+  attribute: string,
+  value?: string,
+) {
+  const remoteAttributes = (node as RemoteConnectedNode)[REMOTE_ATTRIBUTES];
+
+  if (remoteAttributes) {
+    if (remoteAttributes[attribute] === value) return;
+
+    if (value == null) {
+      delete remoteAttributes[attribute];
+    } else {
+      remoteAttributes[attribute] = value;
+    }
+  }
+
+  const connection = (node as RemoteConnectedNode)[REMOTE_CONNECTION];
+
+  if (connection == null) return;
+
+  connection.mutate([
+    [
+      MUTATION_TYPE_UPDATE_PROPERTY,
+      remoteId(node),
+      attribute,
+      value,
+      UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+    ],
+  ]);
+}
+
+/**
+ * Updates a single remote event listener on an element node. If the element is
+ * connected to a remote root, this function will also make a `mutate()` call
+ * to communicate the change to the host.
+ */
+export function updateRemoteElementEventListener(
+  node: Element,
+  event: string,
+  listener?: (...args: any[]) => any,
+) {
+  const remoteEventListeners = (node as RemoteConnectedNode)[
+    REMOTE_EVENT_LISTENERS
+  ];
+
+  if (remoteEventListeners) {
+    if (remoteEventListeners[event] === listener) return;
+
+    if (listener == null) {
+      delete remoteEventListeners[event];
+    } else {
+      remoteEventListeners[event] = listener;
+    }
+  }
+
+  const connection = (node as RemoteConnectedNode)[REMOTE_CONNECTION];
+
+  if (connection == null) return;
+
+  connection.mutate([
+    [
+      MUTATION_TYPE_UPDATE_PROPERTY,
+      remoteId(node),
+      event,
+      listener,
+      UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+    ],
   ]);
 }
 
@@ -148,7 +264,9 @@ export function serializeRemoteNode(node: Node): RemoteNodeSerialization {
         id: remoteId(node),
         type: nodeType,
         element: (node as Element).localName,
-        properties: Object.assign({}, remoteProperties(node)),
+        properties: cloneMaybeObject(remoteProperties(node)),
+        attributes: cloneMaybeObject(remoteAttributes(node)),
+        eventListeners: cloneMaybeObject(remoteEventListeners(node)),
         children: Array.from(node.childNodes).map(serializeRemoteNode),
       };
     }
@@ -171,6 +289,10 @@ export function serializeRemoteNode(node: Node): RemoteNodeSerialization {
       );
     }
   }
+}
+
+function cloneMaybeObject<T>(maybeObject?: T): T | undefined {
+  return maybeObject ? {...maybeObject} : undefined;
 }
 
 /**

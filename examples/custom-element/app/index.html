@@ -24,8 +24,6 @@
           return ['primary'];
         }
 
-        onClick;
-
         connectedCallback() {
           const primary = this.hasAttribute('primary') ?? false;
 
@@ -54,12 +52,6 @@
           if (primary) {
             root.querySelector('.Button').classList.add('Button--primary');
           }
-
-          // We’ll listen for clicks on our button, and call the remote `onClick`
-          // property when it happens.
-          root.querySelector('button').addEventListener('click', () => {
-            this.onClick?.();
-          });
         }
 
         attributeChangedCallback(name, oldValue, newValue) {

@@ -3,6 +3,7 @@ import {forwardRef} from 'preact/compat';
 import type {
   RemoteElement,
   RemoteElementConstructor,
+  RemoteEventListenersFromElementConstructor,
 } from '@remote-dom/core/elements';
 
 import type {
@@ -10,7 +11,15 @@ import type {
   RemoteComponentTypeFromElementConstructor,
 } from './types.ts';
 
-export interface RemoteComponentOptions {
+export interface RemoteComponentOptions<
+  Constructor extends RemoteElementConstructor<
+    any,
+    any,
+    any,
+    any
+  > = RemoteElementConstructor<any, any, any, any>,
+  Props extends Record<string, any> = Record<string, any>,
+> {
   /**
    * Customize how Preact props are mapped to slotted child elements. By default,
    * any prop that is listed in the remote element’s class definition, and which
@@ -34,6 +43,27 @@ export interface RemoteComponentOptions {
          */
         wrapper?: boolean | string;
       };
+
+  /**
+   * Customizes the props your wrapper React component will have for event listeners
+   * on the underlying custom element. The key is the prop name on the React component,
+   * and the value is an options object containing the event name on the custom element.
+   *
+   * @example
+   * ```tsx
+   * const Button = createRemoteComponent('ui-button', ButtonElement, {
+   *   eventProps: {
+   *     onClick: {event: 'click'},
+   *   },
+   * });
+   * ```
+   */
+  eventProps?: Record<
+    keyof Props,
+    {
+      event: keyof RemoteEventListenersFromElementConstructor<Constructor>;
+    }
+  >;
 }
 
 /**
@@ -51,18 +81,24 @@ export function createRemoteComponent<
   ElementConstructor extends RemoteElementConstructor<
     any,
     any,
+    any,
     any
   > = HTMLElementTagNameMap[Tag] extends RemoteElement<
     infer Properties,
     infer Methods,
-    infer Slots
+    infer Slots,
+    infer EventListeners
   >
-    ? RemoteElementConstructor<Properties, Methods, Slots>
+    ? RemoteElementConstructor<Properties, Methods, Slots, EventListeners>
     : never,
+  Props extends Record<string, any> = {},
 >(
   tag: Tag,
   Element: ElementConstructor | undefined = customElements.get(tag) as any,
-  {slotProps = true}: RemoteComponentOptions = {},
+  {
+    slotProps = true,
+    eventProps = {} as any,
+  }: RemoteComponentOptions<ElementConstructor, Props> = {},
 ): RemoteComponentTypeFromElementConstructor<ElementConstructor> {
   const normalizeSlotProps = Boolean(slotProps);
   const slotPropWrapperOption =
@@ -91,32 +127,31 @@ export function createRemoteComponent<
           continue;
         }
 
-        if (normalizeSlotProps) {
-          if (
-            Element.remoteSlotDefinitions.has(prop) &&
-            isValidElement(propValue)
-          ) {
-            if (!slotPropWrapper) {
-              children.push(cloneElement(propValue, {slot: prop}));
-            } else {
-              children.push(
-                createElement(slotPropWrapper, {slot: prop}, propValue),
-              );
-            }
-            continue;
+        if (
+          normalizeSlotProps &&
+          Element.remoteSlotDefinitions.has(prop) &&
+          isValidElement(propValue)
+        ) {
+          if (!slotPropWrapper) {
+            children.push(cloneElement(propValue, {slot: prop}));
+          } else {
+            children.push(
+              createElement(slotPropWrapper, {slot: prop}, propValue),
+            );
           }
+
+          continue;
         }
 
-        // Preact assumes any properties starting with `on` are event listeners.
-        // If we are in this situation, we try to use one of the property’s aliases,
-        // which should be a name *not* starting with `on`.
-        const definition = Element.remotePropertyDefinitions.get(prop);
-        if (definition == null) continue;
-        const aliasTo =
-          definition.type === Function && definition.name.startsWith('on')
-            ? definition.alias?.[0]
-            : undefined;
-        updatedProps[aliasTo ?? prop] = propValue;
+        const eventProp = eventProps[prop];
+        if (eventProp) {
+          const {event} = eventProp;
+
+          updatedProps[`on${event as string}`] = propValue;
+          continue;
+        }
+
+        updatedProps[prop] = propValue;
       }
 
       return createElement(tag, updatedProps, ...children);

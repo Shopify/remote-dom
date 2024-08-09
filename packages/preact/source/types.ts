@@ -27,7 +27,7 @@ export type RemoteComponentProps<
  * will be passed to a component that renders that element.
  */
 export type RemoteComponentPropsFromElementConstructor<
-  ElementConstructor extends RemoteElementConstructor<any, any, any>,
+  ElementConstructor extends RemoteElementConstructor<any, any, any, any>,
 > = RemoteComponentProps<
   RemotePropertiesFromElementConstructor<ElementConstructor>,
   RemoteMethodsFromElementConstructor<ElementConstructor>,
@@ -39,7 +39,9 @@ export type RemoteComponentPropsFromElementConstructor<
  * can be used to render that element.
  */
 export type RemoteComponentTypeFromElementConstructor<
-  ElementConstructor extends RemoteElementConstructor<any, any, any>,
+  ElementConstructor extends RemoteElementConstructor<any, any, any, any>,
+  AdditionalProps extends Record<string, any> = {},
 > = ComponentType<
-  RemoteComponentPropsFromElementConstructor<ElementConstructor>
+  RemoteComponentPropsFromElementConstructor<ElementConstructor> &
+    AdditionalProps
 >;

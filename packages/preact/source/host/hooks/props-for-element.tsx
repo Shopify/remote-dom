@@ -28,9 +28,23 @@ export function usePropsForRemoteElement<
 ): Props | undefined {
   if (!element) return undefined;
 
-  const {children, properties} = element;
+  const {children, properties, attributes, eventListeners} = element;
+  const resolvedEventListeners = eventListeners.value;
+
   const reactChildren: ReturnType<typeof renderRemoteNode>[] = [];
-  const resolvedProperties: Record<string, any> = {...properties.value};
+
+  const resolvedProperties: Record<string, any> = {
+    ...properties.value,
+    ...attributes.value,
+    ...Object.keys(resolvedEventListeners).reduce<Record<string, any>>(
+      (listenerProps, event) => {
+        listenerProps[`on${event[0]!.toUpperCase()}${event.slice(1)}`] =
+          resolvedEventListeners[event];
+        return listenerProps;
+      },
+      {},
+    ),
+  };
 
   for (const child of children.value) {
     let slot: string | undefined =

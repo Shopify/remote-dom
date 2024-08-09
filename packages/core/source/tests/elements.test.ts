@@ -4,17 +4,24 @@ import {describe, it, expect, vi, type MockedObject} from 'vitest';
 import {
   RemoteElement,
   createRemoteElement,
+  RemoteEvent,
   // remoteProperties,
   // remoteProperty,
   RemoteRootElement,
-  type RemoteEvent,
   type RemoteElementConstructor,
 } from '../elements.ts';
 import {
   RemoteReceiver,
   type RemoteReceiverElement,
 } from '../receivers/RemoteReceiver.ts';
-import {REMOTE_ID, MUTATION_TYPE_UPDATE_PROPERTY} from '../constants.ts';
+import {
+  REMOTE_ID,
+  MUTATION_TYPE_UPDATE_PROPERTY,
+  UPDATE_PROPERTY_TYPE_PROPERTY,
+  UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+  MUTATION_TYPE_INSERT_CHILD,
+  UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+} from '../constants.ts';
 
 describe('RemoteElement', () => {
   describe('properties', () => {
@@ -47,6 +54,8 @@ describe('RemoteElement', () => {
           version: 0,
           children: [],
           properties: {name},
+          attributes: {},
+          eventListeners: {},
         },
       ]);
     });
@@ -68,7 +77,13 @@ describe('RemoteElement', () => {
       (element as HelloElementProperties).name = name;
 
       expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
-        [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'name',
+          name,
+          UPDATE_PROPERTY_TYPE_PROPERTY,
+        ],
       ]);
     });
 
@@ -83,7 +98,13 @@ describe('RemoteElement', () => {
       element.name = name;
 
       expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
-        [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'name',
+          name,
+          UPDATE_PROPERTY_TYPE_PROPERTY,
+        ],
       ]);
     });
 
@@ -163,7 +184,13 @@ describe('RemoteElement', () => {
 
         expect(element.name).toBe(name);
         expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
-          [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
+          [
+            MUTATION_TYPE_UPDATE_PROPERTY,
+            remoteId(element),
+            'name',
+            name,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
+          ],
         ]);
       });
 
@@ -180,7 +207,13 @@ describe('RemoteElement', () => {
 
         expect(element.name).toBe(name);
         expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
-          [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
+          [
+            MUTATION_TYPE_UPDATE_PROPERTY,
+            remoteId(element),
+            'name',
+            name,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
+          ],
         ]);
       });
 
@@ -197,7 +230,13 @@ describe('RemoteElement', () => {
 
         expect(element.name).toBe(undefined);
         expect(receiver.connection.mutate).not.toHaveBeenLastCalledWith([
-          [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', name],
+          [
+            MUTATION_TYPE_UPDATE_PROPERTY,
+            remoteId(element),
+            'name',
+            name,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
+          ],
         ]);
       });
 
@@ -215,7 +254,13 @@ describe('RemoteElement', () => {
 
         expect(element.name).toBe(undefined);
         expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
-          [MUTATION_TYPE_UPDATE_PROPERTY, remoteId(element), 'name', undefined],
+          [
+            MUTATION_TYPE_UPDATE_PROPERTY,
+            remoteId(element),
+            'name',
+            undefined,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
+          ],
         ]);
       });
 
@@ -237,6 +282,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'updatedAt',
             updatedAt,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -260,6 +306,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'updatedAt',
             updatedAt,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -282,6 +329,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'inventory',
             inventory,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
 
@@ -294,6 +342,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'inventory',
             undefined,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -316,6 +365,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'collection',
             collection,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
 
@@ -328,6 +378,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'collection',
             undefined,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -349,6 +400,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'collection',
             expect.anything(),
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -373,6 +425,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'collections',
             collections,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
 
@@ -385,6 +438,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'collections',
             undefined,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -408,6 +462,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'collection',
             expect.anything(),
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -440,6 +495,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'myField',
             `${attributePrefix}${value}`,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -492,6 +548,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'onPress',
             element.onPress,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -514,6 +571,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'press',
             element.press,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -536,6 +594,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'onPress',
             element.onPress,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -558,6 +617,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'onMouseEnter',
             element.onMouseEnter,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -577,28 +637,6 @@ describe('RemoteElement', () => {
         const detail = {hello: 'world'};
 
         element.onPress(detail);
-
-        expect(listener).toHaveBeenCalledWith(expect.any(CustomEvent));
-        expect(listener).toHaveBeenCalledWith(
-          expect.objectContaining({type: 'press', detail}),
-        );
-      });
-
-      it('calls event listeners with a RemoteEvent containing multiple function argument as the detail', () => {
-        const ButtonElement = createRemoteElement<{
-          onPress(...detail: any[]): void;
-        }>({
-          properties: {onPress: {}},
-        });
-
-        const {element} = createAndConnectRemoteElement(ButtonElement);
-
-        const listener = vi.fn();
-        element.addEventListener('press', listener);
-
-        const detail = ['123', {hello: 'world'}];
-
-        element.onPress(...detail);
 
         expect(listener).toHaveBeenCalledWith(expect.any(CustomEvent));
         expect(listener).toHaveBeenCalledWith(
@@ -659,6 +697,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'onPress',
             undefined,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -684,6 +723,7 @@ describe('RemoteElement', () => {
             remoteId(element),
             'onPress',
             undefined,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
@@ -710,9 +750,319 @@ describe('RemoteElement', () => {
             remoteId(element),
             'onPress',
             undefined,
+            UPDATE_PROPERTY_TYPE_PROPERTY,
           ],
         ]);
       });
+    });
+  });
+
+  describe('attributes', () => {
+    it('serializes initial attributes when the element is connected', () => {
+      const ProductElement = createRemoteElement({
+        attributes: ['name'],
+      });
+
+      const receiver = new TestRemoteReceiver();
+
+      const root = new RemoteRootElement();
+      const element = createRemoteHTMLElement(ProductElement);
+      root.append(element);
+
+      const name = 'Fiddle leaf fig';
+      element.setAttribute('name', name);
+      element.setAttribute('not-a-valid-attribute', 'foo');
+
+      root.connect(receiver.connection);
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_INSERT_CHILD,
+          remoteId(root),
+          expect.objectContaining({
+            attributes: {name},
+          }),
+          0,
+        ],
+      ]);
+    });
+
+    it('reflects the value of a remote attribute automatically when the attribute is set', () => {
+      const ProductElement = createRemoteElement({
+        attributes: ['name'],
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ProductElement);
+
+      const name = 'Fiddle leaf fig';
+      element.setAttribute('name', name);
+
+      expect(element.getAttribute('name')).toBe(name);
+      // @ts-expect-error We are testing that there is no attribute reflection, and the
+      // type therefore also complains that `name` is not a property of `element`.
+      expect(element.name).toBe(undefined);
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'name',
+          name,
+          UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+        ],
+      ]);
+    });
+
+    it('reflects the value of a remote attribute automatically when the attribute is removed', () => {
+      const ProductElement = createRemoteElement({
+        attributes: ['name'],
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ProductElement);
+
+      const name = 'Fiddle leaf fig';
+      element.setAttribute('name', name);
+      element.removeAttribute('name');
+
+      expect(element.getAttribute('name')).toBe(null);
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'name',
+          null,
+          UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+        ],
+      ]);
+    });
+  });
+
+  describe('event listeners', () => {
+    it('proxies event listeners, passing along the original first argument of the caller and returning the result of event.response', async () => {
+      const ButtonElement = createRemoteElement({
+        events: ['press'],
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const listener = vi.fn((event: RemoteEvent) => {
+        event.respondWith(Promise.resolve(`Detail: ${event.detail}`));
+      });
+
+      // We haven’t added a listener yet, so we should not have informed the host yet
+      expect(receiver.connection.mutate).not.toHaveBeenCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          expect.any(Function),
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+        ],
+      ]);
+
+      element.addEventListener('press', listener);
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          expect.any(Function),
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+        ],
+      ]);
+
+      const dispatchFunction = receiver.get<RemoteReceiverElement>({
+        id: remoteId(element),
+      })?.eventListeners.press;
+      const result = await dispatchFunction?.('Hello world');
+
+      expect(listener).toHaveBeenCalledWith(expect.any(RemoteEvent));
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'press',
+          detail: 'Hello world',
+        }),
+      );
+      expect(result).toBe('Detail: Hello world');
+    });
+
+    it('supports a `bubbles` event option that automatically listens for an event and marks it as bubbling', async () => {
+      const ButtonElement = createRemoteElement({
+        events: {
+          press: {
+            bubbles: true,
+          },
+        },
+      });
+
+      const {receiver, root, element} =
+        createAndConnectRemoteElement(ButtonElement);
+
+      // Attaching a listener to the root, to verify bubbling behavior.
+      const listener = vi.fn();
+      root.addEventListener('press', listener);
+
+      const dispatchFunction = receiver.get<RemoteReceiverElement>({
+        id: remoteId(element),
+      })?.eventListeners.press;
+      await dispatchFunction?.('Hello world');
+
+      expect(listener).toHaveBeenCalledWith(expect.any(RemoteEvent));
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bubbles: true,
+        }),
+      );
+    });
+
+    it('uses a custom event provided by a `dispatchEvent()` event listener description', async () => {
+      class CustomRemoteEvent extends RemoteEvent {}
+
+      const dispatchListener = vi.fn();
+
+      const ButtonElement = createRemoteElement({
+        events: {
+          press: {
+            dispatchEvent(detail: string) {
+              dispatchListener(this, detail);
+
+              return new CustomRemoteEvent('press', {
+                detail: `Detail: ${detail}`,
+              });
+            },
+          },
+        },
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const listener = vi.fn();
+
+      element.addEventListener('press', listener);
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          expect.any(Function),
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+        ],
+      ]);
+
+      const dispatchFunction = receiver.get<RemoteReceiverElement>({
+        id: remoteId(element),
+      })?.eventListeners.press;
+      await dispatchFunction?.('Hello world');
+
+      expect(dispatchListener).toHaveBeenCalledWith(element, 'Hello world');
+      expect(listener).toHaveBeenCalledWith(expect.any(CustomRemoteEvent));
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: 'Detail: Hello world',
+        }),
+      );
+    });
+
+    it('removes an event listener when the last event listener is removed', () => {
+      const ButtonElement = createRemoteElement({
+        events: ['press'],
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const firstListener = vi.fn();
+      const secondListener = vi.fn();
+
+      element.addEventListener('press', firstListener);
+
+      receiver.connection.mutate.mockClear();
+
+      element.addEventListener('press', secondListener);
+
+      expect(receiver.connection.mutate).not.toHaveBeenCalled();
+
+      element.removeEventListener('press', secondListener);
+
+      expect(receiver.connection.mutate).not.toHaveBeenCalled();
+
+      element.removeEventListener('press', firstListener);
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          undefined,
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+        ],
+      ]);
+
+      element.dispatchEvent(new RemoteEvent('press'));
+
+      expect(firstListener).not.toHaveBeenCalled();
+      expect(secondListener).not.toHaveBeenCalled();
+    });
+
+    it('removes an event listener declared with once', () => {
+      const ButtonElement = createRemoteElement({
+        events: ['press'],
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const listener = vi.fn();
+
+      element.addEventListener('press', listener, {once: true});
+
+      element.dispatchEvent(new RemoteEvent('press'));
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          undefined,
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+        ],
+      ]);
+
+      expect(listener).toHaveBeenCalledTimes(1);
+
+      listener.mockClear();
+
+      element.dispatchEvent(new RemoteEvent('press'));
+
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it('removes an event listener declared with an abort signal', () => {
+      const ButtonElement = createRemoteElement({
+        events: ['press'],
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const listener = vi.fn();
+      const abort = new AbortController();
+
+      element.addEventListener('press', listener, {signal: abort.signal});
+
+      abort.abort();
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          undefined,
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+        ],
+      ]);
+
+      element.dispatchEvent(new RemoteEvent('press'));
+
+      expect(listener).not.toHaveBeenCalled();
     });
   });
 
@@ -769,7 +1119,7 @@ class TestRemoteReceiver
     };
   }
 
-  get = this.#receiver.get.bind(this.#receiver);
+  get: RemoteReceiver['get'] = this.#receiver.get.bind(this.#receiver);
   implement = this.#receiver.implement.bind(this.#receiver);
   subscribe = this.#receiver.subscribe.bind(this.#receiver);
 }
@@ -778,9 +1128,18 @@ function createAndConnectRemoteElement<
   ElementType extends RemoteElementConstructor,
 >(ElementConstructor: ElementType) {
   const {receiver, root} = createAndConnectRemoteRootElement();
-  const element = new ElementConstructor() as InstanceType<ElementType>;
+  const element = createRemoteHTMLElement(ElementConstructor);
   root.append(element);
   return {root, element, receiver};
+}
+
+function createRemoteHTMLElement<ElementType extends RemoteElementConstructor>(
+  ElementConstructor: ElementType,
+  tagName: string = 'test-custom-element',
+) {
+  const element = new ElementConstructor() as InstanceType<ElementType>;
+  Object.defineProperty(element, 'nodeName', {value: tagName});
+  return element;
 }
 
 function remoteId(node: any) {
@@ -788,7 +1147,7 @@ function remoteId(node: any) {
 }
 
 function createAndConnectRemoteRootElement() {
-  const root = new RemoteRootElement() as RemoteRootElement;
+  const root = new RemoteRootElement();
   const receiver = new TestRemoteReceiver();
   root.connect(receiver.connection);
   return {root, receiver};
