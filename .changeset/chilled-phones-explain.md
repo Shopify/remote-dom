@@ -1,6 +1,6 @@
 ---
-'@remote-dom/polyfill': patch
-'@remote-dom/core': patch
+'@remote-dom/polyfill': minor
+'@remote-dom/core': minor
 ---
 
 Refactor hooks into the Window instance
