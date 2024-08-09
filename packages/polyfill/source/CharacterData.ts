@@ -6,7 +6,7 @@ export class CharacterData extends ChildNode {
 
   constructor(data: any) {
     super();
-    this.setData(data);
+    this[DATA] = data != null ? String(data) : '';
   }
 
   protected setData(data: any) {
@@ -15,13 +15,7 @@ export class CharacterData extends ChildNode {
       str = typeof data === 'string' ? data : String(data);
     }
     this[DATA] = str;
-    if (this[OWNER_DOCUMENT]) {
-      this[OWNER_DOCUMENT].defaultView[HOOKS].setText?.(this as any, str);
-    } else {
-      setTimeout(() =>
-        this[OWNER_DOCUMENT]?.defaultView[HOOKS].setText?.(this as any, str),
-      );
-    }
+    this[OWNER_DOCUMENT].defaultView[HOOKS].setText?.(this as any, str);
   }
 
   get data() {
