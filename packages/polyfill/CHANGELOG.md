@@ -1,5 +1,11 @@
 # @remote-dom/polyfill
 
+## 1.0.6
+
+### Patch Changes
+
+- [#406](https://github.com/Shopify/remote-dom/pull/406) [`2ea3459`](https://github.com/Shopify/remote-dom/commit/2ea3459e29afc1421b3283ad59514fed38a52515) Thanks [@developit](https://github.com/developit)! - Fixes `hooks.addEventListener()` being called even when `EventTarget.addEventListener()` rejects a duplicate listener registration
+
 ## 1.0.5
 
 ### Patch Changes
