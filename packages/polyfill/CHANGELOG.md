@@ -1,5 +1,11 @@
 # @remote-dom/polyfill
 
+## 1.0.5
+
+### Patch Changes
+
+- [#401](https://github.com/Shopify/remote-dom/pull/401) [`578a8c6`](https://github.com/Shopify/remote-dom/commit/578a8c69ed1df63da77ab5a0efd0b28f8a0188d9) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Expose documentElement, head and body elements on the Document polyfill
+
 ## 1.0.4
 
 ### Patch Changes
