@@ -15,7 +15,7 @@ export class CharacterData extends ChildNode {
       str = typeof data === 'string' ? data : String(data);
     }
     this[DATA] = str;
-    this[OWNER_DOCUMENT].defaultView[HOOKS].setText?.(this as any, str);
+    this[HOOKS].setText?.(this as any, str);
   }
 
   get data() {

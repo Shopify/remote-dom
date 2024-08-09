@@ -7,6 +7,7 @@ import {
   NEXT,
   NamespaceURI,
   NodeType,
+  HOOKS,
 } from './constants.ts';
 import type {Document} from './Document.ts';
 import type {ParentNode} from './ParentNode.ts';
@@ -27,6 +28,10 @@ export class Node extends EventTarget {
   [CHILD]: Node | null = null;
   [PREV]: Node | null = null;
   [NEXT]: Node | null = null;
+
+  protected get [HOOKS]() {
+    return this[OWNER_DOCUMENT].defaultView[HOOKS];
+  }
 
   get localName() {
     return this[NAME];

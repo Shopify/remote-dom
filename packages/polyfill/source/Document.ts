@@ -123,7 +123,7 @@ export function setupElement<T extends Element>(
     Object.defineProperty(element, NS, {value: namespace});
   }
 
-  ownerDocument.defaultView[HOOKS].createElement?.(element as any, namespace);
+  ownerDocument[HOOKS].createElement?.(element as any, namespace);
 
   return element;
 }

@@ -66,11 +66,7 @@ export class ParentNode extends ChildNode {
       children.splice(children.indexOf(child), 1);
     }
 
-    this[OWNER_DOCUMENT].defaultView[HOOKS].removeChild?.(
-      this as any,
-      child as any,
-      childNodesIndex,
-    );
+    this[HOOKS].removeChild?.(this as any, child as any, childNodesIndex);
   }
 
   replaceChild(newChild: Node, oldChild: Node) {
@@ -157,10 +153,6 @@ export class ParentNode extends ChildNode {
       if (isElement) this.children.push(child);
     }
 
-    this[OWNER_DOCUMENT].defaultView[HOOKS].insertChild?.(
-      this as any,
-      child as any,
-      insertIndex,
-    );
+    this[HOOKS].insertChild?.(this as any, child as any, insertIndex);
   }
 }

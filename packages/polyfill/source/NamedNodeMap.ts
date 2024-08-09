@@ -67,7 +67,7 @@ export class NamedNodeMap {
         if (prev) prev[NEXT] = attr[NEXT];
         if (this[CHILD] === attr) this[CHILD] = attr[NEXT];
         updateElementAttribute(ownerElement, attr.name, attr.value, null);
-        ownerElement[OWNER_DOCUMENT].defaultView[HOOKS].removeAttribute?.(
+        ownerElement[HOOKS].removeAttribute?.(
           ownerElement as any,
           name,
           namespaceURI,
@@ -119,7 +119,7 @@ export class NamedNodeMap {
         attr.value,
       );
 
-      ownerElement[OWNER_DOCUMENT].defaultView[HOOKS].setAttribute?.(
+      ownerElement[HOOKS].setAttribute?.(
         ownerElement as any,
         attr.name,
         attr.value,
