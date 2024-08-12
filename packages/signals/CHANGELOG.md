@@ -1,5 +1,12 @@
 # @remote-dom/signals
 
+## 1.0.5
+
+### Patch Changes
+
+- Updated dependencies [[`218ba3b`](https://github.com/Shopify/remote-dom/commit/218ba3bf1ff2e7518a7dcec11ffd352de70b16f8)]:
+  - @remote-dom/core@1.3.0
+
 ## 1.0.4
 
 ### Patch Changes
