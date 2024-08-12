@@ -6,7 +6,7 @@ export class CharacterData extends ChildNode {
 
   constructor(data: any) {
     super();
-    this[DATA] = data != null ? String(data) : '';
+    this[DATA] = data == null ? '' : String(data);
   }
 
   protected setData(data: any) {
