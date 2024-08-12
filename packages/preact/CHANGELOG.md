@@ -6,7 +6,7 @@
 
 - Updated dependencies [[`218ba3b`](https://github.com/Shopify/remote-dom/commit/218ba3bf1ff2e7518a7dcec11ffd352de70b16f8)]:
   - @remote-dom/core@1.3.0
-  - @remote-dom/signals@2.0.0
+  - @remote-dom/signals@1.0.5
 
 ## 1.0.1
 
@@ -14,7 +14,7 @@
 
 - Updated dependencies [[`22e6512`](https://github.com/Shopify/remote-dom/commit/22e6512f797d97d2106f181d730d995f37c6edaf)]:
   - @remote-dom/core@1.1.0
-  - @remote-dom/signals@2.0.0
+  - @remote-dom/signals@1.0.4
 
 ## 1.0.0
 
