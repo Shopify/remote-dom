@@ -1,5 +1,16 @@
 # @remote-dom/core
 
+## 1.3.0
+
+### Minor Changes
+
+- [#402](https://github.com/Shopify/remote-dom/pull/402) [`218ba3b`](https://github.com/Shopify/remote-dom/commit/218ba3bf1ff2e7518a7dcec11ffd352de70b16f8) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Refactor hooks into the Window instance
+
+### Patch Changes
+
+- Updated dependencies [[`218ba3b`](https://github.com/Shopify/remote-dom/commit/218ba3bf1ff2e7518a7dcec11ffd352de70b16f8)]:
+  - @remote-dom/polyfill@1.1.0
+
 ## 1.2.1
 
 ### Patch Changes
