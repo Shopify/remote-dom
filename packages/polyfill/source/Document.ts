@@ -1,5 +1,11 @@
-import {hooks} from './hooks.ts';
-import {NS, NAME, NamespaceURI, NodeType, OWNER_DOCUMENT} from './constants.ts';
+import {
+  NS,
+  NAME,
+  NamespaceURI,
+  NodeType,
+  OWNER_DOCUMENT,
+  HOOKS,
+} from './constants.ts';
 import type {Window} from './Window.ts';
 import type {Node} from './Node.ts';
 import {Event} from './Event.ts';
@@ -117,7 +123,7 @@ export function setupElement<T extends Element>(
     Object.defineProperty(element, NS, {value: namespace});
   }
 
-  hooks.createElement?.(element as any, namespace);
+  ownerDocument[HOOKS].createElement?.(element as any, namespace);
 
   return element;
 }

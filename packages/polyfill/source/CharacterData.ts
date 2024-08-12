@@ -1,5 +1,4 @@
-import {hooks} from './hooks.ts';
-import {DATA} from './constants.ts';
+import {DATA, HOOKS} from './constants.ts';
 import {ChildNode} from './ChildNode.ts';
 
 export class CharacterData extends ChildNode {
@@ -7,7 +6,7 @@ export class CharacterData extends ChildNode {
 
   constructor(data: any) {
     super();
-    this.setData(data);
+    this[DATA] = data == null ? '' : String(data);
   }
 
   protected setData(data: any) {
@@ -16,7 +15,7 @@ export class CharacterData extends ChildNode {
       str = typeof data === 'string' ? data : String(data);
     }
     this[DATA] = str;
-    hooks.setText?.(this as any, str);
+    this[HOOKS].setText?.(this as any, str);
   }
 
   get data() {

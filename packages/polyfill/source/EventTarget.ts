@@ -1,14 +1,19 @@
-import {hooks} from './hooks.ts';
-import {LISTENERS} from './constants.ts';
+import {HOOKS, LISTENERS, OWNER_DOCUMENT} from './constants.ts';
 import {fireEvent, EventPhase} from './Event.ts';
 import {CAPTURE_MARKER, type Event} from './Event.ts';
 import type {ChildNode} from './ChildNode.ts';
+import type {Document} from './Document.ts';
 
 const ONCE_LISTENERS = Symbol('onceListeners');
 
 export class EventTarget {
   [LISTENERS]?: Map<string, Set<EventListenerOrEventListenerObject>>;
   [ONCE_LISTENERS]?: WeakMap<EventListenerOrEventListenerObject, EventListener>;
+  /**
+   * Property set by entities that extend this class that are part of the DOM tree.
+   * @internal
+   */
+  [OWNER_DOCUMENT]?: Document;
 
   addEventListener(
     type: string,
@@ -67,7 +72,12 @@ export class EventTarget {
     );
 
     list.add(normalizedListener);
-    hooks.addEventListener?.(this as any, type, listener, options);
+    this[OWNER_DOCUMENT]?.defaultView[HOOKS].addEventListener?.(
+      this as any,
+      type,
+      listener,
+      options,
+    );
   }
 
   removeEventListener(
@@ -134,7 +144,12 @@ function removeEventListener(
   if (list) {
     const deleted = list.delete(normalizedListener);
     if (deleted) {
-      hooks.removeEventListener?.(this as any, type, listener, options);
+      this[OWNER_DOCUMENT]?.defaultView[HOOKS].removeEventListener?.(
+        this as any,
+        type,
+        listener,
+        options,
+      );
     }
   }
 }

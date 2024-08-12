@@ -1,4 +1,3 @@
-import {hooks} from './hooks.ts';
 import {
   NS,
   NEXT,
@@ -7,6 +6,7 @@ import {
   NAME,
   NamespaceURI,
   NodeType,
+  HOOKS,
 } from './constants.ts';
 import {Node} from './Node.ts';
 import type {Element} from './Element.ts';
@@ -45,7 +45,7 @@ export class Attr extends Node {
     this[VALUE] = str;
     const ownerElement = this[OWNER_ELEMENT];
     if (!ownerElement) return;
-    hooks.setAttribute?.(ownerElement as any, this[NAME], str, this[NS]);
+    this[HOOKS].setAttribute?.(ownerElement as any, this[NAME], str, this[NS]);
   }
 
   get nodeValue() {
