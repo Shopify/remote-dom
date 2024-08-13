@@ -21,19 +21,22 @@
       "types": "./build/typescript/index.d.ts",
       "quilt:source": "./source/index.ts",
       "quilt:esnext": "./build/esnext/index.esnext",
-      "import": "./build/esm/index.mjs"
+      "import": "./build/esm/index.mjs",
+      "require": "./build/cjs/index.cjs"
     },
     "./host": {
       "types": "./build/typescript/host.d.ts",
       "quilt:source": "./source/host.ts",
       "quilt:esnext": "./build/esnext/host.esnext",
-      "import": "./build/esm/host.mjs"
+      "import": "./build/esm/host.mjs",
+      "require": "./build/cjs/host.cjs"
     },
     "./html": {
       "types": "./build/typescript/html.d.ts",
       "quilt:source": "./source/html.ts",
       "quilt:esnext": "./build/esnext/html.esnext",
-      "import": "./build/esm/html.mjs"
+      "import": "./build/esm/html.mjs",
+      "require": "./build/cjs/html.cjs"
     }
   },
   "types": "./build/typescript/index.d.ts",
