@@ -28,25 +28,29 @@
       "types": "./build/typescript/elements.d.ts",
       "quilt:source": "./source/elements.ts",
       "quilt:esnext": "./build/esnext/elements.esnext",
-      "import": "./build/esm/elements.mjs"
+      "import": "./build/esm/elements.mjs",
+      "require": "./build/cjs/elements.cjs"
     },
     "./html": {
       "types": "./build/typescript/html.d.ts",
       "quilt:source": "./source/html.ts",
       "quilt:esnext": "./build/esnext/html.esnext",
-      "import": "./build/esm/html.mjs"
+      "import": "./build/esm/html.mjs",
+      "require": "./build/cjs/html.cjs"
     },
     "./polyfill": {
       "types": "./build/typescript/polyfill.d.ts",
       "quilt:source": "./source/polyfill.ts",
       "quilt:esnext": "./build/esnext/polyfill.esnext",
-      "import": "./build/esm/polyfill.mjs"
+      "import": "./build/esm/polyfill.mjs",
+      "require": "./build/cjs/polyfill.cjs"
     },
     "./receivers": {
       "types": "./build/typescript/receivers.d.ts",
       "quilt:source": "./source/receivers.ts",
       "quilt:esnext": "./build/esnext/receivers.esnext",
-      "import": "./build/esm/receivers.mjs"
+      "import": "./build/esm/receivers.mjs",
+      "require": "./build/cjs/receivers.cjs"
     }
   },
   "types": "./build/typescript/index.d.ts",
