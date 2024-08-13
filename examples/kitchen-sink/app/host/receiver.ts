@@ -9,25 +9,24 @@ import {
   RemoteTextSerialization,
 } from '@remote-dom/core';
 import type {RemoteReceiverOptions} from '@remote-dom/core/receivers';
-import {ComponentType, createElement, Fragment} from 'preact';
+import {createElement, Fragment} from 'preact';
 
-type AnyNodeType = string | ComponentType;
+type AnyNodeType = Parameters<typeof createElement>[0];
 type HostChild = HostNode | null | undefined;
 type ComponentProps<T = any> = {
   [K in keyof T]: T[K];
 } & {
-  // children?: HostChild[];
   children: never;
 };
 
 interface PreactReceiverOptions extends RemoteReceiverOptions {
   rerender?(root: JSX.Element): void;
-  components?: Map<string, ComponentType>;
+  components?: Map<string, AnyNodeType>;
 }
 
 function createHostNode(
   id: string,
-  type: string | ComponentType,
+  type: AnyNodeType,
   props: any = null,
   events?: string[],
   children?: any[],
@@ -65,8 +64,8 @@ class HostNode<
     public id: string,
     public type: Type,
     public props: Props,
-    events: string[],
-    public children: HostChild[] | undefined = undefined,
+    events?: string[],
+    public children?: HostChild[],
   ) {
     if (events) for (const type in events) this.events[type] = true;
   }
@@ -215,13 +214,13 @@ class HostNode<
       type,
     );
     if (isOwnHandler) {
-      return prom.then((ret) => ret?.response ?? ret?.returnValue);
+      return prom.then((ret: any) => ret?.response ?? ret?.returnValue);
     }
   }
 }
 
-function Text({data}: {data?: string}) {
-  return data || '';
+function Text({data}: {data?: any}) {
+  return String(data);
 }
 function Comment() {
   return null;
@@ -231,7 +230,7 @@ export class PreactRemoteReceiver {
   #root: HostNode;
   #nodes = new Map<string, HostNode>();
   rerender: PreactReceiverOptions['rerender'];
-  #components: PreactReceiverOptions['components'];
+  #components: NonNullable<PreactReceiverOptions['components']>;
 
   connection: RemoteConnection;
 
@@ -315,7 +314,7 @@ export class PreactRemoteReceiver {
   }
 
   private triggerRender() {
-    this.rerender(this.#root.resolved());
+    this.rerender!(this.#root.resolved());
   }
 
   constructor({retain, release, rerender, components}: PreactReceiverOptions) {
