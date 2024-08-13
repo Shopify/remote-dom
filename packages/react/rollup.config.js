@@ -1,3 +1,3 @@
 import {quiltPackage} from '@quilted/rollup/package';
 
-export default quiltPackage();
+export default quiltPackage({react: 'react'});
