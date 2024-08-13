@@ -6,6 +6,8 @@ import type {
   MUTATION_TYPE_REMOVE_CHILD,
   MUTATION_TYPE_UPDATE_TEXT,
   MUTATION_TYPE_UPDATE_PROPERTY,
+  MUTATION_TYPE_ADD_EVENT_LISTENER,
+  MUTATION_TYPE_REMOVE_EVENT_LISTENER,
 } from './constants.ts';
 
 /**
@@ -28,7 +30,7 @@ export type RemoteMutationRecordInsertChild = [
     | RemoteElementSerialization,
 
   /**
-   * The index in the parents’ children to insert the new child.
+   * The index in the parents' children to insert the new child.
    */
   index: number,
 ];
@@ -90,19 +92,55 @@ export type RemoteMutationRecordUpdateProperty = [
 ];
 
 /**
+ * Describes adding an event listener to a remote element.
+ */
+export type RemoteMutationRecordAddEventListener = [
+  type: typeof MUTATION_TYPE_ADD_EVENT_LISTENER,
+
+  /**
+   * The ID of the element to add the event listener to.
+   */
+  id: string,
+
+  /**
+   * The type of event to listen for.
+   */
+  eventType: string,
+];
+
+/**
+ * Describes removing an event listener from a remote element.
+ */
+export type RemoteMutationRecordRemoveEventListener = [
+  type: typeof MUTATION_TYPE_REMOVE_EVENT_LISTENER,
+
+  /**
+   * The ID of the element to remove the event listener from.
+   */
+  id: string,
+
+  /**
+   * The type of event that was being listened for.
+   */
+  eventType: string,
+];
+
+/**
  * Describes any mutation to the remote tree of nodes.
  */
 export type RemoteMutationRecord =
   | RemoteMutationRecordInsertChild
   | RemoteMutationRecordRemoveChild
   | RemoteMutationRecordUpdateText
-  | RemoteMutationRecordUpdateProperty;
+  | RemoteMutationRecordUpdateProperty
+  | RemoteMutationRecordAddEventListener
+  | RemoteMutationRecordRemoveEventListener;
 
 /**
  * An object that can synchronize a tree of elements between two JavaScript
- * environments. This object acts as a “thin waist”, allowing for efficient
- * communication of changes between a “remote” environment (usually, a JavaScript
- * sandbox, such as an `iframe` or Web Worker) and a “host” environment
+ * environments. This object acts as a "thin waist", allowing for efficient
+ * communication of changes between a "remote" environment (usually, a JavaScript
+ * sandbox, such as an `iframe` or Web Worker) and a "host" environment
  * (usually, a top-level browser page).
  */
 export interface RemoteConnection {
@@ -147,6 +185,11 @@ export interface RemoteElementSerialization {
    * between the remote and host environments.
    */
   readonly properties?: Record<string, unknown>;
+
+  /**
+   * The event handler types currently registered on this Node.
+   */
+  readonly events?: string[];
 
   /**
    * The list of child nodes of this element.

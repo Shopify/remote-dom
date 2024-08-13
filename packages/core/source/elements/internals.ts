@@ -1,3 +1,4 @@
+import {LISTENERS} from '@remote-dom/polyfill';
 import {
   REMOTE_ID,
   REMOTE_CONNECTION,
@@ -144,11 +145,20 @@ export function serializeRemoteNode(node: Node): RemoteNodeSerialization {
   switch (nodeType) {
     // Element
     case 1: {
+      let events: string[] | undefined;
+      const listeners = (node as any)[LISTENERS];
+      if (listeners) {
+        events = [];
+        for (const [type, list] of listeners) {
+          if (list.size) events.push(type);
+        }
+      }
       return {
         id: remoteId(node),
         type: nodeType,
         element: (node as Element).localName,
         properties: Object.assign({}, remoteProperties(node)),
+        events,
         children: Array.from(node.childNodes).map(serializeRemoteNode),
       };
     }

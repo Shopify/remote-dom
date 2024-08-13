@@ -1,12 +1,7 @@
 import type {RenderAPI} from '../../types.ts';
-import {Modal} from '../elements.ts';
 
 export function renderUsingVanillaDOM(root: Element, api: RenderAPI) {
   let count = 0;
-
-  function handlePress() {
-    updateCount(count + 1);
-  }
 
   function handleClose() {
     if (count > 0) {
@@ -21,10 +16,6 @@ export function renderUsingVanillaDOM(root: Element, api: RenderAPI) {
     countText.textContent = String(count);
   }
 
-  function handlePrimaryAction() {
-    modal.close();
-  }
-
   const countText = document.createElement('ui-text');
   countText.textContent = String(count);
   countText.setAttribute('emphasis', '');
@@ -34,27 +25,25 @@ export function renderUsingVanillaDOM(root: Element, api: RenderAPI) {
   template.innerHTML = `
     <ui-modal slot="modal">
       <ui-text>Click count: </ui-text>
-      <ui-button>Click me!</ui-button>
-      <ui-button slot="primaryAction">
+      <ui-button id="increment">Click me!</ui-button>
+      <ui-button id="close" slot="primaryAction">
         Close
       </ui-button>
     </ui-modal>
   `.trim();
 
-  const modal = template.querySelector('ui-modal')! as InstanceType<
-    typeof Modal
-  >;
+  const modal = template.querySelector('ui-modal')!;
 
   modal.addEventListener('close', handleClose);
 
   modal.querySelector('ui-text')!.append(countText);
 
-  const [countButton, primaryActionButton] = [
-    ...modal.querySelectorAll('ui-button'),
-  ];
-
-  countButton!.addEventListener('press', handlePress);
-  primaryActionButton!.addEventListener('press', handlePrimaryAction);
+  root.addEventListener('press', (event) => {
+    const id = (event.target as Element).getAttribute('id');
+    // console.log(id, event);
+    if (id === 'increment') updateCount(count + 1);
+    if (id === 'close') modal.close();
+  });
 
   template.innerHTML = `
     <ui-stack spacing>

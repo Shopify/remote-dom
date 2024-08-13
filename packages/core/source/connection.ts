@@ -3,6 +3,8 @@ import {
   MUTATION_TYPE_REMOVE_CHILD,
   MUTATION_TYPE_UPDATE_TEXT,
   MUTATION_TYPE_UPDATE_PROPERTY,
+  MUTATION_TYPE_ADD_EVENT_LISTENER,
+  MUTATION_TYPE_REMOVE_EVENT_LISTENER,
 } from './constants.ts';
 import type {
   RemoteConnection,
@@ -10,6 +12,8 @@ import type {
   RemoteMutationRecordRemoveChild,
   RemoteMutationRecordUpdateText,
   RemoteMutationRecordUpdateProperty,
+  RemoteMutationRecordAddEventListener,
+  RemoteMutationRecordRemoveEventListener,
 } from './types.ts';
 
 export type {RemoteConnection};
@@ -53,6 +57,22 @@ export interface RemoteConnectionHandler {
     property: RemoteMutationRecordUpdateProperty[2],
     value: RemoteMutationRecordUpdateProperty[3],
   ): void;
+
+  /**
+   * Handles the `MUTATION_TYPE_ADD_EVENT_LISTENER` mutation record.
+   */
+  addEventListener?(
+    id: RemoteMutationRecordAddEventListener[1],
+    eventType: RemoteMutationRecordAddEventListener[2],
+  ): void;
+
+  /**
+   * Handles the `MUTATION_TYPE_REMOVE_EVENT_LISTENER` mutation record.
+   */
+  removeEventListener?(
+    id: RemoteMutationRecordRemoveEventListener[1],
+    eventType: RemoteMutationRecordRemoveEventListener[2],
+  ): void;
 }
 
 /**
@@ -66,19 +86,23 @@ export function createRemoteConnection({
   removeChild,
   updateText,
   updateProperty,
+  addEventListener,
+  removeEventListener,
 }: RemoteConnectionHandler): RemoteConnection {
   const handlers = {
     [MUTATION_TYPE_INSERT_CHILD]: insertChild,
     [MUTATION_TYPE_REMOVE_CHILD]: removeChild,
     [MUTATION_TYPE_UPDATE_TEXT]: updateText,
     [MUTATION_TYPE_UPDATE_PROPERTY]: updateProperty,
+    [MUTATION_TYPE_ADD_EVENT_LISTENER]: addEventListener,
+    [MUTATION_TYPE_REMOVE_EVENT_LISTENER]: removeEventListener,
   };
 
   return {
     call,
     mutate(records) {
       for (const [type, ...args] of records) {
-        (handlers[type] as any)(...args);
+        (handlers[type] as any)?.(...args);
       }
     },
   };

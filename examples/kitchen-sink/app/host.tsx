@@ -1,9 +1,4 @@
-import {render} from 'preact';
-import {
-  RemoteRootRenderer,
-  RemoteFragmentRenderer,
-  createRemoteComponentRenderer,
-} from '@remote-dom/preact/host';
+import {Fragment, render} from 'preact';
 import {
   createThreadFromIframe,
   createThreadFromWebWorker,
@@ -36,21 +31,14 @@ const workerSandbox = createThreadFromWebWorker<never, SandboxAPI>(worker);
 // We will use Preact to render remote elements in this example. The Preact
 // helper library lets you do this by mapping the name of a remote element to
 // a local Preact component. We’ve implemented the actual UI of our components in
-// the `./host/components.tsx` file, but we need to wrap each one in the `createRemoteComponentRenderer()`
-// helper function in order to get some Preact niceties, like automatic conversion
-// of slots to element props, and using the instance of a Preact component as the
-// target for methods called on matching remote elements.
+// the `./host/components.tsx` file, and here we're just mapping those components
+// to the element names they should be exposed as on the remote side.
 const components = new Map([
-  ['ui-text', createRemoteComponentRenderer(Text)],
-  ['ui-button', createRemoteComponentRenderer(Button)],
-  ['ui-stack', createRemoteComponentRenderer(Stack)],
-  ['ui-modal', createRemoteComponentRenderer(Modal)],
-  // The `remote-fragment` element is a special element created by Remote DOM when
-  // it needs an unstyled container for a list of elements. This is primarily used
-  // to convert elements passed as a prop to React or Preact components into a slotted
-  // element. The `RemoteFragmentRenderer` component is provided to render this element
-  // on the host.
-  ['remote-fragment', RemoteFragmentRenderer],
+  ['ui-text', Text],
+  ['ui-button', Button],
+  ['ui-stack', Stack],
+  ['ui-modal', Modal],
+  ['remote-fragment', Fragment],
 ]);
 
 // We offload most of the complex state logic to this `createState()` function. We’re
@@ -60,7 +48,7 @@ const components = new Map([
 // rendered by the remote environment. We use this object later to render these trees
 // to Preact components using the `RemoteRootRenderer` component.
 
-const {receiver, example, sandbox} = createState(
+const {receiver, tree, example, sandbox} = createState(
   async ({receiver, example, sandbox}) => {
     if (sandbox === 'iframe') {
       await iframeSandbox.render(receiver.connection, {
@@ -86,6 +74,7 @@ const {receiver, example, sandbox} = createState(
       });
     }
   },
+  components,
 );
 
 // We render our Preact application, including the part that renders any remote
@@ -112,9 +101,5 @@ function ExampleRenderer() {
     return <div>Error while rendering example: {value.message}</div>;
   }
 
-  return (
-    <div>
-      <RemoteRootRenderer receiver={value} components={components} />
-    </div>
-  );
+  return <div>{tree}</div>;
 }

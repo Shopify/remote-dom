@@ -1,8 +1,9 @@
 import {signal, effect} from '@preact/signals';
-import {SignalRemoteReceiver} from '@remote-dom/preact/host';
 import {retain, release} from '@quilted/threads';
+import {PreactRemoteReceiver} from './receiver.ts';
 
 import type {RenderExample, RenderSandbox} from '../types.ts';
+import {ComponentType} from 'preact';
 
 const DEFAULT_SANDBOX = 'worker';
 const ALLOWED_SANDBOX_VALUES = new Set<RenderSandbox>(['iframe', 'worker']);
@@ -13,6 +14,7 @@ const ALLOWED_EXAMPLE_VALUES = new Set<RenderExample>([
   'htm',
   'preact',
   'react',
+  'react-dom',
   'svelte',
   'vue',
 ]);
@@ -21,8 +23,9 @@ export function createState(
   render: (details: {
     example: RenderExample;
     sandbox: RenderSandbox;
-    receiver: SignalRemoteReceiver;
+    receiver: PreactRemoteReceiver;
   }) => void | Promise<void>,
+  components: Map<string, ComponentType>,
 ) {
   const initialURL = new URL(window.location.href);
 
@@ -47,12 +50,22 @@ export function createState(
   );
 
   const receiver = signal<
-    SignalRemoteReceiver | Error | Promise<SignalRemoteReceiver> | undefined
+    PreactRemoteReceiver | Error | Promise<PreactRemoteReceiver> | undefined
   >(undefined);
+
+  const tree = signal<JSX.Element>();
+
+  effect(() => {
+    const {value} = receiver;
+    if (!value || value instanceof Error || value instanceof Promise) return;
+    tree.value = value.resolved();
+    value.rerender = (jsx) => (tree.value = jsx);
+    return () => (value.rerender = Object);
+  });
 
   const exampleCache = new Map<
     string,
-    SignalRemoteReceiver | Error | Promise<SignalRemoteReceiver>
+    PreactRemoteReceiver | Error | Promise<PreactRemoteReceiver>
   >();
 
   effect(() => {
@@ -75,7 +88,11 @@ export function createState(
     window.history.replaceState({}, '', newURL.toString());
 
     if (cached == null) {
-      const receiver = new SignalRemoteReceiver({retain, release});
+      const receiver = new PreactRemoteReceiver({
+        retain,
+        release,
+        components,
+      });
       cached = Promise.resolve(
         render({
           receiver,
@@ -97,7 +114,7 @@ export function createState(
 
     receiver.value = cached;
 
-    function updateValueAfterRender(value: SignalRemoteReceiver | Error) {
+    function updateValueAfterRender(value: PreactRemoteReceiver | Error) {
       exampleCache.set(key, value);
 
       if (sandboxValue !== sandbox.peek() || exampleValue !== example.peek()) {
@@ -110,5 +127,5 @@ export function createState(
     }
   });
 
-  return {receiver, sandbox, example};
+  return {receiver, tree, sandbox, example};
 }

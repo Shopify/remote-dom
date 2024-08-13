@@ -24,6 +24,7 @@ export type RenderExample =
   | 'htm'
   | 'preact'
   | 'react'
+  | 'react-dom'
   | 'svelte'
   | 'vue';
 

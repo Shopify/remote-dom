@@ -7,6 +7,8 @@ export const MUTATION_TYPE_INSERT_CHILD = 0;
 export const MUTATION_TYPE_REMOVE_CHILD = 1;
 export const MUTATION_TYPE_UPDATE_TEXT = 2;
 export const MUTATION_TYPE_UPDATE_PROPERTY = 3;
+export const MUTATION_TYPE_ADD_EVENT_LISTENER = 4;
+export const MUTATION_TYPE_REMOVE_EVENT_LISTENER = 5;
 
 export const REMOTE_ID = Symbol.for('remote.id');
 export const REMOTE_CONNECTION = Symbol.for('remote.connection');
