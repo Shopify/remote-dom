@@ -1,5 +1,17 @@
 # @remote-dom/preact
 
+## 1.1.0
+
+### Minor Changes
+
+- [#411](https://github.com/Shopify/remote-dom/pull/411) [`3bec698`](https://github.com/Shopify/remote-dom/commit/3bec6983756c4b8a6834a037ac520438ef59d28f) Thanks [@lemonmade](https://github.com/lemonmade)! - Add CommonJS export conditions
+
+### Patch Changes
+
+- Updated dependencies [[`3bec698`](https://github.com/Shopify/remote-dom/commit/3bec6983756c4b8a6834a037ac520438ef59d28f)]:
+  - @remote-dom/signals@1.1.0
+  - @remote-dom/core@1.4.0
+
 ## 1.0.2
 
 ### Patch Changes
