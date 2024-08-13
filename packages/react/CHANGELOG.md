@@ -1,5 +1,11 @@
 # @remote-dom/react
 
+## 1.0.2
+
+### Patch Changes
+
+- [`6e1f6b6`](https://github.com/Shopify/remote-dom/commit/6e1f6b69aec1958e9e5f125bd9d16847f905efa7) Thanks [@lemonmade](https://github.com/lemonmade)! - Fix React package including `preact/jsx-runtime` imports in output
+
 ## 1.0.1
 
 ### Patch Changes
