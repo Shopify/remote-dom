@@ -21,14 +21,17 @@
       // for `@remote-dom/core/elements`:
       // https://github.com/Shopify/remote-dom/tree/main/packages/core#elements
       class UIButton extends RemoteElement {
-        static get remoteProperties() {
+        static get remoteAttributes() {
+          return ['primary'];
+        }
+
+        static get remoteEvents() {
           return {
-            // A boolean property can be set either by setting the attribute to a non-empty
-            // value, or by setting the property to `true`.
-            primary: {type: Boolean},
-            // Remote DOM will convert the `click` event into an `onClick` property that
-            // is communicated to the host.
-            onClick: {event: true},
+            click: {
+              dispatchEvent(detail) {
+                console.log(`Event detail: `, detail);
+              },
+            },
           };
         }
       }

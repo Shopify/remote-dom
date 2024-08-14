@@ -6,6 +6,10 @@ import {
   ROOT_ID,
   REMOTE_ID,
   REMOTE_PROPERTIES,
+  REMOTE_EVENT_LISTENERS,
+  UPDATE_PROPERTY_TYPE_PROPERTY,
+  UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+  UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
 } from '../constants.ts';
 import type {RemoteNodeSerialization} from '../types.ts';
 import type {RemoteReceiverOptions} from './shared.ts';
@@ -125,7 +129,12 @@ export class DOMRemoteReceiver {
           detach(child);
         }
       },
-      updateProperty: (id, property, value) => {
+      updateProperty: (
+        id,
+        property,
+        value,
+        type = UPDATE_PROPERTY_TYPE_PROPERTY,
+      ) => {
         const element = attached.get(id)!;
 
         retain?.(value);
@@ -134,7 +143,7 @@ export class DOMRemoteReceiver {
         const oldValue = remoteProperties[property];
 
         remoteProperties[property] = value;
-        updateRemoteProperty(element as Element, property, value);
+        updateRemoteProperty(element as Element, property, value, type);
 
         release?.(oldValue);
       },
@@ -160,10 +169,45 @@ export class DOMRemoteReceiver {
             for (const property of Object.keys(node.properties)) {
               const value = node.properties[property];
               retain?.(value);
-              updateRemoteProperty(normalizedChild as Element, property, value);
+              updateRemoteProperty(
+                normalizedChild as Element,
+                property,
+                value,
+                UPDATE_PROPERTY_TYPE_PROPERTY,
+              );
             }
           } else {
             (normalizedChild as any)[REMOTE_PROPERTIES] = {};
+          }
+
+          if (node.attributes) {
+            for (const attribute of Object.keys(node.attributes)) {
+              const value = node.attributes[attribute];
+              retain?.(value);
+              updateRemoteProperty(
+                normalizedChild as Element,
+                attribute,
+                value,
+                UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+              );
+            }
+          }
+
+          if (node.eventListeners) {
+            (normalizedChild as any)[REMOTE_EVENT_LISTENERS] = {};
+
+            for (const event of Object.keys(node.eventListeners)) {
+              const listener = node.eventListeners[event];
+              retain?.(listener);
+              updateRemoteProperty(
+                normalizedChild as Element,
+                event,
+                listener,
+                UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+              );
+            }
+          } else {
+            (normalizedChild as any)[REMOTE_EVENT_LISTENERS] = {};
           }
 
           for (const child of node.children) {
@@ -246,14 +290,49 @@ function updateRemoteProperty(
   element: Element,
   property: string,
   value: unknown,
+  type:
+    | typeof UPDATE_PROPERTY_TYPE_PROPERTY
+    | typeof UPDATE_PROPERTY_TYPE_ATTRIBUTE
+    | typeof UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
 ) {
-  if (property in element) {
-    (element as any)[property] = value;
-  } else if (value == null || value === false) {
-    element.removeAttribute(property);
-  } else if (value === true) {
-    element.setAttribute(property, '');
-  } else {
-    element.setAttribute(property, String(value));
+  switch (type) {
+    case UPDATE_PROPERTY_TYPE_PROPERTY: {
+      (element as any)[property] = value;
+      break;
+    }
+    case UPDATE_PROPERTY_TYPE_ATTRIBUTE: {
+      if (value == null) {
+        element.removeAttribute(property);
+      } else {
+        element.setAttribute(property, value as string);
+      }
+
+      break;
+    }
+    case UPDATE_PROPERTY_TYPE_EVENT_LISTENER: {
+      const remoteListeners = (element as any)[REMOTE_EVENT_LISTENERS];
+      const existing = remoteListeners?.[property];
+
+      if (existing) element.removeEventListener(property, existing);
+
+      if (value != null) {
+        // Support a `RemoteEvent`-shaped event object, where the `detail` argument
+        // is passed to the remote environment, and the resulting promise call is passed
+        // to `event.resolve()`. A host implementation can use this conventional event shape
+        // to use the internal function representation of the event listener.
+        const handler = (event: any) => {
+          const result = (value as any)(event.detail);
+          event.resolve?.(result);
+        };
+
+        if (remoteListeners) {
+          remoteListeners[property] = handler;
+        }
+
+        element.addEventListener(property, handler);
+      }
+
+      break;
+    }
   }
 }

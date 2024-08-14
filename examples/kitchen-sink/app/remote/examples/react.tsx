@@ -14,9 +14,18 @@ import {
 } from '../elements.ts';
 
 const Text = createRemoteComponent('ui-text', TextElement);
-const Button = createRemoteComponent('ui-button', ButtonElement);
+const Button = createRemoteComponent('ui-button', ButtonElement, {
+  eventProps: {
+    onPress: {event: 'press'},
+  },
+});
 const Stack = createRemoteComponent('ui-stack', StackElement);
-const Modal = createRemoteComponent('ui-modal', ModalElement);
+const Modal = createRemoteComponent('ui-modal', ModalElement, {
+  eventProps: {
+    onOpen: {event: 'open'},
+    onClose: {event: 'close'},
+  },
+});
 
 export function renderUsingReact(root: Element, api: RenderAPI) {
   createRoot(root).render(<App api={api} />);

@@ -25,13 +25,13 @@ export function usePropsForRemoteElement<
 ): Props | undefined {
   if (!element) return undefined;
 
-  const {children, properties} = element;
+  const {children, properties, attributes, eventListeners} = element;
   const reactChildren: ReturnType<typeof renderRemoteNode>[] = [];
   const slotProperties: Record<string, any> = {...properties};
 
   for (const child of children) {
-    if (child.type === 1 && typeof child.properties.slot === 'string') {
-      const slot = child.properties.slot;
+    if (child.type === 1 && typeof child.attributes.slot === 'string') {
+      const slot = child.attributes.slot;
       const rendered = renderRemoteNode(child, options);
       slotProperties[slot] = slotProperties[slot] ? (
         <>
@@ -48,6 +48,15 @@ export function usePropsForRemoteElement<
 
   return {
     ...properties,
+    ...attributes,
+    ...Object.keys(eventListeners).reduce<Record<string, any>>(
+      (listenerProps, event) => {
+        listenerProps[`on${event[0]!.toUpperCase()}${event.slice(1)}`] =
+          eventListeners[event];
+        return listenerProps;
+      },
+      {},
+    ),
     ...slotProperties,
     children: reactChildren,
   } as unknown as Props;

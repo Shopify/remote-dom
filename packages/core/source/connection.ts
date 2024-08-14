@@ -52,6 +52,7 @@ export interface RemoteConnectionHandler {
     id: RemoteMutationRecordUpdateProperty[1],
     property: RemoteMutationRecordUpdateProperty[2],
     value: RemoteMutationRecordUpdateProperty[3],
+    type?: RemoteMutationRecordUpdateProperty[4],
   ): void;
 }
 

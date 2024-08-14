@@ -1,4 +1,9 @@
-import {IS_TRUSTED, LISTENERS} from './constants.ts';
+import {
+  PATH,
+  IS_TRUSTED,
+  LISTENERS,
+  STOP_IMMEDIATE_PROPAGATION,
+} from './constants.ts';
 import type {EventTarget} from './EventTarget.ts';
 
 export const enum EventPhase {
@@ -41,12 +46,12 @@ export class Event {
   composed = false;
   defaultPrevented = false;
   cancelBubble = false;
-  immediatePropagationStopped = false;
   eventPhase: EventPhase = 0;
-  path: EventTarget[] = [];
   // private inPassiveListener = false;
   data?: any;
+  [PATH]: EventTarget[] = [];
   [IS_TRUSTED]!: boolean;
+  [STOP_IMMEDIATE_PROPAGATION] = false;
 
   constructor(
     public type: string,
@@ -60,12 +65,12 @@ export class Event {
     }
   }
 
-  get composedPath() {
-    return this.path;
-  }
-
   get isTrusted() {
     return this[IS_TRUSTED];
+  }
+
+  composedPath() {
+    return this[PATH];
   }
 
   stopPropagation() {
@@ -73,7 +78,8 @@ export class Event {
   }
 
   stopImmediatePropagation() {
-    this.immediatePropagationStopped = true;
+    this[STOP_IMMEDIATE_PROPAGATION] = true;
+    this.cancelBubble = true;
   }
 
   preventDefault() {
@@ -98,43 +104,35 @@ export class Event {
 
 export function fireEvent(
   event: Event,
-  target: EventTarget,
-  phase: EventPhase,
-) {
-  const listeners = target[LISTENERS];
+  currentTarget: EventTarget,
+  phase: EventPhase.BUBBLING_PHASE | EventPhase.CAPTURING_PHASE,
+): void {
+  const listeners = currentTarget[LISTENERS];
   const list = listeners?.get(
     `${event.type}${
       phase === EventPhase.CAPTURING_PHASE ? CAPTURE_MARKER : ''
     }`,
   );
-  if (!list) return false;
 
-  let defaultPrevented = false;
+  if (!list) return;
 
   for (const listener of list) {
-    event.eventPhase = phase;
-    event.currentTarget = target;
+    event.eventPhase =
+      event.target === currentTarget ? EventPhase.AT_TARGET : phase;
+    event.currentTarget = currentTarget;
 
     try {
       if (typeof listener === 'object') {
         listener.handleEvent(event as any);
       } else {
-        listener.call(target, event as any);
+        listener.call(currentTarget, event as any);
       }
     } catch (err) {
       setTimeout(thrower, 0, err);
     }
 
-    if (event.defaultPrevented === true) {
-      defaultPrevented = true;
-    }
-
-    if (event.immediatePropagationStopped) {
-      break;
-    }
+    if (event[STOP_IMMEDIATE_PROPAGATION]) break;
   }
-
-  return defaultPrevented;
 }
 
 function thrower(error: any) {

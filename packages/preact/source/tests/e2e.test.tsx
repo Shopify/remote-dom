@@ -39,6 +39,7 @@ declare module 'vitest' {
 }
 
 interface ButtonProps {
+  tooltip?: string;
   disabled?: boolean;
   onPress?(): void;
 }
@@ -55,10 +56,16 @@ const HostButton = forwardRef(function HostButton({
   );
 });
 
-const RemoteButtonElement = createRemoteElement<ButtonProps>({
+const RemoteButtonElement = createRemoteElement<
+  ButtonProps,
+  {},
+  {},
+  {press(): void}
+>({
+  attributes: ['tooltip'],
+  events: ['press'],
   properties: {
     disabled: {type: Boolean},
-    onPress: {type: Function},
   },
 });
 
@@ -117,6 +124,11 @@ declare global {
 const RemoteButton = createRemoteComponent(
   'remote-button',
   RemoteButtonElement,
+  {
+    eventProps: {
+      onPress: {event: 'press'},
+    },
+  },
 );
 
 const RemoteModal = createRemoteComponent('remote-modal', RemoteModalElement);
@@ -150,13 +162,33 @@ describe('preact', () => {
     expect(rendered).toContainPreactComponent(HostButton);
   });
 
+  it('can render remote DOM elements with attributes', async () => {
+    const receiver = new SignalRemoteReceiver();
+    const mutationObserver = new RemoteMutationObserver(receiver.connection);
+
+    const remoteRoot = document.createElement('div');
+    const remoteButton = document.createElement('remote-button');
+    remoteButton.setAttribute('tooltip', 'I do cool things.');
+    remoteButton.textContent = 'Click me!';
+    remoteRoot.append(remoteButton);
+    mutationObserver.observe(remoteRoot);
+
+    const rendered = render(
+      <RemoteRootRenderer receiver={receiver} components={components} />,
+    );
+
+    expect(rendered).toContainPreactComponent(HostButton, {
+      tooltip: 'I do cool things.',
+    });
+  });
+
   it('can render remote DOM elements with simple properties', async () => {
     const receiver = new SignalRemoteReceiver();
     const mutationObserver = new RemoteMutationObserver(receiver.connection);
 
     const remoteRoot = document.createElement('div');
     const remoteButton = document.createElement('remote-button');
-    remoteButton.setAttribute('disabled', '');
+    remoteButton.disabled = true;
     remoteButton.textContent = 'Disabled button';
     remoteRoot.append(remoteButton);
     mutationObserver.observe(remoteRoot);
@@ -207,9 +239,9 @@ describe('preact', () => {
     const remoteModal = document.createElement('remote-modal');
     const remoteButton = document.createElement('remote-button');
     remoteButton.slot = 'action';
-    remoteButton.onPress = () => {
+    remoteButton.addEventListener('press', () => {
       remoteModal.close();
-    };
+    });
     remoteModal.append(remoteButton);
     remoteRoot.append(remoteModal);
     mutationObserver.observe(remoteRoot);
