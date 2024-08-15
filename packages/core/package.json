@@ -38,6 +38,13 @@
       "import": "./build/esm/html.mjs",
       "require": "./build/cjs/html.cjs"
     },
+    "./legacy": {
+      "types": "./build/typescript/legacy.d.ts",
+      "quilt:source": "./source/legacy.ts",
+      "quilt:esnext": "./build/esnext/legacy.esnext",
+      "import": "./build/esm/legacy.mjs",
+      "require": "./build/cjs/legacy.cjs"
+    },
     "./polyfill": {
       "types": "./build/typescript/polyfill.d.ts",
       "quilt:source": "./source/polyfill.ts",
@@ -61,6 +68,9 @@
       ],
       "html": [
         "./build/typescript/html.d.ts"
+      ],
+      "legacy": [
+        "./build/typescript/legacy.d.ts"
       ],
       "polyfill": [
         "./build/typescript/polyfill.d.ts"
