@@ -6,6 +6,8 @@ import type {
 } from '../types.ts'; // Adjust this import path as needed
 import {
   ROOT_ID,
+  NODE_TYPE_TEXT,
+  NODE_TYPE_ELEMENT,
   MUTATION_TYPE_INSERT_CHILD,
   MUTATION_TYPE_REMOVE_CHILD,
   MUTATION_TYPE_UPDATE_PROPERTY,
@@ -13,6 +15,7 @@ import {
 } from '../constants.ts';
 
 import {
+  LEGACY_KIND_TEXT,
   LEGACY_ACTION_MOUNT,
   LEGACY_ACTION_INSERT_CHILD,
   LEGACY_ACTION_REMOVE_CHILD,
@@ -24,8 +27,34 @@ import {
   type LegacyRemoteTextSerialization,
 } from './remote-ui.ts';
 
+export interface LegacyRemoteChannelElementMap {
+  [key: string]: string;
+}
+
+export interface LegacyRemoteChannelOptions {
+  elements?: LegacyRemoteChannelElementMap;
+}
+
+/**
+ * Adapts a Remote DOM `RemoteConnection` object into a `remote-ui` `RemoteChannel`.
+ * This allows you to use a Remote DOM receiver class on the host, even if the remote
+ * environment is using `remote-ui`.
+ *
+ * @example
+ * ```tsx
+ * import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
+ * import {adaptToLegacyRemoteChannel} from '@remote-dom/core/legacy';
+ *
+ * const receiver = new DOMRemoteReceiver();
+ * const channel = adaptToLegacyRemoteChannel(receiver.connection);
+ *
+ * // Do something with the channel
+ * sendChannelToRemoteEnvironment(channel);
+ * ```
+ */
 export function adaptToLegacyRemoteChannel(
   connection: RemoteConnection,
+  options?: LegacyRemoteChannelOptions,
 ): LegacyRemoteChannel {
   return function remoteChannel<T extends keyof LegacyActionArgumentMap>(
     type: T,
@@ -36,12 +65,15 @@ export function adaptToLegacyRemoteChannel(
         const [nodes] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_MOUNT];
 
-        const records: RemoteMutationRecord[] = nodes.map((node, index) => [
-          MUTATION_TYPE_INSERT_CHILD,
-          ROOT_ID,
-          node,
-          index,
-        ]);
+        const records = nodes.map(
+          (node, index) =>
+            [
+              MUTATION_TYPE_INSERT_CHILD,
+              ROOT_ID,
+              adaptLegacyNodeSerialization(node, options),
+              index,
+            ] satisfies RemoteMutationRecord,
+        );
 
         connection.mutate(records);
         break;
@@ -54,9 +86,7 @@ export function adaptToLegacyRemoteChannel(
           [
             MUTATION_TYPE_INSERT_CHILD,
             parentId ?? ROOT_ID,
-            child as
-              | LegacyRemoteTextSerialization
-              | LegacyRemoteElementSerialization,
+            adaptLegacyNodeSerialization(child, options),
             index,
           ],
         ]);
@@ -64,11 +94,11 @@ export function adaptToLegacyRemoteChannel(
         break;
 
       case LEGACY_ACTION_REMOVE_CHILD: {
-        const [removeParentId, removeIndex] =
+        const [parentID, removeIndex] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_REMOVE_CHILD];
 
         connection.mutate([
-          [MUTATION_TYPE_REMOVE_CHILD, removeParentId ?? ROOT_ID, removeIndex],
+          [MUTATION_TYPE_REMOVE_CHILD, parentID ?? ROOT_ID, removeIndex],
         ]);
 
         break;
@@ -83,16 +113,17 @@ export function adaptToLegacyRemoteChannel(
       }
 
       case LEGACY_ACTION_UPDATE_PROPS: {
-        const [propsId, props] =
+        const [id, props] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_UPDATE_PROPS];
 
-        const propRecords: RemoteMutationRecord[] = Object.entries(props).map(
-          ([key, value]) => [
-            MUTATION_TYPE_UPDATE_PROPERTY,
-            propsId,
-            key,
-            value,
-          ],
+        const propRecords = Object.entries(props).map(
+          ([key, value]) =>
+            [
+              MUTATION_TYPE_UPDATE_PROPERTY,
+              id,
+              key,
+              value,
+            ] satisfies RemoteMutationRecord,
         );
 
         connection.mutate(propRecords);
@@ -102,5 +133,44 @@ export function adaptToLegacyRemoteChannel(
       default:
         throw new Error(`Unsupported action type: ${type}`);
     }
+  };
+}
+
+function adaptLegacyNodeSerialization(
+  child: LegacyRemoteComponentSerialization | LegacyRemoteTextSerialization,
+  options?: LegacyRemoteChannelOptions,
+): RemoteElementSerialization | RemoteTextSerialization {
+  if (child.kind === LEGACY_KIND_TEXT) {
+    return adaptLegacyTextSerialization(child);
+  } else {
+    return adaptLegacyComponentSerialization(child, options);
+  }
+}
+
+function adaptLegacyTextSerialization({
+  id,
+  text,
+}: LegacyRemoteTextSerialization): RemoteTextSerialization {
+  return {
+    id,
+    type: NODE_TYPE_TEXT,
+    data: text,
+  };
+}
+
+function adaptLegacyComponentSerialization(
+  {id, type, props, children}: LegacyRemoteComponentSerialization,
+  options?: LegacyRemoteChannelOptions,
+): RemoteElementSerialization {
+  const element = options?.elements?.[type] ?? type;
+
+  return {
+    id,
+    type: NODE_TYPE_ELEMENT,
+    element,
+    properties: props,
+    children: children.map((child) => {
+      return adaptLegacyNodeSerialization(child, options);
+    }),
   };
 }
