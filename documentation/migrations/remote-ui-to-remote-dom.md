@@ -292,6 +292,6 @@ function MyRemoteRenderer() {
     sendReceiverToRemoteContext(receiver.connection);
   }, [receiver]);
 
-  return <RemoteRenderer receiver={receiver} components={components} />;
+  return <RemoteRootRenderer receiver={receiver} components={components} />;
 }
 ```
