@@ -62,6 +62,12 @@ const components = new Map([
 
 const {receiver, example, sandbox} = createState(
   async ({receiver, example, sandbox}) => {
+    if (example === 'react') {
+      receiver.root.children.subscribe((children) => {
+        console.log('Received new children:', children);
+      });
+    }
+
     if (sandbox === 'iframe') {
       await iframeSandbox.render(receiver.connection, {
         sandbox,
