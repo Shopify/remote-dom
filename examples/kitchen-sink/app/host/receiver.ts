@@ -58,8 +58,6 @@ class HostNode<
   } = {current: undefined};
   private boundEventHandlers: Record<string, (...args: any[]) => any> = {};
 
-  // public dispatchEvent?: (target: string, event: Partial<Event>) => any;
-
   constructor(
     public id: string,
     public type: Type,
