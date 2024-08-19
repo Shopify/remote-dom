@@ -150,7 +150,6 @@ export function createRemoteElement<
   return RemoteElementConstructor;
 }
 
-const SLOT_PROPERTY = 'slot';
 const REMOTE_EVENTS = Symbol('remote.events');
 
 interface RemoteEventRecord {
@@ -230,7 +229,7 @@ export abstract class RemoteElement<
     }
 
     this.__finalized = true;
-    const {remoteSlots, remoteProperties, remoteMethods} = this;
+    const {slottable, remoteSlots, remoteProperties, remoteMethods} = this;
 
     // finalize any superclasses
     const SuperConstructor = Object.getPrototypeOf(
@@ -238,6 +237,8 @@ export abstract class RemoteElement<
     ) as typeof RemoteElement;
 
     const observedAttributes: string[] = [];
+    if (slottable) observedAttributes.push('slot');
+
     const attributeToPropertyMap = new Map<string, string>();
     const eventToPropertyMap = new Map<string, string>();
     const remoteSlotDefinitions = new Map<
@@ -341,25 +342,6 @@ export abstract class RemoteElement<
     return this;
   }
 
-  get [SLOT_PROPERTY]() {
-    return super.slot;
-  }
-
-  set [SLOT_PROPERTY](value: string) {
-    const currentSlot = this.slot;
-    const newSlot = String(value);
-
-    if (currentSlot === newSlot) return;
-
-    super.slot = value;
-
-    if (!(this.constructor as typeof RemoteElement).slottable) {
-      return;
-    }
-
-    updateRemoteElementProperty(this, SLOT_PROPERTY, this.slot);
-  }
-
   // Just need to use these types so TS doesn’t lose track of them.
   /** @internal */
   __slots?: Slots;
@@ -427,6 +409,19 @@ export abstract class RemoteElement<
   }
 
   attributeChangedCallback(key: string, _oldValue: any, newValue: any) {
+    if (
+      key === 'slot' &&
+      (this.constructor as typeof RemoteElement).slottable
+    ) {
+      updateRemoteElementProperty(
+        this,
+        key,
+        newValue ? String(newValue) : undefined,
+      );
+
+      return;
+    }
+
     const {
       remotePropertyDefinitions,
       __attributeToPropertyMap: attributeToPropertyMap,

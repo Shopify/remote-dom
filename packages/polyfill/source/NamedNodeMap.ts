@@ -125,6 +125,7 @@ export class NamedNodeMap {
         attr[NS],
       );
     }
+
     return old;
   }
 
@@ -150,7 +151,7 @@ function updateElementAttribute(
   const {observedAttributes} = element.constructor as typeof Element;
   const {attributeChangedCallback} = element;
 
-  if (name === 'slot' && element.slot !== newValue) {
+  if (name === 'slot') {
     element.slot = newValue ?? '';
   }
 
