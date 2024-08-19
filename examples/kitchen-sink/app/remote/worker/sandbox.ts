@@ -1,5 +1,5 @@
 import '@remote-dom/core/polyfill';
-import {retain, createThreadFromWebWorker} from '@quilted/threads';
+import {ThreadWebWorker} from '@quilted/threads';
 
 import '../elements.ts';
 import {render} from '../render.ts';
@@ -12,18 +12,9 @@ import type {SandboxAPI} from '../../types.ts';
 // This block exposes the `render` method that was used by the host application,
 // in `index.html`. We receive the `RemoteConnection` object, and start synchronizing
 // changes to a `<remote-root>` element that contains our UI.
-createThreadFromWebWorker<SandboxAPI>(self as any as Worker, {
-  expose: {
+new ThreadWebWorker<never, SandboxAPI>(self as any as Worker, {
+  exports: {
     async render(connection, api) {
-      // `connection` contains functions that were transferred over `postMessage`.
-      // In order to call these functions later, we need to mark them as used in
-      // order to prevent garbage collection.
-      retain(connection);
-
-      // Similarly, `api.alert` is a function we will call later, so we also need
-      // to mark it as used.
-      retain(api.alert);
-
       // We will observe this DOM node, and send any elements within it to be
       // reflected on this "host" page. This element is defined by the Remote DOM
       // library, and provides a convenient `connect()` method that starts
@@ -31,7 +22,7 @@ createThreadFromWebWorker<SandboxAPI>(self as any as Worker, {
       const root = document.createElement('remote-root');
       root.connect(connection);
 
-      render(root, api);
+      await render(root, api);
     },
   },
 });

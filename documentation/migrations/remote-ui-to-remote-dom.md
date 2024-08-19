@@ -78,7 +78,9 @@ import {RemoteReceiver} from '@remote-dom/core';
 import {retain, release} from '@quilted/threads';
 
 // You now need to pass in functions to manage the memory for functions manually,
-// where this was previously done automatically in `@remote-ui/rpc`.
+// where this was previously done automatically in `@remote-ui/rpc`. If you are
+// using the automatic memory management provided by `@quilted/threads`, you can
+// omit the `retain` and `release` functions.
 const receiver = new RemoteReceiver({retain, release});
 sendToRemoteEnvironment(receiver.connection);
 ```

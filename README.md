@@ -205,18 +205,17 @@ First, we’ll create the remote environment’s version of `ui-button`. The rem
       // which is a small library that was designed to work well with Remote DOM.
 
       import {RemoteMutationObserver} from '@remote-dom/core/elements';
-      import {createThreadFromInsideIframe, retain} from '@quilted/threads';
+      import {ThreadNestedWindow} from '@quilted/threads';
 
       const root = document.querySelector('#root');
 
-      createThreadFromInsideIframe({
-        expose: {
+      new ThreadNestedWindow({
+        exports: {
           // This `render()` method will kick off the process of synchronizing
           // changes between environments. It will be called on the host with a
           // `RemoteConnection` object, which you’ll generally get from one of
           // Remote DOM’s `Receiver` classes.
-          render(connection) {
-            retain(connection);
+          async render(connection) {
             const observer = new RemoteMutationObserver(connection);
             observer.observe(root);
           },
@@ -290,7 +289,7 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
 
     <script type="module">
       import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
-      import {createThreadFromIframe, retain, release} from '@quilted/threads';
+      import {ThreadIframe} from '@quilted/threads';
 
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');
@@ -308,8 +307,8 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
 
       // Like our previous example, we need to use a library that can serialize
       // function properties over `postMessage`.
-      const thread = createThreadFromIframe(iframe);
-      thread.render(receiver.connection);
+      const thread = new ThreadIframe(iframe);
+      thread.imports.render(receiver.connection);
     </script>
   </body>
 </html>

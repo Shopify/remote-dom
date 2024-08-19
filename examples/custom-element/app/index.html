@@ -88,7 +88,7 @@
 
     <script type="module">
       import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
-      import {retain, release, createThreadFromIframe} from '@quilted/threads';
+      import {ThreadIframe} from '@quilted/threads';
 
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');
@@ -108,13 +108,13 @@
       // which lets us communicate over `postMessage` without having to worry about
       // most of its complexities. This includes the ability to send functions between
       // environments, which we rely on for the `click` event listener.
-      const thread = createThreadFromIframe(iframe);
+      const thread = new ThreadIframe(iframe);
 
       // We will call the `render` method on the thread, which will send the iframe
       // the `receiver.connection` object. This object, called a `RemoteConnection`,
       // allows the remote environment to synchronize its tree of UI elements into
       // the `root` element we connected our `receiver` to above.
-      thread.render(receiver.connection);
+      thread.imports.render(receiver.connection);
     </script>
   </body>
 </html>

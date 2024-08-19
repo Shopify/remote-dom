@@ -51,8 +51,8 @@ importers:
   examples/custom-element:
     dependencies:
       '@quilted/threads':
-        specifier: ^2.2.0
-        version: 2.2.0
+        specifier: ^3.0.0
+        version: 3.0.0
       '@remote-dom/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -72,8 +72,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(preact@10.22.1)
       '@quilted/threads':
-        specifier: ^2.2.0
-        version: 2.2.0
+        specifier: ^3.0.0
+        version: 3.0.0
       '@remote-dom/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -2387,6 +2387,14 @@ packages:
   /@quilted/events@2.0.0:
     resolution: {integrity: sha512-0Q5w7jgHPj3nD8sTh1o7oa7LFxATK+dH0i4p8Y6BgKBLDOkr9/m01IDUXsbZdZ98XvxQaVkxBF/HUNAFfg/KfA==}
     engines: {node: '>=14.0.0'}
+    dev: true
+
+  /@quilted/events@2.1.1:
+    resolution: {integrity: sha512-fR72FXN7F/luMIDiVh7uvR3M3IWDBJuSAct3yV4IvQTnapv5Fw5BkOFueqSBaWmcSG8Yx/sCC3yhApF/rdvmTg==}
+    engines: {node: '>=14.0.0'}
+    dependencies:
+      '@preact/signals-core': 1.7.0
+    dev: false
 
   /@quilted/graphql@3.3.2:
     resolution: {integrity: sha512-CngS/wKlVIjB0iWMAV6toSrBr32A0+B5kpiebv8BhsAvN716u99so/wi9aCaygRYzga6A4H/F1W+Pt8+Ap8aHQ==}
@@ -2514,8 +2522,8 @@ packages:
       '@types/jest': 27.5.2
     dev: true
 
-  /@quilted/threads@2.2.0:
-    resolution: {integrity: sha512-1STcdYtWyVrRs2hfA0CYFvtjl2LA8uVJrJGwsYDbuC2WNyjvRrqgB6IHVuzt3rhapXLeo2AjIfM9V2wVcdhByQ==}
+  /@quilted/threads@3.0.0:
+    resolution: {integrity: sha512-9/+Tjkf/ueRMqqSFjyhvWFmWrAziKzBCFAvCKloB+lBbPjChl64q3/TBUyVN1N53Rzh8XXWtFMyI4o/RHqfHew==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       '@preact/signals-core': ^1.6.0
@@ -2523,7 +2531,7 @@ packages:
       '@preact/signals-core':
         optional: true
     dependencies:
-      '@quilted/events': 2.0.0
+      '@quilted/events': 2.1.1
     dev: false
 
   /@quilted/typescript@0.4.1:

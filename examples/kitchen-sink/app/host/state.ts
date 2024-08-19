@@ -1,6 +1,5 @@
 import {signal, effect} from '@preact/signals';
 import {SignalRemoteReceiver} from '@remote-dom/preact/host';
-import {retain, release} from '@quilted/threads';
 
 import type {RenderExample, RenderSandbox} from '../types.ts';
 
@@ -75,7 +74,7 @@ export function createState(
     window.history.replaceState({}, '', newURL.toString());
 
     if (cached == null) {
-      const receiver = new SignalRemoteReceiver({retain, release});
+      const receiver = new SignalRemoteReceiver();
       cached = Promise.resolve(
         render({
           receiver,
