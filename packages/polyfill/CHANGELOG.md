@@ -1,5 +1,11 @@
 # @remote-dom/polyfill
 
+## 1.2.1
+
+### Patch Changes
+
+- [#419](https://github.com/Shopify/remote-dom/pull/419) [`3c6bd29`](https://github.com/Shopify/remote-dom/commit/3c6bd291121b9fa02cac4ba57274601e97b2a2d2) Thanks [@lemonmade](https://github.com/lemonmade)! - Fix synchronization of `slot` property in some edge cases
+
 ## 1.2.0
 
 ### Minor Changes
