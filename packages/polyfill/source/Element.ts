@@ -1,4 +1,4 @@
-import {NS, SLOT, ATTRIBUTES, NamespaceURI, NodeType} from './constants.ts';
+import {NS, ATTRIBUTES, NamespaceURI, NodeType} from './constants.ts';
 import {ParentNode} from './ParentNode.ts';
 import {NamedNodeMap} from './NamedNodeMap.ts';
 import {Attr} from './Attr.ts';
@@ -10,7 +10,6 @@ export class Element extends ParentNode {
   nodeType = NodeType.ELEMENT_NODE;
 
   [NS] = NamespaceURI.XHTML;
-  [SLOT] = '';
   get namespaceURI() {
     return this[NS];
   }
@@ -24,12 +23,12 @@ export class Element extends ParentNode {
   [anyProperty: string]: any;
 
   get slot() {
-    return this[SLOT];
+    return this.getAttribute('slot') ?? '';
   }
 
   set slot(slot: string) {
     const finalSlot = String(slot);
-    this[SLOT] = finalSlot;
+
     if (this.getAttribute('slot') !== finalSlot) {
       this.attributes.setNamedItem(new Attr('slot', finalSlot));
     }
