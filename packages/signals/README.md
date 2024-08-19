@@ -29,7 +29,8 @@ To support functions being passed over `postMessage`, you may need a way to manu
 ```ts
 // This library is not included with Remote DOM, but it pairs
 // well with it in allowing you to pass functions between
-// JavaScript environments.
+// JavaScript environments without leaking memory, by manually
+// managing the memory for those functions.
 import {retain, release} from '@quilted/threads';
 import {SignalRemoteReceiver} from '@remote-dom/signals';
 

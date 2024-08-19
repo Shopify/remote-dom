@@ -4,10 +4,7 @@ import {
   RemoteFragmentRenderer,
   createRemoteComponentRenderer,
 } from '@remote-dom/preact/host';
-import {
-  createThreadFromIframe,
-  createThreadFromWebWorker,
-} from '@quilted/threads';
+import {ThreadIframe, ThreadWebWorker} from '@quilted/threads';
 
 import type {SandboxAPI} from './types.ts';
 import {Button, Modal, Stack, Text, ControlPanel} from './host/components.tsx';
@@ -20,7 +17,7 @@ const uiRoot = document.querySelector('main')!;
 // which lets us communicate over `postMessage` without having to worry about
 // most of its complexities.
 const iframe = document.querySelector('iframe')!;
-const iframeSandbox = createThreadFromIframe<never, SandboxAPI>(iframe);
+const iframeSandbox = new ThreadIframe<SandboxAPI>(iframe);
 
 // We also use the `@quilted/threads` library to create a “thread” around a Web
 // Worker. We’ll run the same example code in both, depending on the `sandbox`
@@ -31,7 +28,7 @@ const worker = new Worker(
     type: 'module',
   },
 );
-const workerSandbox = createThreadFromWebWorker<never, SandboxAPI>(worker);
+const workerSandbox = new ThreadWebWorker<SandboxAPI>(worker);
 
 // We will use Preact to render remote elements in this example. The Preact
 // helper library lets you do this by mapping the name of a remote element to
@@ -63,7 +60,7 @@ const components = new Map([
 const {receiver, example, sandbox} = createState(
   async ({receiver, example, sandbox}) => {
     if (sandbox === 'iframe') {
-      await iframeSandbox.render(receiver.connection, {
+      await iframeSandbox.imports.render(receiver.connection, {
         sandbox,
         example,
         async alert(content) {
@@ -74,7 +71,7 @@ const {receiver, example, sandbox} = createState(
         },
       });
     } else {
-      await workerSandbox.render(receiver.connection, {
+      await workerSandbox.imports.render(receiver.connection, {
         sandbox,
         example,
         async alert(content) {

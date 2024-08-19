@@ -1,5 +1,5 @@
 import {RemoteMutationObserver} from '@remote-dom/core/elements';
-import {retain, createThreadFromInsideIframe} from '@quilted/threads';
+import {ThreadNestedIframe} from '@quilted/threads';
 
 import '../elements.ts';
 import {render} from '../render.ts';
@@ -12,18 +12,9 @@ import type {SandboxAPI} from '../../types.ts';
 // This block exposes the `render` method that was used by the host application,
 // in `index.html`. We receive the `RemoteConnection` object, and start synchronizing
 // changes to the `<div id="root">` element that contains our UI.
-createThreadFromInsideIframe<SandboxAPI>({
-  expose: {
+new ThreadNestedIframe<never, SandboxAPI>({
+  exports: {
     async render(connection, api) {
-      // `connection` contains functions that were transferred over `postMessage`.
-      // In order to call these functions later, we need to mark them as used in
-      // order to prevent garbage collection.
-      retain(connection);
-
-      // Similarly, `api.alert` is a function we will call later, so we also need
-      // to mark it as used.
-      retain(api.alert);
-
       // We will observe this DOM node, and send any elements within it to be
       // reflected on this "host" page.
       const root = document.createElement('div');
@@ -39,7 +30,7 @@ createThreadFromInsideIframe<SandboxAPI>({
       const observer = new RemoteMutationObserver(connection);
       observer.observe(root);
 
-      render(root, api);
+      await render(root, api);
     },
   },
 });

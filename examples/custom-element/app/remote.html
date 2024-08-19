@@ -57,7 +57,7 @@
 
     <script type="module">
       import {RemoteMutationObserver} from '@remote-dom/core/elements';
-      import {retain, createThreadFromInsideIframe} from '@quilted/threads';
+      import {ThreadNestedIframe} from '@quilted/threads';
 
       const root = document.querySelector('#root');
 
@@ -68,14 +68,9 @@
       // This block exposes the `render` method that was used by the host application,
       // in `index.html`. We receive the `RemoteConnection` object, and start synchronizing
       // changes to the `<div id="root">` element that contains our UI.
-      createThreadFromInsideIframe({
-        expose: {
-          render(connection) {
-            // `connection` contains functions that were transferred over `postMessage`.
-            // In order to call these functions later, we need to mark them as used in
-            // order to prevent garbage collection.
-            retain(connection);
-
+      new ThreadNestedIframe({
+        exports: {
+          async render(connection) {
             // We use the `RemoteMutationObserver` class, which extends the native DOM
             // `MutationObserver`, to send any changes to a tree of DOM elements over
             // a `RemoteConnection`.
