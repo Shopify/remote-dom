@@ -321,6 +321,12 @@ function updateRemoteProperty(
         // to `event.resolve()`. A host implementation can use this conventional event shape
         // to use the internal function representation of the event listener.
         const handler = (event: any) => {
+          // If the event is bubbling/ capturing, we don’t trigger the listener here,
+          // we let the event be dispatched to the remote environment only from the actual
+          // target element. In the remote environment, the event will go through a separate
+          // capture/ bubbling phase, where it will invoke the remote event listener
+          // that corresponds to this `value` function.
+          if (event.target !== element) return;
           const result = (value as any)(event.detail);
           event.resolve?.(result);
         };
