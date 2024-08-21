@@ -98,8 +98,6 @@
       // we are restricting the allowed elements to only the ones we list, which in this
       // case means only our `ui-button` element can be rendered.
       const receiver = new DOMRemoteReceiver({
-        retain,
-        release,
         elements: ['ui-button'],
       });
       receiver.connect(root);
