@@ -61,7 +61,7 @@ More importantly, though, this wrapper will also take care of adapting some part
 
 Custom Preact components generally expose events as callback props on the component. To support this pattern, the `createRemoteComponent()` wrapper can map specific props on the resulting Preact component to event listeners on underlying custom element.
 
-Imagine a `ui-card` element with a clickable header. When clicked, the header will emit an `expand` event to the remote environment, and reveal the children of the `ui-card` element to the user. First, we define our custom element:
+Imagine a `ui-card` element with a clickable header. When clicked, the card will emit an `expand` event to the remote environment, and reveal the children of the `ui-card` element to the user. First, we define our custom element:
 
 ```ts
 import {RemoteElement} from '@remote-dom/core/elements';
@@ -234,6 +234,196 @@ const Card = createRemoteComponentRenderer(function Card({
       {children}
     </div>
   );
+});
+```
+
+##### Host event listener props
+
+Like with creating a [Preact wrapper in the remote environment with `createRemoteComponent()`](#event-listener-props), a host using Preact likely wants to map event listeners to conventional Preact callback props. Like with creating a Preact wrapper for the remote environment, let’s return to our `ui-card` example. To refresh, we are imagining a collapsible card element that will emit an `expand` event to the remote environment when its contents are revealed. In the remote environment, our custom element would be defined like this:
+
+```ts
+import {RemoteElement} from '@remote-dom/core/elements';
+
+class Card extends RemoteElement {
+  static get remoteEvents() {
+    return ['expand'];
+  }
+}
+
+customElements.define('ui-card', Card);
+
+const card = document.createElement('ui-card');
+card.textContent = 'This is the body of the card.';
+
+card.addEventListener('expand', (event) => {
+  console.log('Card expanded!', event.detail);
+});
+```
+
+By default, Remote DOM will map these an event listener to a conventionally-named Preact prop — that is, `on`, followed by the pascal-case name of the event, like `onExpand`. So, when using the `createRemoteComponentRenderer()` function, you can automatically invoke the event listeners by calling the conventional prop, with the first argument you pass being set as the `detail` of the resulting remote event:
+
+```tsx
+import {createRemoteComponentRenderer} from '@remote-dom/preact/host';
+
+const Card = createRemoteComponentRenderer(function Card({children, onExpand}) {
+  return (
+    <div>
+      {/* when clicked, will emit the `expand` remote event with this object as the `detail` field */}
+      <button onClick={() => onExpand({timestamp: Date.now()})}>Expand</button>
+      {children}
+    </div>
+  );
+});
+```
+
+The default logic also allows you to pass an `Event` object to the Preact callback. When you do so, the `detail` field of the event will be passed to the remote environment directly. This can be useful when, for example, you have an existing web component being rendered by Preact that already emits a custom event with the necessary data.
+
+```tsx
+import {createRemoteComponentRenderer} from '@remote-dom/preact/host';
+
+const Card = createRemoteComponentRenderer(function Card({children, onExpand}) {
+  return (
+    // Can pass the callback directly as an event listener to create a corresponding remote event automatically.
+    <ui-card onexpand={onExpand}>{children}</ui-card>
+  );
+});
+```
+
+If this default behavior does not work for you, you can customize which events get mapped to properties, and what prop name that event maps to. This is done by passing a second argument to `createRemoteComponentRenderer()`, an object with an `eventProps` key. Each key in this `eventProps` option should be the name of a Preact property to create on the wrapper component, and the value is an object that describes which event listener to read for that property.
+
+```tsx
+import {createRemoteComponentRenderer} from '@remote-dom/preact/host';
+
+const Card = createRemoteComponentRenderer(
+  function Card({children, onexpand}) {
+    return <ui-card onexpand={onexpand}>{children}</ui-card>;
+  },
+  {
+    eventProps: {
+      // Convert the `expand` event listener into an all-lowercase `onexpand` prop, which allows the prop to be passed
+      // directly as a web component event listener.
+      onexpand: {event: 'expand'},
+    },
+  },
+);
+```
+
+If your event bubbles, be careful not to call the callback unless the matching remote element for this component is actually the target of the emitted event. For example, if you had two components that both support `click` events in the remote environment, implementing the event listener like this would cause a single click on the host version of the button to trigger two separate events:
+
+```tsx
+// Remote environment: two elements that can emit the same event, each with
+// an event listener attached:
+
+import {RemoteElement} from '@remote-dom/core/elements';
+
+class Card extends RemoteElement {
+  static get remoteEvents() {
+    return {
+      click: {
+        bubbles: true,
+      },
+    };
+  }
+}
+
+class Button extends RemoteElement {
+  static get remoteEvents() {
+    return {
+      click: {
+        bubbles: true,
+      },
+    };
+  }
+}
+
+customElements.define('ui-card', Card);
+customElements.define('ui-button', Button);
+
+const card = document.createElement('ui-card');
+card.addEventListener('click', (event) => {
+  console.log('Click event in card', event.target);
+});
+
+const button = document.createElement('ui-button');
+button.textContent = 'Click me!';
+button.addEventListener('click', (event) => {
+  console.log('Click event in button', event.target);
+});
+
+card.append(button);
+
+// Host: both are implemented to call their respective event listener props when clicked,
+// leads to `card.addEventListener()` callback being called twice (once from the bubbling
+// click on `ui-button` in the remote, and once from the bubbling in the host).
+
+import {createRemoteComponentRenderer} from '@remote-dom/preact/host';
+
+const Card = createRemoteComponentRenderer(function Card({children, onClick}) {
+  // This `onclick` will be called, even if the `Button` was the actual target
+  return <ui-card onClick={() => onClick?.()}>{children}</ui-card>;
+});
+
+const Button = createRemoteComponentRenderer(function Button({
+  children,
+  onClick,
+}) {
+  return <ui-button onClick={() => onClick?.()}>{children}</ui-button>;
+});
+```
+
+To avoid this issue, you should manually check that the target of the event is the current element before calling the callback, which will prevent the event from being dispatched on ancestor elements in the remote environment:
+
+```tsx
+import {createRemoteComponentRenderer} from '@remote-dom/preact/host';
+
+const Card = createRemoteComponentRenderer(function Card({children, onClick}) {
+  // This `onclick` will be called, even if the `Button` was the actual target
+  return (
+    <ui-card
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          onClick?.();
+        }
+      }}
+    >
+      {children}
+    </ui-card>
+  );
+});
+
+const Button = createRemoteComponentRenderer(function Button({
+  children,
+  onClick,
+}) {
+  return (
+    <ui-button
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          onClick?.();
+        }
+      }}
+    >
+      {children}
+    </ui-button>
+  );
+});
+```
+
+If you pass the event object directly to the callback, Remote DOM will automatically apply this protection for you, so you do not need to protect against this case manually:
+
+```tsx
+import {createRemoteComponentRenderer} from '@remote-dom/preact/host';
+
+const Card = createRemoteComponentRenderer(function Card({children, onClick}) {
+  // Pass the callback directly through as an event listener.
+  return <ui-card onClick={onClick}>{children}</ui-card>;
+});
+
+const Button = createRemoteComponentRenderer(function Button({
+  children,
+  onClick,
+}) {
+  return <ui-button onClick={onClick}>{children}</ui-button>;
 });
 ```
 

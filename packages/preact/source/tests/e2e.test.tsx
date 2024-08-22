@@ -42,15 +42,21 @@ interface ButtonProps {
   tooltip?: string;
   disabled?: boolean;
   onPress?(): void;
+  // Alias for `onPress`, to test configurable host event listener mappings
+  onClick?(): void;
 }
 
 const HostButton = forwardRef(function HostButton({
   children,
   disabled,
   onPress,
+  onClick,
 }: PropsWithChildren<ButtonProps>) {
   return (
-    <button disabled={disabled} onClick={() => onPress?.()}>
+    <button
+      disabled={disabled}
+      onClick={() => (onPress ? onPress?.() : onClick?.())}
+    >
       {children}
     </button>
   );
@@ -111,13 +117,29 @@ const RemoteModalElement = createRemoteElement<
   slots: ['action'],
 });
 
+const RemoteInputElement = createRemoteElement<
+  {},
+  {},
+  {},
+  {change(detail: string): void}
+>({
+  events: ['change'],
+});
+
+function HostInput({onChange}: {onChange?(event: Event): void}) {
+  // @ts-expect-error
+  return <my-custom-input oncustomchange={onChange} />;
+}
+
 customElements.define('remote-button', RemoteButtonElement);
 customElements.define('remote-modal', RemoteModalElement);
+customElements.define('remote-input', RemoteInputElement);
 
 declare global {
   interface HTMLElementTagNameMap {
     'remote-button': InstanceType<typeof RemoteButtonElement>;
     'remote-modal': InstanceType<typeof RemoteModalElement>;
+    'remote-input': InstanceType<typeof RemoteInputElement>;
   }
 }
 
@@ -136,6 +158,7 @@ const RemoteModal = createRemoteComponent('remote-modal', RemoteModalElement);
 const components = new Map([
   ['remote-button', createRemoteComponentRenderer(HostButton)],
   ['remote-modal', createRemoteComponentRenderer(HostModal)],
+  ['remote-input', createRemoteComponentRenderer(HostInput)],
   ['remote-fragment', RemoteFragmentRenderer],
 ]);
 
@@ -229,6 +252,87 @@ describe('preact', () => {
     rendered.find(HostButton)?.trigger('onPress');
 
     expect(rendered).toContainPreactComponent(HostButton, {disabled: true});
+  });
+
+  it('can customize the mapping of event listeners to Preact props', async () => {
+    const receiver = new SignalRemoteReceiver();
+    const mutationObserver = new RemoteMutationObserver(receiver.connection);
+
+    const remoteRoot = document.createElement('div');
+    const remoteButton = document.createElement('remote-button');
+    remoteButton.textContent = 'Click to disable';
+
+    remoteButton.addEventListener(
+      'press',
+      () => {
+        remoteButton.textContent = 'Already disabled';
+        remoteButton.setAttribute('disabled', '');
+      },
+      {once: true},
+    );
+
+    remoteRoot.append(remoteButton);
+    mutationObserver.observe(remoteRoot);
+
+    const rendered = render(
+      <RemoteRootRenderer
+        receiver={receiver}
+        components={
+          // Use the same component mapping as other tests, but replace the `remote-button` mapping
+          // with one that will map the `press` event to the `onClick` prop instead of the `onPress` prop.
+          new Map([
+            ...components,
+            [
+              'remote-button',
+              createRemoteComponentRenderer(HostButton, {
+                eventProps: {
+                  onClick: {event: 'press'},
+                },
+              }),
+            ],
+          ])
+        }
+      />,
+    );
+
+    expect(rendered).toContainPreactComponent(HostButton, {disabled: false});
+
+    rendered.find(HostButton)?.trigger('onClick');
+
+    expect(rendered).toContainPreactComponent(HostButton, {disabled: true});
+  });
+
+  it('automatically calls a mapped callback with the `detail` of a custom event that is the only argument to an event listener', async () => {
+    const receiver = new SignalRemoteReceiver();
+    const mutationObserver = new RemoteMutationObserver(receiver.connection);
+
+    const remoteRoot = document.createElement('div');
+    const remoteButton = document.createElement('remote-input');
+
+    const spy = vi.fn();
+
+    remoteButton.addEventListener(
+      'change',
+      (event) => {
+        spy(event.detail);
+      },
+      {once: true},
+    );
+
+    remoteRoot.append(remoteButton);
+    mutationObserver.observe(remoteRoot);
+
+    const rendered = render(
+      <RemoteRootRenderer receiver={receiver} components={components} />,
+    );
+
+    rendered
+      .find('my-custom-input')!
+      .domNode!.dispatchEvent(
+        new CustomEvent('customchange', {detail: 'Hello world'}),
+      );
+
+    expect(spy).toHaveBeenCalledWith('Hello world');
   });
 
   it('can call methods on a remote DOM element by forwarding calls to the host’s implementation component ref', async () => {

@@ -2,7 +2,10 @@ import type {ComponentType} from 'preact';
 import {memo, useRef, useEffect, type MutableRefObject} from 'preact/compat';
 import type {RemoteReceiverElement} from '@remote-dom/core/receivers';
 
-import {usePropsForRemoteElement} from './hooks/props-for-element.tsx';
+import {
+  usePropsForRemoteElement,
+  type RemoteElementPropsOptions,
+} from './hooks/props-for-element.tsx';
 import {REMOTE_ELEMENT_PROP} from './constants.ts';
 import type {RemoteComponentRendererProps} from './types.ts';
 
@@ -14,6 +17,40 @@ export interface RemoteComponentRendererAdditionalProps {
    * The remote element that this component is rendering.
    */
   readonly [REMOTE_ELEMENT_PROP]: RemoteReceiverElement;
+}
+
+export interface RemoteComponentRendererOptions<Props = {}>
+  extends RemoteElementPropsOptions<Props> {
+  /**
+   * The display name of the resulting wrapper component. By default, a name derived
+   * from the wrapped component is used, with a fallback to `RemoteComponentRenderer(Component)`.
+   */
+  name?: string;
+
+  /**
+   * Customizes the props your wrapper Preact component will have for event listeners
+   * on the underlying custom element. The key is the prop name on the Preact component,
+   * and the value is an options object containing the event name on the custom element.
+   *
+   * @example
+   * ```tsx
+   * const Button = createRemoteComponent(ButtonImplementation, {
+   *   eventProps: {
+   *     onClick: {event: 'click'},
+   *   },
+   * });
+   *
+   * function ButtonImplementation({children, onClick}) {
+   *   // Default behavior: dispatch the `detail` of the event to the remote environment
+   *   return <button onClick={onClick}>{children}</button>;
+   *
+   *   // Alternatively, dispatch a custom value to the remote environment, including potentially
+   *   // omitting the event details entirely, like we do below:
+   *   return <button onClick={() => onClick()}>{children}</button>;
+   * }
+   * ```
+   */
+  eventProps?: RemoteElementPropsOptions<Props>['eventProps'];
 }
 
 interface Internals extends Pick<RemoteComponentRendererProps, 'receiver'> {
@@ -31,7 +68,7 @@ export function createRemoteComponentRenderer<
   Props extends Record<string, any> = {},
 >(
   Component: ComponentType<Props>,
-  {name}: {name?: string} = {},
+  {name, eventProps}: NoInfer<RemoteComponentRendererOptions<Props>> = {},
 ): ComponentType<RemoteComponentRendererProps> {
   const RemoteComponentRenderer = memo(function RemoteComponentRenderer({
     element,
@@ -44,6 +81,7 @@ export function createRemoteComponentRenderer<
     const props = usePropsForRemoteElement<Props>(element, {
       receiver,
       components,
+      eventProps,
     });
 
     (props as any)[REMOTE_ELEMENT_PROP] = element;
