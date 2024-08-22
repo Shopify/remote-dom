@@ -13,6 +13,8 @@
     <iframe id="remote-iframe" src="/remote.html" hidden></iframe>
 
     <script type="module">
+      class UIBox extends HTMLElement {}
+
       class UIButton extends HTMLElement {
         // By default, `DOMRemoteReceiver` will assign remote properties as properties,
         // but only if the element has a matching property defined. Otherwise, the remote
@@ -22,6 +24,10 @@
         // remote property.
         static get observedAttributes() {
           return ['primary'];
+        }
+
+        get #button() {
+          return this.shadowRoot?.querySelector('.Button');
         }
 
         connectedCallback() {
@@ -50,13 +56,49 @@
           `;
 
           if (primary) {
-            root.querySelector('.Button').classList.add('Button--primary');
+            this.#button?.classList.add('Button--primary');
           }
+
+          this.#button.addEventListener('click', (event) => {
+            console.log('[HOST] Clicked button', {
+              eventPhase: event.eventPhase,
+              target: event.target,
+            });
+          });
+
+          this.#button.addEventListener(
+            'click',
+            (event) => {
+              console.log('[HOST] Clicked button (capture)', {
+                eventPhase: event.eventPhase,
+                target: event.target,
+              });
+            },
+            true,
+          );
+
+          this.addEventListener('click', (event) => {
+            console.log('[HOST] Clicked :host ui-button', {
+              eventPhase: event.eventPhase,
+              target: event.target,
+            });
+          });
+
+          this.addEventListener(
+            'click',
+            (event) => {
+              console.log('[HOST] Clicked :host ui-button (capture)', {
+                eventPhase: event.eventPhase,
+                target: event.target,
+              });
+            },
+            true,
+          );
         }
 
         attributeChangedCallback(name, oldValue, newValue) {
           if (name === 'primary') {
-            const button = this.shadowRoot?.querySelector('.Button');
+            const button = this.#button;
 
             if (button == null) return;
 
@@ -71,10 +113,11 @@
         // Remote DOM will automatically call methods on a custom element to satisfy
         // remote method calls.
         focus() {
-          this.shadowRoot.querySelector('button').focus();
+          this.#button?.focus();
         }
       }
 
+      customElements.define('ui-box', UIBox);
       customElements.define('ui-button', UIButton);
     </script>
 

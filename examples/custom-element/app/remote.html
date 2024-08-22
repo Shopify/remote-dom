@@ -8,7 +8,11 @@
 
   <body>
     <div id="root">
-      <ui-button primary>Clicked 0 times</ui-button>
+      <ui-box id="outer">
+        <ui-box id="inner">
+          <ui-button primary>Clicked 0 times</ui-button>
+        </ui-box>
+      </ui-box>
     </div>
 
     <script type="module">
@@ -28,15 +32,26 @@
         static get remoteEvents() {
           return {
             click: {
+              bubbles: true,
               dispatchEvent(detail) {
-                console.log(`Event detail: `, detail);
+                console.log(
+                  `[REMOTE] ui-button click event received with detail: `,
+                  detail,
+                );
               },
             },
           };
         }
       }
 
+      class UIBox extends RemoteElement {
+        static get remoteEvents() {
+          return ['click'];
+        }
+      }
+
       customElements.define('ui-button', UIButton);
+      customElements.define('ui-box', UIBox);
     </script>
 
     <script type="module">
@@ -45,7 +60,12 @@
       let count = 0;
       const button = document.querySelector('ui-button');
 
-      button.addEventListener('click', () => {
+      button.addEventListener('click', (event) => {
+        console.log('[REMOTE] Clicked ui-button', {
+          eventPhase: event.eventPhase,
+          target: event.target,
+        });
+
         count += 1;
 
         button.textContent = `Clicked ${count} ${
@@ -56,6 +76,56 @@
           button.removeAttribute('primary');
         }
       });
+
+      button.addEventListener(
+        'click',
+        (event) => {
+          console.log('[REMOTE] Clicked ui-button (capture)', {
+            eventPhase: event.eventPhase,
+            target: event.target,
+          });
+        },
+        true,
+      );
+
+      const inner = document.querySelector('#inner');
+      const outer = document.querySelector('#outer');
+
+      inner.addEventListener('click', (event) => {
+        console.log('[REMOTE] Clicked inner box', {
+          eventPhase: event.eventPhase,
+          target: event.target,
+        });
+      });
+
+      inner.addEventListener(
+        'click',
+        (event) => {
+          console.log('[REMOTE] Clicked inner box (capture)', {
+            eventPhase: event.eventPhase,
+            target: event.target,
+          });
+        },
+        {capture: true},
+      );
+
+      outer.addEventListener('click', (event) => {
+        console.log('[REMOTE] Clicked outer box', {
+          eventPhase: event.eventPhase,
+          target: event.target,
+        });
+      });
+
+      outer.addEventListener(
+        'click',
+        (event) => {
+          console.log('[REMOTE] Clicked outer box (capture)', {
+            eventPhase: event.eventPhase,
+            target: event.target,
+          });
+        },
+        {capture: true},
+      );
     </script>
 
     <script type="module">
