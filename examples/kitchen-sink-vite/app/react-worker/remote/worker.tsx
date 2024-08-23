@@ -11,7 +11,14 @@ endpoint.expose({
     retain(api);
     const remoteRoot = createRemoteRoot(receiver, {components: ['Button']});
     const root = createRoot(remoteRoot);
-    root.render(<RemoteApp {...api} />);
+    root.render(
+      <RemoteApp
+        {...api}
+        destroy={() => {
+          root.unmount();
+        }}
+      />,
+    );
     await remoteRoot.mount();
   },
 });
