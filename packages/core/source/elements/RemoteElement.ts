@@ -59,6 +59,7 @@ export interface RemoteElementAttributeDefinition {}
 
 export interface RemoteElementEventListenerDefinition {
   bubbles?: boolean;
+  property?: boolean | string;
   dispatchEvent?: (
     this: RemoteElement<any, any, any, any>,
     arg: any,
@@ -513,6 +514,7 @@ export abstract class RemoteElement<
   private [REMOTE_EVENT_LISTENERS]!: Record<string, (...args: any[]) => any>;
   private [REMOTE_EVENTS]?: {
     readonly events: Map<string, RemoteEventRecord>;
+    readonly properties: Map<string, ((event: any) => void) | null>;
     readonly listeners: WeakMap<
       EventListenerOrEventListenerObject,
       RemoteEventListenerRecord
@@ -547,15 +549,19 @@ export abstract class RemoteElement<
       enumerable: false,
     };
 
-    for (const [property, description] of (
-      this.constructor as typeof RemoteElement
-    ).remotePropertyDefinitions.entries()) {
+    const prototype = Object.getPrototypeOf(this);
+    const ThisClass = this.constructor as typeof RemoteElement;
+
+    for (const [
+      property,
+      description,
+    ] of ThisClass.remotePropertyDefinitions.entries()) {
       const aliasedName = description.name;
 
       // Don’t override actual accessors. This is handled by the
       // `remoteProperty()` decorator applied to the accessor.
       // eslint-disable-next-line no-prototype-builtins
-      if (Object.getPrototypeOf(this).hasOwnProperty(property)) {
+      if (prototype.hasOwnProperty(property)) {
         continue;
       }
 
@@ -575,6 +581,47 @@ export abstract class RemoteElement<
       };
 
       propertyDescriptors[property] = propertyDescriptor;
+    }
+
+    for (const [
+      event,
+      definition,
+    ] of ThisClass.remoteEventDefinitions.entries()) {
+      const propertyFromDefinition = definition.property ?? true;
+
+      if (!propertyFromDefinition) continue;
+
+      const property =
+        propertyFromDefinition === true ? `on${event}` : propertyFromDefinition;
+
+      propertyDescriptors[property] = {
+        configurable: true,
+        enumerable: true,
+        get: () => {
+          return getRemoteEvents(this).properties.get(property) ?? null;
+        },
+        set: (value: any) => {
+          const remoteEvents = getRemoteEvents(this);
+          const currentListener = remoteEvents.properties.get(property);
+
+          if (typeof value === 'function') {
+            // Wrapping this in a custom function so you can’t call `removeEventListener`
+            // on it.
+            function handler(this: any, ...args: any[]) {
+              return value.call(this, ...args);
+            }
+
+            remoteEvents.properties.set(property, handler);
+            this.addEventListener(event, handler);
+          } else {
+            remoteEvents.properties.delete(property);
+          }
+
+          if (currentListener) {
+            this.removeEventListener(event, currentListener);
+          }
+        },
+      };
     }
 
     Object.defineProperties(this, propertyDescriptors);
@@ -664,35 +711,11 @@ export abstract class RemoteElement<
       return super.addEventListener(type, listener, options);
     }
 
-    let remoteEvents = this[REMOTE_EVENTS];
-    if (remoteEvents == null) {
-      remoteEvents = {events: new Map(), listeners: new WeakMap()};
-      this[REMOTE_EVENTS] = remoteEvents;
-    }
-
-    let remoteEvent = remoteEvents.events.get(type);
-    if (remoteEvent == null) {
-      remoteEvent = {
-        name: type,
-        property,
-        definition: listenerDefinition,
-        listeners: new Set(),
-        dispatch: (arg: any) => {
-          const event =
-            listenerDefinition?.dispatchEvent?.call(this, arg) ??
-            new RemoteEvent(type, {
-              detail: arg,
-              bubbles: listenerDefinition?.bubbles,
-            });
-
-          this.dispatchEvent(event);
-
-          return (event as any).response;
-        },
-      };
-
-      remoteEvents.events.set(type, remoteEvent);
-    }
+    const remoteEvents = getRemoteEvents(this);
+    const remoteEvent = getRemoteEventRecord.call(this, type, {
+      property,
+      definition: listenerDefinition,
+    });
 
     const normalizedListener =
       typeof options === 'object' && options?.once
@@ -762,13 +785,71 @@ export abstract class RemoteElement<
   }
 }
 
+function getRemoteEvents(element: RemoteElement<any, any, any, any>): {
+  events: Map<string, RemoteEventRecord>;
+  properties: Map<string, ((event: any) => void) | null>;
+  listeners: WeakMap<
+    EventListenerOrEventListenerObject,
+    RemoteEventListenerRecord
+  >;
+} {
+  if (element[REMOTE_EVENTS]) return element[REMOTE_EVENTS]!;
+
+  const remoteEvents = {
+    events: new Map(),
+    properties: new Map(),
+    listeners: new WeakMap(),
+  };
+
+  Object.defineProperty(element, REMOTE_EVENTS, {
+    value: remoteEvents,
+    enumerable: false,
+  });
+
+  return remoteEvents;
+}
+
+function getRemoteEventRecord(
+  this: RemoteElement<any, any, any, any>,
+  type: string,
+  {property, definition}: Pick<RemoteEventRecord, 'property' | 'definition'>,
+) {
+  const remoteEvents = getRemoteEvents(this);
+
+  let remoteEvent = remoteEvents.events.get(type);
+  if (remoteEvent == null) {
+    remoteEvent = {
+      name: type,
+      property,
+      definition,
+      listeners: new Set(),
+      dispatch: (arg: any) => {
+        const event =
+          definition?.dispatchEvent?.call(this, arg) ??
+          new RemoteEvent(type, {
+            detail: arg,
+            bubbles: definition?.bubbles,
+          });
+
+        this.dispatchEvent(event);
+
+        return (event as any).response;
+      },
+    };
+
+    remoteEvents.events.set(type, remoteEvent);
+  }
+
+  return remoteEvent;
+}
+
 function removeRemoteListener(
-  this: RemoteElement<any, any>,
+  this: RemoteElement<any, any, any, any>,
   type: string,
   listener: EventListenerOrEventListenerObject,
   listenerRecord: RemoteEventListenerRecord,
 ) {
-  const remoteEvents = this[REMOTE_EVENTS]!;
+  const remoteEvents = getRemoteEvents(this);
 
   const remoteEvent = listenerRecord[1];
   remoteEvent.listeners.delete(listener);

@@ -1065,6 +1065,126 @@ describe('RemoteElement', () => {
 
       expect(listener).not.toHaveBeenCalled();
     });
+
+    it('supports adding event listeners using a property', () => {
+      const ButtonElement = createRemoteElement<{
+        onpress: ((event: Event) => void) | null;
+      }>({
+        events: ['press'],
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const listener = vi.fn();
+
+      element.onpress = listener;
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          expect.any(Function),
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+        ],
+      ]);
+
+      const event = new RemoteEvent('press');
+
+      element.dispatchEvent(event);
+
+      expect(listener).toHaveBeenCalledWith(event);
+    });
+
+    it('supports adding event listeners using a custom property name', () => {
+      const ButtonElement = createRemoteElement<{
+        onPress: ((event: Event) => void) | null;
+      }>({
+        events: {
+          press: {property: 'onPress'},
+        },
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const listener = vi.fn();
+
+      element.onPress = listener;
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          expect.any(Function),
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+        ],
+      ]);
+
+      element.dispatchEvent(new RemoteEvent('press'));
+
+      expect(listener).toHaveBeenCalledOnce();
+    });
+
+    it('supports disabling a property name that maps to the event listener', () => {
+      const ButtonElement = createRemoteElement({
+        events: {
+          press: {property: false},
+        },
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+      receiver.connection.mutate.mockClear();
+
+      const listener = vi.fn();
+
+      // @ts-expect-error This property is not available in this case
+      element.onpress = listener;
+
+      expect(receiver.connection.mutate).not.toHaveBeenCalled();
+
+      element.dispatchEvent(new RemoteEvent('press'));
+
+      expect(listener).not.toHaveBeenCalledOnce();
+    });
+
+    it('removes an event listener declared using a property when it is unset', () => {
+      const ButtonElement = createRemoteElement<{
+        onpress: ((event: Event) => void) | null;
+      }>({
+        events: ['press'],
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const firstListener = vi.fn();
+      const secondListener = vi.fn();
+
+      element.onpress = firstListener;
+
+      receiver.connection.mutate.mockClear();
+
+      element.onpress = secondListener;
+
+      expect(receiver.connection.mutate).not.toHaveBeenCalled();
+
+      element.onpress = null;
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          undefined,
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+        ],
+      ]);
+
+      element.dispatchEvent(new RemoteEvent('press'));
+
+      expect(firstListener).not.toHaveBeenCalled();
+      expect(secondListener).not.toHaveBeenCalled();
+    });
   });
 
   describe('methods', () => {
