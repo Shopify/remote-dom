@@ -1,18 +1,17 @@
 import {Window, HOOKS, type Hooks} from '@remote-dom/polyfill';
 
 import {
-  REMOTE_CONNECTION,
   MUTATION_TYPE_INSERT_CHILD,
   MUTATION_TYPE_REMOVE_CHILD,
   MUTATION_TYPE_UPDATE_TEXT,
 } from './constants.ts';
 import {
   remoteId,
+  remoteConnection,
   connectRemoteNode,
   disconnectRemoteNode,
   serializeRemoteNode,
   updateRemoteElementAttribute,
-  type RemoteConnectedNode,
 } from './elements/internals.ts';
 
 const window = new Window();
@@ -21,7 +20,7 @@ const hooks = window[HOOKS];
 Window.setGlobal(window);
 
 hooks.insertChild = (parent, node, index) => {
-  const connection = (parent as RemoteConnectedNode)[REMOTE_CONNECTION];
+  const connection = remoteConnection(parent);
   if (connection == null) return;
 
   connectRemoteNode(node, connection);
@@ -37,7 +36,7 @@ hooks.insertChild = (parent, node, index) => {
 };
 
 hooks.removeChild = (parent, node, index) => {
-  const connection = (parent as RemoteConnectedNode)[REMOTE_CONNECTION];
+  const connection = remoteConnection(parent);
   if (connection == null) return;
 
   disconnectRemoteNode(node);
@@ -46,7 +45,7 @@ hooks.removeChild = (parent, node, index) => {
 };
 
 hooks.setText = (text, data) => {
-  const connection = (text as RemoteConnectedNode)[REMOTE_CONNECTION];
+  const connection = remoteConnection(text);
   if (connection == null) return;
 
   connection.mutate([[MUTATION_TYPE_UPDATE_TEXT, remoteId(text), data]]);

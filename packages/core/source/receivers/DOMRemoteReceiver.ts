@@ -4,15 +4,16 @@ import {
   NODE_TYPE_COMMENT,
   NODE_TYPE_ELEMENT,
   ROOT_ID,
-  REMOTE_ID,
-  REMOTE_PROPERTIES,
-  REMOTE_EVENT_LISTENERS,
   UPDATE_PROPERTY_TYPE_PROPERTY,
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
   UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
 } from '../constants.ts';
 import type {RemoteNodeSerialization} from '../types.ts';
 import type {RemoteReceiverOptions} from './shared.ts';
+
+const REMOTE_IDS = new WeakMap<Node, string>();
+const REMOTE_PROPERTIES = new WeakMap<Node, Record<string, any>>();
+const REMOTE_EVENT_LISTENERS = new WeakMap<Node, Record<string, any>>();
 
 /**
  * Takes care of mapping remote elements to matching HTML elements
@@ -139,7 +140,7 @@ export class DOMRemoteReceiver {
 
         retain?.(value);
 
-        const remoteProperties = (element as any)[REMOTE_PROPERTIES];
+        const remoteProperties = REMOTE_PROPERTIES.get(element)!;
         const oldValue = remoteProperties[property];
 
         remoteProperties[property] = value;
@@ -164,7 +165,7 @@ export class DOMRemoteReceiver {
           normalizedChild = document.createElement(node.element);
 
           if (node.properties) {
-            (normalizedChild as any)[REMOTE_PROPERTIES] = node.properties;
+            REMOTE_PROPERTIES.set(normalizedChild, node.properties);
 
             for (const property of Object.keys(node.properties)) {
               const value = node.properties[property];
@@ -177,7 +178,7 @@ export class DOMRemoteReceiver {
               );
             }
           } else {
-            (normalizedChild as any)[REMOTE_PROPERTIES] = {};
+            REMOTE_PROPERTIES.set(normalizedChild, {});
           }
 
           if (node.attributes) {
@@ -193,9 +194,9 @@ export class DOMRemoteReceiver {
             }
           }
 
-          if (node.eventListeners) {
-            (normalizedChild as any)[REMOTE_EVENT_LISTENERS] = {};
+          REMOTE_EVENT_LISTENERS.set(normalizedChild, {});
 
+          if (node.eventListeners) {
             for (const event of Object.keys(node.eventListeners)) {
               const listener = node.eventListeners[event];
               retain?.(listener);
@@ -206,8 +207,6 @@ export class DOMRemoteReceiver {
                 UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
               );
             }
-          } else {
-            (normalizedChild as any)[REMOTE_EVENT_LISTENERS] = {};
           }
 
           for (const child of node.children) {
@@ -229,17 +228,18 @@ export class DOMRemoteReceiver {
         }
       }
 
-      (normalizedChild as any)[REMOTE_ID] = node.id;
+      REMOTE_IDS.set(normalizedChild, node.id);
+
       attached.set(node.id, normalizedChild);
 
       return normalizedChild;
     }
 
     function detach(child: Node) {
-      const id = (child as any)[REMOTE_ID];
+      const id = REMOTE_IDS.get(child);
       if (id) attached.delete(id);
 
-      const properties = (child as any)[REMOTE_PROPERTIES];
+      const properties = REMOTE_PROPERTIES.get(child);
       if (properties && release) release(properties);
 
       if (child instanceof Element) {
@@ -310,7 +310,7 @@ function updateRemoteProperty(
       break;
     }
     case UPDATE_PROPERTY_TYPE_EVENT_LISTENER: {
-      const remoteListeners = (element as any)[REMOTE_EVENT_LISTENERS];
+      const remoteListeners = REMOTE_EVENT_LISTENERS.get(element);
       const existing = remoteListeners?.[property];
 
       if (existing) element.removeEventListener(property, existing);

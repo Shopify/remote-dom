@@ -10,12 +10,12 @@ import {
   RemoteRootElement,
   type RemoteElementConstructor,
 } from '../elements.ts';
+import {remoteId} from '../elements/internals.ts';
 import {
   RemoteReceiver,
   type RemoteReceiverElement,
 } from '../receivers/RemoteReceiver.ts';
 import {
-  REMOTE_ID,
   MUTATION_TYPE_UPDATE_PROPERTY,
   UPDATE_PROPERTY_TYPE_PROPERTY,
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
@@ -1284,8 +1284,4 @@ function createAndConnectRemoteRootElement() {
 
 function createRemoteRootElement() {
   return createElementFromConstructor(RemoteRootElement, 'remote-root');
-}
-
-function remoteId(node: any) {
-  return (node as any)[REMOTE_ID];
 }

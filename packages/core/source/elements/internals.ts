@@ -1,9 +1,4 @@
 import {
-  REMOTE_ID,
-  REMOTE_CONNECTION,
-  REMOTE_PROPERTIES,
-  REMOTE_ATTRIBUTES,
-  REMOTE_EVENT_LISTENERS,
   MUTATION_TYPE_UPDATE_PROPERTY,
   UPDATE_PROPERTY_TYPE_PROPERTY,
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
@@ -11,67 +6,45 @@ import {
 } from '../constants.ts';
 import type {RemoteConnection, RemoteNodeSerialization} from '../types.ts';
 
-let id = 0;
+export const REMOTE_CONNECTIONS = new WeakMap<Node, RemoteConnection>();
 
 /**
- * Additional properties that are assigned to a node to keep track of its
- * connection to a remote root.
+ * Gets the `RemoteConnection` instance that a node is connected to. If the node
+ * is not connected to a remote root, this method returns `undefined`.
  */
-export interface RemoteConnectedNodeProperties {
-  /**
-   * A unique identifier representing this node.
-   */
-  [REMOTE_ID]?: string;
-
-  /**
-   * The `RemoteConnection` object that connects this node’s remote root
-   * and a receiver on the host.
-   */
-  [REMOTE_CONNECTION]?: RemoteConnection;
-
-  /**
-   * The properties to synchronize between this node and its host representation.
-   */
-  [REMOTE_PROPERTIES]?: Record<string, unknown>;
-
-  /**
-   * The attributes to synchronize between this node and its host representation.
-   */
-  [REMOTE_ATTRIBUTES]?: Record<string, string>;
-
-  /**
-   * The event listeners to synchronize between this node and its host representation.
-   */
-  [REMOTE_EVENT_LISTENERS]?: Record<string, (...args: any[]) => any>;
+export function remoteConnection(node: Node) {
+  return REMOTE_CONNECTIONS.get(node);
 }
 
-/**
- * A node of type `T`, but with the additional properties that are assigned
- * to keep track of its connection to a remote root.
- */
-export type RemoteConnectedNode<T extends Node = Node> = T &
-  RemoteConnectedNodeProperties;
+export const REMOTE_IDS = new WeakMap<Node, string>();
+let id = 0;
 
 /**
  * Gets the unique identifier representing a node. If the node does not have
  * a unique identifier, one is created and assigned when calling this method.
  */
-export function remoteId(node: RemoteConnectedNode) {
-  if (node[REMOTE_ID] == null) {
-    node[REMOTE_ID] = String(id++);
+export function remoteId(node: Node) {
+  let remoteID = REMOTE_IDS.get(node);
+  if (remoteID == null) {
+    remoteID = String(id++);
+    REMOTE_IDS.set(node, remoteID);
   }
 
-  return node[REMOTE_ID];
+  return remoteID;
 }
+
+export const REMOTE_PROPERTIES = new WeakMap<Node, Record<string, any>>();
 
 /**
  * Gets the remote properties of an element node. If the node is not an element
  * node, this method returns `undefined`, or if it does not have any remote properties,
  * it will return undefined.
  */
-export function remoteProperties(node: RemoteConnectedNode) {
-  return node[REMOTE_PROPERTIES];
+export function remoteProperties(node: Node) {
+  return REMOTE_PROPERTIES.get(node);
 }
+
+export const REMOTE_ATTRIBUTES = new WeakMap<Node, Record<string, string>>();
 
 /**
  * Gets the remote attributes of an element node. If the node is not an element
@@ -81,26 +54,36 @@ export function remoteProperties(node: RemoteConnectedNode) {
  * to represent “standard” HTML elements, such as `<div>` or `<span>`, as remote
  * elements.
  */
-export function remoteAttributes(node: RemoteConnectedNode) {
-  if (node[REMOTE_ATTRIBUTES] != null) return node[REMOTE_ATTRIBUTES];
-  if ((node as any).attributes == null) return undefined;
+export function remoteAttributes(node: Node) {
+  let attributes = REMOTE_ATTRIBUTES.get(node);
 
-  const attributes: Record<string, string> = {};
+  if (attributes != null) return attributes;
 
-  for (const {name, value} of (node as Element).attributes) {
+  // Custom elements are expected to handle their own attribute updates
+  if (!(node instanceof Element) || node.tagName.includes('-'))
+    return undefined;
+
+  attributes = {};
+
+  for (const {name, value} of node.attributes) {
     attributes[name] = value;
   }
 
   return attributes;
 }
 
+export const REMOTE_EVENT_LISTENERS = new WeakMap<
+  Node,
+  Record<string, (...args: any) => void>
+>();
+
 /**
  * Gets the remote event listeners of an element node. If the node is not an element
  * node, or does not have explicitly defined remote event listeners, this method returns
  * `undefined`.
  */
-export function remoteEventListeners(node: RemoteConnectedNode) {
-  return node[REMOTE_EVENT_LISTENERS];
+export function remoteEventListeners(node: Node) {
+  return REMOTE_EVENT_LISTENERS.get(node);
 }
 
 /**
@@ -113,18 +96,18 @@ export function updateRemoteElementProperty(
   property: string,
   value: unknown,
 ) {
-  let properties = (node as RemoteConnectedNode)[REMOTE_PROPERTIES];
+  let properties = REMOTE_PROPERTIES.get(node);
 
   if (properties == null) {
     properties = {};
-    (node as any)[REMOTE_PROPERTIES] = properties;
+    REMOTE_PROPERTIES.set(node, properties);
   }
 
   if (properties[property] === value) return;
 
   properties[property] = value;
 
-  const connection = (node as RemoteConnectedNode)[REMOTE_CONNECTION];
+  const connection = REMOTE_CONNECTIONS.get(node);
 
   if (connection == null) return;
 
@@ -149,19 +132,22 @@ export function updateRemoteElementAttribute(
   attribute: string,
   value?: string,
 ) {
-  const remoteAttributes = (node as RemoteConnectedNode)[REMOTE_ATTRIBUTES];
+  let attributes = REMOTE_ATTRIBUTES.get(node);
 
-  if (remoteAttributes) {
-    if (remoteAttributes[attribute] === value) return;
-
-    if (value == null) {
-      delete remoteAttributes[attribute];
-    } else {
-      remoteAttributes[attribute] = value;
-    }
+  if (attributes == null) {
+    attributes = {};
+    REMOTE_ATTRIBUTES.set(node, attributes);
   }
 
-  const connection = (node as RemoteConnectedNode)[REMOTE_CONNECTION];
+  if (attributes[attribute] === value) return;
+
+  if (value == null) {
+    delete attributes[attribute];
+  } else {
+    attributes[attribute] = String(value);
+  }
+
+  const connection = REMOTE_CONNECTIONS.get(node);
 
   if (connection == null) return;
 
@@ -186,21 +172,22 @@ export function updateRemoteElementEventListener(
   event: string,
   listener?: (...args: any[]) => any,
 ) {
-  const remoteEventListeners = (node as RemoteConnectedNode)[
-    REMOTE_EVENT_LISTENERS
-  ];
+  let eventListeners = REMOTE_EVENT_LISTENERS.get(node);
 
-  if (remoteEventListeners) {
-    if (remoteEventListeners[event] === listener) return;
-
-    if (listener == null) {
-      delete remoteEventListeners[event];
-    } else {
-      remoteEventListeners[event] = listener;
-    }
+  if (eventListeners == null) {
+    eventListeners = {};
+    REMOTE_EVENT_LISTENERS.set(node, eventListeners);
   }
 
-  const connection = (node as RemoteConnectedNode)[REMOTE_CONNECTION];
+  if (eventListeners[event] === listener) return;
+
+  if (listener == null) {
+    delete eventListeners[event];
+  } else {
+    eventListeners[event] = listener;
+  }
+
+  const connection = REMOTE_CONNECTIONS.get(node);
 
   if (connection == null) return;
 
@@ -219,13 +206,12 @@ export function updateRemoteElementEventListener(
  * Connects a node to a `RemoteConnection` instance. Any future updates to this node
  * will be communicated to the host by way of this connection.
  */
-export function connectRemoteNode(
-  node: RemoteConnectedNode,
-  connection: RemoteConnection,
-) {
-  if ((node as any)[REMOTE_CONNECTION] === connection) return;
+export function connectRemoteNode(node: Node, connection: RemoteConnection) {
+  const existingConnection = REMOTE_CONNECTIONS.get(node);
 
-  (node as any)[REMOTE_CONNECTION] = connection;
+  if (existingConnection === connection) return;
+
+  REMOTE_CONNECTIONS.set(node, connection);
 
   if (node.childNodes) {
     for (let i = 0; i < node.childNodes.length; i++) {
@@ -238,10 +224,12 @@ export function connectRemoteNode(
  * Disconnects a node from its `RemoteConnection` instance. Future updates to this
  * this element will not be communicated to a host, until you call `connectRemoteNode` again.
  */
-export function disconnectRemoteNode(node: RemoteConnectedNode) {
-  if ((node as any)[REMOTE_CONNECTION] == null) return;
+export function disconnectRemoteNode(node: Node) {
+  const existingConnection = REMOTE_CONNECTIONS.get(node);
 
-  (node as any)[REMOTE_CONNECTION] = undefined;
+  if (existingConnection == null) return;
+
+  REMOTE_CONNECTIONS.delete(node);
 
   if (node.childNodes) {
     for (let i = 0; i < node.childNodes.length; i++) {
@@ -304,8 +292,8 @@ export function callRemoteElementMethod(
   method: string,
   ...args: unknown[]
 ) {
-  const id = (node as RemoteConnectedNode)[REMOTE_ID];
-  const connection = (node as RemoteConnectedNode)[REMOTE_CONNECTION];
+  const id = REMOTE_IDS.get(node);
+  const connection = REMOTE_CONNECTIONS.get(node);
 
   if (id == null || connection == null) {
     throw new Error(`Cannot call method ${method} on an unconnected node`);

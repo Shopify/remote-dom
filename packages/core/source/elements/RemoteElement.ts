@@ -1,14 +1,11 @@
-import {
-  REMOTE_PROPERTIES,
-  REMOTE_ATTRIBUTES,
-  REMOTE_EVENT_LISTENERS,
-} from '../constants.ts';
 import {RemoteEvent} from './RemoteEvent.ts';
 import {
   updateRemoteElementProperty,
   updateRemoteElementAttribute,
   updateRemoteElementEventListener,
   callRemoteElementMethod,
+  remoteProperties as getRemoteProperties,
+  remoteEventListeners as getRemoteEventListeners,
 } from './internals.ts';
 
 export interface RemoteElementPropertyType<Value = unknown> {
@@ -508,10 +505,6 @@ export abstract class RemoteElement<
   /** @internal */
   __eventListeners?: EventListeners;
 
-  private [REMOTE_PROPERTIES]!: Properties;
-  // @ts-expect-error used by helpers in the `internals.ts` file
-  private [REMOTE_ATTRIBUTES]!: Record<string, string>;
-  private [REMOTE_EVENT_LISTENERS]!: Record<string, (...args: any[]) => any>;
   private [REMOTE_EVENTS]?: {
     readonly events: Map<string, RemoteEventRecord>;
     readonly properties: Map<string, ((event: any) => void) | null>;
@@ -526,28 +519,7 @@ export abstract class RemoteElement<
     (this.constructor as typeof RemoteElement).finalize();
 
     const propertyDescriptors: PropertyDescriptorMap = {};
-
-    propertyDescriptors[REMOTE_ATTRIBUTES] = {
-      value: {},
-      writable: true,
-      configurable: true,
-      enumerable: false,
-    };
-
-    propertyDescriptors[REMOTE_EVENT_LISTENERS] = {
-      value: {},
-      writable: true,
-      configurable: true,
-      enumerable: false,
-    };
-
-    const remoteProperties: Record<string, unknown> = {};
-    propertyDescriptors[REMOTE_PROPERTIES] = {
-      value: remoteProperties,
-      writable: true,
-      configurable: true,
-      enumerable: false,
-    };
+    const initialPropertiesToSet: Record<string, any> = {};
 
     const prototype = Object.getPrototypeOf(this);
     const ThisClass = this.constructor as typeof RemoteElement;
@@ -566,14 +538,14 @@ export abstract class RemoteElement<
       }
 
       if (property === aliasedName) {
-        remoteProperties[property] = description.default;
+        initialPropertiesToSet[property] = description.default;
       }
 
       const propertyDescriptor = {
         configurable: true,
         enumerable: property === aliasedName,
         get: () => {
-          return this[REMOTE_PROPERTIES][aliasedName];
+          return getRemoteProperties(this)?.[aliasedName];
         },
         set: (value: any) => {
           updateRemoteElementProperty(this, aliasedName, value);
@@ -625,6 +597,7 @@ export abstract class RemoteElement<
     }
 
     Object.defineProperties(this, propertyDescriptors);
+    Object.assign(this, initialPropertiesToSet);
   }
 
   attributeChangedCallback(attribute: string, _oldValue: any, newValue: any) {
@@ -861,12 +834,12 @@ function removeRemoteListener(
 
   if (remoteEvent.property) {
     if (
-      this[REMOTE_PROPERTIES][remoteEvent.property] === remoteEvent.dispatch
+      getRemoteProperties(this)?.[remoteEvent.property] === remoteEvent.dispatch
     ) {
       updateRemoteElementProperty(this, remoteEvent.property, undefined);
     }
   } else {
-    if (this[REMOTE_EVENT_LISTENERS][type] === remoteEvent.dispatch) {
+    if (getRemoteEventListeners(this)?.[type] === remoteEvent.dispatch) {
       updateRemoteElementEventListener(this, type, undefined);
     }
   }
