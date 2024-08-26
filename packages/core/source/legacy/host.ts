@@ -1,3 +1,16 @@
+import {
+  KIND_TEXT as LEGACY_KIND_TEXT,
+  ACTION_MOUNT as LEGACY_ACTION_MOUNT,
+  ACTION_INSERT_CHILD as LEGACY_ACTION_INSERT_CHILD,
+  ACTION_REMOVE_CHILD as LEGACY_ACTION_REMOVE_CHILD,
+  ACTION_UPDATE_PROPS as LEGACY_ACTION_UPDATE_PROPS,
+  ACTION_UPDATE_TEXT as LEGACY_ACTION_UPDATE_TEXT,
+  type RemoteChannel as LegacyRemoteChannel,
+  type ActionArgumentMap as LegacyActionArgumentMap,
+  type RemoteComponentSerialization as LegacyRemoteComponentSerialization,
+  type RemoteTextSerialization as LegacyRemoteTextSerialization,
+} from '@remote-ui/core';
+
 import type {
   RemoteConnection,
   RemoteMutationRecord,
@@ -13,19 +26,6 @@ import {
   MUTATION_TYPE_UPDATE_PROPERTY,
   MUTATION_TYPE_UPDATE_TEXT,
 } from '../constants.ts';
-
-import {
-  LEGACY_KIND_TEXT,
-  LEGACY_ACTION_MOUNT,
-  LEGACY_ACTION_INSERT_CHILD,
-  LEGACY_ACTION_REMOVE_CHILD,
-  LEGACY_ACTION_UPDATE_PROPS,
-  LEGACY_ACTION_UPDATE_TEXT,
-  type LegacyRemoteChannel,
-  type LegacyActionArgumentMap,
-  type LegacyRemoteComponentSerialization,
-  type LegacyRemoteTextSerialization,
-} from './remote-ui.ts';
 
 export interface LegacyRemoteChannelElementMap {
   [key: string]: string;
