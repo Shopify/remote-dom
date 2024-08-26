@@ -125,7 +125,10 @@ importers:
     dependencies:
       '@remote-dom/polyfill':
         specifier: ^1.2.0
-        version: link:../polyfill
+        version: 1.2.1
+      '@remote-ui/core':
+        specifier: ^2.0.0
+        version: 2.2.4
       htm:
         specifier: ^3.1.1
         version: 3.1.1
@@ -2559,6 +2562,26 @@ packages:
       - rollup
       - supports-color
     dev: true
+
+  /@remote-dom/polyfill@1.2.1:
+    resolution: {integrity: sha512-UrH3w/JMlG2mQc5dxpTb5N/5TT0QdPgPzZLeHZw/jL+t+3Dlfz8jbCjmJ+x7S4SkiDgNpddvxi1OLuPV5o/nRw==}
+    engines: {node: '>=14.0.0'}
+    dev: false
+
+  /@remote-ui/core@2.2.4:
+    resolution: {integrity: sha512-7ahrsI5GqYvAGcWTcysbKFKbzbhB/mDgIJr9VurF34gor2IqRCrmrPYemLQuOCQhWqPb3AOEUxWFYNLiB5i6kA==}
+    dependencies:
+      '@remote-ui/rpc': 1.4.5
+      '@remote-ui/types': 1.1.3
+    dev: false
+
+  /@remote-ui/rpc@1.4.5:
+    resolution: {integrity: sha512-Cr+06niG/vmE4A9YsmaKngRuuVSWKMY42NMwtZfy+gctRWGu6Wj9BWuMJg5CEp+JTkRBPToqT5rqnrg1G/Wvow==}
+    dev: false
+
+  /@remote-ui/types@1.1.3:
+    resolution: {integrity: sha512-P1kN1F3p0oMgnLN8Of1Ie9am3sLvJ7nhqHH1pvzkrxqjVwhhyPVZNcwOHyUNZPKp62izhDavdrcnqrdXzVJqGA==}
+    dev: false
 
   /@rollup/plugin-alias@5.0.1(rollup@4.18.0):
     resolution: {integrity: sha512-JObvbWdOHoMy9W7SU0lvGhDtWq9PllP5mjpAy+TUslZG/WzOId9u80Hsqq1vCUn9pFJ0cxpdcnAv+QzU2zFH3Q==}
