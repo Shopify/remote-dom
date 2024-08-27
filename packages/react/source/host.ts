@@ -11,6 +11,7 @@ export {
 export {renderRemoteNode} from './host/node.tsx';
 export {
   createRemoteComponentRenderer,
+  type RemoteComponentRendererOptions,
   type RemoteComponentRendererAdditionalProps,
 } from './host/component.tsx';
 export {RemoteFragmentRenderer} from './host/RemoteFragmentRenderer.tsx';
@@ -23,7 +24,11 @@ export {
   type RemoteRootRendererProps,
 } from './host/RemoteRootRenderer.tsx';
 
-export {useRemoteReceived, usePropsForRemoteElement} from './host/hooks.ts';
+export {
+  useRemoteReceived,
+  usePropsForRemoteElement,
+  type RemoteElementPropsOptions,
+} from './host/hooks.ts';
 
 export type {
   RemoteNodeRenderOptions,

@@ -1,2 +1,5 @@
 export {useRemoteReceived} from './hooks/remote-received.ts';
-export {usePropsForRemoteElement} from './hooks/props-for-element.tsx';
+export {
+  usePropsForRemoteElement,
+  type RemoteElementPropsOptions,
+} from './hooks/props-for-element.tsx';

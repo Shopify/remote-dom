@@ -4,11 +4,16 @@ import {
   NODE_TYPE_COMMENT,
   NODE_TYPE_ELEMENT,
   ROOT_ID,
-  REMOTE_ID,
-  REMOTE_PROPERTIES,
+  UPDATE_PROPERTY_TYPE_PROPERTY,
+  UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+  UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
 } from '../constants.ts';
 import type {RemoteNodeSerialization} from '../types.ts';
 import type {RemoteReceiverOptions} from './shared.ts';
+
+const REMOTE_IDS = new WeakMap<Node, string>();
+const REMOTE_PROPERTIES = new WeakMap<Node, Record<string, any>>();
+const REMOTE_EVENT_LISTENERS = new WeakMap<Node, Record<string, any>>();
 
 /**
  * Takes care of mapping remote elements to matching HTML elements
@@ -125,16 +130,21 @@ export class DOMRemoteReceiver {
           detach(child);
         }
       },
-      updateProperty: (id, property, value) => {
+      updateProperty: (
+        id,
+        property,
+        value,
+        type = UPDATE_PROPERTY_TYPE_PROPERTY,
+      ) => {
         const element = attached.get(id)!;
 
         retain?.(value);
 
-        const remoteProperties = (element as any)[REMOTE_PROPERTIES];
+        const remoteProperties = REMOTE_PROPERTIES.get(element)!;
         const oldValue = remoteProperties[property];
 
         remoteProperties[property] = value;
-        updateRemoteProperty(element as Element, property, value);
+        updateRemoteProperty(element as Element, property, value, type);
 
         release?.(oldValue);
       },
@@ -155,15 +165,48 @@ export class DOMRemoteReceiver {
           normalizedChild = document.createElement(node.element);
 
           if (node.properties) {
-            (normalizedChild as any)[REMOTE_PROPERTIES] = node.properties;
+            REMOTE_PROPERTIES.set(normalizedChild, node.properties);
 
             for (const property of Object.keys(node.properties)) {
               const value = node.properties[property];
               retain?.(value);
-              updateRemoteProperty(normalizedChild as Element, property, value);
+              updateRemoteProperty(
+                normalizedChild as Element,
+                property,
+                value,
+                UPDATE_PROPERTY_TYPE_PROPERTY,
+              );
             }
           } else {
-            (normalizedChild as any)[REMOTE_PROPERTIES] = {};
+            REMOTE_PROPERTIES.set(normalizedChild, {});
+          }
+
+          if (node.attributes) {
+            for (const attribute of Object.keys(node.attributes)) {
+              const value = node.attributes[attribute];
+              retain?.(value);
+              updateRemoteProperty(
+                normalizedChild as Element,
+                attribute,
+                value,
+                UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+              );
+            }
+          }
+
+          REMOTE_EVENT_LISTENERS.set(normalizedChild, {});
+
+          if (node.eventListeners) {
+            for (const event of Object.keys(node.eventListeners)) {
+              const listener = node.eventListeners[event];
+              retain?.(listener);
+              updateRemoteProperty(
+                normalizedChild as Element,
+                event,
+                listener,
+                UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+              );
+            }
           }
 
           for (const child of node.children) {
@@ -185,17 +228,18 @@ export class DOMRemoteReceiver {
         }
       }
 
-      (normalizedChild as any)[REMOTE_ID] = node.id;
+      REMOTE_IDS.set(normalizedChild, node.id);
+
       attached.set(node.id, normalizedChild);
 
       return normalizedChild;
     }
 
     function detach(child: Node) {
-      const id = (child as any)[REMOTE_ID];
+      const id = REMOTE_IDS.get(child);
       if (id) attached.delete(id);
 
-      const properties = (child as any)[REMOTE_PROPERTIES];
+      const properties = REMOTE_PROPERTIES.get(child);
       if (properties && release) release(properties);
 
       if (child instanceof Element) {
@@ -246,14 +290,55 @@ function updateRemoteProperty(
   element: Element,
   property: string,
   value: unknown,
+  type:
+    | typeof UPDATE_PROPERTY_TYPE_PROPERTY
+    | typeof UPDATE_PROPERTY_TYPE_ATTRIBUTE
+    | typeof UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
 ) {
-  if (property in element) {
-    (element as any)[property] = value;
-  } else if (value == null || value === false) {
-    element.removeAttribute(property);
-  } else if (value === true) {
-    element.setAttribute(property, '');
-  } else {
-    element.setAttribute(property, String(value));
+  switch (type) {
+    case UPDATE_PROPERTY_TYPE_PROPERTY: {
+      (element as any)[property] = value;
+      break;
+    }
+    case UPDATE_PROPERTY_TYPE_ATTRIBUTE: {
+      if (value == null) {
+        element.removeAttribute(property);
+      } else {
+        element.setAttribute(property, value as string);
+      }
+
+      break;
+    }
+    case UPDATE_PROPERTY_TYPE_EVENT_LISTENER: {
+      const remoteListeners = REMOTE_EVENT_LISTENERS.get(element);
+      const existing = remoteListeners?.[property];
+
+      if (existing) element.removeEventListener(property, existing);
+
+      if (value != null) {
+        // Support a `RemoteEvent`-shaped event object, where the `detail` argument
+        // is passed to the remote environment, and the resulting promise call is passed
+        // to `event.resolve()`. A host implementation can use this conventional event shape
+        // to use the internal function representation of the event listener.
+        const handler = (event: any) => {
+          // If the event is bubbling/ capturing, we don’t trigger the listener here,
+          // we let the event be dispatched to the remote environment only from the actual
+          // target element. In the remote environment, the event will go through a separate
+          // capture/ bubbling phase, where it will invoke the remote event listener
+          // that corresponds to this `value` function.
+          if (event.target !== element) return;
+          const result = (value as any)(event.detail);
+          event.resolve?.(result);
+        };
+
+        if (remoteListeners) {
+          remoteListeners[property] = handler;
+        }
+
+        element.addEventListener(property, handler);
+      }
+
+      break;
+    }
   }
 }

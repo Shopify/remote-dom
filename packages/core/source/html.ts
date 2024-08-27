@@ -53,9 +53,12 @@ export function h<
         childNodes.push(fragment);
       } else if (property in element) {
         (element as any)[property] = value;
+      } else if (property[0] === 'o' && property[1] === 'n') {
+        const eventName = `${property[2]!.toLowerCase()}${property.slice(3)}`;
+        element.addEventListener(eventName, value);
       } else if (value === true) {
         element.setAttribute(property, '');
-      } else if (value === false) {
+      } else if (value == null || value === false) {
         element.removeAttribute(property);
       } else {
         element.setAttribute(property, String(value));

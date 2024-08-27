@@ -5,11 +5,15 @@ export {
   type RemoteElementPropertyType,
   type RemoteElementPropertyDefinition,
   type RemoteElementPropertiesDefinition,
+  type RemoteElementAttributeDefinition,
+  type RemoteElementEventListenerDefinition,
+  type RemoteElementEventListenersDefinition,
   type RemoteElementSlotDefinition,
   type RemoteElementSlotsDefinition,
   type RemotePropertiesFromElementConstructor,
   type RemoteMethodsFromElementConstructor,
   type RemoteSlotsFromElementConstructor,
+  type RemoteEventListenersFromElementConstructor,
   type RemoteElementCreatorOptions,
 } from './elements/RemoteElement.ts';
 export {RemoteFragmentElement} from './elements/RemoteFragmentElement.ts';
@@ -24,6 +28,8 @@ export {
   disconnectRemoteNode,
   serializeRemoteNode,
   updateRemoteElementProperty,
+  updateRemoteElementAttribute,
+  updateRemoteElementEventListener,
   callRemoteElementMethod,
 } from './elements/internals.ts';
 

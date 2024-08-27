@@ -3,11 +3,10 @@ import {
   connectRemoteNode,
   disconnectRemoteNode,
   serializeRemoteNode,
+  REMOTE_IDS,
 } from './internals.ts';
 import {
   ROOT_ID,
-  REMOTE_ID,
-  REMOTE_PROPERTIES,
   MUTATION_TYPE_INSERT_CHILD,
   MUTATION_TYPE_REMOVE_CHILD,
   MUTATION_TYPE_UPDATE_TEXT,
@@ -89,7 +88,8 @@ export class RemoteMutationObserver extends MutationObserver {
         } else if (
           record.type === 'attributes' &&
           record.attributeName != null &&
-          !(REMOTE_PROPERTIES in record.target)
+          record.target instanceof Element &&
+          !record.target.tagName.includes('-')
         ) {
           remoteRecords.push([
             MUTATION_TYPE_UPDATE_PROPERTY,
@@ -121,7 +121,7 @@ export class RemoteMutationObserver extends MutationObserver {
       initial?: boolean;
     },
   ) {
-    Object.defineProperty(target, REMOTE_ID, {value: ROOT_ID});
+    REMOTE_IDS.set(target, ROOT_ID);
 
     if (options?.initial !== false && target.childNodes.length > 0) {
       const records: RemoteMutationRecord[] = [];

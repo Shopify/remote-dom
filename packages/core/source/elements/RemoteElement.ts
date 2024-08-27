@@ -1,8 +1,11 @@
-import {REMOTE_PROPERTIES} from '../constants.ts';
 import {RemoteEvent} from './RemoteEvent.ts';
 import {
   updateRemoteElementProperty,
+  updateRemoteElementAttribute,
+  updateRemoteElementEventListener,
   callRemoteElementMethod,
+  remoteProperties as getRemoteProperties,
+  remoteEventListeners as getRemoteEventListeners,
 } from './internals.ts';
 
 export interface RemoteElementPropertyType<Value = unknown> {
@@ -22,6 +25,9 @@ export type RemoteElementPropertyTypeOrBuiltIn<Value = unknown> =
 export interface RemoteElementPropertyDefinition<Value = unknown> {
   type?: RemoteElementPropertyTypeOrBuiltIn<Value>;
   alias?: string[];
+  /**
+   * @deprecated Use `RemoteElement.eventListeners` instead.
+   */
   event?: boolean | string;
   attribute?: string | boolean;
   default?: Value;
@@ -45,7 +51,23 @@ export type RemoteElementPropertiesDefinition<
 };
 
 export interface RemoteElementSlotDefinition {}
-interface RemoteElementSlotNormalizedDefinition {}
+
+export interface RemoteElementAttributeDefinition {}
+
+export interface RemoteElementEventListenerDefinition {
+  bubbles?: boolean;
+  property?: boolean | string;
+  dispatchEvent?: (
+    this: RemoteElement<any, any, any, any>,
+    arg: any,
+  ) => Event | undefined | void;
+}
+
+export type RemoteElementEventListenersDefinition<
+  EventListeners extends Record<string, any> = {},
+> = {
+  [Event in keyof EventListeners]: RemoteElementEventListenerDefinition;
+};
 
 export interface RemoteElementMethodDefinition {}
 
@@ -62,36 +84,43 @@ export type RemoteElementMethodsDefinition<
 };
 
 export type RemotePropertiesFromElementConstructor<T> = T extends {
-  new (): RemoteElement<infer Properties, any, any>;
+  new (): RemoteElement<infer Properties, any, any, any>;
 }
   ? Properties
   : never;
 
 export type RemoteMethodsFromElementConstructor<T> = T extends {
-  new (): RemoteElement<any, infer Methods, any>;
+  new (): RemoteElement<any, infer Methods, any, any>;
 }
   ? Methods
   : never;
 
 export type RemoteSlotsFromElementConstructor<T> = T extends {
-  new (): RemoteElement<any, any, infer Slots>;
+  new (): RemoteElement<any, any, infer Slots, any>;
 }
   ? Slots
+  : never;
+
+export type RemoteEventListenersFromElementConstructor<T> = T extends {
+  new (): RemoteElement<any, any, any, infer EventListeners>;
+}
+  ? EventListeners
   : never;
 
 export type RemoteElementConstructor<
   Properties extends Record<string, any> = {},
   Methods extends Record<string, (...args: any[]) => any> = {},
   Slots extends Record<string, any> = {},
+  EventListeners extends Record<string, any> = {},
 > = {
-  new (): RemoteElement<Properties, Methods, Slots> & Properties & Methods;
+  new (): RemoteElement<Properties, Methods, Slots, EventListeners> &
+    Properties &
+    Methods;
   readonly remoteSlots?:
     | RemoteElementSlotsDefinition<Slots>
     | readonly (keyof Slots)[];
-  readonly remoteSlotDefinitions: Map<
-    string,
-    RemoteElementSlotNormalizedDefinition
-  >;
+  readonly remoteSlotDefinitions: Map<string, RemoteElementSlotDefinition>;
+
   readonly remoteProperties?:
     | RemoteElementPropertiesDefinition<Properties>
     | readonly (keyof Properties)[];
@@ -99,6 +128,21 @@ export type RemoteElementConstructor<
     string,
     RemoteElementPropertyNormalizedDefinition
   >;
+
+  readonly remoteAttributes?: readonly string[];
+  readonly remoteAttributeDefinitions: Map<
+    string,
+    RemoteElementAttributeDefinition
+  >;
+
+  readonly remoteEvents?:
+    | RemoteElementEventListenersDefinition<EventListeners>
+    | readonly (keyof EventListeners)[];
+  readonly remoteEventDefinitions: Map<
+    string,
+    RemoteElementEventListenerDefinition
+  >;
+
   readonly remoteMethods?: Methods | readonly (keyof Methods)[];
   createProperty<Value = unknown>(
     name: string,
@@ -110,40 +154,66 @@ export interface RemoteElementCreatorOptions<
   Properties extends Record<string, any> = {},
   Methods extends Record<string, any> = {},
   Slots extends Record<string, any> = {},
+  EventListeners extends Record<string, any> = {},
 > {
-  slots?: RemoteElementConstructor<Properties, Methods, Slots>['remoteSlots'];
+  slots?: RemoteElementConstructor<
+    Properties,
+    Methods,
+    Slots,
+    EventListeners
+  >['remoteSlots'];
   properties?: RemoteElementConstructor<
     Properties,
     Methods,
-    Slots
+    Slots,
+    EventListeners
   >['remoteProperties'];
+  attributes?: RemoteElementConstructor<
+    Properties,
+    Methods,
+    Slots,
+    EventListeners
+  >['remoteAttributes'];
+  events?: RemoteElementConstructor<
+    Properties,
+    Methods,
+    Slots,
+    EventListeners
+  >['remoteEvents'];
   methods?: RemoteElementConstructor<
     Properties,
     Methods,
-    Slots
+    Slots,
+    EventListeners
   >['remoteMethods'];
 }
+
+const EMPTY_DEFINITION = Object.freeze({});
 
 export function createRemoteElement<
   Properties extends Record<string, any> = {},
   Methods extends Record<string, any> = {},
   Slots extends Record<string, any> = {},
+  EventListeners extends Record<string, any> = {},
 >({
   slots,
   properties,
+  attributes,
+  events,
   methods,
-}: RemoteElementCreatorOptions<
-  Properties,
-  Methods,
-  Slots
-> = {}): RemoteElementConstructor<Properties, Methods, Slots> {
+}: NoInfer<
+  RemoteElementCreatorOptions<Properties, Methods, Slots, EventListeners>
+> = {}): RemoteElementConstructor<Properties, Methods, Slots, EventListeners> {
   const RemoteElementConstructor = class extends RemoteElement<
     Properties,
     Methods,
-    Slots
+    Slots,
+    EventListeners
   > {
     static readonly remoteSlots = slots;
     static readonly remoteProperties = properties;
+    static readonly remoteAttributes = attributes;
+    static readonly remoteEvents = events;
     static readonly remoteMethods = methods;
   } as any;
 
@@ -154,7 +224,8 @@ const REMOTE_EVENTS = Symbol('remote.events');
 
 interface RemoteEventRecord {
   readonly name: string;
-  readonly property: string;
+  readonly property?: string;
+  readonly definition?: RemoteElementEventListenerDefinition;
   readonly listeners: Set<EventListenerOrEventListenerObject>;
   dispatch(...args: any[]): unknown;
 }
@@ -170,11 +241,14 @@ export abstract class RemoteElement<
   Properties extends Record<string, any> = {},
   Methods extends Record<string, (...args: any[]) => any> = {},
   Slots extends Record<string, any> = {},
+  EventListeners extends Record<string, any> = {},
 > extends HTMLElement {
   static readonly slottable = true;
 
   static readonly remoteSlots?: any;
   static readonly remoteProperties?: any;
+  static readonly remoteAttributes?: any;
+  static readonly remoteEvents?: any;
   static readonly remoteMethods?: any;
 
   static get observedAttributes() {
@@ -188,10 +262,21 @@ export abstract class RemoteElement<
     return this.finalize().__remotePropertyDefinitions;
   }
 
-  static get remoteSlotDefinitions(): Map<
+  static get remoteAttributeDefinitions(): Map<
     string,
-    RemoteElementSlotNormalizedDefinition
+    RemoteElementAttributeDefinition
   > {
+    return this.finalize().__remoteAttributeDefinitions;
+  }
+
+  static get remoteEventDefinitions(): Map<
+    string,
+    RemoteElementEventListenerDefinition
+  > {
+    return this.finalize().__remoteEventDefinitions;
+  }
+
+  static get remoteSlotDefinitions(): Map<string, RemoteElementSlotDefinition> {
     return this.finalize().__remoteSlotDefinitions;
   }
 
@@ -203,9 +288,17 @@ export abstract class RemoteElement<
     string,
     RemoteElementPropertyNormalizedDefinition
   >();
+  private static readonly __remoteAttributeDefinitions = new Map<
+    string,
+    RemoteElementAttributeDefinition
+  >();
+  private static readonly __remoteEventDefinitions = new Map<
+    string,
+    RemoteElementEventListenerDefinition
+  >();
   private static readonly __remoteSlotDefinitions = new Map<
     string,
-    RemoteElementSlotNormalizedDefinition
+    RemoteElementSlotDefinition
   >();
 
   static createProperty<Value = unknown>(
@@ -229,35 +322,65 @@ export abstract class RemoteElement<
     }
 
     this.__finalized = true;
-    const {slottable, remoteSlots, remoteProperties, remoteMethods} = this;
+    const {
+      slottable,
+      remoteSlots,
+      remoteProperties,
+      remoteAttributes,
+      remoteEvents,
+      remoteMethods,
+    } = this;
 
     // finalize any superclasses
     const SuperConstructor = Object.getPrototypeOf(
       this,
     ) as typeof RemoteElement;
 
-    const observedAttributes: string[] = [];
-    if (slottable) observedAttributes.push('slot');
+    const observedAttributes = new Set<string>();
+    if (slottable) observedAttributes.add('slot');
 
     const attributeToPropertyMap = new Map<string, string>();
     const eventToPropertyMap = new Map<string, string>();
     const remoteSlotDefinitions = new Map<
       string,
-      RemoteElementSlotNormalizedDefinition
+      RemoteElementSlotDefinition
     >();
     const remotePropertyDefinitions = new Map<
       string,
       RemoteElementPropertyNormalizedDefinition
     >();
+    const remoteAttributeDefinitions = new Map<
+      string,
+      RemoteElementAttributeDefinition
+    >();
+    const remoteEventDefinitions = new Map<
+      string,
+      RemoteElementEventListenerDefinition
+    >();
 
     if (typeof SuperConstructor.finalize === 'function') {
       SuperConstructor.finalize();
-      observedAttributes.push(...SuperConstructor.observedAttributes);
+
+      SuperConstructor.observedAttributes.forEach((attribute) => {
+        observedAttributes.add(attribute);
+      });
+
       SuperConstructor.remotePropertyDefinitions.forEach(
         (definition, property) => {
           remotePropertyDefinitions.set(property, definition);
         },
       );
+
+      SuperConstructor.remoteAttributeDefinitions.forEach(
+        (definition, event) => {
+          remoteAttributeDefinitions.set(event, definition);
+        },
+      );
+
+      SuperConstructor.remoteEventDefinitions.forEach((definition, event) => {
+        remoteEventDefinitions.set(event, definition);
+      });
+
       SuperConstructor.remoteSlotDefinitions.forEach((definition, slot) => {
         remoteSlotDefinitions.set(slot, definition);
       });
@@ -269,7 +392,7 @@ export abstract class RemoteElement<
         : Object.keys(remoteSlots);
 
       slotNames.forEach((slotName) => {
-        remoteSlotDefinitions.set(slotName, {});
+        remoteSlotDefinitions.set(slotName, EMPTY_DEFINITION);
       });
     }
 
@@ -299,6 +422,25 @@ export abstract class RemoteElement<
       }
     }
 
+    if (remoteAttributes != null) {
+      remoteAttributes.forEach((attribute: string) => {
+        remoteAttributeDefinitions.set(attribute, EMPTY_DEFINITION);
+        observedAttributes.add(attribute);
+      });
+    }
+
+    if (remoteEvents != null) {
+      if (Array.isArray(remoteEvents)) {
+        remoteEvents.forEach((event: string) => {
+          remoteEventDefinitions.set(event, EMPTY_DEFINITION);
+        });
+      } else {
+        Object.keys(remoteEvents).forEach((event) => {
+          remoteEventDefinitions.set(event, remoteEvents[event]);
+        });
+      }
+    }
+
     if (remoteMethods != null) {
       if (Array.isArray(remoteMethods)) {
         for (const method of remoteMethods) {
@@ -318,7 +460,7 @@ export abstract class RemoteElement<
 
     Object.defineProperties(this, {
       __observedAttributes: {
-        value: observedAttributes,
+        value: [...observedAttributes],
         enumerable: false,
       },
       __remoteSlotDefinitions: {
@@ -327,6 +469,14 @@ export abstract class RemoteElement<
       },
       __remotePropertyDefinitions: {
         value: remotePropertyDefinitions,
+        enumerable: false,
+      },
+      __remoteAttributeDefinitions: {
+        value: remoteAttributeDefinitions,
+        enumerable: false,
+      },
+      __remoteEventDefinitions: {
+        value: remoteEventDefinitions,
         enumerable: false,
       },
       __attributeToPropertyMap: {
@@ -352,9 +502,12 @@ export abstract class RemoteElement<
   /** @internal */
   __methods?: Methods;
 
-  private [REMOTE_PROPERTIES]!: Properties;
+  /** @internal */
+  __eventListeners?: EventListeners;
+
   private [REMOTE_EVENTS]?: {
     readonly events: Map<string, RemoteEventRecord>;
+    readonly properties: Map<string, ((event: any) => void) | null>;
     readonly listeners: WeakMap<
       EventListenerOrEventListenerObject,
       RemoteEventListenerRecord
@@ -366,36 +519,33 @@ export abstract class RemoteElement<
     (this.constructor as typeof RemoteElement).finalize();
 
     const propertyDescriptors: PropertyDescriptorMap = {};
+    const initialPropertiesToSet: Record<string, any> = {};
 
-    const remoteProperties: Record<string, unknown> = {};
-    propertyDescriptors[REMOTE_PROPERTIES] = {
-      value: remoteProperties,
-      writable: true,
-      configurable: true,
-      enumerable: false,
-    };
+    const prototype = Object.getPrototypeOf(this);
+    const ThisClass = this.constructor as typeof RemoteElement;
 
-    for (const [property, description] of (
-      this.constructor as typeof RemoteElement
-    ).remotePropertyDefinitions.entries()) {
+    for (const [
+      property,
+      description,
+    ] of ThisClass.remotePropertyDefinitions.entries()) {
       const aliasedName = description.name;
 
       // Don’t override actual accessors. This is handled by the
       // `remoteProperty()` decorator applied to the accessor.
       // eslint-disable-next-line no-prototype-builtins
-      if (Object.getPrototypeOf(this).hasOwnProperty(property)) {
+      if (prototype.hasOwnProperty(property)) {
         continue;
       }
 
       if (property === aliasedName) {
-        remoteProperties[property] = description.default;
+        initialPropertiesToSet[property] = description.default;
       }
 
       const propertyDescriptor = {
         configurable: true,
         enumerable: property === aliasedName,
         get: () => {
-          return this[REMOTE_PROPERTIES][aliasedName];
+          return getRemoteProperties(this)?.[aliasedName];
         },
         set: (value: any) => {
           updateRemoteElementProperty(this, aliasedName, value);
@@ -405,17 +555,59 @@ export abstract class RemoteElement<
       propertyDescriptors[property] = propertyDescriptor;
     }
 
+    for (const [
+      event,
+      definition,
+    ] of ThisClass.remoteEventDefinitions.entries()) {
+      const propertyFromDefinition = definition.property ?? true;
+
+      if (!propertyFromDefinition) continue;
+
+      const property =
+        propertyFromDefinition === true ? `on${event}` : propertyFromDefinition;
+
+      propertyDescriptors[property] = {
+        configurable: true,
+        enumerable: true,
+        get: () => {
+          return getRemoteEvents(this).properties.get(property) ?? null;
+        },
+        set: (value: any) => {
+          const remoteEvents = getRemoteEvents(this);
+          const currentListener = remoteEvents.properties.get(property);
+
+          if (typeof value === 'function') {
+            // Wrapping this in a custom function so you can’t call `removeEventListener`
+            // on it.
+            function handler(this: any, ...args: any[]) {
+              return value.call(this, ...args);
+            }
+
+            remoteEvents.properties.set(property, handler);
+            this.addEventListener(event, handler);
+          } else {
+            remoteEvents.properties.delete(property);
+          }
+
+          if (currentListener) {
+            this.removeEventListener(event, currentListener);
+          }
+        },
+      };
+    }
+
     Object.defineProperties(this, propertyDescriptors);
+    Object.assign(this, initialPropertiesToSet);
   }
 
-  attributeChangedCallback(key: string, _oldValue: any, newValue: any) {
+  attributeChangedCallback(attribute: string, _oldValue: any, newValue: any) {
     if (
-      key === 'slot' &&
+      attribute === 'slot' &&
       (this.constructor as typeof RemoteElement).slottable
     ) {
       updateRemoteElementProperty(
         this,
-        key,
+        attribute,
         newValue ? String(newValue) : undefined,
       );
 
@@ -424,10 +616,16 @@ export abstract class RemoteElement<
 
     const {
       remotePropertyDefinitions,
+      remoteAttributeDefinitions,
       __attributeToPropertyMap: attributeToPropertyMap,
     } = this.constructor as typeof RemoteElement;
 
-    const property = attributeToPropertyMap.get(key);
+    if (remoteAttributeDefinitions.has(attribute)) {
+      updateRemoteElementAttribute(this, attribute, newValue);
+      return;
+    }
+
+    const property = attributeToPropertyMap.get(attribute);
 
     const propertyDefinition =
       property == null ? property : remotePropertyDefinitions.get(property);
@@ -438,6 +636,29 @@ export abstract class RemoteElement<
       newValue,
       propertyDefinition.type,
     );
+  }
+
+  connectedCallback() {
+    // Ensure a connection is made with the host environment, so that
+    // the event will be emitted even if no listener is directly attached
+    // to this element.
+    for (const [event, descriptor] of (
+      this.constructor as typeof RemoteElement
+    ).remoteEventDefinitions.entries()) {
+      if (descriptor.bubbles) {
+        this.addEventListener(event, noopBubblesEventListener);
+      }
+    }
+  }
+
+  disconnectedCallback() {
+    for (const [event, descriptor] of (
+      this.constructor as typeof RemoteElement
+    ).remoteEventDefinitions.entries()) {
+      if (descriptor.bubbles) {
+        this.removeEventListener(event, noopBubblesEventListener);
+      }
+    }
   }
 
   addEventListener(
@@ -453,39 +674,21 @@ export abstract class RemoteElement<
     listener: EventListenerOrEventListenerObject,
     options?: boolean | AddEventListenerOptions,
   ) {
-    const {__eventToPropertyMap: eventToPropertyMap} = this
-      .constructor as typeof RemoteElement;
+    const {remoteEventDefinitions, __eventToPropertyMap: eventToPropertyMap} =
+      this.constructor as typeof RemoteElement;
+
+    const listenerDefinition = remoteEventDefinitions.get(type);
     const property = eventToPropertyMap.get(type);
 
-    if (property == null) {
+    if (listenerDefinition == null && property == null) {
       return super.addEventListener(type, listener, options);
     }
 
-    let remoteEvents = this[REMOTE_EVENTS];
-    if (remoteEvents == null) {
-      remoteEvents = {events: new Map(), listeners: new WeakMap()};
-      this[REMOTE_EVENTS] = remoteEvents;
-    }
-
-    let remoteEvent = remoteEvents.events.get(type);
-    if (remoteEvent == null) {
-      remoteEvent = {
-        name: type,
-        property,
-        listeners: new Set(),
-        dispatch: (...args: any[]) => {
-          const event = new RemoteEvent(type, {
-            detail: args.length > 1 ? args : args[0],
-          });
-
-          this.dispatchEvent(event);
-
-          return event.response;
-        },
-      };
-
-      remoteEvents.events.set(type, remoteEvent);
-    }
+    const remoteEvents = getRemoteEvents(this);
+    const remoteEvent = getRemoteEventRecord.call(this, type, {
+      property,
+      definition: listenerDefinition,
+    });
 
     const normalizedListener =
       typeof options === 'object' && options?.once
@@ -519,11 +722,11 @@ export abstract class RemoteElement<
       );
     }
 
-    const currentPropertyValue = this[REMOTE_PROPERTIES][property];
-
-    if (currentPropertyValue != null) return;
-
-    updateRemoteElementProperty(this, property!, remoteEvent.dispatch);
+    if (listenerDefinition) {
+      updateRemoteElementEventListener(this, type, remoteEvent.dispatch);
+    } else {
+      updateRemoteElementProperty(this, property!, remoteEvent.dispatch);
+    }
   }
 
   removeEventListener(
@@ -546,18 +749,80 @@ export abstract class RemoteElement<
     updateRemoteElementProperty(this, name, value);
   }
 
+  updateRemoteAttribute(name: string, value?: string) {
+    updateRemoteElementAttribute(this, name, value);
+  }
+
   callRemoteMethod(method: string, ...args: any[]) {
     return callRemoteElementMethod(this, method, ...args);
   }
 }
 
+function getRemoteEvents(element: RemoteElement<any, any, any, any>): {
+  events: Map<string, RemoteEventRecord>;
+  properties: Map<string, ((event: any) => void) | null>;
+  listeners: WeakMap<
+    EventListenerOrEventListenerObject,
+    RemoteEventListenerRecord
+  >;
+} {
+  if (element[REMOTE_EVENTS]) return element[REMOTE_EVENTS]!;
+
+  const remoteEvents = {
+    events: new Map(),
+    properties: new Map(),
+    listeners: new WeakMap(),
+  };
+
+  Object.defineProperty(element, REMOTE_EVENTS, {
+    value: remoteEvents,
+    enumerable: false,
+  });
+
+  return remoteEvents;
+}
+
+function getRemoteEventRecord(
+  this: RemoteElement<any, any, any, any>,
+  type: string,
+  {property, definition}: Pick<RemoteEventRecord, 'property' | 'definition'>,
+) {
+  const remoteEvents = getRemoteEvents(this);
+
+  let remoteEvent = remoteEvents.events.get(type);
+  if (remoteEvent == null) {
+    remoteEvent = {
+      name: type,
+      property,
+      definition,
+      listeners: new Set(),
+      dispatch: (arg: any) => {
+        const event =
+          definition?.dispatchEvent?.call(this, arg) ??
+          new RemoteEvent(type, {
+            detail: arg,
+            bubbles: definition?.bubbles,
+          });
+
+        this.dispatchEvent(event);
+
+        return (event as any).response;
+      },
+    };
+
+    remoteEvents.events.set(type, remoteEvent);
+  }
+
+  return remoteEvent;
+}
+
 function removeRemoteListener(
-  this: RemoteElement<any, any>,
+  this: RemoteElement<any, any, any, any>,
   type: string,
   listener: EventListenerOrEventListenerObject,
   listenerRecord: RemoteEventListenerRecord,
 ) {
-  const remoteEvents = this[REMOTE_EVENTS]!;
+  const remoteEvents = getRemoteEvents(this);
 
   const remoteEvent = listenerRecord[1];
   remoteEvent.listeners.delete(listener);
@@ -567,38 +832,23 @@ function removeRemoteListener(
 
   remoteEvents.events.delete(type);
 
-  if (this[REMOTE_PROPERTIES][remoteEvent.property] === remoteEvent.dispatch) {
-    updateRemoteElementProperty(this, remoteEvent.property, undefined);
+  if (remoteEvent.property) {
+    if (
+      getRemoteProperties(this)?.[remoteEvent.property] === remoteEvent.dispatch
+    ) {
+      updateRemoteElementProperty(this, remoteEvent.property, undefined);
+    }
+  } else {
+    if (getRemoteEventListeners(this)?.[type] === remoteEvent.dispatch) {
+      updateRemoteElementEventListener(this, type, undefined);
+    }
   }
 }
-
-// function convertPropertyValueToAttribute<Value = unknown>(
-//   value: Value,
-//   type: RemoteElementPropertyTypeOrBuiltIn<Value>,
-// ) {
-//   switch (type) {
-//     case Boolean:
-//       return value ? '' : null;
-//     case Object:
-//     case Array:
-//       return value == null ? value : JSON.stringify(value);
-//     case String:
-//     case Number:
-//       return value == null ? value : String(value);
-//     case Function:
-//       return null;
-//     default: {
-//       return (
-//         (type as RemoteElementPropertyType<Value>).serialize?.(value) ?? null
-//       );
-//     }
-//   }
-// }
 
 function saveRemoteProperty<Value = unknown>(
   name: string,
   description: RemoteElementPropertyDefinition<Value> | undefined,
-  observedAttributes: string[],
+  observedAttributes: Set<string> | string[],
   remotePropertyDefinitions: Map<
     string,
     RemoteElementPropertyNormalizedDefinition
@@ -650,7 +900,12 @@ function saveRemoteProperty<Value = unknown>(
   }
 
   if (attributeName) {
-    observedAttributes.push(attributeName);
+    if (Array.isArray(observedAttributes)) {
+      observedAttributes.push(attributeName);
+    } else {
+      observedAttributes.add(attributeName);
+    }
+
     attributeToPropertyMap.set(attributeName, name);
   }
 
@@ -717,3 +972,5 @@ function convertAttributeValueToProperty<Value = unknown>(
 function camelToKebabCase(str: string) {
   return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
+
+function noopBubblesEventListener() {}

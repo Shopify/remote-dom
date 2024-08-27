@@ -43,6 +43,10 @@ export class Element extends ParentNode {
     return attributes;
   }
 
+  getAttributeNames() {
+    return [...this.attributes].map((attr) => attr.name);
+  }
+
   get firstElementChild() {
     return this.children[0] ?? null;
   }

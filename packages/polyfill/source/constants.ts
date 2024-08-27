@@ -12,6 +12,8 @@ export const DATA = Symbol('data');
 export const USER_PROPERTIES = Symbol('user_properties');
 export const LISTENERS = Symbol('listeners');
 export const IS_TRUSTED = Symbol('isTrusted');
+export const PATH = Symbol('path');
+export const STOP_IMMEDIATE_PROPAGATION = Symbol('stop_immediate_propagation');
 export const CONTENT = Symbol('content');
 export const HOOKS = Symbol('hooks');
 

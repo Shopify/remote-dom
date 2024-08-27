@@ -32,9 +32,139 @@ class MyElement extends RemoteElement {}
 customElements.define('my-element', MyElement);
 ```
 
+##### Remote attributes
+
+You can provide Remote DOM with a list of [attributes](https://developer.mozilla.org/en-US/docs/Glossary/Attribute) that will be synchronized between the remote and host environments. This can be done manually by calling the `updateRemoteAttribute()` method in a custom `RemoteElement` subclass:
+
+```ts
+import {RemoteElement} from '@remote-dom/core/elements';
+
+class MyElement extends RemoteElement {
+  static get observedAttributes() {
+    return ['label'];
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'label') {
+      this.updateRemoteAttribute('label', newValue);
+    }
+  }
+}
+
+customElements.define('my-element', MyElement);
+```
+
+Or, for convenience, by defining a static `remoteAttributes` getter:
+
+```ts
+import {RemoteElement} from '@remote-dom/core/elements';
+
+class MyElement extends RemoteElement {
+  static get remoteAttributes() {
+    return ['label'];
+  }
+}
+
+customElements.define('my-element', MyElement);
+```
+
+Now, when we create a `my-element` element and set its `label` attribute, the change will be communicated to the host environment.
+
+```ts
+const element = document.createElement('my-element');
+element.setAttribute('label', 'Hello, world!');
+```
+
+##### Remote events
+
+You can also provide Remote DOM with a list of [events](https://developer.mozilla.org/en-US/docs/Web/API/Event) that will be synchronized between the remote and host environments. You can register to listen for these events on the remote element using [`addEventListener`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener), and they will be registered as event listeners in the host representation of the element.
+
+To define remote events, you can use the `remoteEvents` static getter:
+
+```ts
+import {RemoteElement} from '@remote-dom/core/elements';
+
+class MyElement extends RemoteElement {
+  static get remoteEvents() {
+    return ['change'];
+  }
+}
+
+customElements.define('my-element', MyElement);
+```
+
+Now, we can create a `my-element` element and add an event listener for the `change` event dispatched by the host:
+
+```ts
+const element = document.createElement('my-element');
+element.addEventListener('change', () => console.log('Changed!'));
+```
+
+By default, a `RemoteEvent` object is dispatched to your remote event listeners. This object is a subclass of [`CustomEvent`](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent), and sets any argument sent from the host on the `detail` property. If you’d prefer a custom event object, you can instead use the object form of `remoteEvents` to set an event’s `dispatchEvent` option, which receives the argument from the host environment, and allows you to return a custom event that will be dispatched on the element:
+
+```ts
+import {RemoteElement} from '@remote-dom/core/elements';
+
+class ChangeEvent extends CustomEvent {
+  constructor(value) {
+    super('change', {detail: value});
+  }
+}
+
+class MyElement extends RemoteElement {
+  static get remoteEvents() {
+    return {
+      change: {
+        dispatchEvent(value) {
+          // Before calling event listeners, update some properties on the element,
+          // so they can be read in event listeners.
+          Object.assign(this, {value});
+          return new ChangeEvent(value);
+        },
+      },
+    };
+  }
+}
+
+customElements.define('my-element', MyElement);
+
+const element = document.createElement('my-element');
+element.addEventListener('change', (event) => {
+  console.log('Changed!', element.value, element.value === event.detail);
+});
+```
+
+Remote events do not bubble by default. As an extension of this behavior, the remote element will not even request that the host inform it of a particular non-bubbling event, unless an event listener for that event is specifically added to the element.
+
+To listen for events in the host regardless of whether the remote element has an event listener, you can use the `bubbles` option when defining your remote event:
+
+```ts
+import {RemoteElement} from '@remote-dom/core/elements';
+
+class MyElement extends RemoteElement {
+  static get remoteEvents() {
+    return {
+      change: {
+        bubbles: true,
+      },
+    };
+  }
+}
+
+customElements.define('my-element', MyElement);
+
+const parent = document.createElement('parent-element');
+const element = document.createElement('my-element');
+parent.append(element);
+
+parent.addEventListener('change', (event) => {
+  console.log('Nested element changed!', event.target, event.bubbles);
+});
+```
+
 ##### Remote properties
 
-Remote DOM converts all the important properties of an element into a dedicated object that can be communicated to the host environment. We refer to this object as an element’s “remote properties”.
+Remote DOM converts an allowlist of element instance properties into a dedicated object that can be communicated to the host environment. We refer to this object as an element’s “remote properties”, and it can be used to synchronize additional state that can’t be represented by attributes or event listeners.
 
 You can manually set an element’s remote properties by using the `updateRemoteProperty()` method:
 
@@ -125,7 +255,12 @@ Each property definition can have the following options:
 
 **`attribute`: whether this property maps to an attribute.** If `true`, which is the default, Remote DOM will set this property value from an attribute with the same name. The `type` option is used to determine how the attribute value is converted to the property value. You can choose an attribute name that differs from the property name by setting this option to a string, instead of `true`.
 
+> **Note:** If you want to use the attribute as the “source of truth” for the property value, > you should use a [remote attribute](#remote-attributes) instead of a remote property.
+
 **`event`: whether this property maps to an event listener.** If `true`, Remote DOM will set the property value to a function if any event listeners are set for the matching event name.
+
+> **Note:** This feature is deprecated. You should use [`remoteEvents`](#remote-events) to define
+> event listeners that will be synchronized with the host environment.
 
 ```ts
 import {RemoteElement} from '@remote-dom/core/elements';
@@ -245,16 +380,16 @@ element.focus();
 
 #### `createRemoteElement`
 
-`createRemoteElement` lets you define a remote element class without having to subclass `RemoteElement`. Instead, you’ll just provide the remote properties and methods for your element using the `properties` and `methods` options:
+`createRemoteElement` lets you define a remote element class without having to subclass `RemoteElement`. Instead, you’ll just provide the remote `properties`, `attributes`, `events`, and `methods` for your element as options to the function:
 
 ```ts
 import {createRemoteElement} from '@remote-dom/core/elements';
 
 const MyElement = createRemoteElement({
+  attributes: ['label'],
+  events: ['change']
   properties: {
-    label: {type: String},
     emphasized: {type: Boolean},
-    onPress: {event: true},
   },
   methods: ['focus'],
 });
@@ -267,21 +402,32 @@ When using TypeScript, you can pass the generic type arguments to `createRemoteE
 ```ts
 import {createRemoteElement} from '@remote-dom/core/elements';
 
-interface MyElementProperties {
+interface MyElementAttributes {
   label?: string;
+}
+
+interface MyElementProperties {
   emphasized?: boolean;
-  onPress?: () => void;
+}
+
+interface MyElementEvents {
+  change(event: CustomEvent): void;
 }
 
 interface MyElementMethods {
   focus(): void;
 }
 
-const MyElement = createRemoteElement<MyElementProperties, MyElementMethods>({
+const MyElement = createRemoteElement<
+  MyElementProperties,
+  MyElementMethods,
+  {},
+  MyElementEvents
+>({
+  attributes: ['label'],
+  events: ['change']
   properties: {
-    label: {type: String},
     emphasized: {type: Boolean},
-    onPress: {event: true},
   },
   methods: ['focus'],
 });
@@ -584,7 +730,7 @@ import {html} from '@remote-dom/core/html';
 
 function MyButton() {
   return html`<ui-button
-    onPress=${() => {
+    onClick=${() => {
       console.log('Pressed!');
     }}
     >Click me!</ui-button
@@ -598,3 +744,10 @@ const html = html`
   </ui-stack>
 ` satisfies HTMLElement;
 ```
+
+This helper uses the following logic to determine whether a given property in the template should map to an attribute, property, or event listener:
+
+- If the property is an instance member of the element, it will be set as a property.
+- If the property is an HTML element, it will be appended as a child in a slot named the same as the property (e.g., `<ui-button modal=${html`<ui-modal />`}>` becomes a `ui-modal` child with a `slot="modal"` attribute).
+- If the property starts with `on`, the value will be set as an event listener, with the event name being the lowercased version of the string following `on` (e.g., `onClick` sets a `click` event).
+- Otherwise, the property will be set as an attribute.
