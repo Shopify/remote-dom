@@ -1,7 +1,5 @@
-import type {
-  RemoteElementConstructor,
-  RemoteElementSlotsDefinition,
-} from '../RemoteElement.ts';
+import type {RemoteElementSlotsDefinition} from '../types.ts';
+import type {RemoteElementConstructor} from '../RemoteElement.ts';
 
 export function remoteSlots<Slots extends Record<string, any> = {}>(
   slots: RemoteElementSlotsDefinition<Slots>,

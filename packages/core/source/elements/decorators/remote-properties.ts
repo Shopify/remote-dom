@@ -1,7 +1,5 @@
-import type {
-  RemoteElementConstructor,
-  RemoteElementPropertiesDefinition,
-} from '../RemoteElement.ts';
+import type {RemoteElementPropertiesDefinition} from '../types.ts';
+import type {RemoteElementConstructor} from '../RemoteElement.ts';
 
 export function remoteProperties<Properties extends Record<string, any> = {}>(
   properties: RemoteElementPropertiesDefinition<Properties>,

@@ -1,4 +1,4 @@
-import type {RemoteElementPropertyType} from '../RemoteElement.ts';
+import type {RemoteElementPropertyType} from '../types.ts';
 
 export const BooleanOrString: RemoteElementPropertyType<boolean | string> = {
   parse(value) {

@@ -1,7 +1,5 @@
-import type {
-  RemoteElement,
-  RemoteElementPropertyDefinition,
-} from '../RemoteElement.ts';
+import type {RemoteElementPropertyDefinition} from '../types.ts';
+import type {RemoteElement} from '../RemoteElement.ts';
 import {updateRemoteElementProperty} from '../internals.ts';
 
 export function remoteProperty<Value = unknown>(
