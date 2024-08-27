@@ -5,7 +5,20 @@ type DOMRemoteReceiverOptions = NonNullable<
 >;
 
 /**
- * A custom element that can be used to simplify receiving
+ * A custom element that can be used to simplify receiving updates to a
+ * remote tree of elements in a host environment. On the host, you can create
+ * a `RemoteReceiverElement` and use its `connection` property to connect
+ * it to a remote environment
+ *
+ * @example
+ * ```ts
+ * import {RemoteReceiverElement} from '@remote-dom/core/elements';
+ *
+ * customElements.define('remote-receiver', RemoteReceiverElement);
+ *
+ * const element = document.createElement('remote-receiver');
+ * console.log(element.connection); // RemoteConnection
+ * ```
  */
 export class RemoteReceiverElement extends HTMLElement {
   /**

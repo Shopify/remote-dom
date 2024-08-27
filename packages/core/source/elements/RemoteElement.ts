@@ -7,106 +7,23 @@ import {
   remoteProperties as getRemoteProperties,
   remoteEventListeners as getRemoteEventListeners,
 } from './internals.ts';
+import type {
+  RemoteElementAttributeDefinition,
+  RemoteElementEventListenerDefinition,
+  RemoteElementEventListenersDefinition,
+  RemoteElementPropertiesDefinition,
+  RemoteElementPropertyDefinition,
+  RemoteElementPropertyType,
+  RemoteElementPropertyTypeOrBuiltIn,
+  RemoteElementSlotsDefinition,
+  RemoteElementSlotDefinition,
+} from './types.ts';
 
-export interface RemoteElementPropertyType<Value = unknown> {
-  parse?(value: string | unknown): Value;
-  serialize?(value: Value): string | unknown;
-}
-
-export type RemoteElementPropertyTypeOrBuiltIn<Value = unknown> =
-  | typeof String
-  | typeof Number
-  | typeof Boolean
-  | typeof Object
-  | typeof Array
-  | typeof Function
-  | RemoteElementPropertyType<Value>;
-
-export interface RemoteElementPropertyDefinition<Value = unknown> {
-  type?: RemoteElementPropertyTypeOrBuiltIn<Value>;
-  alias?: string[];
-  /**
-   * @deprecated Use `RemoteElement.eventListeners` instead.
-   */
-  event?: boolean | string;
-  attribute?: string | boolean;
-  default?: Value;
-}
-
-interface RemoteElementPropertyNormalizedDefinition<Value = unknown> {
-  name: string;
-  type: RemoteElementPropertyTypeOrBuiltIn<Value>;
-  alias?: string[];
-  event?: string;
-  attribute?: string;
-  default?: Value;
-}
-
-export type RemoteElementPropertiesDefinition<
-  Properties extends Record<string, any> = {},
-> = {
-  [Property in keyof Properties]: RemoteElementPropertyDefinition<
-    Properties[Property]
-  >;
-};
-
-export interface RemoteElementSlotDefinition {}
-
-export interface RemoteElementAttributeDefinition {}
-
-export interface RemoteElementEventListenerDefinition {
-  bubbles?: boolean;
-  property?: boolean | string;
-  dispatchEvent?: (
-    this: RemoteElement<any, any, any, any>,
-    arg: any,
-  ) => Event | undefined | void;
-}
-
-export type RemoteElementEventListenersDefinition<
-  EventListeners extends Record<string, any> = {},
-> = {
-  [Event in keyof EventListeners]: RemoteElementEventListenerDefinition;
-};
-
-export interface RemoteElementMethodDefinition {}
-
-export type RemoteElementSlotsDefinition<
-  Slots extends Record<string, any> = {},
-> = {
-  [Slot in keyof Slots]: RemoteElementSlotDefinition;
-};
-
-export type RemoteElementMethodsDefinition<
-  Slots extends Record<string, any> = {},
-> = {
-  [Slot in keyof Slots]: RemoteElementMethodDefinition;
-};
-
-export type RemotePropertiesFromElementConstructor<T> = T extends {
-  new (): RemoteElement<infer Properties, any, any, any>;
-}
-  ? Properties
-  : never;
-
-export type RemoteMethodsFromElementConstructor<T> = T extends {
-  new (): RemoteElement<any, infer Methods, any, any>;
-}
-  ? Methods
-  : never;
-
-export type RemoteSlotsFromElementConstructor<T> = T extends {
-  new (): RemoteElement<any, any, infer Slots, any>;
-}
-  ? Slots
-  : never;
-
-export type RemoteEventListenersFromElementConstructor<T> = T extends {
-  new (): RemoteElement<any, any, any, infer EventListeners>;
-}
-  ? EventListeners
-  : never;
-
+/**
+ * A class that represents a remote custom element, which can have properties,
+ * attributes, event listeners, methods, and slots that are synchronized with
+ * a host environment.
+ */
 export type RemoteElementConstructor<
   Properties extends Record<string, any> = {},
   Methods extends Record<string, (...args: any[]) => any> = {},
@@ -116,70 +33,174 @@ export type RemoteElementConstructor<
   new (): RemoteElement<Properties, Methods, Slots, EventListeners> &
     Properties &
     Methods;
+
+  /**
+   * The slots that can be populated on this remote element.
+   */
   readonly remoteSlots?:
     | RemoteElementSlotsDefinition<Slots>
     | readonly (keyof Slots)[];
+
+  /**
+   * The resolved slot definitions for this remote element.
+   */
   readonly remoteSlotDefinitions: Map<string, RemoteElementSlotDefinition>;
 
+  /**
+   * The properties that can be synchronized between this remote element and
+   * its host representation.
+   */
   readonly remoteProperties?:
     | RemoteElementPropertiesDefinition<Properties>
     | readonly (keyof Properties)[];
+
+  /**
+   * The resolved property definitions for this remote element.
+   */
   readonly remotePropertyDefinitions: Map<
     string,
     RemoteElementPropertyNormalizedDefinition
   >;
 
+  /**
+   * Creates a new definition for a property that will be synchronized between
+   * this remote element and its host representation.
+   */
+  createProperty<Value = unknown>(
+    name: string,
+    definition?: RemoteElementPropertyDefinition<Value>,
+  ): void;
+
+  /**
+   * The attributes that can be synchronized between this remote element and
+   * its host representation.
+   */
   readonly remoteAttributes?: readonly string[];
+
+  /**
+   * The resolved attribute definitions for this remote element.
+   */
   readonly remoteAttributeDefinitions: Map<
     string,
     RemoteElementAttributeDefinition
   >;
 
+  /**
+   * The event listeners that can be synchronized between this remote element
+   * and its host representation.
+   */
   readonly remoteEvents?:
     | RemoteElementEventListenersDefinition<EventListeners>
     | readonly (keyof EventListeners)[];
+
+  /**
+   * The resolved event listener definitions for this remote element.
+   */
   readonly remoteEventDefinitions: Map<
     string,
     RemoteElementEventListenerDefinition
   >;
 
+  /**
+   * The methods on the corresponding host element that you can call from the remote
+   * environment.
+   */
   readonly remoteMethods?: Methods | readonly (keyof Methods)[];
-  createProperty<Value = unknown>(
-    name: string,
-    definition?: RemoteElementPropertyDefinition<Value>,
-  ): void;
 };
 
+/**
+ * Returns the properties type from a remote element constructor.
+ */
+export type RemotePropertiesFromElementConstructor<T> = T extends {
+  new (): RemoteElement<infer Properties, any, any, any>;
+}
+  ? Properties
+  : never;
+
+/**
+ * Returns the methods type from a remote element constructor.
+ */
+export type RemoteMethodsFromElementConstructor<T> = T extends {
+  new (): RemoteElement<any, infer Methods, any, any>;
+}
+  ? Methods
+  : never;
+
+/**
+ * Returns the slots type from a remote element constructor.
+ */
+export type RemoteSlotsFromElementConstructor<T> = T extends {
+  new (): RemoteElement<any, any, infer Slots, any>;
+}
+  ? Slots
+  : never;
+
+/**
+ * Returns the event listeners type from a remote element constructor.
+ */
+export type RemoteEventListenersFromElementConstructor<T> = T extends {
+  new (): RemoteElement<any, any, any, infer EventListeners>;
+}
+  ? EventListeners
+  : never;
+
+/**
+ * Options that can be passed when creating a new remote element class with
+ * `createRemoteElement()`.
+ */
 export interface RemoteElementCreatorOptions<
   Properties extends Record<string, any> = {},
   Methods extends Record<string, any> = {},
   Slots extends Record<string, any> = {},
   EventListeners extends Record<string, any> = {},
 > {
+  /**
+   * The slots that can be populated on this remote element.
+   */
   slots?: RemoteElementConstructor<
     Properties,
     Methods,
     Slots,
     EventListeners
   >['remoteSlots'];
+
+  /**
+   * The properties that can be synchronized between this remote element and
+   * its host representation.
+   */
   properties?: RemoteElementConstructor<
     Properties,
     Methods,
     Slots,
     EventListeners
   >['remoteProperties'];
+
+  /**
+   * The attributes that can be synchronized between this remote element and
+   * its host representation.
+   */
   attributes?: RemoteElementConstructor<
     Properties,
     Methods,
     Slots,
     EventListeners
   >['remoteAttributes'];
+
+  /**
+   * The event listeners that can be synchronized between this remote element
+   * and its host representation.
+   */
   events?: RemoteElementConstructor<
     Properties,
     Methods,
     Slots,
     EventListeners
   >['remoteEvents'];
+
+  /**
+   * The methods on the corresponding host element that you can call from the remote
+   * environment.
+   */
   methods?: RemoteElementConstructor<
     Properties,
     Methods,
@@ -220,23 +241,28 @@ export function createRemoteElement<
   return RemoteElementConstructor;
 }
 
-const REMOTE_EVENTS = Symbol('remote.events');
-
-interface RemoteEventRecord {
-  readonly name: string;
-  readonly property?: string;
-  readonly definition?: RemoteElementEventListenerDefinition;
-  readonly listeners: Set<EventListenerOrEventListenerObject>;
-  dispatch(...args: any[]): unknown;
-}
-
-type RemoteEventListenerRecord = [
-  EventListenerOrEventListenerObject,
-  RemoteEventRecord,
-];
-
 // Heavily inspired by https://github.com/lit/lit/blob/343187b1acbbdb02ce8d01fa0a0d326870419763/packages/reactive-element/src/reactive-element.ts
-// @ts-ignore-error
+
+/**
+ * A base class for creating “remote” HTML elements, which have properties, attributes,
+ * event listeners, slots, and methods that can be synchronized between a host and
+ * remote environment. When subclassing `RemoteElement`, you can define how different fields
+ * in the class will be synchronized by defining the `remoteProperties`, `remoteAttributes`,
+ * `remoteEvents`, and/or `remoteMethods` static properties.
+ *
+ * @example
+ * ```ts
+ * class CustomButton extends RemoteElement {
+ *   static remoteAttributes = ['disabled', 'primary'];
+ *   static remoteEvents = ['click'];
+ *
+ *   focus() {
+ *     console.log('Calling focus in the remote environment...');
+ *     return this.callRemoteMethod('focus');
+ *   }
+ * }
+ * ```
+ */
 export abstract class RemoteElement<
   Properties extends Record<string, any> = {},
   Methods extends Record<string, (...args: any[]) => any> = {},
@@ -255,6 +281,9 @@ export abstract class RemoteElement<
     return this.finalize().__observedAttributes;
   }
 
+  /**
+   * The resolved property definitions for this remote element.
+   */
   static get remotePropertyDefinitions(): Map<
     string,
     RemoteElementPropertyNormalizedDefinition
@@ -262,6 +291,9 @@ export abstract class RemoteElement<
     return this.finalize().__remotePropertyDefinitions;
   }
 
+  /**
+   * The resolved attribute definitions for this remote element.
+   */
   static get remoteAttributeDefinitions(): Map<
     string,
     RemoteElementAttributeDefinition
@@ -269,6 +301,9 @@ export abstract class RemoteElement<
     return this.finalize().__remoteAttributeDefinitions;
   }
 
+  /**
+   * The resolved event listener definitions for this remote element.
+   */
   static get remoteEventDefinitions(): Map<
     string,
     RemoteElementEventListenerDefinition
@@ -276,6 +311,9 @@ export abstract class RemoteElement<
     return this.finalize().__remoteEventDefinitions;
   }
 
+  /**
+   * The resolved slot definitions for this remote element.
+   */
   static get remoteSlotDefinitions(): Map<string, RemoteElementSlotDefinition> {
     return this.finalize().__remoteSlotDefinitions;
   }
@@ -301,6 +339,10 @@ export abstract class RemoteElement<
     RemoteElementSlotDefinition
   >();
 
+  /**
+   * Creates a new definition for a property that will be synchronized between
+   * this remote element and its host representation.
+   */
   static createProperty<Value = unknown>(
     name: string,
     definition?: RemoteElementPropertyDefinition<Value>,
@@ -315,6 +357,11 @@ export abstract class RemoteElement<
     );
   }
 
+  /**
+   * Consumes all the static members defined on the class and converts them
+   * into the internal representation used to handle properties, attributes,
+   * and event listeners.
+   */
   protected static finalize(): typeof this {
     // eslint-disable-next-line no-prototype-builtins
     if (this.hasOwnProperty('__finalized')) {
@@ -504,15 +551,6 @@ export abstract class RemoteElement<
 
   /** @internal */
   __eventListeners?: EventListeners;
-
-  private [REMOTE_EVENTS]?: {
-    readonly events: Map<string, RemoteEventRecord>;
-    readonly properties: Map<string, ((event: any) => void) | null>;
-    readonly listeners: WeakMap<
-      EventListenerOrEventListenerObject,
-      RemoteEventListenerRecord
-    >;
-  };
 
   constructor() {
     super();
@@ -734,8 +772,7 @@ export abstract class RemoteElement<
     listener: EventListenerOrEventListenerObject,
     options?: boolean | EventListenerOptions,
   ) {
-    const remoteEvents = this[REMOTE_EVENTS];
-    const listenerRecord = remoteEvents?.listeners.get(listener);
+    const listenerRecord = REMOTE_EVENTS.get(this)?.listeners.get(listener);
     const normalizedListener = listenerRecord ? listenerRecord[0] : listener;
 
     super.removeEventListener(type, normalizedListener, options);
@@ -745,18 +782,70 @@ export abstract class RemoteElement<
     removeRemoteListener.call(this, type, listener, listenerRecord);
   }
 
+  /**
+   * Updates a single remote property on an element node. If the element is
+   * connected to a remote root, this function will also make a `mutate()` call
+   * to communicate the change to the host.
+   */
   updateRemoteProperty(name: string, value?: unknown) {
     updateRemoteElementProperty(this, name, value);
   }
 
+  /**
+   * Updates a single remote attribute on an element node. If the element is
+   * connected to a remote root, this function will also make a `mutate()` call
+   * to communicate the change to the host.
+   */
   updateRemoteAttribute(name: string, value?: string) {
     updateRemoteElementAttribute(this, name, value);
   }
 
+  /**
+   * Performs a method through `RemoteConnection.call()`, using the remote ID and
+   * connection for the provided node.
+   */
   callRemoteMethod(method: string, ...args: any[]) {
     return callRemoteElementMethod(this, method, ...args);
   }
 }
+
+// Utilities
+
+interface RemoteElementPropertyNormalizedDefinition<Value = unknown> {
+  name: string;
+  type: RemoteElementPropertyTypeOrBuiltIn<Value>;
+  alias?: string[];
+  event?: string;
+  attribute?: string;
+  default?: Value;
+}
+
+const REMOTE_EVENTS = new WeakMap<
+  RemoteElement<any, any, any, any>,
+  RemoteElementEventCache
+>();
+
+interface RemoteElementEventCache {
+  readonly events: Map<string, RemoteEventRecord>;
+  readonly properties: Map<string, ((event: any) => void) | null>;
+  readonly listeners: WeakMap<
+    EventListenerOrEventListenerObject,
+    RemoteEventListenerRecord
+  >;
+}
+
+interface RemoteEventRecord {
+  readonly name: string;
+  readonly property?: string;
+  readonly definition?: RemoteElementEventListenerDefinition;
+  readonly listeners: Set<EventListenerOrEventListenerObject>;
+  dispatch(...args: any[]): unknown;
+}
+
+type RemoteEventListenerRecord = [
+  EventListenerOrEventListenerObject,
+  RemoteEventRecord,
+];
 
 function getRemoteEvents(element: RemoteElement<any, any, any, any>): {
   events: Map<string, RemoteEventRecord>;
@@ -766,20 +855,19 @@ function getRemoteEvents(element: RemoteElement<any, any, any, any>): {
     RemoteEventListenerRecord
   >;
 } {
-  if (element[REMOTE_EVENTS]) return element[REMOTE_EVENTS]!;
+  let events = REMOTE_EVENTS.get(element);
 
-  const remoteEvents = {
+  if (events) return events;
+
+  events = {
     events: new Map(),
     properties: new Map(),
     listeners: new WeakMap(),
   };
 
-  Object.defineProperty(element, REMOTE_EVENTS, {
-    value: remoteEvents,
-    enumerable: false,
-  });
+  REMOTE_EVENTS.set(element, events);
 
-  return remoteEvents;
+  return events;
 }
 
 function getRemoteEventRecord(

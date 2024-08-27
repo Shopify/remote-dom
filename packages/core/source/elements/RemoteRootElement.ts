@@ -10,6 +10,28 @@ import {
   REMOTE_IDS,
 } from './internals.ts';
 
+/**
+ * A custom element that represents the root of a remote tree of elements.
+ * To use this element, define it as a custom element and create it with
+ * `document.createElement()`. Then, call its `connect()` method with a
+ * `RemoteConnection` instance from a host environment, and start appending
+ * child nodes to the tree. Any changes to the tree nested under this element
+ * will be synchronized with the host environment automatically.
+ *
+ * @example
+ * ```ts
+ * import {RemoteRootElement} from '@remote-dom/core/elements';
+ *
+ * customElements.define('remote-root', RemoteRootElement);
+ *
+ * const element = document.createElement('remote-root');
+ *
+ * withRemoteConnectionFromHost((connection) => {
+ *   element.connect(connection);
+ * });
+ *
+ * element.append('Hello world!');
+ */
 export class RemoteRootElement extends HTMLElement {
   constructor() {
     super();

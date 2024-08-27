@@ -2,14 +2,6 @@ export {
   RemoteElement,
   createRemoteElement,
   type RemoteElementConstructor,
-  type RemoteElementPropertyType,
-  type RemoteElementPropertyDefinition,
-  type RemoteElementPropertiesDefinition,
-  type RemoteElementAttributeDefinition,
-  type RemoteElementEventListenerDefinition,
-  type RemoteElementEventListenersDefinition,
-  type RemoteElementSlotDefinition,
-  type RemoteElementSlotsDefinition,
   type RemotePropertiesFromElementConstructor,
   type RemoteMethodsFromElementConstructor,
   type RemoteSlotsFromElementConstructor,
@@ -19,6 +11,16 @@ export {
 export {RemoteFragmentElement} from './elements/RemoteFragmentElement.ts';
 export {RemoteRootElement} from './elements/RemoteRootElement.ts';
 export {RemoteReceiverElement} from './elements/RemoteReceiverElement.ts';
+export type {
+  RemoteElementPropertyType,
+  RemoteElementPropertyDefinition,
+  RemoteElementPropertiesDefinition,
+  RemoteElementAttributeDefinition,
+  RemoteElementEventListenerDefinition,
+  RemoteElementEventListenersDefinition,
+  RemoteElementSlotDefinition,
+  RemoteElementSlotsDefinition,
+} from './elements/types.ts';
 
 export {RemoteEvent} from './elements/RemoteEvent.ts';
 export {RemoteMutationObserver} from './elements/RemoteMutationObserver.ts';
