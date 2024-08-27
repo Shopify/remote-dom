@@ -28,6 +28,8 @@ export {
   disconnectRemoteNode,
   serializeRemoteNode,
   updateRemoteElementProperty,
+  updateRemoteElementAttribute,
+  updateRemoteElementEventListener,
   callRemoteElementMethod,
 } from './elements/internals.ts';
 
