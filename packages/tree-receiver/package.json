@@ -1,0 +1,81 @@
+{
+  "name": "@remote-dom/tree-receiver",
+  "type": "module",
+  "license": "MIT",
+  "description": "A RemoteReceiver implementation for Virtual DOM hosts",
+  "publishConfig": {
+    "access": "public",
+    "@remote-dom/registry": "https://registry.npmjs.org"
+  },
+  "version": "1.0.2",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/remote-dom",
+    "directory": "packages/tree-receiver"
+  },
+  "exports": {
+    ".": {
+      "types": "./build/typescript/index.d.ts",
+      "quilt:source": "./source/index.ts",
+      "quilt:esnext": "./build/esnext/index.esnext",
+      "import": "./build/esm/index.mjs"
+    },
+    "./preact": {
+      "types": "./build/typescript/preact.d.ts",
+      "quilt:source": "./source/preact.ts",
+      "quilt:esnext": "./build/esnext/preact.esnext",
+      "import": "./build/esm/preact.mjs"
+    },
+    "./react": {
+      "types": "./build/typescript/react.d.ts",
+      "quilt:source": "./source/react.ts",
+      "quilt:esnext": "./build/esnext/react.esnext",
+      "import": "./build/esm/react.mjs"
+    }
+  },
+  "types": "./build/typescript/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "preact": [
+        "./build/typescript/preact.d.ts"
+      ],
+      "react": [
+        "./build/typescript/react.d.ts"
+      ]
+    }
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "rollup --config rollup.config.js"
+  },
+  "dependencies": {
+    "@remote-dom/core": "workspace:^1.1.0"
+  },
+  "peerDependencies": {
+    "preact": "*",
+    "react": "*"
+  },
+  "peerDependenciesMeta": {
+    "preact": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@quilted/preact-testing": "^0.1.7",
+    "@quilted/react-testing": "^0.1.7",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
+    "preact": "^10.22.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "browserslist": [
+    "defaults and not dead"
+  ]
+}

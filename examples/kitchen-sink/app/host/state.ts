@@ -1,6 +1,6 @@
 import {signal, effect} from '@preact/signals';
 import {retain, release} from '@quilted/threads';
-import {PreactRemoteReceiver} from './receiver.ts';
+import {PreactTreeReceiver} from '@remote-dom/tree-receiver/preact';
 
 import type {RenderExample, RenderSandbox} from '../types.ts';
 import {ComponentType} from 'preact';
@@ -23,7 +23,7 @@ export function createState(
   render: (details: {
     example: RenderExample;
     sandbox: RenderSandbox;
-    receiver: PreactRemoteReceiver;
+    receiver: PreactTreeReceiver;
   }) => void | Promise<void>,
   components: Map<string, ComponentType>,
 ) {
@@ -50,7 +50,7 @@ export function createState(
   );
 
   const receiver = signal<
-    PreactRemoteReceiver | Error | Promise<PreactRemoteReceiver> | undefined
+    PreactTreeReceiver | Error | Promise<PreactTreeReceiver> | undefined
   >(undefined);
 
   const tree = signal<JSX.Element>();
@@ -65,7 +65,7 @@ export function createState(
 
   const exampleCache = new Map<
     string,
-    PreactRemoteReceiver | Error | Promise<PreactRemoteReceiver>
+    PreactTreeReceiver | Error | Promise<PreactTreeReceiver>
   >();
 
   effect(() => {
@@ -88,10 +88,11 @@ export function createState(
     window.history.replaceState({}, '', newURL.toString());
 
     if (cached == null) {
-      const receiver = new PreactRemoteReceiver({
+      const receiver = new PreactTreeReceiver({
         retain,
         release,
         components,
+        rerender() {},
       });
       cached = Promise.resolve(
         render({
@@ -114,7 +115,7 @@ export function createState(
 
     receiver.value = cached;
 
-    function updateValueAfterRender(value: PreactRemoteReceiver | Error) {
+    function updateValueAfterRender(value: PreactTreeReceiver | Error) {
       exampleCache.set(key, value);
 
       if (sandboxValue !== sandbox.peek() || exampleValue !== example.peek()) {
