@@ -1,9 +1,10 @@
 import '@remote-dom/core/polyfill';
+import '@remote-dom/react/polyfill';
 import {retain, createThreadFromWebWorker} from '@quilted/threads';
 
-import '../elements.ts';
 import {render} from '../render.ts';
 import type {SandboxAPI} from '../../types.ts';
+import {REMOTE_ID, REMOTE_CONNECTION} from '@remote-dom/core';
 
 // We use the `@quilted/threads` library to create a “thread” for our iframe,
 // which lets us communicate over `postMessage` without having to worry about
@@ -28,8 +29,15 @@ createThreadFromWebWorker<SandboxAPI>(self as any as Worker, {
       // reflected on this "host" page. This element is defined by the Remote DOM
       // library, and provides a convenient `connect()` method that starts
       // synchronizing its children over a `RemoteConnection`.
+      if (!customElements.get('remote-root')) {
+        class RemoteRoot extends HTMLElement {
+          [REMOTE_ID] = '~';
+          [REMOTE_CONNECTION] = connection;
+        }
+        customElements.define('remote-root', RemoteRoot);
+      }
       const root = document.createElement('remote-root');
-      root.connect(connection);
+      root.connect?.(connection);
 
       render(root, api);
     },

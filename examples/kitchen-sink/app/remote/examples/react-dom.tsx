@@ -5,7 +5,6 @@ import {useState, useRef} from 'react';
 import {createRoot} from 'react-dom/client';
 
 import type {RenderAPI} from '../../types.ts';
-import '../elements.ts';
 import {RemoteElement} from '@remote-dom/core/elements';
 
 type IgnoreKeys =

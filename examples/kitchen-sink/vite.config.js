@@ -13,6 +13,9 @@ export default defineConfig({
     preact({
       // We manually set the JSX transformation to apply to examples per-file
       exclude: ['remote/examples/*.tsx'],
+      devToolsEnabled: false,
+      prefreshEnabled: false,
+      reactAliasesEnabled: false,
     }),
     svelte({
       preprocess: vitePreprocess(),

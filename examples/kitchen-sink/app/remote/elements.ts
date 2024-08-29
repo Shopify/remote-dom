@@ -82,3 +82,59 @@ declare global {
     'remote-fragment': InstanceType<typeof RemoteFragmentElement>;
   }
 }
+
+// monkeypatch RemoteElement to remove all custom event handling
+// so it just uses the standard EventTarget implementation.
+const EVENT_HANDLER_PROPERTIES = Symbol('EVENT_HANDLER_PROPERTIES');
+function strip(Ctor: any) {
+  const remoteElementProto = Object.getPrototypeOf(Ctor).prototype;
+  delete remoteElementProto.addEventListener;
+  delete remoteElementProto.removeEventListener;
+  delete remoteElementProto.dispatchEvent;
+  Ctor.remotePropertyDefinitions.forEach((value, key) => {
+    if (key.startsWith('_on')) {
+      Ctor.remotePropertyDefinitions.delete(key);
+    } else if (value.event) {
+      // we should probably just implement this in the React wrapper
+      const isReactStyle = key !== 'on' + value.event;
+      const proxyHandler = function (
+        this: Element & {[EVENT_HANDLER_PROPERTIES]: Record<string, Function>},
+        event: Event,
+      ) {
+        const handlers = this[EVENT_HANDLER_PROPERTIES];
+        if (isReactStyle) return handlers?.[key]?.(event.detail, event);
+        return handlers?.[key]?.(event);
+      };
+
+      // remove the funky event handler behavior, but don't delete
+      // the "remote property definition" because the Preact+React
+      // wrapper code currently relies on it (it should probably
+      // just forward props by default instead!)
+      value.alias = undefined;
+      // install a standard event handler property
+      const type = value.event;
+      Object.defineProperty(Ctor.prototype, key, {
+        configurable: true,
+        enumerable: true,
+        get() {
+          return this[EVENT_HANDLER_PROPERTIES]?.[key] ?? null;
+        },
+        set(value) {
+          let handlers = this[EVENT_HANDLER_PROPERTIES];
+          if (!handlers) this[EVENT_HANDLER_PROPERTIES] = handlers = {};
+          const prev = handlers[key];
+          handlers[key] = value;
+          if (value && !prev) {
+            this.addEventListener(type, proxyHandler);
+          } else if (!value && prev) {
+            this.removeEventListener(type, proxyHandler);
+          }
+        },
+      });
+    }
+  });
+}
+strip(Text);
+strip(Button);
+strip(Stack);
+strip(Modal);
