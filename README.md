@@ -311,7 +311,7 @@ You’ve now seen the key elements of parts of Remote DOM, but it can help you w
 
 This repository also contains a few companion packages to `@remote-dom/core` that are used in some of the examples above:
 
-- [`@remote-dom/preact`](./packages/react/), which provides [Preact](https://preactjs.com) wrapper components for the remote environment, and the ability to map remote elements directly to Preact components on the host.
+- [`@remote-dom/preact`](./packages/preact/), which provides [Preact](https://preactjs.com) wrapper components for the remote environment, and the ability to map remote elements directly to Preact components on the host.
 - [`@remote-dom/react`](./packages/react/), which provides [React](https://react.dev) wrapper components for the remote environment, and the ability to map remote elements directly to React components on the host.
 - [`@remote-dom/polyfill`](./packages/polyfill/), which provides a minimal polyfill of the DOM APIs needed to run Remote DOM inside a non-DOM environment, like a Web Worker.
 - [`@remote-dom/signals`](./packages/signals/), which lets you receive remote updates into a tree of [signals](https://preactjs.com/guide/v10/signals/).
