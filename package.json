@@ -25,7 +25,7 @@
     "@changesets/cli": "^2.27.0",
     "@quilted/rollup": "^0.2.32",
     "@quilted/typescript": "^0.4.1",
-    "@quilted/vite": "^0.1.22",
+    "@quilted/vite": "^0.1.27",
     "@types/node": "~20.11.0",
     "jsdom": "^24.1.0",
     "prettier": "^3.3.3",
