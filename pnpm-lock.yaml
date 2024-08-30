@@ -131,8 +131,8 @@ importers:
         version: 3.1.1
     devDependencies:
       '@preact/signals-core':
-        specifier: ^1.7.0
-        version: 1.7.0
+        specifier: ^1.8.0
+        version: 1.8.0
       '@quilted/testing':
         specifier: ^0.1.6
         version: 0.1.6
@@ -155,8 +155,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(preact@10.22.1)
       '@preact/signals-core':
-        specifier: ^1.7.0
-        version: 1.7.0
+        specifier: ^1.8.0
+        version: 1.8.0
       '@quilted/preact-testing':
         specifier: ^0.1.7
         version: 0.1.7(preact@10.22.1)
@@ -192,8 +192,8 @@ importers:
   packages/signals:
     devDependencies:
       '@preact/signals-core':
-        specifier: ^1.7.0
-        version: 1.7.0
+        specifier: ^1.8.0
+        version: 1.8.0
       '@remote-dom/core':
         specifier: workspace:^1.5.0
         version: link:../core
@@ -2314,6 +2314,9 @@ packages:
   /@preact/signals-core@1.7.0:
     resolution: {integrity: sha512-bEZLgmJGSBVP5PUPDowhPW3bVdMmp9Tr5OEl+SQK+8Tv9T7UsIfyN905cfkmmeqw8z4xp8T6zrl4M1uj9+HAfg==}
 
+  /@preact/signals-core@1.8.0:
+    resolution: {integrity: sha512-OBvUsRZqNmjzCZXWLxkZfhcgT+Fk8DDcT/8vD6a1xhDemodyy87UJRJfASMuSD8FaAIeGgGm85ydXhm7lr4fyA==}
+
   /@preact/signals@1.3.0(preact@10.22.1):
     resolution: {integrity: sha512-EOMeg42SlLS72dhoq6Vjq08havnLseWmPQ8A0YsgIAqMgWgx7V1a39+Pxo6i7SY5NwJtH4849JogFq3M67AzWg==}
     peerDependencies:
@@ -2393,7 +2396,7 @@ packages:
     resolution: {integrity: sha512-fR72FXN7F/luMIDiVh7uvR3M3IWDBJuSAct3yV4IvQTnapv5Fw5BkOFueqSBaWmcSG8Yx/sCC3yhApF/rdvmTg==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@preact/signals-core': 1.7.0
+      '@preact/signals-core': 1.8.0
     dev: false
 
   /@quilted/graphql@3.3.2:
@@ -2511,7 +2514,7 @@ packages:
     resolution: {integrity: sha512-iGWkDiDpR2xq0FmAF/ix/cz1qUtz2USp+8kam/QnHe0i50uKCBkufv/QHv0QhhB2/eKbHwa8wxKwslCKdiyS2w==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@preact/signals-core': 1.7.0
+      '@preact/signals-core': 1.8.0
       '@quilted/events': 2.0.0
     dev: true
 
