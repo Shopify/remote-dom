@@ -1,5 +1,11 @@
 # @remote-dom/polyfill
 
+## 1.3.1
+
+### Patch Changes
+
+- [#436](https://github.com/Shopify/remote-dom/pull/436) [`5979797`](https://github.com/Shopify/remote-dom/commit/59797975a3ccf2bee825809f67e05ca4a28e2647) Thanks [@jakearchibald](https://github.com/jakearchibald)! - Ensure the `createText` hook is called when creating a new text node
+
 ## 1.3.0
 
 ### Minor Changes
