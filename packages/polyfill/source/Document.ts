@@ -50,7 +50,9 @@ export class Document extends ParentNode {
   }
 
   createTextNode(data: any) {
-    return createNode(new Text(data), this);
+    const text = createNode(new Text(data), this);
+    this[HOOKS].createText?.(text as any, String(data));
+    return text;
   }
 
   createComment(data: any) {
