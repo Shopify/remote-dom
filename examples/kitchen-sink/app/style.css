@@ -200,6 +200,13 @@ li {
   font-weight: bold;
 }
 
+.Text--monospace {
+  font-family: monospace;
+  font-size: 8px;
+  line-height: 0.9;
+  letter-spacing: -0.1em;
+}
+
 .ControlPanel {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
