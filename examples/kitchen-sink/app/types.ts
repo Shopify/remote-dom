@@ -13,7 +13,11 @@ export type RenderSandbox =
    * The remote code is executed in a web worker.
    * @see https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API
    */
-  | 'worker';
+  | 'worker'
+  /**
+   * A web worker that is using remote-ui
+   */
+  | 'remote-ui-worker';
 
 /**
  * Describes the example used to render the UI in the sandboxed environment.
@@ -56,6 +60,13 @@ export interface RenderAPI {
  */
 export interface SandboxAPI {
   render(connection: RemoteConnection, api: RenderAPI): Promise<unknown>;
+}
+
+export interface LegacySandboxAPI {
+  render(
+    channel: import('@remote-ui/core').RemoteChannel,
+    api: RenderAPI,
+  ): Promise<unknown>;
 }
 
 // These property and method types will be used by both the host and remote environments.

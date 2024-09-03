@@ -6,7 +6,7 @@ import {
 } from '@remote-dom/preact/host';
 import {ThreadIframe, ThreadWebWorker} from '@quilted/threads';
 
-import type {SandboxAPI} from './types.ts';
+import type {LegacySandboxAPI, SandboxAPI} from './types.ts';
 import {Button, Modal, Stack, Text, ControlPanel} from './host/components.tsx';
 import {createState} from './host/state.ts';
 
@@ -29,6 +29,21 @@ const worker = new Worker(
   },
 );
 const workerSandbox = new ThreadWebWorker<SandboxAPI>(worker);
+
+import {createEndpoint, fromWebWorker} from '@remote-ui/rpc';
+import {wrapRemoteUiSandbox} from './host/remote-ui-adapter.ts';
+
+// a wild remote-ui powered sandbox appears!
+const legacyWorkerSandbox = createEndpoint<LegacySandboxAPI>(
+  fromWebWorker(
+    new Worker(
+      new URL('./remote/remote-ui-worker/sandbox.ts', import.meta.url),
+      {
+        type: 'module',
+      },
+    ),
+  ),
+);
 
 // We will use Preact to render remote elements in this example. The Preact
 // helper library lets you do this by mapping the name of a remote element to
@@ -56,6 +71,12 @@ const components = new Map([
 // each time. This object, a `SignalRemoteReceiver`, keeps track of the tree of elements
 // rendered by the remote environment. We use this object later to render these trees
 // to Preact components using the `RemoteRootRenderer` component.
+
+const sandboxes = {
+  iframe: iframeSandbox,
+  worker: workerSandbox,
+  'remote-ui-worker': wrapRemoteUiSandbox(legacyWorkerSandbox),
+};
 
 const {receiver, example, sandbox} = createState(
   async ({receiver, example, sandbox}) => {

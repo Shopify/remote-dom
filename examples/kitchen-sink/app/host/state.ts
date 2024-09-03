@@ -4,7 +4,11 @@ import {SignalRemoteReceiver} from '@remote-dom/preact/host';
 import type {RenderExample, RenderSandbox} from '../types.ts';
 
 const DEFAULT_SANDBOX = 'worker';
-const ALLOWED_SANDBOX_VALUES = new Set<RenderSandbox>(['iframe', 'worker']);
+const ALLOWED_SANDBOX_VALUES = new Set<RenderSandbox>([
+  'iframe',
+  'worker',
+  'remote-ui-worker',
+]);
 
 const DEFAULT_EXAMPLE = 'vanilla';
 const ALLOWED_EXAMPLE_VALUES = new Set<RenderExample>([
