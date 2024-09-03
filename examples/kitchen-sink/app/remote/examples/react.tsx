@@ -1,7 +1,7 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource react */
 
-import {useState, useRef} from 'react';
+import {useState, useRef, Suspense, StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import {createRemoteComponent} from '@remote-dom/react';
 
@@ -28,10 +28,41 @@ const Modal = createRemoteComponent('ui-modal', ModalElement, {
 });
 
 export function renderUsingReact(root: Element, api: RenderAPI) {
-  createRoot(root).render(<App api={api} />);
+  createRoot(root).render(
+    <StrictMode>
+      <Suspense fallback={<Text>Loading...</Text>}>
+        <App api={api} />
+      </Suspense>
+    </StrictMode>,
+  );
+
+  setTimeout(() => {
+    console.log(JSON.stringify(root.innerHTML));
+  });
 }
 
+let result: string;
+let promise: Promise<string>;
+
+const Suspender = {
+  get: () => {
+    if (result) return result;
+    if (promise) throw promise;
+
+    promise = new Promise((resolve) => {
+      setTimeout(() => {
+        result = `Suspense boundary resolved!`;
+        resolve(result);
+      }, 1_000);
+    });
+
+    throw promise;
+  },
+};
+
 function App({api}: {api: RenderAPI}) {
+  const suspenseResult = Suspender.get();
+
   return (
     <Stack spacing>
       <Text>
@@ -40,6 +71,7 @@ function App({api}: {api: RenderAPI}) {
       <Text>
         Rendering in sandbox: <Text emphasis>{api.sandbox}</Text>
       </Text>
+      <Text>Suspense result: {suspenseResult}</Text>
       <Button modal={<CountModal alert={api.alert} />}>Open modal</Button>
     </Stack>
   );

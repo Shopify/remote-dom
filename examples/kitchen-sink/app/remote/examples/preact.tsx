@@ -3,6 +3,7 @@
 
 import {render} from 'preact';
 import {useRef} from 'preact/hooks';
+import {Suspense} from 'preact/compat';
 import {useSignal} from '@preact/signals';
 import {createRemoteComponent} from '@remote-dom/preact';
 
@@ -29,10 +30,36 @@ const Modal = createRemoteComponent('ui-modal', ModalElement, {
 });
 
 export function renderUsingPreact(root: Element, api: RenderAPI) {
-  render(<App api={api} />, root);
+  render(
+    <Suspense fallback="Loading...">
+      <App api={api} />
+    </Suspense>,
+    root,
+  );
 }
 
+let result: string;
+let promise: Promise<string>;
+
+const Suspender = {
+  get: () => {
+    if (result) return result;
+    if (promise) throw promise;
+
+    promise = new Promise((resolve) => {
+      setTimeout(() => {
+        result = `Suspense boundary resolved!`;
+        resolve(result);
+      }, 1_000);
+    });
+
+    throw promise;
+  },
+};
+
 function App({api}: {api: RenderAPI}) {
+  const suspenseResult = Suspender.get();
+
   return (
     <Stack spacing>
       <Text>
@@ -41,6 +68,7 @@ function App({api}: {api: RenderAPI}) {
       <Text>
         Rendering in sandbox: <Text emphasis>{api.sandbox}</Text>
       </Text>
+      <Text>Suspense result: {suspenseResult}</Text>
       <Button modal={<CountModal alert={api.alert} />}>Open modal</Button>
     </Stack>
   );
