@@ -16,6 +16,11 @@ export type {RemoteConnection};
 
 export interface RemoteConnectionHandler {
   /**
+   * Triggers events on the host component.
+   */
+  dispatchEvent: <E extends Event>(id: string, event: E) => void;
+
+  /**
    * Handles the `call()` operation on the `RemoteConnection`.
    */
   call: RemoteConnection['call'];
@@ -62,6 +67,7 @@ export interface RemoteConnectionHandler {
  * naming on top of the protocol.
  */
 export function createRemoteConnection({
+  dispatchEvent,
   call,
   insertChild,
   removeChild,
@@ -76,6 +82,9 @@ export function createRemoteConnection({
   };
 
   return {
+    dispatchEvent: (id, type, details) => {
+      dispatchEvent(id, constructEvent(type, details));
+    },
     call,
     mutate(records) {
       for (const [type, ...args] of records) {
@@ -83,4 +92,13 @@ export function createRemoteConnection({
       }
     },
   };
+}
+
+export function constructEvent(type: string, eventDict: Record<string, any>) {
+  switch (type) {
+    case 'message':
+      return new MessageEvent(type, eventDict);
+    default:
+      return new Event(type, eventDict);
+  }
 }

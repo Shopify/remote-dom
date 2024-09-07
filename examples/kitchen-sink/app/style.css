@@ -186,7 +186,6 @@ li {
   display: grid;
   gap: 1rem;
   padding: 1rem;
-  justify-content: start;
 }
 
 .Modal-Actions {

@@ -133,6 +133,12 @@ export interface RemoteConnection {
    * @returns The return value of the method.
    */
   call(id: string, method: string, ...args: readonly unknown[]): unknown;
+
+  dispatchEvent(
+    id: string,
+    type: string,
+    details: Record<string, any>,
+  ): unknown;
 }
 
 /**
