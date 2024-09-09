@@ -39,8 +39,8 @@ importers:
         specifier: ^4.19.0
         version: 4.19.0
       typescript:
-        specifier: ^5.5.0
-        version: 5.5.3
+        specifier: ^5.6.2
+        version: 5.6.2
       vite:
         specifier: ^5.4.0
         version: 5.4.2(@types/node@20.11.16)
@@ -97,7 +97,7 @@ importers:
         version: 4.2.19
       vue:
         specifier: ^3.4.38
-        version: 3.4.38(typescript@5.5.3)
+        version: 3.4.38(typescript@5.6.2)
     devDependencies:
       '@preact/preset-vite':
         specifier: ^2.9.0
@@ -3089,7 +3089,7 @@ packages:
       vue: ^3.2.25
     dependencies:
       vite: 5.4.2(@types/node@20.11.16)
-      vue: 3.4.38(typescript@5.5.3)
+      vue: 3.4.38(typescript@5.6.2)
     dev: true
 
   /@vitest/expect@1.6.0:
@@ -3191,7 +3191,7 @@ packages:
     dependencies:
       '@vue/compiler-ssr': 3.4.38
       '@vue/shared': 3.4.38
-      vue: 3.4.38(typescript@5.5.3)
+      vue: 3.4.38(typescript@5.6.2)
 
   /@vue/shared@3.4.38:
     resolution: {integrity: sha512-q0xCiLkuWWQLzVrecPb0RMsNWyxICOjPrcrwxTUEHb1fsnvni4dcuyG7RT/Ie7VPTvnjzIaWzRMUBsrqNj/hhw==}
@@ -5516,8 +5516,8 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /typescript@5.5.3:
-    resolution: {integrity: sha512-/hreyEujaB0w76zKo6717l3L0o/qEUtRgdvUBvlkhoWeOVMjMuHNHk0BRBzikzuGDqNmPQbg5ifMEqsHLiIUcQ==}
+  /typescript@5.6.2:
+    resolution: {integrity: sha512-NW8ByodCSNCwZeghjN3o+JX5OFH0Ojg6sadjEKY4huZ52TqbJTJnDo5+Tw98lSy63NZvi4n+ez5m2u5d4PkZyw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -5715,7 +5715,7 @@ packages:
       - terser
     dev: true
 
-  /vue@3.4.38(typescript@5.5.3):
+  /vue@3.4.38(typescript@5.6.2):
     resolution: {integrity: sha512-f0ZgN+mZ5KFgVv9wz0f4OgVKukoXtS3nwET4c2vLBGQR50aI8G0cqbFtLlX9Yiyg3LFGBitruPHt2PxwTduJEw==}
     peerDependencies:
       typescript: '*'
@@ -5728,7 +5728,7 @@ packages:
       '@vue/runtime-dom': 3.4.38
       '@vue/server-renderer': 3.4.38(vue@3.4.38)
       '@vue/shared': 3.4.38
-      typescript: 5.5.3
+      typescript: 5.6.2
 
   /w3c-xmlserializer@5.0.0:
     resolution: {integrity: sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==}
