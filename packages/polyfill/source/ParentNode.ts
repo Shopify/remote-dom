@@ -6,11 +6,13 @@ import {
   OWNER_DOCUMENT,
   NodeType,
   HOOKS,
+  IS_CONNECTED,
 } from './constants.ts';
 import type {Node} from './Node.ts';
 import {ChildNode, toNode} from './ChildNode.ts';
 import {NodeList} from './NodeList.ts';
 import {querySelectorAll, querySelector} from './selectors.ts';
+import {inclusiveDescendants} from './shared.ts';
 
 export class ParentNode extends ChildNode {
   readonly childNodes = new NodeList();
@@ -66,7 +68,13 @@ export class ParentNode extends ChildNode {
       children.splice(children.indexOf(child), 1);
     }
 
-    (child as any).disconnectedCallback?.();
+    if (this[IS_CONNECTED]) {
+      for (const node of inclusiveDescendants(child)) {
+        node[IS_CONNECTED] = false;
+        (node as any).disconnectedCallback?.();
+      }
+    }
+
     this[HOOKS].removeChild?.(this as any, child as any, childNodesIndex);
   }
 
@@ -154,7 +162,12 @@ export class ParentNode extends ChildNode {
       if (isElement) this.children.push(child);
     }
 
-    (child as any).connectedCallback?.();
     this[HOOKS].insertChild?.(this as any, child as any, insertIndex);
+    if (this[IS_CONNECTED]) {
+      for (const node of inclusiveDescendants(child)) {
+        node[IS_CONNECTED] = true;
+        (node as any).connectedCallback?.();
+      }
+    }
   }
 }

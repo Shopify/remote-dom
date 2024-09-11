@@ -17,7 +17,6 @@ export class Attr extends Node {
   [NEXT]: Attr | null = null;
   [VALUE]: string;
   [OWNER_ELEMENT]: Element | null = null;
-  isConnected = false;
 
   constructor(name: string, value: string, namespace?: NamespaceURI | null) {
     super();

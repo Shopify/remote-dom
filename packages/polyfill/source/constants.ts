@@ -16,6 +16,7 @@ export const PATH = Symbol('path');
 export const STOP_IMMEDIATE_PROPAGATION = Symbol('stop_immediate_propagation');
 export const CONTENT = Symbol('content');
 export const HOOKS = Symbol('hooks');
+export const IS_CONNECTED = Symbol('is_connected');
 
 // @TODO remove explicit values
 export const enum NodeType {

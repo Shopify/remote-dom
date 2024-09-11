@@ -1,4 +1,11 @@
-import {DATA, OWNER_DOCUMENT, ATTRIBUTES, NodeType} from './constants.ts';
+import {
+  DATA,
+  OWNER_DOCUMENT,
+  ATTRIBUTES,
+  NodeType,
+  CHILD,
+  NEXT,
+} from './constants.ts';
 import type {Document} from './Document.ts';
 import type {DocumentFragment} from './DocumentFragment.ts';
 import type {Node} from './Node.ts';
@@ -77,4 +84,24 @@ export function cloneNode(
     cloned[OWNER_DOCUMENT] = document;
     return cloned;
   }
+}
+
+export function descendants(node: Node) {
+  const nodes: Node[] = [];
+  const walk = (node: Node) => {
+    nodes.push(node);
+    const child = node[CHILD];
+    if (child) walk(child);
+    const sibling = node[NEXT];
+    if (sibling) walk(sibling);
+  };
+  const child = node[CHILD];
+  if (child) walk(child);
+  return nodes;
+}
+
+export function inclusiveDescendants(node: Node) {
+  const nodes = descendants(node);
+  nodes.unshift(node);
+  return nodes;
 }

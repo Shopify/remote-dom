@@ -5,6 +5,7 @@ import {
   NodeType,
   OWNER_DOCUMENT,
   HOOKS,
+  IS_CONNECTED,
 } from './constants.ts';
 import type {Window} from './Window.ts';
 import type {Node} from './Node.ts';
@@ -28,6 +29,7 @@ export class Document extends ParentNode {
   head: HTMLHeadElement;
   documentElement: HTMLHtmlElement;
   defaultView: Window;
+  [IS_CONNECTED] = true;
 
   constructor(defaultView: Window) {
     super();
@@ -37,6 +39,7 @@ export class Document extends ParentNode {
     this.body = setupElement(new HTMLBodyElement(), this, 'body');
     this.head = setupElement(new HTMLHeadElement(), this, 'head');
 
+    this.appendChild(this.documentElement);
     this.documentElement.appendChild(this.head);
     this.documentElement.appendChild(this.body);
   }
