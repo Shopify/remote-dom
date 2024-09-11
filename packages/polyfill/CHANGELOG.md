@@ -1,5 +1,17 @@
 # @remote-dom/polyfill
 
+## 1.4.0
+
+### Minor Changes
+
+- [#446](https://github.com/Shopify/remote-dom/pull/446) [`b297fc5`](https://github.com/Shopify/remote-dom/commit/b297fc5efecc6479fa5e0e3bdcdb48dea721df43) Thanks [@jakearchibald](https://github.com/jakearchibald)! - Implement node.isConnected
+
+### Patch Changes
+
+- [#446](https://github.com/Shopify/remote-dom/pull/446) [`b297fc5`](https://github.com/Shopify/remote-dom/commit/b297fc5efecc6479fa5e0e3bdcdb48dea721df43) Thanks [@jakearchibald](https://github.com/jakearchibald)! - Ensure that the insert and remove hooks are only called for element parents.
+
+- [#446](https://github.com/Shopify/remote-dom/pull/446) [`b297fc5`](https://github.com/Shopify/remote-dom/commit/b297fc5efecc6479fa5e0e3bdcdb48dea721df43) Thanks [@jakearchibald](https://github.com/jakearchibald)! - Make connectedCallback and disconnectedCallback call on connect/disconnect recursively
+
 ## 1.3.1
 
 ### Patch Changes
