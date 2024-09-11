@@ -75,7 +75,9 @@ export class ParentNode extends ChildNode {
       }
     }
 
-    this[HOOKS].removeChild?.(this as any, child as any, childNodesIndex);
+    if (this.nodeType === NodeType.ELEMENT_NODE) {
+      this[HOOKS].removeChild?.(this as any, child as any, childNodesIndex);
+    }
   }
 
   replaceChild(newChild: Node, oldChild: Node) {
@@ -162,12 +164,15 @@ export class ParentNode extends ChildNode {
       if (isElement) this.children.push(child);
     }
 
-    this[HOOKS].insertChild?.(this as any, child as any, insertIndex);
     if (this[IS_CONNECTED]) {
       for (const node of inclusiveDescendants(child)) {
         node[IS_CONNECTED] = true;
         (node as any).connectedCallback?.();
       }
+    }
+
+    if (this.nodeType === NodeType.ELEMENT_NODE) {
+      this[HOOKS].insertChild?.(this as any, child as any, insertIndex);
     }
   }
 }
