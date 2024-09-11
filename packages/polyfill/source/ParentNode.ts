@@ -12,7 +12,7 @@ import type {Node} from './Node.ts';
 import {ChildNode, toNode} from './ChildNode.ts';
 import {NodeList} from './NodeList.ts';
 import {querySelectorAll, querySelector} from './selectors.ts';
-import {inclusiveDescendants} from './shared.ts';
+import {selfAndDescendants} from './shared.ts';
 
 export class ParentNode extends ChildNode {
   readonly childNodes = new NodeList();
@@ -69,7 +69,7 @@ export class ParentNode extends ChildNode {
     }
 
     if (this[IS_CONNECTED]) {
-      for (const node of inclusiveDescendants(child)) {
+      for (const node of selfAndDescendants(child)) {
         node[IS_CONNECTED] = false;
         (node as any).disconnectedCallback?.();
       }
@@ -165,7 +165,7 @@ export class ParentNode extends ChildNode {
     }
 
     if (this[IS_CONNECTED]) {
-      for (const node of inclusiveDescendants(child)) {
+      for (const node of selfAndDescendants(child)) {
         node[IS_CONNECTED] = true;
         (node as any).connectedCallback?.();
       }

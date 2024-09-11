@@ -100,7 +100,7 @@ export function descendants(node: Node) {
   return nodes;
 }
 
-export function inclusiveDescendants(node: Node) {
+export function selfAndDescendants(node: Node) {
   const nodes = descendants(node);
   nodes.unshift(node);
   return nodes;
