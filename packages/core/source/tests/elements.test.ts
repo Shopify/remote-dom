@@ -1279,6 +1279,7 @@ function createAndConnectRemoteRootElement() {
   const root = createRemoteRootElement();
   const receiver = new TestRemoteReceiver();
   root.connect(receiver.connection);
+  document.body.append(root);
   return {root, receiver};
 }
 

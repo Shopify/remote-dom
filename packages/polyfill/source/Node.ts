@@ -8,6 +8,7 @@ import {
   NamespaceURI,
   NodeType,
   HOOKS,
+  IS_CONNECTED,
 } from './constants.ts';
 import type {Document} from './Document.ts';
 import type {ParentNode} from './ParentNode.ts';
@@ -17,6 +18,7 @@ import {
   isParentNode,
   isTextNode,
   cloneNode,
+  descendants,
 } from './shared.ts';
 
 export class Node extends EventTarget {
@@ -28,6 +30,7 @@ export class Node extends EventTarget {
   [CHILD]: Node | null = null;
   [PREV]: Node | null = null;
   [NEXT]: Node | null = null;
+  [IS_CONNECTED] = false;
 
   protected get [HOOKS]() {
     return this[OWNER_DOCUMENT].defaultView[HOOKS];
@@ -43,6 +46,10 @@ export class Node extends EventTarget {
 
   get ownerDocument() {
     return this[OWNER_DOCUMENT];
+  }
+
+  get isConnected() {
+    return this[IS_CONNECTED];
   }
 
   isDefaultNamespace(namespace: string) {
@@ -113,17 +120,13 @@ export class Node extends EventTarget {
   get textContent(): string | null {
     if (isCharacterData(this)) return this.data;
     let text = '';
-    function walk(node: Node) {
+
+    for (const node of descendants(this)) {
       if (isTextNode(node)) {
         text += node.data;
       }
-      const child = node[CHILD];
-      if (child) walk(child);
-      const sibling = node[NEXT];
-      if (sibling) walk(sibling);
     }
-    const child = this[CHILD];
-    if (child) walk(child);
+
     return text;
   }
 

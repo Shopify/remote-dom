@@ -159,6 +159,7 @@ icon.setAttribute('type', 'archive');
 icon.setAttribute('slot', 'icon');
 button.append(icon);
 root.append(button);
+document.body.append(root);
 ```
 
 ## Update React integration
@@ -211,6 +212,7 @@ createRoot(remoteRoot).render(<App />);
 import {createRoot} from 'react-dom/client';
 
 const root = document.createElement('remote-root');
+document.body.append(root);
 createRoot(root).render(<App />);
 ```
 
