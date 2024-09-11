@@ -21,6 +21,7 @@ new ThreadWebWorker<never, SandboxAPI>(self as any as Worker, {
       // synchronizing its children over a `RemoteConnection`.
       const root = document.createElement('remote-root');
       root.connect(connection);
+      document.body.append(root);
 
       await render(root, api);
     },
