@@ -33,7 +33,7 @@
     "tsx": "^4.19.0",
     "typescript": "^5.5.0",
     "vite": "^5.4.0",
-    "vitest": "^1.6.0"
+    "vitest": "^2.1.0"
   },
   "packageManager": "pnpm@8.10.2+sha256.487609e857f1c11780cc98dd0bfe4c8a8b11c7f23bc3a4493ac7d263d6fb6c8c",
   "prettier": {
