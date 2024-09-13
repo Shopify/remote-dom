@@ -50,6 +50,11 @@ const components = new Map([
   ['remote-fragment', RemoteFragmentRenderer],
 ]);
 
+const sandboxes = {
+  iframe: iframeSandbox,
+  worker: workerSandbox,
+};
+
 // We offload most of the complex state logic to this `createState()` function. We’re
 // just leaving the key bit in this file: when the example or sandbox changes, we render
 // the example in the chosen sandbox. The `createState()` passes us a fresh `receiver`
@@ -59,29 +64,72 @@ const components = new Map([
 
 const {receiver, example, sandbox} = createState(
   async ({receiver, example, sandbox}) => {
-    if (sandbox === 'iframe') {
-      await iframeSandbox.imports.render(receiver.connection, {
-        sandbox,
-        example,
-        async alert(content) {
-          console.log(
-            `Alert API used by example ${example} in the iframe sandbox`,
-          );
-          window.alert(content);
-        },
-      });
-    } else {
-      await workerSandbox.imports.render(receiver.connection, {
-        sandbox,
-        example,
-        async alert(content) {
-          console.log(
-            `Alert API used by example ${example} in the worker sandbox`,
-          );
-          window.alert(content);
-        },
-      });
-    }
+    const sandboxImpl = sandboxes[sandbox];
+    await sandboxImpl.imports.render(receiver.connection, {
+      sandbox,
+      example,
+      async alert(content) {
+        console.log(
+          `Alert API used by example ${example} in the iframe sandbox`,
+        );
+        window.alert(content);
+      },
+      async enumerateDevices() {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        return devices
+          .filter((d) => d.kind === 'videoinput')
+          .map((d) => d.toJSON());
+      },
+      async getUserMedia(
+        callback: (frame: ImageBitmap) => void | Promise<void>,
+        {deviceId}: {deviceId?: string} = {},
+      ) {
+        const getStream = (deviceId?: string) =>
+          navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+              deviceId,
+              aspectRatio: {ideal: 1},
+              facingMode: {ideal: 'user'},
+            },
+          });
+        let stream = await getStream(deviceId);
+        const video = document.createElement('video');
+        video.autoplay = true;
+        video.srcObject = stream;
+        async function frame() {
+          if (video.videoWidth) {
+            const size = Math.max(video.videoWidth, video.videoHeight);
+            const scale = 500 / size;
+            try {
+              await callback(
+                await createImageBitmap(video, {
+                  resizeQuality: 'pixelated',
+                  // resizeQuality: 'low',
+                  resizeHeight: (video.videoHeight * scale) | 0,
+                  resizeWidth: (video.videoWidth * scale) | 0,
+                }),
+              );
+            } catch (error) {
+              console.error(error);
+            }
+          }
+          requestAnimationFrame(frame);
+        }
+        frame();
+        return {
+          async switchDevice(deviceId: string) {
+            stream?.getVideoTracks()[0]?.stop();
+            stream = await getStream(deviceId);
+            video.srcObject = stream;
+          },
+          stop() {
+            stream?.getVideoTracks()[0]?.stop();
+            video.remove();
+          },
+        };
+      },
+    });
   },
 );
 

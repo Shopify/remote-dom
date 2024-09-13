@@ -1,6 +1,6 @@
 import {type ComponentChildren} from 'preact';
 import {forwardRef} from 'preact/compat';
-import {useRef, useImperativeHandle} from 'preact/hooks';
+import {useRef, useImperativeHandle, useEffect} from 'preact/hooks';
 import type {Signal} from '@preact/signals';
 
 import type {
@@ -15,11 +15,18 @@ import type {
 
 export function Text({
   emphasis,
+  monospace,
   children,
 }: {children?: ComponentChildren} & TextProperties) {
   return (
     <span
-      class={['Text', emphasis && 'Text--emphasis'].filter(Boolean).join(' ')}
+      class={[
+        'Text',
+        emphasis && 'Text--emphasis',
+        monospace && 'Text--monospace',
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
       {children}
     </span>
@@ -68,8 +75,9 @@ export const Modal = forwardRef<
   {
     children?: ComponentChildren;
     primaryAction?: ComponentChildren;
+    open?: boolean;
   } & ModalProperties
->(function Modal({children, primaryAction, onClose}, ref) {
+>(function Modal({children, primaryAction, open, onClose}, ref) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useImperativeHandle(ref, () => ({
@@ -80,6 +88,12 @@ export const Modal = forwardRef<
       dialogRef.current?.close();
     },
   }));
+
+  useEffect(() => {
+    if (typeof open === 'boolean') {
+      dialogRef.current?.[open ? 'showModal' : 'close']();
+    }
+  }, [open]);
 
   return (
     <dialog ref={dialogRef} class="Modal" onClose={() => onClose?.()}>
@@ -159,6 +173,7 @@ export function ControlPanel({
           <option value="svelte">Svelte</option>
           <option value="vue">Vue</option>
           <option value="htm">htm</option>
+          <option value="game">GAME</option>
         </Select>
       </section>
 
@@ -182,6 +197,7 @@ export function ControlPanel({
         >
           <option value="worker">Web Worker</option>
           <option value="iframe">iFrame</option>
+          <option value="remote-ui-worker">Remote-UI Web Worker</option>
         </Select>
       </section>
     </div>

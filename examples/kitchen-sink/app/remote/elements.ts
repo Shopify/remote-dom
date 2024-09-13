@@ -22,6 +22,7 @@ import type {
 export const Text = createRemoteElement<TextProperties>({
   properties: {
     emphasis: {type: Boolean},
+    monospace: {type: Boolean},
   },
 });
 

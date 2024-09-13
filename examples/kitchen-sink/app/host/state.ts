@@ -14,6 +14,7 @@ const ALLOWED_EXAMPLE_VALUES = new Set<RenderExample>([
   'react',
   'svelte',
   'vue',
+  'game',
 ]);
 
 export function createState(

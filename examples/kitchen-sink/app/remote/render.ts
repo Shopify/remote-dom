@@ -29,5 +29,9 @@ export async function render(root: Element, api: RenderAPI) {
       const {renderUsingVue} = await import('./examples/vue.ts');
       return renderUsingVue(root, api);
     }
+    case 'game': {
+      const {renderGame} = await import('./examples/game.tsx');
+      return renderGame(root, api);
+    }
   }
 }
