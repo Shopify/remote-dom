@@ -76,6 +76,7 @@ export class RemoteReceiverElement extends HTMLElement {
 
     const receiver = new DOMRemoteReceiver({
       root: this,
+      dispatchEvent: receiver.dispatchEvent,
       call: (element, method, ...args) =>
         this.call
           ? this.call(element, method, ...args)

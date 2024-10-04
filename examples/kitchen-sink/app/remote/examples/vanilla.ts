@@ -19,6 +19,9 @@ export function renderUsingVanillaDOM(root: Element, api: RenderAPI) {
   function updateCount(newCount: number) {
     count = newCount;
     countText.textContent = String(count);
+    iframe.contentWindow?.postMessage({
+      count,
+    });
   }
 
   function handlePrimaryAction() {
@@ -38,12 +41,26 @@ export function renderUsingVanillaDOM(root: Element, api: RenderAPI) {
       <ui-button slot="primaryAction">
         Close
       </ui-button>
+      <ui-iframe/>
     </ui-modal>
   `.trim();
 
   const modal = template.querySelector('ui-modal')! as InstanceType<
     typeof Modal
   >;
+
+  const iframe = template.querySelector('ui-iframe');
+
+  iframe.addEventListener('ready', () => {
+    iframe.contentWindow?.postMessage({
+      count,
+    });
+  });
+
+  iframe.setAttribute(
+    'src',
+    'https://emacs-since-invention-shannon.trycloudflare.com/app',
+  );
 
   modal.addEventListener('close', handleClose);
 

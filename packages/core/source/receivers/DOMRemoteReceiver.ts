@@ -95,6 +95,10 @@ export class DOMRemoteReceiver {
     const destroyTimeouts = new Map<string, number>();
 
     this.connection = createRemoteConnection({
+      dispatchEvent: (id, event) => {
+        const implementation = attached.get(id) as Node;
+        implementation.dispatchEvent(event);
+      },
       call: (id, method, ...args) => {
         const element =
           id === ROOT_ID && this.root.nodeType !== 11

@@ -636,6 +636,12 @@ export abstract class RemoteElement<
 
     Object.defineProperties(this, propertyDescriptors);
     Object.assign(this, initialPropertiesToSet);
+
+    // this.contentWindow = {
+    //   postMessage: (data: any) => {
+    //     dispatchEventToHost(this, 'message', data);
+    //   },
+    // };
   }
 
   attributeChangedCallback(attribute: string, _oldValue: any, newValue: any) {

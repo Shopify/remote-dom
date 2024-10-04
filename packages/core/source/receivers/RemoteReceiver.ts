@@ -144,6 +144,12 @@ export class RemoteReceiver {
     const {attached, parents, subscribers} = this;
 
     this.connection = createRemoteConnection({
+      dispatchEvent: (id, type, details) => {
+        const element = attached.get(id);
+        if (element) {
+          element.dispatchEvent(new Event(type, {...details}));
+        }
+      },
       call: (id, method, ...args) => {
         const implementation = this.implementations.get(id);
         const implementationMethod = implementation?.[method];

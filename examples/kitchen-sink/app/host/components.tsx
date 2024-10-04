@@ -1,6 +1,6 @@
 import {type ComponentChildren} from 'preact';
 import {forwardRef} from 'preact/compat';
-import {useRef, useImperativeHandle} from 'preact/hooks';
+import {useRef, useImperativeHandle, useEffect} from 'preact/hooks';
 import type {Signal} from '@preact/signals';
 
 import type {
@@ -232,4 +232,33 @@ function nanoId(size = 21) {
     id += urlAlphabet[(Math.random() * 64) | 0];
   }
   return id;
+}
+
+export function Iframe({src, onReady}: {src: string; onReady: any}) {
+  const iframe = useRef<HTMLIFrameElement | null>(null);
+
+  useEffect(() => {
+    const iframeRef = iframe.current;
+    if (!iframeRef || !iframeRef.contentWindow) {
+      return;
+    }
+    iframeRef.addEventListener('message', (event) => {
+      const origin = new URL(src).origin;
+      iframeRef.contentWindow?.postMessage(event.data, origin);
+    });
+  }, []);
+
+  return (
+    <iframe
+      style={{outline: 'none', height: '100%', width: '100%', border: 'none'}}
+      ref={iframe}
+      src={src}
+      onLoad={() => {
+        // onload should be called only after the app bridge handshake happens, this is just an artificial delay
+        setTimeout(() => {
+          onReady?.(new Event('ready'));
+        }, 100);
+      }}
+    />
+  );
 }

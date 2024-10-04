@@ -138,6 +138,12 @@ export class SignalRemoteReceiver {
     const {attached, parents} = this;
 
     const baseConnection = createRemoteConnection({
+      dispatchEvent: (id, event) => {
+        const implementation = this.implementations.get(
+          id,
+        ) as unknown as Element;
+        implementation.dispatchEvent(event);
+      },
       call: (id, method, ...args) => {
         const implementation = this.implementations.get(id);
         const implementationMethod = implementation?.[method];
@@ -232,6 +238,7 @@ export class SignalRemoteReceiver {
     });
 
     this.connection = {
+      dispatchEvent: baseConnection.dispatchEvent,
       call: baseConnection.call,
       mutate(records) {
         batch(() => {
