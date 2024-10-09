@@ -13,19 +13,26 @@ import type {Comment} from './Comment.ts';
 import type {ParentNode} from './ParentNode.ts';
 import type {Element} from './Element.ts';
 
-// const voidElements = {
-//   img: true,
-//   image: true,
-// };
-// const elementTokenizer =
-//   /(?:<([a-z][a-z0-9-:]*)( [^<>'"\n=\s]+=(['"])[^>'"\n]*\3)*\s*(\/?)\s*>|<\/([a-z][a-z0-9-:]*)>|([^&<>]+))/gi;
-// const attributeTokenizer = / ([^<>'"\n=\s]+)=(['"])([^>'"\n]*)\2/g;
+const ENTITIES = {
+  amp: '&',
+  quot: '"',
+  apos: "'",
+  lt: '<',
+  gt: '>',
+} as const;
+
+function decode(str: string) {
+  return str.replace(
+    /&(?:(amp|quot|apos|lt|gt)|#(\d+));/gi,
+    (s, e: keyof typeof ENTITIES, d) =>
+      d ? String.fromCharCode(d) : ENTITIES[e] || s,
+  );
+}
 
 const elementTokenizer =
-  /(?:<([a-z][a-z0-9-:]*)((?:\s[^<>'"=\n\s]+(?:=(['"])[^\n]*?\3|=[^>'"\n\s]*|))*)\s*(\/?)\s*>|<\/([a-z][a-z0-9-:]*)>|<!--(.*?)-->|([^&<>]+))/gi;
+  /(?:<([a-z][a-z0-9-:]*)((?:\s+[^<>'"=\s]+(?:=(['"]).*?\3|=[^>'"\s]*|))*)\s*(\/?)\s*>|<\/([a-z][a-z0-9-:]*)>|<!--(.*?)-->|([^<>]+))/gis;
 
-const attributeTokenizer =
-  /\s([^<>'"=\n\s]+)(?:=(['"])([^\n]*?)\2|=([^>'"\n\s]*)|)/g;
+const attributeTokenizer = /\s+([^<>'"=\s]+)(?:=(['"])(.*?)\2|=([^>'"\s]*)|)/gs;
 
 export function parseHtml(html: string, contextNode: Node) {
   const document = contextNode.ownerDocument;
@@ -53,7 +60,13 @@ export function parseHtml(html: string, contextNode: Node) {
     } else if (token[6]) {
       parent.append(document.createComment(token[6]!));
     } else {
-      parent.append(token[7]!);
+      const lastChild = parent.lastChild;
+      const text = decode(token[7]!);
+      if (lastChild && lastChild.nodeType === NodeType.TEXT_NODE) {
+        (lastChild as Text).data += text;
+      } else {
+        parent.append(text);
+      }
     }
   }
   return root;
