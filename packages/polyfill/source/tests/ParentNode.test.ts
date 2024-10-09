@@ -1,17 +1,18 @@
 import {describe, beforeEach, it, expect} from 'vitest';
 
 import {Node} from '../Node';
-import {createNode} from '../Document';
 import {setupScratch} from './helpers';
 
 describe('ParentNode', () => {
   const ctx = setupScratch();
-  const {document, hooks} = ctx;
+  const {hooks} = ctx;
 
   describe('append and remove', () => {
     it('can be appended to a parent', () => {
-      const node = createNode(new Node(), document);
+      const node = ctx.document.createTextNode('');
       ctx.scratch.append(node);
+      expect(ctx.scratch.childNodes).toEqual([node]);
+      expect(ctx.scratch.children).toEqual([]);
       expect(hooks.insertChild).toHaveBeenCalledOnce();
       expect(hooks.insertChild).toHaveBeenCalledWith(ctx.scratch, node, 0);
       expect(node.parentNode).toBe(ctx.scratch);
@@ -19,9 +20,10 @@ describe('ParentNode', () => {
     });
 
     it('can be removed from a parent', () => {
-      const node = createNode(new Node(), document);
+      const node = ctx.document.createTextNode('');
       ctx.scratch.append(node);
       ctx.scratch.removeChild(node);
+      expect(ctx.scratch.childNodes).toEqual([]);
       expect(hooks.insertChild).toHaveBeenCalledOnce();
       expect(hooks.insertChild).toHaveBeenCalledWith(ctx.scratch, node, 0);
       expect(hooks.removeChild).toHaveBeenCalledOnce();
@@ -32,10 +34,10 @@ describe('ParentNode', () => {
     });
 
     it('throws if removed from wrong parent', () => {
-      const node = createNode(new Node(), document);
+      const node = ctx.document.createTextNode('');
       ctx.scratch.append(node);
       expect(() => {
-        document.body.removeChild(node);
+        ctx.document.body.removeChild(node);
       }).toThrow();
       expect(hooks.removeChild).not.toHaveBeenCalled();
       expect(node.parentNode).toBe(ctx.scratch);
@@ -43,7 +45,7 @@ describe('ParentNode', () => {
     });
 
     it('throws if removed twice', () => {
-      const node = createNode(new Node(), document);
+      const node = ctx.document.createTextNode('');
       ctx.scratch.append(node);
       ctx.scratch.removeChild(node);
       ctx.clearMocks();
@@ -59,15 +61,17 @@ describe('ParentNode', () => {
     let node2: Node;
     let node3: Node;
     beforeEach(() => {
-      node = createNode(new Node(), document);
-      node2 = createNode(new Node(), document);
-      node3 = createNode(new Node(), document);
+      node = ctx.document.createElement('node');
+      node2 = ctx.document.createElement('node2');
+      node3 = ctx.document.createElement('node3');
       ctx.scratch.append(node, node2, node3);
       ctx.clearMocks();
     });
 
     it('move to end', () => {
       ctx.scratch.insertBefore(node, null);
+      expect(ctx.scratch.childNodes).toEqual([node2, node3, node]);
+      expect(ctx.scratch.children).toEqual([node2, node3, node]);
       expect(hooks.removeChild).toHaveBeenCalledOnce();
       expect(hooks.removeChild).toHaveBeenCalledWith(ctx.scratch, node, 0);
       expect(hooks.insertChild).toHaveBeenCalledOnce();
@@ -79,36 +83,47 @@ describe('ParentNode', () => {
 
     it('move to start', () => {
       ctx.scratch.insertBefore(node3, node);
+      expect(ctx.scratch.childNodes).toEqual([node3, node, node2]);
+      expect(ctx.scratch.children).toEqual([node3, node, node2]);
       expect(hooks.removeChild).toHaveBeenCalledOnce();
       expect(hooks.removeChild).toHaveBeenCalledWith(ctx.scratch, node3, 2);
       expect(hooks.insertChild).toHaveBeenCalledOnce();
       expect(hooks.insertChild).toHaveBeenCalledWith(ctx.scratch, node3, 0);
+      expect(hooks.insertChild).toHaveBeenCalledAfter(hooks.removeChild);
       expect(node.parentNode).toBe(ctx.scratch);
       expect(node.isConnected).toBe(true);
     });
 
     it('reinsert at end', () => {
       ctx.scratch.appendChild(node3);
+      expect(ctx.scratch.childNodes).toEqual([node, node2, node3]);
+      expect(ctx.scratch.children).toEqual([node, node2, node3]);
       expect(hooks.removeChild).toHaveBeenCalledOnce();
       expect(hooks.removeChild).toHaveBeenCalledWith(ctx.scratch, node3, 2);
       expect(hooks.insertChild).toHaveBeenCalledOnce();
       expect(hooks.insertChild).toHaveBeenCalledWith(ctx.scratch, node3, 2);
+      expect(hooks.insertChild).toHaveBeenCalledAfter(hooks.removeChild);
       expect(node.parentNode).toBe(ctx.scratch);
       expect(node.isConnected).toBe(true);
     });
 
     it('reinsert at start', () => {
       ctx.scratch.insertBefore(node, node2);
+      expect(ctx.scratch.childNodes).toEqual([node, node2, node3]);
+      expect(ctx.scratch.children).toEqual([node, node2, node3]);
       expect(hooks.removeChild).toHaveBeenCalledOnce();
       expect(hooks.removeChild).toHaveBeenCalledWith(ctx.scratch, node, 0);
       expect(hooks.insertChild).toHaveBeenCalledOnce();
       expect(hooks.insertChild).toHaveBeenCalledWith(ctx.scratch, node, 0);
+      expect(hooks.insertChild).toHaveBeenCalledAfter(hooks.removeChild);
       expect(node.parentNode).toBe(ctx.scratch);
       expect(node.isConnected).toBe(true);
     });
 
     it('reverse children order', () => {
       ctx.scratch.replaceChildren(node3, node2, node);
+      expect(ctx.scratch.childNodes).toEqual([node3, node2, node]);
+      expect(ctx.scratch.children).toEqual([node3, node2, node]);
       // remove all nodes in document order
       expect(hooks.removeChild).toHaveBeenCalledTimes(3);
       expect(hooks.removeChild).toHaveBeenNthCalledWith(
@@ -129,6 +144,8 @@ describe('ParentNode', () => {
         node3,
         0,
       );
+      // removes should all be called prior to inserts
+      expect(hooks.removeChild).toHaveBeenCalledBefore(hooks.insertChild);
       // insert all nodes in new order
       expect(hooks.insertChild).toHaveBeenCalledTimes(3);
       expect(hooks.insertChild).toHaveBeenNthCalledWith(

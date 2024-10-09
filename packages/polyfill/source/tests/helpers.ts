@@ -45,9 +45,13 @@ export function setupScratch() {
   });
 
   return {
-    window,
-    document,
-    // using a getter here is required because scratch is recreated for each test
+    // using getters here is required because things are recreated for each test
+    get window() {
+      return window;
+    },
+    get document() {
+      return document;
+    },
     get scratch() {
       return scratch;
     },
