@@ -643,7 +643,7 @@ export abstract class RemoteElement<
       attribute === 'slot' &&
       (this.constructor as typeof RemoteElement).slottable
     ) {
-      updateRemoteElementProperty(
+      updateRemoteElementAttribute(
         this,
         attribute,
         newValue ? String(newValue) : undefined,
