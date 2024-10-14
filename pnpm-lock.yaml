@@ -22,7 +22,7 @@ importers:
         version: 0.4.2
       '@quilted/vite':
         specifier: ^0.1.27
-        version: 0.1.27(@babel/template@7.25.0)(preact@10.23.2)(rollup@4.21.2)(vite@5.4.2)(vitest@1.6.0)
+        version: 0.1.27(@babel/template@7.25.0)(preact@10.24.3)(rollup@4.21.2)(vite@5.4.2)(vitest@1.6.0)
       '@types/node':
         specifier: ~20.11.0
         version: 20.11.16
@@ -67,7 +67,7 @@ importers:
     dependencies:
       '@preact/signals':
         specifier: ^1.3.0
-        version: 1.3.0(preact@10.22.1)
+        version: 1.3.0(preact@10.24.3)
       '@quilted/threads':
         specifier: ^3.0.0
         version: 3.0.0
@@ -84,8 +84,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/signals
       preact:
-        specifier: ^10.22.0
-        version: 10.22.1
+        specifier: ^10.24.3
+        version: 10.24.3
       react:
         specifier: ^18.3.0
         version: 18.3.1
@@ -101,7 +101,7 @@ importers:
     devDependencies:
       '@preact/preset-vite':
         specifier: ^2.9.0
-        version: 2.9.0(@babel/core@7.25.2)(preact@10.22.1)(vite@5.4.2)
+        version: 2.9.0(@babel/core@7.25.2)(preact@10.24.3)(vite@5.4.2)
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.1.2
         version: 3.1.2(svelte@4.2.19)(vite@5.4.2)
@@ -153,16 +153,16 @@ importers:
     devDependencies:
       '@preact/signals':
         specifier: ^1.3.0
-        version: 1.3.0(preact@10.23.2)
+        version: 1.3.0(preact@10.24.3)
       '@preact/signals-core':
         specifier: ^1.8.0
         version: 1.8.0
       '@quilted/preact-testing':
         specifier: ^0.1.7
-        version: 0.1.7(preact@10.23.2)
+        version: 0.1.7(preact@10.24.3)
       preact:
-        specifier: ^10.23.0
-        version: 10.23.2
+        specifier: ^10.24.3
+        version: 10.24.3
 
   packages/react:
     dependencies:
@@ -178,7 +178,7 @@ importers:
     devDependencies:
       '@quilted/react-testing':
         specifier: ^0.6.11
-        version: 0.6.11(preact@10.23.2)(react-dom@18.3.1)(react@18.3.1)
+        version: 0.6.11(preact@10.24.3)(react-dom@18.3.1)(react@18.3.1)
       '@types/react-dom':
         specifier: ^18.3.0
         version: 18.3.0
@@ -2374,7 +2374,7 @@ packages:
     dev: true
     optional: true
 
-  /@preact/preset-vite@2.9.0(@babel/core@7.25.2)(preact@10.22.1)(vite@5.4.2):
+  /@preact/preset-vite@2.9.0(@babel/core@7.25.2)(preact@10.24.3)(vite@5.4.2):
     resolution: {integrity: sha512-B9yVT7AkR6owrt84K3pLNyaKSvlioKdw65VqE/zMiR6HMovPekpsrwBNs5DJhBFEd5cvLMtCjHNHZ9P7Oblveg==}
     peerDependencies:
       '@babel/core': 7.x
@@ -2384,7 +2384,7 @@ packages:
       '@babel/core': 7.25.2
       '@babel/plugin-transform-react-jsx': 7.25.2(@babel/core@7.25.2)
       '@babel/plugin-transform-react-jsx-development': 7.24.7(@babel/core@7.25.2)
-      '@prefresh/vite': 2.4.5(preact@10.22.1)(vite@5.4.2)
+      '@prefresh/vite': 2.4.5(preact@10.24.3)(vite@5.4.2)
       '@rollup/pluginutils': 4.2.1
       babel-plugin-transform-hook-names: 1.0.2(@babel/core@7.25.2)
       debug: 4.3.5
@@ -2403,49 +2403,31 @@ packages:
   /@preact/signals-core@1.8.0:
     resolution: {integrity: sha512-OBvUsRZqNmjzCZXWLxkZfhcgT+Fk8DDcT/8vD6a1xhDemodyy87UJRJfASMuSD8FaAIeGgGm85ydXhm7lr4fyA==}
 
-  /@preact/signals@1.3.0(preact@10.22.1):
+  /@preact/signals@1.3.0(preact@10.24.3):
     resolution: {integrity: sha512-EOMeg42SlLS72dhoq6Vjq08havnLseWmPQ8A0YsgIAqMgWgx7V1a39+Pxo6i7SY5NwJtH4849JogFq3M67AzWg==}
     peerDependencies:
       preact: 10.x
     dependencies:
       '@preact/signals-core': 1.8.0
-      preact: 10.22.1
-    dev: false
-
-  /@preact/signals@1.3.0(preact@10.23.2):
-    resolution: {integrity: sha512-EOMeg42SlLS72dhoq6Vjq08havnLseWmPQ8A0YsgIAqMgWgx7V1a39+Pxo6i7SY5NwJtH4849JogFq3M67AzWg==}
-    peerDependencies:
-      preact: 10.x
-    dependencies:
-      '@preact/signals-core': 1.8.0
-      preact: 10.23.2
-    dev: true
+      preact: 10.24.3
 
   /@prefresh/babel-plugin@0.5.1:
     resolution: {integrity: sha512-uG3jGEAysxWoyG3XkYfjYHgaySFrSsaEb4GagLzYaxlydbuREtaX+FTxuIidp241RaLl85XoHg9Ej6E4+V1pcg==}
     dev: true
 
-  /@prefresh/core@1.5.1(preact@10.22.1):
+  /@prefresh/core@1.5.1(preact@10.24.3):
     resolution: {integrity: sha512-e0mB0Oxtog6ZpKPDBYbzFniFJDIktuKMzOHp7sguntU+ot0yi6dbhJRE9Css1qf0u16wdSZjpL2W2ODWuU05Cw==}
     peerDependencies:
       preact: ^10.0.0
     dependencies:
-      preact: 10.22.1
-    dev: true
-
-  /@prefresh/core@1.5.1(preact@10.23.2):
-    resolution: {integrity: sha512-e0mB0Oxtog6ZpKPDBYbzFniFJDIktuKMzOHp7sguntU+ot0yi6dbhJRE9Css1qf0u16wdSZjpL2W2ODWuU05Cw==}
-    peerDependencies:
-      preact: ^10.0.0
-    dependencies:
-      preact: 10.23.2
+      preact: 10.24.3
     dev: true
 
   /@prefresh/utils@1.2.0:
     resolution: {integrity: sha512-KtC/fZw+oqtwOLUFM9UtiitB0JsVX0zLKNyRTA332sqREqSALIIQQxdUCS1P3xR/jT1e2e8/5rwH6gdcMLEmsQ==}
     dev: true
 
-  /@prefresh/vite@2.4.5(preact@10.22.1)(vite@5.4.2):
+  /@prefresh/vite@2.4.5(preact@10.24.3)(vite@5.4.2):
     resolution: {integrity: sha512-iForDVJ2M8gQYnm5pHumvTEJjGGc7YNYC0GVKnHFL+GvFfKHfH9Rpq67nUAzNbjuLEpqEOUuQVQajMazWu2ZNQ==}
     peerDependencies:
       preact: ^10.4.0
@@ -2453,27 +2435,10 @@ packages:
     dependencies:
       '@babel/core': 7.25.2
       '@prefresh/babel-plugin': 0.5.1
-      '@prefresh/core': 1.5.1(preact@10.22.1)
+      '@prefresh/core': 1.5.1(preact@10.24.3)
       '@prefresh/utils': 1.2.0
       '@rollup/pluginutils': 4.2.1
-      preact: 10.22.1
-      vite: 5.4.2(@types/node@20.11.16)
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
-  /@prefresh/vite@2.4.5(preact@10.23.2)(vite@5.4.2):
-    resolution: {integrity: sha512-iForDVJ2M8gQYnm5pHumvTEJjGGc7YNYC0GVKnHFL+GvFfKHfH9Rpq67nUAzNbjuLEpqEOUuQVQajMazWu2ZNQ==}
-    peerDependencies:
-      preact: ^10.4.0
-      vite: '>=2.0.0'
-    dependencies:
-      '@babel/core': 7.25.2
-      '@prefresh/babel-plugin': 0.5.1
-      '@prefresh/core': 1.5.1(preact@10.23.2)
-      '@prefresh/utils': 1.2.0
-      '@rollup/pluginutils': 4.2.1
-      preact: 10.23.2
+      preact: 10.24.3
       vite: 5.4.2(@types/node@20.11.16)
     transitivePeerDependencies:
       - supports-color
@@ -2531,7 +2496,7 @@ packages:
     resolution: {integrity: sha512-60CNw2V/WJjEsShHaSSGEfNsa3yAGfZYsUACgdPpR0Pypd9PUF1doUhTvTyY09A0nJ/9WxEHWoDV6p2YFGtu2w==}
     dev: true
 
-  /@quilted/preact-testing@0.1.7(preact@10.23.2):
+  /@quilted/preact-testing@0.1.7(preact@10.24.3):
     resolution: {integrity: sha512-vYZS+8zsw7+oHZ6xGoO7VSjJmIapmi39iBVMNmpLMeKkc4uevG6IIS6wGWfs41LyCg3E/H1DvkzJmDPMvF8nSg==}
     peerDependencies:
       preact: ^10.21.0
@@ -2540,10 +2505,10 @@ packages:
         optional: true
     dependencies:
       jest-matcher-utils: 27.5.1
-      preact: 10.23.2
+      preact: 10.24.3
     dev: true
 
-  /@quilted/react-testing@0.6.11(preact@10.23.2)(react-dom@18.3.1)(react@18.3.1):
+  /@quilted/react-testing@0.6.11(preact@10.24.3)(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-qUFYOmKInEifR7RkY31GNUW58xGAU8SJ9toYUOR2OnyUCBtwqFs4BKluepA+TReoSQ5041zkmIfjJbkSrWiENQ==}
     peerDependencies:
       preact: ^10.21.0
@@ -2560,9 +2525,9 @@ packages:
       react-test-renderer:
         optional: true
     dependencies:
-      '@quilted/preact-testing': 0.1.7(preact@10.23.2)
+      '@quilted/preact-testing': 0.1.7(preact@10.24.3)
       jest-matcher-utils: 27.5.1
-      preact: 10.23.2
+      preact: 10.24.3
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
     dev: true
@@ -2661,7 +2626,7 @@ packages:
     engines: {node: '>=18.0.0'}
     dev: true
 
-  /@quilted/vite@0.1.27(@babel/template@7.25.0)(preact@10.23.2)(rollup@4.21.2)(vite@5.4.2)(vitest@1.6.0):
+  /@quilted/vite@0.1.27(@babel/template@7.25.0)(preact@10.24.3)(rollup@4.21.2)(vite@5.4.2)(vitest@1.6.0):
     resolution: {integrity: sha512-QkvqM6JquIkz9l0vrETw2DK8Bs1paoUND81xUYhEe/DoenZRLt9MbViX0SZR+dnlHWna/dNWRHYHHfMmsNOeeQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
@@ -2674,7 +2639,7 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.25.2
-      '@prefresh/vite': 2.4.5(preact@10.23.2)(vite@5.4.2)
+      '@prefresh/vite': 2.4.5(preact@10.24.3)(vite@5.4.2)
       '@quilted/babel': 0.2.2(@babel/core@7.25.2)(@babel/template@7.25.0)
       '@quilted/request-router': 0.3.0
       '@quilted/rollup': 0.2.45(@babel/template@7.25.0)(rollup@4.21.2)
@@ -4924,12 +4889,8 @@ packages:
       picocolors: 1.0.1
       source-map-js: 1.2.0
 
-  /preact@10.22.1:
-    resolution: {integrity: sha512-jRYbDDgMpIb5LHq3hkI0bbl+l/TQ9UnkdQ0ww+lp+4MMOdqaUYdFc5qeyP+IV8FAd/2Em7drVPeKdQxsiWCf/A==}
-
-  /preact@10.23.2:
-    resolution: {integrity: sha512-kKYfePf9rzKnxOAKDpsWhg/ysrHPqT+yQ7UW4JjdnqjFIeNUnNcEJvhuA8fDenxAGWzUqtd51DfVg7xp/8T9NA==}
-    dev: true
+  /preact@10.24.3:
+    resolution: {integrity: sha512-Z2dPnBnMUfyQfSQ+GBdsGa16hz35YmLmtTLhM169uW944hYL6xzTYkJjC07j+Wosz733pMWx0fgON3JNw1jJQA==}
 
   /preferred-pm@3.1.2:
     resolution: {integrity: sha512-nk7dKrcW8hfCZ4H6klWcdRknBOXWzNQByJ0oJyX97BOupsYD+FzLS4hflgEu/uPUEHZCuRfMxzCBsuWd7OzT8Q==}
