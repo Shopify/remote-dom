@@ -68,6 +68,10 @@ export class ParentNode extends ChildNode {
       children.splice(children.indexOf(child), 1);
     }
 
+    child[PARENT] = null;
+    child[NEXT] = null;
+    child[PREV] = null;
+
     if (this[IS_CONNECTED]) {
       for (const node of selfAndDescendants(child)) {
         node[IS_CONNECTED] = false;
