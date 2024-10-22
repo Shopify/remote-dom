@@ -1,5 +1,6 @@
 import {
   KIND_TEXT as LEGACY_KIND_TEXT,
+  KIND_FRAGMENT as LEGACY_KIND_FRAGMENT,
   ACTION_MOUNT as LEGACY_ACTION_MOUNT,
   ACTION_INSERT_CHILD as LEGACY_ACTION_INSERT_CHILD,
   ACTION_REMOVE_CHILD as LEGACY_ACTION_REMOVE_CHILD,
@@ -116,17 +117,27 @@ export function adaptToLegacyRemoteChannel(
         const [id, props] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_UPDATE_PROPS];
 
-        const propRecords = Object.entries(props).map(
-          ([key, value]) =>
-            [
+        const records = [];
+
+        for (const [key, value] of Object.entries(props)) {
+          if (isFragment(value)) {
+            records.push([
+              MUTATION_TYPE_INSERT_CHILD,
+              id ?? ROOT_ID,
+              adaptLegacyFragmentSerialization(key, value, options),
+              0,
+            ] satisfies RemoteMutationRecord);
+          } else {
+            records.push([
               MUTATION_TYPE_UPDATE_PROPERTY,
               id,
               key,
               value,
-            ] satisfies RemoteMutationRecord,
-        );
+            ] satisfies RemoteMutationRecord);
+          }
+        }
 
-        connection.mutate(propRecords);
+        connection.mutate(records);
         break;
       }
 
@@ -164,12 +175,67 @@ function adaptLegacyComponentSerialization(
 ): RemoteElementSerialization {
   const element = options?.elements?.[type] ?? type;
 
+  const [fragments, properties] = adaptFragmentsInProps(props);
+
   return {
     id,
     type: NODE_TYPE_ELEMENT,
     element,
-    properties: props,
-    children: children.map((child) => {
+    properties,
+    children: [
+      ...adaptLegacyFragmentsSerialization(fragments, options),
+      ...children.map((child) => {
+        return adaptLegacyNodeSerialization(child, options);
+      }),
+    ],
+  };
+}
+
+function adaptFragmentsInProps(props: any) {
+  const fragments: any = {};
+  const properties: any = {};
+
+  for (const [key, value] of Object.entries(props)) {
+    if (isFragment(value)) {
+      fragments[key] = value;
+    } else {
+      properties[key] = value;
+    }
+  }
+
+  return [fragments, properties];
+}
+
+function isFragment(prop: any) {
+  return (
+    typeof prop === 'object' &&
+    'kind' in prop &&
+    prop.kind === LEGACY_KIND_FRAGMENT
+  );
+}
+
+function adaptLegacyFragmentsSerialization(
+  fragments: any,
+  options?: LegacyRemoteChannelOptions,
+) {
+  return Object.entries(fragments).map(([slot, fragment]) => {
+    return adaptLegacyFragmentSerialization(slot, fragment, options);
+  });
+}
+
+function adaptLegacyFragmentSerialization(
+  slot: string,
+  fragment: any,
+  options?: LegacyRemoteChannelOptions,
+): RemoteElementSerialization {
+  return {
+    id: fragment.id,
+    element: 'remote-fragment',
+    attributes: {
+      slot,
+    },
+    type: NODE_TYPE_ELEMENT,
+    children: fragment.children.map((child: any) => {
       return adaptLegacyNodeSerialization(child, options);
     }),
   };
