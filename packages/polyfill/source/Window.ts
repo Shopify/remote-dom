@@ -48,8 +48,8 @@ export class Window extends EventTarget {
 
   static setGlobal(window: Window) {
     for (const property in window) {
-      if (window[property] === window) {
-        window[property] = globalThis;
+      if ((window as any)[property] === window) {
+        (window as any)[property] = globalThis;
       }
     }
 
