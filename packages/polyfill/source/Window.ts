@@ -53,8 +53,12 @@ export class Window extends EventTarget {
       }
     }
 
+    const eventTargetPrototypeProperties = Object.getOwnPropertyDescriptors(
+      EventTarget.prototype,
+    );
     const properties = Object.getOwnPropertyDescriptors(window);
 
+    Object.defineProperties(globalThis, eventTargetPrototypeProperties);
     Object.defineProperties(globalThis, properties);
   }
 }

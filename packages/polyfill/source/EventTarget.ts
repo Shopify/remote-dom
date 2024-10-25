@@ -7,13 +7,19 @@ import type {Document} from './Document.ts';
 const ONCE_LISTENERS = Symbol('onceListeners');
 
 export class EventTarget {
-  [LISTENERS]?: Map<string, Set<EventListenerOrEventListenerObject>>;
-  [ONCE_LISTENERS]?: WeakMap<EventListenerOrEventListenerObject, EventListener>;
+  [LISTENERS]:
+    | Map<string, Set<EventListenerOrEventListenerObject>>
+    | undefined = undefined;
+
+  [ONCE_LISTENERS]:
+    | WeakMap<EventListenerOrEventListenerObject, EventListener>
+    | undefined = undefined;
+
   /**
    * Property set by entities that extend this class that are part of the DOM tree.
    * @internal
    */
-  [OWNER_DOCUMENT]?: Document;
+  [OWNER_DOCUMENT]: Document | undefined = undefined;
 
   addEventListener(
     type: string,
