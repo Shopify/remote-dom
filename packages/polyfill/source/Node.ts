@@ -62,6 +62,14 @@ export class Node extends EventTarget {
 
   set parentNode(_readonly) {}
 
+  get parentElement(): ParentNode | null {
+    const parent = this[PARENT];
+    if (!parent || parent.nodeType !== 1) return null;
+    return parent;
+  }
+
+  set parentElement(_readonly) {}
+
   get previousSibling() {
     return this[PREV];
   }
