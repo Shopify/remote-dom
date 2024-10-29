@@ -1,5 +1,15 @@
 # @remote-dom/polyfill
 
+## 1.4.1
+
+### Patch Changes
+
+- [#472](https://github.com/Shopify/remote-dom/pull/472) [`1473a3c`](https://github.com/Shopify/remote-dom/commit/1473a3c521e8d4d44d50c2f15680f28997270dc8) Thanks [@jakearchibald](https://github.com/jakearchibald)! - Fix removeChild so it clears parent/sibling references
+
+- [#472](https://github.com/Shopify/remote-dom/pull/472) [`1473a3c`](https://github.com/Shopify/remote-dom/commit/1473a3c521e8d4d44d50c2f15680f28997270dc8) Thanks [@jakearchibald](https://github.com/jakearchibald)! - Add node.parentElement
+
+- [#470](https://github.com/Shopify/remote-dom/pull/470) [`08839d3`](https://github.com/Shopify/remote-dom/commit/08839d3c136b63024ef725d9cf427e250f2978d3) Thanks [@developit](https://github.com/developit)! - window aliases should refer to globalThis
+
 ## 1.4.0
 
 ### Minor Changes
