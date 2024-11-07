@@ -11,6 +11,7 @@ export default defineConfig({
   },
   plugins: [
     preact({
+      reactAliasesEnabled: false,
       // We manually set the JSX transformation to apply to examples per-file
       exclude: ['remote/examples/*.tsx'],
     }),
