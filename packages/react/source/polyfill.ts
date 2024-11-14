@@ -1,5 +1,3 @@
-import {window} from '@remote-dom/core/polyfill';
-
 class HTMLIFrameElement extends HTMLElement {}
 
 class CSSStyleDeclaration {
@@ -24,23 +22,8 @@ class CSSStyleDeclaration {
   }
 }
 
-// React ues the `location` property when printing help text in development.
-if (!window.location) {
-  Object.defineProperty(window, 'location', {
-    value: globalThis.location ?? {protocol: 'https:'},
-    configurable: true,
-  });
-}
-
-if (!window.navigator) {
-  Object.defineProperty(window, 'navigator', {
-    value: globalThis.navigator ?? {userAgent: ''},
-    configurable: true,
-  });
-}
-
 // React checks whether elements are Iframes on initialization.
-Object.defineProperty(window, 'HTMLIFrameElement', {
+Object.defineProperty(globalThis, 'HTMLIFrameElement', {
   value: HTMLIFrameElement,
   configurable: true,
 });
