@@ -13,7 +13,6 @@ import {
 } from '@remote-ui/core';
 
 import type {
-  RemoteConnection,
   RemoteMutationRecord,
   RemoteTextSerialization,
   RemoteElementSerialization,
@@ -27,6 +26,8 @@ import {
   MUTATION_TYPE_UPDATE_PROPERTY,
   MUTATION_TYPE_UPDATE_TEXT,
 } from '../constants.ts';
+import {RemoteReceiver} from '../receivers.ts';
+import {RemoteReceiverElement} from '../elements.ts';
 
 export interface LegacyRemoteChannelElementMap {
   [key: string]: string;
@@ -54,9 +55,10 @@ export interface LegacyRemoteChannelOptions {
  * ```
  */
 export function adaptToLegacyRemoteChannel(
-  connection: RemoteConnection,
+  receiver: RemoteReceiver,
   options?: LegacyRemoteChannelOptions,
 ): LegacyRemoteChannel {
+  const connection = receiver.connection;
   return function remoteChannel<T extends keyof LegacyActionArgumentMap>(
     type: T,
     ...payload: LegacyActionArgumentMap[T]
@@ -119,25 +121,40 @@ export function adaptToLegacyRemoteChannel(
 
         const records = [];
 
+        const element = receiver.get({id}) as unknown as RemoteReceiverElement;
+
         for (const [key, value] of Object.entries(props)) {
           if (isFragment(value)) {
             records.push([
               MUTATION_TYPE_INSERT_CHILD,
               id ?? ROOT_ID,
               adaptLegacyFragmentSerialization(key, value, options),
-              0,
+              element.children.length,
             ] satisfies RemoteMutationRecord);
           } else {
-            records.push([
-              MUTATION_TYPE_UPDATE_PROPERTY,
-              id,
-              key,
-              value,
-            ] satisfies RemoteMutationRecord);
+            const index = [...element.children].findIndex(
+              (child) =>
+                'slot' in child.attributes && child.attributes.slot === key,
+            );
+            if (index !== -1) {
+              records.push([
+                MUTATION_TYPE_REMOVE_CHILD,
+                id ?? ROOT_ID,
+                index,
+              ] satisfies RemoteMutationRecord);
+            } else {
+              records.push([
+                MUTATION_TYPE_UPDATE_PROPERTY,
+                id,
+                key,
+                value,
+              ] satisfies RemoteMutationRecord);
+            }
           }
         }
 
         connection.mutate(records);
+
         break;
       }
 
@@ -183,10 +200,10 @@ function adaptLegacyComponentSerialization(
     element,
     properties,
     children: [
-      ...adaptLegacyFragmentsSerialization(fragments, options),
       ...children.map((child) => {
         return adaptLegacyNodeSerialization(child, options);
       }),
+      ...adaptLegacyFragmentsSerialization(fragments, options),
     ],
   };
 }
