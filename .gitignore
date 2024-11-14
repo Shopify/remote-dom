@@ -3,3 +3,7 @@ node_modules/
 .DS_STORE
 packages/*/bin/
 *.log
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
