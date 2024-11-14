@@ -25,7 +25,8 @@ export type RenderExample =
   | 'preact'
   | 'react'
   | 'svelte'
-  | 'vue';
+  | 'vue'
+  | 'game';
 
 /**
  * The object that the “host” page will pass to the “remote” environment. This
@@ -49,6 +50,12 @@ export interface RenderAPI {
    * alert.
    */
   alert(content: string): Promise<void>;
+
+  enumerateDevices(): Promise<MediaDeviceInfo[]>;
+  getUserMedia(
+    callback: (frame: ImageBitmap) => void | Promise<void>,
+    options?: {deviceId?: string},
+  ): Promise<{switchDevice(deviceId: string): void; stop(): void}>;
 }
 
 /**
@@ -70,6 +77,10 @@ export interface TextProperties {
    * Whether the text should be emphasized.
    */
   emphasis?: boolean;
+  /**
+   * Whether the text should be monospaced.
+   */
+  monospace?: boolean;
 }
 
 /**
@@ -93,6 +104,8 @@ export interface ModalProperties {
    * Remote DOM, this property can be set using `addEventListener('press')`.
    */
   onClose?(): void;
+
+  open?: boolean;
 }
 
 export interface ModalMethods {
