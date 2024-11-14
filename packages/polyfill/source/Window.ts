@@ -47,18 +47,18 @@ export class Window extends EventTarget {
   MutationObserver = MutationObserver;
 
   static setGlobal(window: Window) {
-    for (const property in window) {
-      if ((window as any)[property] === window) {
-        (window as any)[property] = globalThis;
+    const properties = Object.getOwnPropertyDescriptors(window);
+
+    for (const property in properties) {
+      if (property === 'window') continue;
+
+      const descriptor = properties[property]!;
+
+      if (descriptor.value === window) {
+        descriptor.value = globalThis;
       }
     }
 
-    const eventTargetPrototypeProperties = Object.getOwnPropertyDescriptors(
-      EventTarget.prototype,
-    );
-    const properties = Object.getOwnPropertyDescriptors(window);
-
-    Object.defineProperties(globalThis, eventTargetPrototypeProperties);
     Object.defineProperties(globalThis, properties);
   }
 }
