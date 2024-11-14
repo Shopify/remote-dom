@@ -1,10 +1,7 @@
-import '@remote-dom/core/polyfill';
-import '@remote-dom/react/polyfill';
-
 import {ThreadWebWorker} from '@quilted/threads';
 
-import '../elements.ts';
-import {render} from '../render.ts';
+// import '../elements.ts';
+// import {render} from '../render.ts';
 import type {SandboxAPI} from '../../types.ts';
 
 // We use the `@quilted/threads` library to create a “thread” for our iframe,
@@ -17,6 +14,8 @@ import type {SandboxAPI} from '../../types.ts';
 new ThreadWebWorker<never, SandboxAPI>(self as any as Worker, {
   exports: {
     async render(connection, api) {
+      const {render} = await import('../render.ts');
+
       // We will observe this DOM node, and send any elements within it to be
       // reflected on this "host" page. This element is defined by the Remote DOM
       // library, and provides a convenient `connect()` method that starts
@@ -29,3 +28,7 @@ new ThreadWebWorker<never, SandboxAPI>(self as any as Worker, {
     },
   },
 });
+
+await import('@remote-dom/core/polyfill');
+await import('@remote-dom/react/polyfill');
+await import('../elements.ts');
