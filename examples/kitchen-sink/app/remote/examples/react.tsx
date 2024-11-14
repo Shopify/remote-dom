@@ -1,7 +1,6 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource react */
 
-import '@remote-dom/react/polyfill';
 import {useState, useRef} from 'react';
 import {createRoot} from 'react-dom/client';
 import {createRemoteComponent} from '@remote-dom/react';
