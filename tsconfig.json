@@ -8,6 +8,7 @@
     {"path": "./packages/polyfill"},
     {"path": "./packages/preact"},
     {"path": "./packages/react"},
-    {"path": "./packages/signals"}
+    {"path": "./packages/signals"},
+    {"path": "./packages/tree-receiver"}
   ]
 }
