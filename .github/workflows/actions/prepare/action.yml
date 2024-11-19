@@ -6,7 +6,6 @@ runs:
     - uses: actions/setup-node@v4
       with:
         cache: pnpm
-        registry-url: 'https://registry.npmjs.org'
         node-version-file: '.nvmrc'
     - name: Enable Corepack
       run: corepack enable && pnpm -v

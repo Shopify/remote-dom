@@ -141,6 +141,7 @@ export class RemoteReceiver {
      */
     methods?: Record<string, (...args: any[]) => any> | null;
   } = {}) {
+    console.log('#### test');
     const {attached, parents, subscribers} = this;
 
     this.connection = createRemoteConnection({
