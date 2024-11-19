@@ -1,5 +1,11 @@
 import type {ComponentType} from 'preact';
-import {memo, useRef, useEffect, type MutableRefObject} from 'preact/compat';
+import {
+  memo,
+  useRef,
+  useEffect,
+  type MutableRefObject,
+  findDOMNode,
+} from 'preact/compat';
 import type {RemoteReceiverElement} from '@remote-dom/core/receivers';
 
 import {
@@ -112,7 +118,14 @@ export function createRemoteComponentRenderer<
       };
     }, [id, receiver]);
 
-    return <Component ref={internalsRef.current.instanceRef} {...props} />;
+    return (
+      <Component
+        ref={(node) => {
+          internalsRef.current.instanceRef.current = findDOMNode(node) || node;
+        }}
+        {...props}
+      />
+    );
   });
 
   RemoteComponentRenderer.displayName =

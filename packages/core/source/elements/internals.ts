@@ -301,3 +301,18 @@ export function callRemoteElementMethod(
 
   return connection.call(id, method, ...args);
 }
+
+export function dispatchEventToHost(
+  node: Element,
+  type: string,
+  details: Record<string, any>,
+) {
+  const id = REMOTE_IDS.get(node);
+  const connection = REMOTE_CONNECTIONS.get(node);
+
+  if (id == null || connection == null) {
+    throw new Error('node not found or not connected');
+  }
+
+  return connection.dispatchEvent(id, type, details);
+}

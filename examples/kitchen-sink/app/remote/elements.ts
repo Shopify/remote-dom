@@ -1,8 +1,9 @@
 import {
   createRemoteElement,
+  RemoteEvent,
   RemoteRootElement,
   RemoteFragmentElement,
-  type RemoteEvent,
+  RemoteElement,
 } from '@remote-dom/core/elements';
 
 import type {
@@ -12,12 +13,31 @@ import type {
   ModalMethods,
   StackProperties,
 } from '../types.ts';
+import {dispatchEventToHost} from '../../../../packages/core/source/elements/internals.ts';
 
 // In this file we will define the custom elements that can be rendered in the
 // remote environment. Note that none of these elements have any real implementation —
 // they just act as placeholders that will be communicated to the host environment.
 // The host environment contains the actual implementation of these elements (in this case,
 // they have been implemented using Preact, in the `host/components.tsx` file).
+
+export class Iframe extends RemoteElement {
+  static get remoteAttributes() {
+    return ['src'];
+  }
+
+  static get remoteEvents() {
+    return ['ready'];
+  }
+
+  get contentWindow() {
+    return {
+      postMessage: (data: any) => {
+        dispatchEventToHost(this, 'message', {data});
+      },
+    };
+  }
+}
 
 export const Text = createRemoteElement<TextProperties>({
   properties: {
@@ -56,6 +76,7 @@ customElements.define('ui-text', Text);
 customElements.define('ui-button', Button);
 customElements.define('ui-modal', Modal);
 customElements.define('ui-stack', Stack);
+customElements.define('ui-iframe', Iframe);
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -63,6 +84,7 @@ declare global {
     'ui-button': InstanceType<typeof Button>;
     'ui-stack': InstanceType<typeof Stack>;
     'ui-modal': InstanceType<typeof Modal>;
+    'ui-iframe': InstanceType<typeof Iframe>;
   }
 }
 

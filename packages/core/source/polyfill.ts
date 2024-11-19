@@ -73,3 +73,8 @@ hooks.removeAttribute = (element, name) => {
 };
 
 export {hooks, window, type Hooks};
+
+// Object.defineProperty(window, 'HTMLIFrameElement', {
+//   value: HTMLIFrameElement,
+//   configurable: true,
+// });
