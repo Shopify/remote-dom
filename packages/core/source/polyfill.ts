@@ -72,4 +72,4 @@ hooks.removeAttribute = (element, name) => {
   updateRemoteElementAttribute(element, name);
 };
 
-export {hooks, window, type Hooks};
+export {hooks, window, Window, type Hooks};
