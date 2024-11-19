@@ -1,5 +1,6 @@
-import {TreeReceiver, HostNode} from '.';
 import {createElement, type ComponentType, type JSX} from 'react';
+
+import {TreeReceiver, HostNode} from './TreeReceiver.ts';
 
 export {HostNode};
 

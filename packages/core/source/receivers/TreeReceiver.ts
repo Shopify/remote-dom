@@ -8,6 +8,7 @@ import {
   type RemoteElementSerialization,
   type RemoteTextSerialization,
 } from '@remote-dom/core';
+
 import {BASE_COMPONENTS, type BaseNodeTypes} from './components';
 import {HostNode} from './HostNode';
 import type {TreeReceiverOptions} from './types';
@@ -152,12 +153,6 @@ export class TreeReceiver<
         const node = getNode(id);
         if (newText === node.props.data) return;
         node.setProperty('data', newText);
-      },
-      addEventListener: (id, eventType) => {
-        getNode(id).addEventListener(eventType);
-      },
-      removeEventListener: (id, eventType) => {
-        getNode(id).removeEventListener(eventType);
       },
     });
   }
