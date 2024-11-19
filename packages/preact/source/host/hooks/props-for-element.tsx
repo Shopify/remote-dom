@@ -87,7 +87,7 @@ export function usePropsForRemoteElement<
 
   for (const child of children.value) {
     let slot: string | undefined =
-      child.type === 1 ? (child.properties.peek().slot as any) : undefined;
+      child.type === 1 ? (child.attributes.peek().slot as any) : undefined;
 
     if (typeof slot !== 'string') slot = undefined;
 

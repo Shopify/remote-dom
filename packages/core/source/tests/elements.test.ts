@@ -788,6 +788,32 @@ describe('RemoteElement', () => {
       ]);
     });
 
+    it('automatically serializes the slot attribute without any additional configuration', () => {
+      const ProductElement = createRemoteElement();
+
+      const receiver = new TestRemoteReceiver();
+
+      const root = createRemoteRootElement();
+      const element = createElementFromConstructor(ProductElement);
+      root.append(element);
+
+      const slot = 'aside';
+      element.setAttribute('slot', slot);
+
+      root.connect(receiver.connection);
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_INSERT_CHILD,
+          remoteId(root),
+          expect.objectContaining({
+            attributes: {slot},
+          }),
+          0,
+        ],
+      ]);
+    });
+
     it('reflects the value of a remote attribute automatically when the attribute is set', () => {
       const ProductElement = createRemoteElement({
         attributes: ['name'],
