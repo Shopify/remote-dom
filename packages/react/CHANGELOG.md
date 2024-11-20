@@ -1,5 +1,11 @@
 # @remote-dom/react
 
+## 1.2.1
+
+### Patch Changes
+
+- [#492](https://github.com/Shopify/remote-dom/pull/492) [`59f417b`](https://github.com/Shopify/remote-dom/commit/59f417b4abe5aa5d59999200430a18f5fe1aa810) Thanks [@lemonmade](https://github.com/lemonmade)! - Apply React polyfill directly to `globalThis`
+
 ## 1.2.0
 
 ### Minor Changes
