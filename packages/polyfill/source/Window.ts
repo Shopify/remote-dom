@@ -47,6 +47,28 @@ export class Window extends EventTarget {
   MutationObserver = MutationObserver;
 
   static setGlobal(window: Window) {
+    const properties = Object.getOwnPropertyDescriptors(window);
+
+    delete (properties as any).self;
+
+    Object.defineProperties(globalThis, properties);
+
+    if (typeof globalThis.self === 'undefined') {
+      Object.defineProperty(globalThis, 'self', {
+        value: window,
+        configurable: true,
+        writable: true,
+        enumerable: true,
+      });
+    } else {
+      // There can already be a `self`, like when polyfilling the DOM
+      // in a Web Worker. In those cases, just mirror all the `Window`
+      // properties onto `self`, rather than wholly redefining it.
+      Object.defineProperties(self, properties);
+    }
+  }
+
+  static setGlobalThis(window: Window) {
     for (const property in window) {
       if ((window as any)[property] === window) {
         (window as any)[property] = globalThis;
