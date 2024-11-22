@@ -51,9 +51,6 @@ export const Banner = createRemoteElement<
   {},
   {content: true; primaryAction: true}
 >({
-  properties: {
-    content: {type: String},
-  },
   slots: ['content', 'primaryAction'],
 });
 
