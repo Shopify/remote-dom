@@ -28,6 +28,7 @@
     "@quilted/typescript": "^0.4.2",
     "@quilted/vite": "^0.1.27",
     "@types/node": "~20.11.0",
+    "jest-extended": "^4.0.2",
     "jsdom": "^25.0.0",
     "playwright": "^1.48.2",
     "prettier": "^3.3.3",

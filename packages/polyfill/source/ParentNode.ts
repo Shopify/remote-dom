@@ -50,7 +50,9 @@ export class ParentNode extends ChildNode {
   }
 
   removeChild(child: Node) {
-    if (child.parentNode !== this) throw Error(`not a child of this node`);
+    if (child[PARENT] !== this) throw Error(`not a child of this node`);
+    child[PARENT] = null;
+
     const prev = child[PREV];
     const next = child[NEXT];
     if (prev) prev[NEXT] = next;
