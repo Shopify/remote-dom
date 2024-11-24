@@ -127,6 +127,43 @@ importers:
         specifier: ^5.4.0
         version: 5.4.2(@types/node@20.11.16)(lightningcss@1.22.1)
 
+  examples/remote-ui:
+    dependencies:
+      '@preact/preset-vite':
+        specifier: ^2.9.0
+        version: 2.9.0(@babel/core@7.25.2)(preact@10.23.2)(vite@5.4.2(@types/node@20.11.16)(lightningcss@1.22.1))
+      '@preact/signals':
+        specifier: ^1.3.0
+        version: 1.3.0(preact@10.23.2)
+      '@remote-dom/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@remote-dom/preact':
+        specifier: workspace:*
+        version: link:../../packages/preact
+      '@remote-ui/core':
+        specifier: ^2.2.4
+        version: 2.2.4
+      '@remote-ui/react':
+        specifier: ^5.0.4
+        version: 5.0.4(react-reconciler@0.28.0(react@18.3.1))(react@18.3.1)
+      '@remote-ui/rpc':
+        specifier: ^1.4.5
+        version: 1.4.5
+      preact:
+        specifier: ^10.22.0
+        version: 10.23.2
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-reconciler:
+        specifier: 0.28.0
+        version: 0.28.0(react@18.3.1)
+    devDependencies:
+      '@types/react':
+        specifier: ^18.3.5
+        version: 18.3.5
+
   packages/core:
     dependencies:
       '@remote-dom/polyfill':
@@ -1420,8 +1457,20 @@ packages:
       vitest:
         optional: true
 
+  '@remote-ui/async-subscription@2.1.15':
+    resolution: {integrity: sha512-SdPfO4ExDOVyOPAoCqT9+Tk0UeU97EMplkxlr5qiv3W7c1yRsxgtbETicoBh9l/P49bLzVjiJG6CQIu1au3Vhw==}
+
   '@remote-ui/core@2.2.4':
     resolution: {integrity: sha512-7ahrsI5GqYvAGcWTcysbKFKbzbhB/mDgIJr9VurF34gor2IqRCrmrPYemLQuOCQhWqPb3AOEUxWFYNLiB5i6kA==}
+
+  '@remote-ui/react@5.0.4':
+    resolution: {integrity: sha512-zrewan3KqKHW8HOCgnpHduG4Ldqyh9ysouGIv8VeE0PlC03eCqi2MFzA+nKIJ1p58LIAbPQ1asp+RwT6ImVImg==}
+    peerDependencies:
+      react: '>=17.0.0 <19.0.0'
+      react-reconciler: '>=0.26.0 <0.30.0'
+    peerDependenciesMeta:
+      react-reconciler:
+        optional: true
 
   '@remote-ui/rpc@1.4.5':
     resolution: {integrity: sha512-Cr+06niG/vmE4A9YsmaKngRuuVSWKMY42NMwtZfy+gctRWGu6Wj9BWuMJg5CEp+JTkRBPToqT5rqnrg1G/Wvow==}
@@ -1636,6 +1685,9 @@ packages:
 
   '@types/react-dom@18.3.0':
     resolution: {integrity: sha512-EhwApuTmMBmXuFOikhQLIBUn6uFg81SwLMOAUgodJF14SOBOCMdU04gDoYi0WOJJHD144TL32z4yDqCW3dnkQg==}
+
+  '@types/react-reconciler@0.28.8':
+    resolution: {integrity: sha512-SN9c4kxXZonFhbX4hJrZy37yw9e7EIxcpHCxQv5JUS18wDE5ovkQKlqQEkufdJCCMfuI9BnjUJvhYeJ9x5Ra7g==}
 
   '@types/react@18.3.5':
     resolution: {integrity: sha512-WeqMfGJLGuLCqHGYRGHxnKrXcTitc6L/nBUWfWPcTarG3t9PsquqUMuVeXZeca+mglY4Vo5GZjCi0A3Or2lnxA==}
@@ -2792,6 +2844,12 @@ packages:
   react-is@18.2.0:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
 
+  react-reconciler@0.28.0:
+    resolution: {integrity: sha512-sGIHDOpgVjRYgsi8NgosDnbkDvvkYFFSF900ZUhUw0+lSBEA5n76TcKFaVkfYMIuYm+7W6mT8Q673DLBfuTxcQ==}
+    engines: {node: '>=0.10.0'}
+    peerDependencies:
+      react: ^18.1.0
+
   react-refresh@0.14.2:
     resolution: {integrity: sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA==}
     engines: {node: '>=0.10.0'}
@@ -2894,6 +2952,9 @@ packages:
   saxes@6.0.0:
     resolution: {integrity: sha512-xAg7SOnEhrm5zI3puOOKyy1OMcMlIJZYNJY7xLBwSze0UjhPLnWfj2GF2EpT0jmzaJKIWKHLsaSSajf35bcYnA==}
     engines: {node: '>=v12.22.7'}
+
+  scheduler@0.22.0:
+    resolution: {integrity: sha512-6QAm1BgQI88NPYymgGQLCZgvep4FyePDWFpXVK+zNSUgHwlqpJy8VEh8Et0KxTACS4VWwMousBElAZOH9nkkoQ==}
 
   scheduler@0.23.2:
     resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
@@ -4610,6 +4671,27 @@ snapshots:
       - preact
       - supports-color
 
+  '@preact/preset-vite@2.9.0(@babel/core@7.25.2)(preact@10.23.2)(vite@5.4.2(@types/node@20.11.16)(lightningcss@1.22.1))':
+    dependencies:
+      '@babel/code-frame': 7.24.7
+      '@babel/core': 7.25.2
+      '@babel/plugin-transform-react-jsx': 7.25.2(@babel/core@7.25.2)
+      '@babel/plugin-transform-react-jsx-development': 7.24.7(@babel/core@7.25.2)
+      '@prefresh/vite': 2.4.5(preact@10.23.2)(vite@5.4.2(@types/node@20.11.16)(lightningcss@1.22.1))
+      '@rollup/pluginutils': 4.2.1
+      babel-plugin-transform-hook-names: 1.0.2(@babel/core@7.25.2)
+      debug: 4.3.5
+      kolorist: 1.8.0
+      magic-string: 0.30.5
+      node-html-parser: 6.1.12
+      resolve: 1.22.8
+      source-map: 0.7.4
+      stack-trace: 1.0.0-pre2
+      vite: 5.4.2(@types/node@20.11.16)(lightningcss@1.22.1)
+    transitivePeerDependencies:
+      - preact
+      - supports-color
+
   '@preact/signals-core@1.8.0': {}
 
   '@preact/signals@1.3.0(preact@10.22.1)':
@@ -4792,10 +4874,25 @@ snapshots:
       - rollup
       - supports-color
 
+  '@remote-ui/async-subscription@2.1.15':
+    dependencies:
+      '@remote-ui/rpc': 1.4.5
+
   '@remote-ui/core@2.2.4':
     dependencies:
       '@remote-ui/rpc': 1.4.5
       '@remote-ui/types': 1.1.3
+
+  '@remote-ui/react@5.0.4(react-reconciler@0.28.0(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@remote-ui/async-subscription': 2.1.15
+      '@remote-ui/core': 2.2.4
+      '@remote-ui/rpc': 1.4.5
+      '@types/react': 18.3.5
+      '@types/react-reconciler': 0.28.8
+      react: 18.3.1
+    optionalDependencies:
+      react-reconciler: 0.28.0(react@18.3.1)
 
   '@remote-ui/rpc@1.4.5': {}
 
@@ -4982,6 +5079,10 @@ snapshots:
   '@types/prop-types@15.7.6': {}
 
   '@types/react-dom@18.3.0':
+    dependencies:
+      '@types/react': 18.3.5
+
+  '@types/react-reconciler@0.28.8':
     dependencies:
       '@types/react': 18.3.5
 
@@ -6136,6 +6237,12 @@ snapshots:
 
   react-is@18.2.0: {}
 
+  react-reconciler@0.28.0(react@18.3.1):
+    dependencies:
+      loose-envify: 1.4.0
+      react: 18.3.1
+      scheduler: 0.22.0
+
   react-refresh@0.14.2: {}
 
   react@18.3.1:
@@ -6251,6 +6358,10 @@ snapshots:
   saxes@6.0.0:
     dependencies:
       xmlchars: 2.2.0
+
+  scheduler@0.22.0:
+    dependencies:
+      loose-envify: 1.4.0
 
   scheduler@0.23.2:
     dependencies:

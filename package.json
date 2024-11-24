@@ -17,6 +17,7 @@
     "version-bump": "changeset version && pnpm install --no-frozen-lockfile",
     "deploy": "pnpm publish -r",
     "example:getting-started": "pnpm run --filter example-getting-started start",
+    "example:remote-ui": "pnpm run --filter example-remote-ui start",
     "example:custom-element": "pnpm run --filter example-custom-element start",
     "example:kitchen-sink": "pnpm run --filter example-kitchen-sink start"
   },
