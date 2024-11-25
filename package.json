@@ -35,7 +35,7 @@
     "tsx": "^4.19.0",
     "typescript": "^5.5.0",
     "vite": "^5.4.0",
-    "vitest": "^1.6.0"
+    "vitest": "^2.1.5"
   },
   "packageManager": "pnpm@9.14.2+sha256.06e65a4965baff6d6097f9c8f75c35f6d420974dbc03d775009056a69edfd271",
   "prettier": {
