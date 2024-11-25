@@ -11,6 +11,7 @@ import {
   Button as ButtonElement,
   Stack as StackElement,
   Modal as ModalElement,
+  Banner as BannerElement,
 } from '../elements.ts';
 
 const Text = createRemoteComponent('ui-text', TextElement);
@@ -26,6 +27,7 @@ const Modal = createRemoteComponent('ui-modal', ModalElement, {
     onClose: {event: 'close'},
   },
 });
+const Banner = createRemoteComponent('ui-banner', BannerElement);
 
 export function renderUsingReact(root: Element, api: RenderAPI) {
   createRoot(root).render(<App api={api} />);
@@ -34,6 +36,14 @@ export function renderUsingReact(root: Element, api: RenderAPI) {
 function App({api}: {api: RenderAPI}) {
   return (
     <Stack spacing>
+      <Banner
+        content="Hi there, I am just playing with a cool banner"
+        primaryAction={
+          <Button onPress={() => api.alert('Hey! you clicked me! ')}>
+            Click me!
+          </Button>
+        }
+      />
       <Text>
         Rendering example: <Text emphasis>{api.example}</Text>
       </Text>
