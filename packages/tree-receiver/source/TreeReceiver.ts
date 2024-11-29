@@ -79,13 +79,21 @@ export class TreeReceiver<
   }
 
   /** @internal */
-  protected _createHostNode<Type extends AnyNodeType | BaseNodeTypes>(
-    id: string,
-    type: Type,
-    props: any = null,
-    events?: string[],
-    children?: any[],
-  ) {
+  protected _createHostNode<Type extends AnyNodeType | BaseNodeTypes>({
+    id,
+    type,
+    props,
+    events,
+    children,
+    element,
+  }: {
+    id: string;
+    type: Type;
+    props?: any;
+    events?: string[];
+    children?: any[];
+    element?: string;
+  }) {
     return new HostNode<AnyNodeType, Element>(
       this,
       id,
@@ -93,6 +101,7 @@ export class TreeReceiver<
       props || {},
       events,
       children,
+      element,
     );
   }
 
@@ -112,7 +121,10 @@ export class TreeReceiver<
       this.components.set(key, value);
     });
     // create the root node, which the client also uses to expose its API:
-    const root = this._createHostNode('~', this.components.get('#fragment')!);
+    const root = this._createHostNode({
+      id: '~',
+      type: this.components.get('#fragment')!,
+    });
     root.isRoot = true;
     root.events = events;
     root.api = {
@@ -222,7 +234,7 @@ export class TreeReceiver<
           this.components.get(element) || this.components.get('_unknown');
         if (!type) throw Error(`Unknown element type "${element}"`);
         this.retain?.(properties);
-        node = this._createHostNode(id, type, properties);
+        node = this._createHostNode({id, type, props: properties, element});
         if (incoming.events) {
           for (const type of incoming.events) {
             node.addEventListener(type);
@@ -236,13 +248,17 @@ export class TreeReceiver<
         break;
       }
       case NODE_TYPE_TEXT:
-        node = this._createHostNode(id, this.components.get('#text')!, {
-          data: incoming.data,
+        node = this._createHostNode({
+          id,
+          type: this.components.get('#text')!,
+          props: {data: incoming.data},
         });
         break;
       case NODE_TYPE_COMMENT:
-        node = this._createHostNode(id, this.components.get('#comment')!, {
-          data: incoming.data,
+        node = this._createHostNode({
+          id,
+          type: this.components.get('#comment')!,
+          props: {data: incoming.data},
         });
         break;
     }

@@ -45,6 +45,7 @@ export class HostNode<
     public props: Props,
     events?: string[],
     public children?: HostChild<AnyNodeType, Element>[],
+    public element?: string,
   ) {
     if (events) for (const type in events) this.events[type] = true;
   }
@@ -56,6 +57,9 @@ export class HostNode<
       ...this.props,
       key: this.id,
       ref: this.ref,
+      meta: {
+        element: this.element,
+      },
     };
     if (allowProps) {
       // event delegation
