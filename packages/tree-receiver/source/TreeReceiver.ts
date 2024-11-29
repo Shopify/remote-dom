@@ -29,6 +29,8 @@ export class TreeReceiver<
   protected components = new Map<string, AnyNodeType | BaseNodeTypes>(
     Object.entries(BASE_COMPONENTS),
   );
+  protected retain?: (value: unknown) => void;
+  protected release?: (value: unknown) => void;
 
   connection: RemoteConnection;
 
@@ -102,6 +104,8 @@ export class TreeReceiver<
     components,
     events = {},
   }: TreeReceiverOptions<AnyNodeType, Element>) {
+    this.retain = retain;
+    this.release = release;
     if (createElement) this._createElement = createElement;
     this.rerender = rerender;
     components?.forEach((value, key) => {
@@ -217,6 +221,7 @@ export class TreeReceiver<
         const type =
           this.components.get(element) || this.components.get('_unknown');
         if (!type) throw Error(`Unknown element type "${element}"`);
+        this.retain?.(properties);
         node = this._createHostNode(id, type, properties);
         if (incoming.events) {
           for (const type of incoming.events) {
