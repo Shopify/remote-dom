@@ -61,6 +61,10 @@ export interface RemoteReceiverRoot {
   readonly type: typeof NODE_TYPE_ROOT;
   readonly children: readonly RemoteReceiverNode[];
   readonly properties: NonNullable<RemoteElementSerialization['properties']>;
+  readonly attributes: NonNullable<RemoteElementSerialization['attributes']>;
+  readonly eventListeners: NonNullable<
+    RemoteElementSerialization['eventListeners']
+  >;
   readonly version: number;
 }
 
@@ -102,6 +106,8 @@ export class RemoteReceiver {
     children: [],
     version: 0,
     properties: {},
+    attributes: {},
+    eventListeners: {},
   };
 
   /**
