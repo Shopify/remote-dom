@@ -16,6 +16,7 @@ import type {
   RemoteMutationRecord,
   RemoteTextSerialization,
   RemoteElementSerialization,
+  RemoteConnection,
 } from '../types.ts'; // Adjust this import path as needed
 import {
   ROOT_ID,
@@ -26,8 +27,6 @@ import {
   MUTATION_TYPE_UPDATE_PROPERTY,
   MUTATION_TYPE_UPDATE_TEXT,
 } from '../constants.ts';
-import {RemoteReceiver} from '../receivers.ts';
-import {RemoteReceiverElement} from '../elements.ts';
 
 export interface LegacyRemoteChannelElementMap {
   [key: string]: string;
@@ -55,10 +54,62 @@ export interface LegacyRemoteChannelOptions {
  * ```
  */
 export function adaptToLegacyRemoteChannel(
-  receiver: RemoteReceiver,
+  connection: RemoteConnection,
   options?: LegacyRemoteChannelOptions,
 ): LegacyRemoteChannel {
-  const connection = receiver.connection;
+  const tree: Record<string, any> = {};
+
+  function persistNode(parentId: string, node: any, index: number) {
+    tree[parentId] = tree[parentId] ?? [];
+    tree[parentId].splice(index, 0, {
+      id: node.id,
+      slot: node?.attributes?.slot,
+    });
+
+    if (node.children) {
+      for (const [childIndex, child] of node.children.entries()) {
+        persistNode(node.id, child, childIndex);
+      }
+    }
+  }
+
+  function removeNode(parentId: string, index: number) {
+    const id = tree[parentId][index].id;
+    tree[parentId].splice(index, 1);
+    cleanupNode(id);
+  }
+
+  function cleanupNode(id: string) {
+    if (tree[id]) {
+      for (const child of tree[id]) {
+        cleanupNode(child.id);
+      }
+
+      delete tree[id];
+    }
+  }
+
+  function mutate(records: RemoteMutationRecord[]) {
+    for (const record of records) {
+      const [mutationType, parentId] = record;
+
+      switch (mutationType) {
+        case MUTATION_TYPE_INSERT_CHILD: {
+          const node = record[2];
+          const index = record[3];
+          persistNode(parentId, node, index);
+          break;
+        }
+        case MUTATION_TYPE_REMOVE_CHILD:
+          const index = record[2];
+          removeNode(parentId, index);
+          break;
+      }
+
+      connection.mutate(records);
+    }
+  }
+
   return function remoteChannel<T extends keyof LegacyActionArgumentMap>(
     type: T,
     ...payload: LegacyActionArgumentMap[T]
@@ -78,14 +129,14 @@ export function adaptToLegacyRemoteChannel(
             ] satisfies RemoteMutationRecord,
         );
 
-        connection.mutate(records);
+        mutate(records);
         break;
 
       case LEGACY_ACTION_INSERT_CHILD:
         const [parentId, index, child] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_INSERT_CHILD];
 
-        connection.mutate([
+        mutate([
           [
             MUTATION_TYPE_INSERT_CHILD,
             parentId ?? ROOT_ID,
@@ -100,7 +151,7 @@ export function adaptToLegacyRemoteChannel(
         const [parentID, removeIndex] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_REMOVE_CHILD];
 
-        connection.mutate([
+        mutate([
           [MUTATION_TYPE_REMOVE_CHILD, parentID ?? ROOT_ID, removeIndex],
         ]);
 
@@ -111,7 +162,7 @@ export function adaptToLegacyRemoteChannel(
         const [textId, text] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_UPDATE_TEXT];
 
-        connection.mutate([[MUTATION_TYPE_UPDATE_TEXT, textId, text]]);
+        mutate([[MUTATION_TYPE_UPDATE_TEXT, textId, text]]);
         break;
       }
 
@@ -121,22 +172,17 @@ export function adaptToLegacyRemoteChannel(
 
         const records = [];
 
-        const element = receiver.get({id}) as unknown as RemoteReceiverElement;
-
         for (const [key, value] of Object.entries(props)) {
           if (isFragment(value)) {
             records.push([
               MUTATION_TYPE_INSERT_CHILD,
               id ?? ROOT_ID,
               adaptLegacyFragmentSerialization(key, value, options),
-              element.children.length,
+              tree[id ?? ROOT_ID]?.length ?? 0,
             ] satisfies RemoteMutationRecord);
           } else {
-            const index = [...element.children].findIndex(
-              (child) =>
-                child.attributes &&
-                'slot' in child.attributes &&
-                child.attributes.slot === key,
+            const index = tree[id ?? ROOT_ID].findIndex(
+              ({slot}: any) => slot === key,
             );
             if (index !== -1) {
               records.push([
@@ -155,7 +201,7 @@ export function adaptToLegacyRemoteChannel(
           }
         }
 
-        connection.mutate(records);
+        mutate(records);
 
         break;
       }
