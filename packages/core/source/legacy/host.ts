@@ -130,6 +130,7 @@ export function adaptToLegacyRemoteChannel(
         );
 
         mutate(records);
+
         break;
 
       case LEGACY_ACTION_INSERT_CHILD:
@@ -163,6 +164,7 @@ export function adaptToLegacyRemoteChannel(
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_UPDATE_TEXT];
 
         mutate([[MUTATION_TYPE_UPDATE_TEXT, textId, text]]);
+
         break;
       }
 
@@ -174,20 +176,30 @@ export function adaptToLegacyRemoteChannel(
 
         for (const [key, value] of Object.entries(props)) {
           if (isFragment(value)) {
-            records.push([
-              MUTATION_TYPE_INSERT_CHILD,
-              id ?? ROOT_ID,
-              adaptLegacyFragmentSerialization(key, value, options),
-              tree[id ?? ROOT_ID]?.length ?? 0,
-            ] satisfies RemoteMutationRecord);
-          } else {
-            const index = tree[id ?? ROOT_ID].findIndex(
-              ({slot}: any) => slot === key,
-            );
+            const index =
+              tree[id]?.findIndex(({slot}: any) => slot === key) ?? -1;
+
             if (index !== -1) {
               records.push([
                 MUTATION_TYPE_REMOVE_CHILD,
-                id ?? ROOT_ID,
+                id,
+                index,
+              ] satisfies RemoteMutationRecord);
+            }
+
+            records.push([
+              MUTATION_TYPE_INSERT_CHILD,
+              id,
+              adaptLegacyFragmentSerialization(key, value, options),
+              tree[id]?.length ?? 0,
+            ] satisfies RemoteMutationRecord);
+          } else {
+            const index =
+              tree[id]?.findIndex(({slot}: any) => slot === key) ?? -1;
+            if (index !== -1) {
+              records.push([
+                MUTATION_TYPE_REMOVE_CHILD,
+                id,
                 index,
               ] satisfies RemoteMutationRecord);
             } else {
@@ -273,6 +285,7 @@ function adaptFragmentsInProps(props: any) {
 
 function isFragment(prop: any) {
   return (
+    prop != null &&
     typeof prop === 'object' &&
     'kind' in prop &&
     prop.kind === LEGACY_KIND_FRAGMENT
