@@ -134,7 +134,9 @@ export function adaptToLegacyRemoteChannel(
           } else {
             const index = [...element.children].findIndex(
               (child) =>
-                'slot' in child.attributes && child.attributes.slot === key,
+                child.attributes &&
+                'slot' in child.attributes &&
+                child.attributes.slot === key,
             );
             if (index !== -1) {
               records.push([
