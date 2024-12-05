@@ -434,6 +434,11 @@ The `RemoteRootRenderer` component is used to render a tree of remote elements t
 The following component shows an example of how you could render a tree of remote elements using Preact. You’ll need to hand the `receiver` object’s `connection` property to the remote environment; some examples of how to do this are shown in the [runnable Remote DOM examples](/examples/).
 
 ```tsx
+// If you don’t already have this import somewhere in your project, you need
+// to add it — this import adds the Preact hooks that auto-subscribe components
+// to signals.
+import '@preact/signals';
+
 import {render} from 'preact';
 import {
   createRemoteComponentRenderer,
