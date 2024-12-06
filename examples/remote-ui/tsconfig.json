@@ -1,0 +1,15 @@
+{
+  "extends": "@quilted/typescript/tsconfig.project.json",
+  "compilerOptions": {
+    "outDir": "build/typescript",
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
+  "include": ["app"],
+  "references": [
+    {"path": "../../packages/core"},
+    {"path": "../../packages/preact"},
+    {"path": "../../packages/react"},
+    {"path": "../../packages/signals"}
+  ]
+}

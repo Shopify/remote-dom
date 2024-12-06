@@ -30,7 +30,8 @@ import {test, expect} from '@playwright/test';
       dialog.dismiss().catch(() => {});
     });
 
+    const dialogPromise = page.waitForEvent('dialog');
     await page.getByRole('button', {name: 'Close'}).click();
-    await page.waitForEvent('dialog');
+    await dialogPromise;
   });
 });
