@@ -1,5 +1,14 @@
 # @remote-dom/signals
 
+## 1.1.2
+
+### Patch Changes
+
+- [#517](https://github.com/Shopify/remote-dom/pull/517) [`99a8e1a`](https://github.com/Shopify/remote-dom/commit/99a8e1ad8d441619a33a5a4c3f2424fe1ccbe8df) Thanks [@lemonmade](https://github.com/lemonmade)! - Fix missing attributes and event listeners on root receiver elements
+
+- Updated dependencies [[`99a8e1a`](https://github.com/Shopify/remote-dom/commit/99a8e1ad8d441619a33a5a4c3f2424fe1ccbe8df)]:
+  - @remote-dom/core@1.5.2
+
 ## 1.1.1
 
 ### Patch Changes
