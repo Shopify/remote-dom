@@ -3,58 +3,57 @@
 
 import {useState} from 'react';
 import {Button, Modal, Stack, Text} from './components';
+import {RenderAPI} from '../types';
 
-export function App({api}: {api: any}) {
-  const [showModal, setShowModal] = useState(false);
-  const [count, setCount] = useState(0);
-
-  function removeModal() {
-    setShowModal(false);
-  }
-
+export function App({api}: {api: RenderAPI}) {
   return (
     <Stack spacing>
       <>
         <Text>
           Rendering example: <Text emphasis>remote-ui legacy</Text>
         </Text>
-        <Button
-          onPress={() => setShowModal(true)}
-          modal={
-            showModal ? (
-              <Modal
-                primaryAction={
-                  <Button
-                    onPress={() => {
-                      removeModal();
-                      if (count > 0) {
-                        void api.showAlert(`You clicked ${count} times!`);
-                      }
-                    }}
-                  >
-                    Close
-                  </Button>
-                }
-              >
-                <Stack spacing>
-                  <Text>
-                    Click count: <Text emphasis>{count}</Text>
-                  </Text>
-                  <Button
-                    onPress={() => {
-                      setCount((count) => count + 1);
-                    }}
-                  >
-                    Click me!
-                  </Button>
-                </Stack>
-              </Modal>
-            ) : undefined
-          }
-        >
-          Open modal
-        </Button>
+        <Button modal={<CountModal {...api} />}>Open modal</Button>
       </>
     </Stack>
+  );
+}
+
+function CountModal({showAlert, closeModal}: RenderAPI) {
+  const [count, setCount] = useState(0);
+
+  const primaryAction = (
+    <Button
+      onPress={() => {
+        closeModal();
+      }}
+    >
+      Close
+    </Button>
+  );
+
+  return (
+    <Modal
+      primaryAction={primaryAction}
+      onClose={() => {
+        if (count > 0) {
+          showAlert(`You clicked ${count} times!`);
+        }
+
+        setCount(0);
+      }}
+    >
+      <Stack spacing>
+        <Text>
+          Click count: <Text emphasis>{count}</Text>
+        </Text>
+        <Button
+          onPress={() => {
+            setCount((count) => count + 1);
+          }}
+        >
+          Click me!
+        </Button>
+      </Stack>
+    </Modal>
   );
 }

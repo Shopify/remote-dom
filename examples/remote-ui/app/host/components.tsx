@@ -45,7 +45,11 @@ export function Button({
         class="Button"
         type="button"
         onClick={() => {
-          onPress?.();
+          if (onPress) {
+            onPress();
+          } else {
+            document.querySelector('dialog')?.showModal();
+          }
         }}
       >
         {children}
@@ -74,11 +78,16 @@ export const Modal = forwardRef<
     children?: ComponentChildren;
     primaryAction?: ComponentChildren;
   } & ModalProperties
->(function Modal({children, primaryAction}) {
+>(function Modal({children, primaryAction, onClose}) {
   return (
-    <div class="Modal">
+    <dialog
+      class="Modal"
+      onClose={() => {
+        onClose?.();
+      }}
+    >
       <div class="Modal-Content">{children}</div>
       {primaryAction && <div class="Modal-Actions">{primaryAction}</div>}
-    </div>
+    </dialog>
   );
 });

@@ -9,7 +9,8 @@ import {
 } from '@remote-dom/preact/host';
 import {adaptToLegacyRemoteChannel} from '@remote-dom/core/legacy';
 import {createEndpoint, fromIframe, retain, release} from '@remote-ui/rpc';
-import {Button, Modal, Stack, Text} from './components.tsx';
+import {Button, Modal, Stack, Text, ModalProvider} from './components.tsx';
+import {EndpointApi} from '../types.ts';
 
 const components = new Map([
   ['Text', createRemoteComponentRenderer(Text)],
@@ -21,7 +22,7 @@ const components = new Map([
 
 const root = document.querySelector('#root')!;
 const iframe = document.querySelector('#remote-iframe') as HTMLIFrameElement;
-const endpoint = createEndpoint(fromIframe(iframe));
+const endpoint = createEndpoint<EndpointApi>(fromIframe(iframe));
 
 const receiver = new SignalRemoteReceiver({retain, release});
 const channel = adaptToLegacyRemoteChannel(receiver.connection);
@@ -32,7 +33,10 @@ render(
 );
 
 endpoint.call.render(channel, {
-  showAlert: (message: string) => {
+  showAlert: async (message: string) => {
     alert(message);
+  },
+  closeModal: async () => {
+    document.querySelector('dialog')?.close();
   },
 });

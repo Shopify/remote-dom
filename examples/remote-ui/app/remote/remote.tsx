@@ -5,8 +5,10 @@ import {createRoot, createRemoteRoot} from '@remote-ui/react';
 
 import * as components from './components';
 import {App} from './app';
+import {EndpointApi} from '../types';
 
-const endpoint = createEndpoint(fromInsideIframe());
+const endpoint = createEndpoint<EndpointApi>(fromInsideIframe());
+
 endpoint.expose({
   render(channel, api) {
     retain(channel);

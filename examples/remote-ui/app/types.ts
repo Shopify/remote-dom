@@ -2,7 +2,7 @@
 // They will be used to describe the properties that are available on the elements that can
 // be synchronized between the two environments.
 
-import {RemoteFragment} from '@remote-ui/core';
+import {RemoteChannel, RemoteFragment} from '@remote-ui/core';
 
 /**
  * A `Text` element renders a styled string of text.
@@ -61,4 +61,13 @@ export interface StackProperties {
    * Whether children should have space between them.
    */
   spacing?: boolean;
+}
+
+export interface EndpointApi {
+  render(channel: RemoteChannel, api: RenderAPI): Promise<void>;
+}
+
+export interface RenderAPI {
+  closeModal(): void;
+  showAlert(message: string): void;
 }
