@@ -9,7 +9,7 @@ import {
 } from '@remote-dom/preact/host';
 import {adaptToLegacyRemoteChannel} from '@remote-dom/core/legacy';
 import {createEndpoint, fromIframe, retain, release} from '@remote-ui/rpc';
-import {Button, Modal, Stack, Text, ModalProvider} from './components.tsx';
+import {Button, Modal, Stack, Text} from './components.tsx';
 import {EndpointApi} from '../types.ts';
 
 const components = new Map([

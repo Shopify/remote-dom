@@ -1,14 +1,5 @@
 import {type ComponentChildren} from 'preact';
 import {forwardRef} from 'preact/compat';
-import {
-  useRef,
-  useImperativeHandle,
-  useEffect,
-  useLayoutEffect,
-  useState,
-  useMemo,
-} from 'preact/hooks';
-import {createContext, useContext} from 'preact/compat';
 
 import type {
   ButtonProperties,
