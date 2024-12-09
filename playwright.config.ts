@@ -32,9 +32,16 @@ export default defineConfig({
   ],
 
   // Run your local dev server before starting the tests
-  webServer: {
-    command: 'pnpm run example:kitchen-sink --port 8080',
-    url: 'http://localhost:8080',
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: [
+    {
+      command: 'pnpm run example:kitchen-sink --port 8080',
+      url: 'http://localhost:8080',
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: 'pnpm run example:remote-ui --port 8081',
+      url: 'http://localhost:8081',
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
 });

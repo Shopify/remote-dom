@@ -1,0 +1,231 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 1.25em;
+  height: -webkit-fill-available;
+}
+
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
+body {
+  background: rgb(23, 19, 31);
+  color: rgb(239, 231, 243);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+
+  display: grid;
+  justify-content: center;
+  align-content: stretch;
+
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  margin: 0;
+  padding: 0;
+}
+
+main {
+  width: 35rem;
+  max-width: 100vw;
+  padding: 1.5em;
+  container-type: inline-size;
+
+  display: grid;
+  gap: 1.5rem;
+  align-content: space-between;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: rgb(7, 204, 204);
+}
+
+a:focus {
+  outline: 1px solid transparent;
+}
+
+a:focus-visible {
+  outline-color: rgb(7, 204, 204);
+}
+
+code {
+  color: rgb(224, 129, 209);
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  padding-bottom: 1.5em;
+}
+
+.Button {
+  display: inline-flex;
+  justify-content: center;
+  max-inline-size: max-content;
+  position: relative;
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgb(91, 79, 115);
+  color: inherit;
+  border-radius: 8px;
+  font-size: 1em;
+  padding: 0.5rem 1rem;
+  transition: background 0.15s ease;
+}
+
+.Button:focus {
+  outline: 2px solid rgb(171, 135, 237);
+  outline-offset: 2px;
+}
+
+.Button:hover,
+.Button:focus-visible {
+  background: rgb(110, 96, 139);
+}
+
+.Button:active {
+  background: rgb(125, 109, 157);
+}
+
+.Stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.Stack--spacing {
+  gap: 1rem;
+}
+
+.Label {
+  display: block;
+  color: rgb(212, 169, 205);
+  font-size: 0.85em;
+  margin-bottom: 0.25em;
+}
+
+.Label--visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  overflow: hidden;
+}
+
+.Select-Input {
+  display: block;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 8px;
+  color: rgb(239, 231, 243);
+  font-size: 1em;
+  padding: 0.5em;
+  transition: background 0.15s ease;
+}
+
+.Modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  block-size: auto;
+  inline-size: 30rem;
+  max-inline-size: 90%;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  background: rgb(30, 25, 41);
+  color: rgb(239, 231, 243);
+  border: none;
+  border-radius: 10px;
+  box-shadow:
+    rgb(255, 255, 255) 0px 0px 0px 0px,
+    rgba(255, 255, 255, 0.1) 0px 0px 0px 1px,
+    rgba(0, 0, 0, 0.3) 0px 10px 15px -3px,
+    rgba(0, 0, 0, 0.5) 0px 4px 6px -4px;
+}
+
+.Modal::backdrop {
+  background: rgba(9, 9, 11, 0.65);
+}
+
+.Modal[open] {
+  animation: OpenModal 0.2s ease normal;
+}
+
+.Modal:not([open]) {
+  display: none;
+}
+
+@keyframes OpenModal {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(3rem - 50%));
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.Modal-Content {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  justify-content: start;
+}
+
+.Modal-Actions {
+  padding: 1rem;
+  border-block-start: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: end;
+}
+
+.Text--emphasis {
+  font-weight: bold;
+}
+
+.ControlPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-gap: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 1rem;
+  font-size: 0.85em;
+  color: rgb(166, 154, 172);
+}
+
+@container (min-width: 30em) {
+  .ControlPanel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.ControlPanel-SectionHeading {
+  margin: 0;
+  font-size: 1.25em;
+  color: rgb(239, 231, 243);
+}
+
+.ControlPanel-Section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-gap: 0.5rem;
+}
