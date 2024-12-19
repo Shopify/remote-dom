@@ -4,6 +4,7 @@ import {
   disconnectRemoteNode,
   serializeRemoteNode,
   REMOTE_IDS,
+  getStructuralMutationIndex,
 } from './internals.ts';
 import {
   ROOT_ID,
@@ -100,8 +101,18 @@ export class RemoteMutationObserver extends MutationObserver {
         }
       }
 
+      this.sortStructuralMutations(remoteRecords);
       connection.mutate(remoteRecords);
     });
+  }
+
+  /**
+   * See this issue, why sorting is required: https://github.com/Shopify/remote-dom/issues/519
+   */
+  private sortStructuralMutations(records: RemoteMutationRecord[]) {
+    records.sort(
+      (l, r) => getStructuralMutationIndex(l) - getStructuralMutationIndex(r),
+    );
   }
 
   /**

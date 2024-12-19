@@ -160,7 +160,7 @@ export class Node extends EventTarget {
     while (true) {
       if (currentNode == null) return false;
       if (currentNode === this) return true;
-      currentNode = node!.parentNode;
+      currentNode = currentNode!.parentNode;
     }
   }
 }
