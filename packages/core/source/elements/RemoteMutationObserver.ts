@@ -4,6 +4,7 @@ import {
   disconnectRemoteNode,
   serializeRemoteNode,
   REMOTE_IDS,
+  getStructuralMutationIndex,
 } from './internals.ts';
 import {
   ROOT_ID,
@@ -36,9 +37,13 @@ export class RemoteMutationObserver extends MutationObserver {
     super((records) => {
       const addedNodes: Node[] = [];
       const remoteRecords: RemoteMutationRecord[] = [];
+      const netStructuralMutations = new Map<string, number>();
 
       for (const record of records) {
         const targetId = remoteId(record.target);
+
+        const targetsNetStructuralMutations =
+          netStructuralMutations.get(targetId) ?? 0;
 
         if (record.type === 'childList') {
           const position = record.previousSibling
@@ -48,6 +53,10 @@ export class RemoteMutationObserver extends MutationObserver {
           record.removedNodes.forEach((node) => {
             disconnectRemoteNode(node);
 
+            netStructuralMutations.set(
+              targetId,
+              targetsNetStructuralMutations + 1,
+            );
             remoteRecords.push([
               MUTATION_TYPE_REMOVE_CHILD,
               targetId,
@@ -72,6 +81,10 @@ export class RemoteMutationObserver extends MutationObserver {
             addedNodes.push(node);
             connectRemoteNode(node, connection);
 
+            netStructuralMutations.set(
+              targetId,
+              targetsNetStructuralMutations - 1,
+            );
             remoteRecords.push([
               MUTATION_TYPE_INSERT_CHILD,
               targetId,
@@ -100,8 +113,25 @@ export class RemoteMutationObserver extends MutationObserver {
         }
       }
 
+      const hasCompensatedStructuralMutations = Array.from(
+        netStructuralMutations.values(),
+      ).includes(0);
+
+      if (hasCompensatedStructuralMutations) {
+        this.sortStructuralMutations(remoteRecords);
+      }
+
       connection.mutate(remoteRecords);
     });
+  }
+
+  /**
+   * See this issue why sorting is required: https://github.com/Shopify/remote-dom/issues/519
+   */
+  private sortStructuralMutations(records: RemoteMutationRecord[]) {
+    records.sort(
+      (l, r) => getStructuralMutationIndex(l) - getStructuralMutationIndex(r),
+    );
   }
 
   /**

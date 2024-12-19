@@ -3,8 +3,14 @@ import {
   UPDATE_PROPERTY_TYPE_PROPERTY,
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
   UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+  MUTATION_TYPE_INSERT_CHILD,
+  MUTATION_TYPE_REMOVE_CHILD,
 } from '../constants.ts';
-import type {RemoteConnection, RemoteNodeSerialization} from '../types.ts';
+import type {
+  RemoteConnection,
+  RemoteMutationRecord,
+  RemoteNodeSerialization,
+} from '../types.ts';
 
 export const REMOTE_CONNECTIONS = new WeakMap<Node, RemoteConnection>();
 
@@ -300,4 +306,12 @@ export function callRemoteElementMethod(
   }
 
   return connection.call(id, method, ...args);
+}
+
+export function getStructuralMutationIndex(record: RemoteMutationRecord) {
+  return record[0] === MUTATION_TYPE_INSERT_CHILD
+    ? record[3]
+    : record[0] === MUTATION_TYPE_REMOVE_CHILD
+      ? record[2]
+      : -1;
 }
