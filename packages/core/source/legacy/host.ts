@@ -19,7 +19,7 @@ import type {
   RemoteElementSerialization,
   RemoteConnection,
   RemoteNodeSerialization,
-} from '../types.ts'; // Adjust this import path as needed
+} from '../types';
 import {
   ROOT_ID,
   NODE_TYPE_TEXT,
@@ -111,14 +111,15 @@ export function adaptToLegacyRemoteChannel(
           persistNode(parentId, node, index);
           break;
         }
-        case MUTATION_TYPE_REMOVE_CHILD:
+        case MUTATION_TYPE_REMOVE_CHILD: {
           const index = record[2];
           removeNode(parentId, index);
           break;
+        }
       }
-
-      connection.mutate(records);
     }
+
+    connection.mutate(records);
   }
 
   return function remoteChannel<T extends keyof LegacyActionArgumentMap>(
