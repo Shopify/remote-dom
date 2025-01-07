@@ -1,5 +1,6 @@
 import {
   KIND_TEXT as LEGACY_KIND_TEXT,
+  KIND_FRAGMENT as LEGACY_KIND_FRAGMENT,
   ACTION_MOUNT as LEGACY_ACTION_MOUNT,
   ACTION_INSERT_CHILD as LEGACY_ACTION_INSERT_CHILD,
   ACTION_REMOVE_CHILD as LEGACY_ACTION_REMOVE_CHILD,
@@ -9,14 +10,16 @@ import {
   type ActionArgumentMap as LegacyActionArgumentMap,
   type RemoteComponentSerialization as LegacyRemoteComponentSerialization,
   type RemoteTextSerialization as LegacyRemoteTextSerialization,
+  type RemoteFragmentSerialization as LegacyRemoteFragmentSerialization,
 } from '@remote-ui/core';
 
 import type {
-  RemoteConnection,
   RemoteMutationRecord,
   RemoteTextSerialization,
   RemoteElementSerialization,
-} from '../types.ts'; // Adjust this import path as needed
+  RemoteConnection,
+  RemoteNodeSerialization,
+} from '../types';
 import {
   ROOT_ID,
   NODE_TYPE_TEXT,
@@ -56,6 +59,69 @@ export function adaptToLegacyRemoteChannel(
   connection: RemoteConnection,
   options?: LegacyRemoteChannelOptions,
 ): LegacyRemoteChannel {
+  const tree: Record<string, Array<{id: string; slot?: string}>> = {};
+
+  function persistNode(
+    parentId: string,
+    node: RemoteNodeSerialization,
+    index: number,
+  ) {
+    tree[parentId] = tree[parentId] ?? [];
+    tree[parentId].splice(index, 0, {
+      id: node.id,
+      slot: 'attributes' in node ? node.attributes?.slot : undefined,
+    });
+
+    if ('children' in node && node.children) {
+      for (const [childIndex, child] of node.children.entries()) {
+        persistNode(node.id, child, childIndex);
+      }
+    }
+  }
+
+  function removeNode(parentId: string, index: number) {
+    const parentNode = tree[parentId];
+    if (!parentNode?.[index]) return;
+
+    const id = parentNode[index].id;
+    parentNode.splice(index, 1);
+    cleanupNode(id);
+  }
+
+  function cleanupNode(id: string) {
+    const nodeChildren = tree[id];
+
+    if (nodeChildren) {
+      for (const child of nodeChildren) {
+        cleanupNode(child.id);
+      }
+
+      delete tree[id];
+    }
+  }
+
+  function mutate(records: RemoteMutationRecord[]) {
+    for (const record of records) {
+      const [mutationType, parentId] = record;
+
+      switch (mutationType) {
+        case MUTATION_TYPE_INSERT_CHILD: {
+          const node = record[2];
+          const index = record[3];
+          persistNode(parentId, node, index);
+          break;
+        }
+        case MUTATION_TYPE_REMOVE_CHILD: {
+          const index = record[2];
+          removeNode(parentId, index);
+          break;
+        }
+      }
+    }
+
+    connection.mutate(records);
+  }
+
   return function remoteChannel<T extends keyof LegacyActionArgumentMap>(
     type: T,
     ...payload: LegacyActionArgumentMap[T]
@@ -75,14 +141,15 @@ export function adaptToLegacyRemoteChannel(
             ] satisfies RemoteMutationRecord,
         );
 
-        connection.mutate(records);
+        mutate(records);
+
         break;
 
       case LEGACY_ACTION_INSERT_CHILD:
         const [parentId, index, child] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_INSERT_CHILD];
 
-        connection.mutate([
+        mutate([
           [
             MUTATION_TYPE_INSERT_CHILD,
             parentId ?? ROOT_ID,
@@ -97,7 +164,7 @@ export function adaptToLegacyRemoteChannel(
         const [parentID, removeIndex] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_REMOVE_CHILD];
 
-        connection.mutate([
+        mutate([
           [MUTATION_TYPE_REMOVE_CHILD, parentID ?? ROOT_ID, removeIndex],
         ]);
 
@@ -108,7 +175,8 @@ export function adaptToLegacyRemoteChannel(
         const [textId, text] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_UPDATE_TEXT];
 
-        connection.mutate([[MUTATION_TYPE_UPDATE_TEXT, textId, text]]);
+        mutate([[MUTATION_TYPE_UPDATE_TEXT, textId, text]]);
+
         break;
       }
 
@@ -116,17 +184,47 @@ export function adaptToLegacyRemoteChannel(
         const [id, props] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_UPDATE_PROPS];
 
-        const propRecords = Object.entries(props).map(
-          ([key, value]) =>
-            [
-              MUTATION_TYPE_UPDATE_PROPERTY,
-              id,
-              key,
-              value,
-            ] satisfies RemoteMutationRecord,
-        );
+        const records = [];
 
-        connection.mutate(propRecords);
+        for (const [key, value] of Object.entries(props)) {
+          if (isFragment(value)) {
+            const index = tree[id]?.findIndex(({slot}) => slot === key) ?? -1;
+
+            if (index !== -1) {
+              records.push([
+                MUTATION_TYPE_REMOVE_CHILD,
+                id,
+                index,
+              ] satisfies RemoteMutationRecord);
+            }
+
+            records.push([
+              MUTATION_TYPE_INSERT_CHILD,
+              id,
+              adaptLegacyFragmentSerialization(key, value, options),
+              tree[id]?.length ?? 0,
+            ] satisfies RemoteMutationRecord);
+          } else {
+            const index = tree[id]?.findIndex(({slot}) => slot === key) ?? -1;
+            if (index !== -1) {
+              records.push([
+                MUTATION_TYPE_REMOVE_CHILD,
+                id,
+                index,
+              ] satisfies RemoteMutationRecord);
+            } else {
+              records.push([
+                MUTATION_TYPE_UPDATE_PROPERTY,
+                id,
+                key,
+                value,
+              ] satisfies RemoteMutationRecord);
+            }
+          }
+        }
+
+        mutate(records);
+
         break;
       }
 
@@ -164,12 +262,73 @@ function adaptLegacyComponentSerialization(
 ): RemoteElementSerialization {
   const element = options?.elements?.[type] ?? type;
 
+  const [fragments, properties] = adaptFragmentsInProps(props);
+
   return {
     id,
     type: NODE_TYPE_ELEMENT,
     element,
-    properties: props,
-    children: children.map((child) => {
+    properties,
+    children: [
+      ...children.map((child) => {
+        return adaptLegacyNodeSerialization(child, options);
+      }),
+      ...adaptLegacyFragmentsSerialization(fragments, options),
+    ],
+  };
+}
+
+function adaptFragmentsInProps(
+  props: Record<string, unknown>,
+): [
+  fragments: Record<string, LegacyRemoteFragmentSerialization>,
+  properties: Record<string, unknown>,
+] {
+  const fragments: Record<string, LegacyRemoteFragmentSerialization> = {};
+  const properties: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(props)) {
+    if (isFragment(value)) {
+      fragments[key] = value;
+    } else {
+      properties[key] = value;
+    }
+  }
+
+  return [fragments, properties];
+}
+
+function isFragment(prop: unknown): prop is LegacyRemoteFragmentSerialization {
+  return (
+    prop != null &&
+    typeof prop === 'object' &&
+    'kind' in prop &&
+    prop.kind === LEGACY_KIND_FRAGMENT
+  );
+}
+
+function adaptLegacyFragmentsSerialization(
+  fragments: Record<string, LegacyRemoteFragmentSerialization>,
+  options?: LegacyRemoteChannelOptions,
+): RemoteElementSerialization[] {
+  return Object.entries(fragments).map(([slot, fragment]) => {
+    return adaptLegacyFragmentSerialization(slot, fragment, options);
+  });
+}
+
+function adaptLegacyFragmentSerialization(
+  slot: string,
+  fragment: LegacyRemoteFragmentSerialization,
+  options?: LegacyRemoteChannelOptions,
+): RemoteElementSerialization {
+  return {
+    id: fragment.id,
+    element: 'remote-fragment',
+    attributes: {
+      slot,
+    },
+    type: NODE_TYPE_ELEMENT,
+    children: fragment.children.map((child) => {
       return adaptLegacyNodeSerialization(child, options);
     }),
   };
