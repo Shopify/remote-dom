@@ -61,6 +61,28 @@ export function adaptToLegacyRemoteChannel(
 ): LegacyRemoteChannel {
   const tree: Record<string, Array<{id: string; slot?: string}>> = {};
 
+  function mutate(records: RemoteMutationRecord[]) {
+    for (const record of records) {
+      const [mutationType, parentId] = record;
+
+      switch (mutationType) {
+        case MUTATION_TYPE_INSERT_CHILD: {
+          const node = record[2];
+          const index = record[3];
+          persistNode(parentId, node, index);
+          break;
+        }
+        case MUTATION_TYPE_REMOVE_CHILD: {
+          const index = record[2];
+          removeNode(parentId, index);
+          break;
+        }
+      }
+    }
+
+    connection.mutate(records);
+  }
+
   function persistNode(
     parentId: string,
     node: RemoteNodeSerialization,
@@ -98,28 +120,6 @@ export function adaptToLegacyRemoteChannel(
 
       delete tree[id];
     }
-  }
-
-  function mutate(records: RemoteMutationRecord[]) {
-    for (const record of records) {
-      const [mutationType, parentId] = record;
-
-      switch (mutationType) {
-        case MUTATION_TYPE_INSERT_CHILD: {
-          const node = record[2];
-          const index = record[3];
-          persistNode(parentId, node, index);
-          break;
-        }
-        case MUTATION_TYPE_REMOVE_CHILD: {
-          const index = record[2];
-          removeNode(parentId, index);
-          break;
-        }
-      }
-    }
-
-    connection.mutate(records);
   }
 
   return function remoteChannel<T extends keyof LegacyActionArgumentMap>(
