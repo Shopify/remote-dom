@@ -13,6 +13,8 @@
     "@remote-dom/preact": "workspace:*",
     "@remote-dom/react": "workspace:*",
     "@remote-dom/signals": "workspace:*",
+    "@remote-ui/core": "^2.2.4",
+    "@remote-ui/react": "^5.0.4",
     "preact": "^10.22.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
