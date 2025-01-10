@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "build": "pnpm -r run build",
+    "build:snapit": "pnpm type-check || true && pnpm build",
     "format": "prettier --write --cache .",
     "lint": "prettier --check --cache .",
     "test": "vitest",
