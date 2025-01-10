@@ -754,7 +754,7 @@ This helper uses the following logic to determine whether a given property in th
 
 ### `@remote-dom/core/legacy`
 
-The `@remote-dom/core/html` package provides helpers for adapting between Remote DOM and [`remote-ui`, the previous version of this project](https://github.com/Shopify/remote-dom/discussions/267). These utilities are offered to help you transition to Remote DOM, while continuing to support existing code that expects `remote-ui`-style APIs.
+The `@remote-dom/core/legacy` package provides helpers for adapting between Remote DOM and [`remote-ui`, the previous version of this project](https://github.com/Shopify/remote-dom/discussions/267). These utilities are offered to help you transition to Remote DOM, while continuing to support existing code that expects `remote-ui`-style APIs.
 
 #### Progressive migration from `remote-ui`’s `RemoteChannel` to Remote DOM’s `RemoteConnection`
 
