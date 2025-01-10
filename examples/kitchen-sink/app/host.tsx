@@ -9,6 +9,7 @@ import {ThreadIframe, ThreadWebWorker} from '@quilted/threads';
 import type {SandboxAPI} from './types.ts';
 import {Button, Modal, Stack, Text, ControlPanel} from './host/components.tsx';
 import {createState} from './host/state.ts';
+import {adaptToLegacyRemoteChannel} from '@remote-dom/core/legacy';
 
 // We will put any remote elements we want to render in this root element.
 const uiRoot = document.querySelector('main')!;
@@ -42,6 +43,10 @@ const components = new Map([
   ['ui-button', createRemoteComponentRenderer(Button)],
   ['ui-stack', createRemoteComponentRenderer(Stack)],
   ['ui-modal', createRemoteComponentRenderer(Modal)],
+  ['Text', createRemoteComponentRenderer(Text)],
+  ['Button', createRemoteComponentRenderer(Button)],
+  ['Stack', createRemoteComponentRenderer(Stack)],
+  ['Modal', createRemoteComponentRenderer(Modal)],
   // The `remote-fragment` element is a special element created by Remote DOM when
   // it needs an unstyled container for a list of elements. This is primarily used
   // to convert elements passed as a prop to React or Preact components into a slotted
@@ -59,27 +64,30 @@ const components = new Map([
 
 const {receiver, example, sandbox} = createState(
   async ({receiver, example, sandbox}) => {
-    if (sandbox === 'iframe') {
-      await iframeSandbox.imports.render(receiver.connection, {
-        sandbox,
-        example,
-        async alert(content) {
-          console.log(
-            `Alert API used by example ${example} in the iframe sandbox`,
-          );
-          window.alert(content);
-        },
+    const api = {
+      sandbox,
+      example,
+      async alert(content: string) {
+        console.log(
+          `Alert API used by example ${example} in the iframe sandbox`,
+        );
+        window.alert(content);
+      },
+      async closeModal() {
+        document.querySelector('dialog')?.close();
+      },
+    };
+
+    const sandboxToUse = sandbox === 'iframe' ? iframeSandbox : workerSandbox;
+
+    if (example === 'react-remote-ui') {
+      const remoteUiChannel = adaptToLegacyRemoteChannel(receiver.connection);
+      await sandboxToUse.imports.renderRemoteUi(remoteUiChannel, {
+        ...api,
       });
     } else {
-      await workerSandbox.imports.render(receiver.connection, {
-        sandbox,
-        example,
-        async alert(content) {
-          console.log(
-            `Alert API used by example ${example} in the worker sandbox`,
-          );
-          window.alert(content);
-        },
+      await sandboxToUse.imports.render(receiver.connection, {
+        ...api,
       });
     }
   },

@@ -4,7 +4,7 @@ import '@remote-dom/react/polyfill';
 import {ThreadWebWorker} from '@quilted/threads';
 
 import '../elements.ts';
-import {render} from '../render.ts';
+import {render, renderRemoteUi} from '../render.ts';
 import type {SandboxAPI} from '../../types.ts';
 
 // We use the `@quilted/threads` library to create a “thread” for our iframe,
@@ -26,6 +26,9 @@ new ThreadWebWorker<never, SandboxAPI>(self as any as Worker, {
       document.body.append(root);
 
       await render(root, api);
+    },
+    async renderRemoteUi(channel, api) {
+      await renderRemoteUi(channel, api);
     },
   },
 });

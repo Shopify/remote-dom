@@ -1,3 +1,4 @@
+import {RemoteChannel} from '@remote-ui/core';
 import type {RenderAPI} from '../types.ts';
 
 // Defines the custom elements available to render in the remote environment.
@@ -30,4 +31,11 @@ export async function render(root: Element, api: RenderAPI) {
       return renderUsingVue(root, api);
     }
   }
+}
+
+export async function renderRemoteUi(channel: RemoteChannel, api: RenderAPI) {
+  const {renderUsingReactRemoteUI} = await import(
+    './examples/react-remote-ui.tsx'
+  );
+  return renderUsingReactRemoteUI(channel, api);
 }

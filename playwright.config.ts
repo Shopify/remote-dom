@@ -38,10 +38,5 @@ export default defineConfig({
       url: 'http://localhost:8080',
       reuseExistingServer: !process.env.CI,
     },
-    {
-      command: 'pnpm run example:remote-ui --port 8081',
-      url: 'http://localhost:8081',
-      reuseExistingServer: !process.env.CI,
-    },
   ],
 });

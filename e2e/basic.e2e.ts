@@ -7,12 +7,14 @@ import {test, expect} from '@playwright/test';
   ['iframe', 'vue'],
   ['iframe', 'htm'],
   ['iframe', 'react'],
+  ['iframe', 'react-remote-ui'],
   ['worker', 'vanilla'],
   ['worker', 'preact'],
   ['worker', 'svelte'],
   // ['worker', 'vue'],
   ['worker', 'htm'],
   ['worker', 'react'],
+  ['worker', 'react-remote-ui'],
 ].forEach(([sandbox, example]) => {
   test(`basic modal interaction with ${sandbox} sandbox and ${example} example`, async ({
     page,
