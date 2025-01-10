@@ -8,8 +8,6 @@
   "include": ["app"],
   "references": [
     {"path": "../../packages/core"},
-    {"path": "../../packages/preact"},
-    {"path": "../../packages/react"},
-    {"path": "../../packages/signals"}
+    {"path": "../../packages/preact"}
   ]
 }
