@@ -194,7 +194,7 @@ export function adaptToLegacyRemoteChannel(
             const parentNode = tree.get(id);
             const index = parentNode?.findIndex(({slot}) => slot === key) ?? -1;
 
-            if (index !== -1) {
+            if (index >= 0) {
               records.push([
                 MUTATION_TYPE_REMOVE_CHILD,
                 id,
@@ -211,7 +211,7 @@ export function adaptToLegacyRemoteChannel(
           } else {
             const parentNode = tree.get(id);
             const index = parentNode?.findIndex(({slot}) => slot === key) ?? -1;
-            if (index !== -1) {
+            if (index >= 0) {
               records.push([
                 MUTATION_TYPE_REMOVE_CHILD,
                 id,
