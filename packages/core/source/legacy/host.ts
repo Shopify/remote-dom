@@ -35,7 +35,15 @@ export interface LegacyRemoteChannelElementMap {
 }
 
 export interface LegacyRemoteChannelOptions {
+  /**
+   * A map of element types to their corresponding remote-ui element types.
+   */
   elements?: LegacyRemoteChannelElementMap;
+
+  /**
+   * The element type to use for slots.
+   */
+  slotWrapper?: string;
 }
 
 /**
@@ -326,7 +334,7 @@ function adaptLegacyFragmentSerialization(
 ): RemoteElementSerialization {
   return {
     id: fragment.id,
-    element: 'remote-fragment',
+    element: options?.slotWrapper ?? 'remote-fragment',
     attributes: {
       slot,
     },
