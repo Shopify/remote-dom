@@ -186,14 +186,14 @@ export function adaptToLegacyRemoteChannel(
       case LEGACY_ACTION_UPDATE_PROPS: {
         const [id, props] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_UPDATE_PROPS];
+        const parentNode = tree.get(id);
 
         const records = [];
 
         for (const [key, value] of Object.entries(props)) {
-          if (isFragment(value)) {
-            const parentNode = tree.get(id);
-            const index = parentNode?.findIndex(({slot}) => slot === key) ?? -1;
+          const index = parentNode?.findIndex(({slot}) => slot === key) ?? -1;
 
+          if (isFragment(value)) {
             if (index >= 0) {
               records.push([
                 MUTATION_TYPE_REMOVE_CHILD,
@@ -209,8 +209,6 @@ export function adaptToLegacyRemoteChannel(
               tree.get(id)?.length ?? 0,
             ] satisfies RemoteMutationRecord);
           } else {
-            const parentNode = tree.get(id);
-            const index = parentNode?.findIndex(({slot}) => slot === key) ?? -1;
             if (index >= 0) {
               records.push([
                 MUTATION_TYPE_REMOVE_CHILD,
