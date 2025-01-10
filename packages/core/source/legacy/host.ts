@@ -59,7 +59,7 @@ export function adaptToLegacyRemoteChannel(
   connection: RemoteConnection,
   options?: LegacyRemoteChannelOptions,
 ): LegacyRemoteChannel {
-  const tree: Record<string, Array<{id: string; slot?: string}>> = {};
+  const tree = new Map<string, {id: string; slot?: string}[]>();
 
   function mutate(records: RemoteMutationRecord[]) {
     for (const record of records) {
@@ -88,8 +88,11 @@ export function adaptToLegacyRemoteChannel(
     node: RemoteNodeSerialization,
     index: number,
   ) {
-    tree[parentId] = tree[parentId] ?? [];
-    tree[parentId].splice(index, 0, {
+    if (!tree.has(parentId)) {
+      tree.set(parentId, []);
+    }
+    const parentNode = tree.get(parentId)!;
+    parentNode.splice(index, 0, {
       id: node.id,
       slot: 'attributes' in node ? node.attributes?.slot : undefined,
     });
@@ -102,7 +105,7 @@ export function adaptToLegacyRemoteChannel(
   }
 
   function removeNode(parentId: string, index: number) {
-    const parentNode = tree[parentId];
+    const parentNode = tree.get(parentId);
     if (!parentNode?.[index]) return;
 
     const id = parentNode[index].id;
@@ -111,14 +114,14 @@ export function adaptToLegacyRemoteChannel(
   }
 
   function cleanupNode(id: string) {
-    const nodeChildren = tree[id];
+    const nodeChildren = tree.get(id);
 
     if (nodeChildren) {
       for (const child of nodeChildren) {
         cleanupNode(child.id);
       }
 
-      delete tree[id];
+      tree.delete(id);
     }
   }
 
@@ -188,7 +191,8 @@ export function adaptToLegacyRemoteChannel(
 
         for (const [key, value] of Object.entries(props)) {
           if (isFragment(value)) {
-            const index = tree[id]?.findIndex(({slot}) => slot === key) ?? -1;
+            const parentNode = tree.get(id);
+            const index = parentNode?.findIndex(({slot}) => slot === key) ?? -1;
 
             if (index !== -1) {
               records.push([
@@ -202,10 +206,11 @@ export function adaptToLegacyRemoteChannel(
               MUTATION_TYPE_INSERT_CHILD,
               id,
               adaptLegacyFragmentSerialization(key, value, options),
-              tree[id]?.length ?? 0,
+              tree.get(id)?.length ?? 0,
             ] satisfies RemoteMutationRecord);
           } else {
-            const index = tree[id]?.findIndex(({slot}) => slot === key) ?? -1;
+            const parentNode = tree.get(id);
+            const index = parentNode?.findIndex(({slot}) => slot === key) ?? -1;
             if (index !== -1) {
               records.push([
                 MUTATION_TYPE_REMOVE_CHILD,
