@@ -40,10 +40,12 @@ export interface LegacyRemoteChannelOptions {
    */
   elements?: LegacyRemoteChannelElementMap;
 
-  /**
-   * The element type to use for slots.
-   */
-  slotWrapper?: string;
+  slotProps?: {
+    /**
+     * The element type to use for slots.
+     */
+    wrapper?: string;
+  };
 }
 
 /**
@@ -334,7 +336,7 @@ function adaptLegacyFragmentSerialization(
 ): RemoteElementSerialization {
   return {
     id: fragment.id,
-    element: options?.slotWrapper ?? 'remote-fragment',
+    element: options?.slotProps?.wrapper ?? 'remote-fragment',
     attributes: {
       slot,
     },
