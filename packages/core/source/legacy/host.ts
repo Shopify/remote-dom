@@ -19,7 +19,7 @@ import type {
   RemoteElementSerialization,
   RemoteConnection,
   RemoteNodeSerialization,
-} from '../types';
+} from '../types.ts';
 import {
   ROOT_ID,
   NODE_TYPE_TEXT,
