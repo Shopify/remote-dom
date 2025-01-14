@@ -1,49 +1,31 @@
 import '../../polyfill.ts';
 
-import {beforeEach, describe, expect, it, vi, type MockedObject} from 'vitest';
+import {describe, expect, it, vi, type MockedObject} from 'vitest';
 
 import {adaptToLegacyRemoteChannel} from '../../legacy/host.ts';
 
 import {
-  ACTION_MOUNT,
   ACTION_INSERT_CHILD,
+  ACTION_MOUNT,
   ACTION_REMOVE_CHILD,
-  ACTION_UPDATE_TEXT,
   ACTION_UPDATE_PROPS,
-  KIND_TEXT,
-  KIND_FRAGMENT,
+  ACTION_UPDATE_TEXT,
   KIND_COMPONENT,
-  RemoteComponentType,
-  RemoteComponentSerialization,
-  RemoteTextSerialization,
+  KIND_FRAGMENT,
+  KIND_TEXT,
 } from '@remote-ui/core';
 
 import {
-  ROOT_ID,
-  NODE_TYPE_TEXT,
-  NODE_TYPE_ELEMENT,
   MUTATION_TYPE_INSERT_CHILD,
   MUTATION_TYPE_REMOVE_CHILD,
-  MUTATION_TYPE_UPDATE_TEXT,
   MUTATION_TYPE_UPDATE_PROPERTY,
+  MUTATION_TYPE_UPDATE_TEXT,
+  NODE_TYPE_ELEMENT,
+  NODE_TYPE_TEXT,
+  ROOT_ID,
 } from '../../constants';
 
-import {
-  RemoteElement,
-  createRemoteElement,
-  RemoteEvent,
-  // remoteProperties,
-  // remoteProperty,
-  RemoteRootElement,
-  type RemoteElementConstructor,
-} from '../../elements.ts';
-import {remoteId} from '../elements/internals.ts';
-import {
-  RemoteReceiver,
-  type RemoteReceiverElement,
-} from '../../receivers/RemoteReceiver.ts';
-
-import {NAME, OWNER_DOCUMENT} from '../../../../polyfill/source/constants.ts';
+import {RemoteReceiver} from '../../receivers/RemoteReceiver.ts';
 
 describe('adaptToLegacyRemoteChannel()', () => {
   describe('ACTION_MOUNT', () => {
