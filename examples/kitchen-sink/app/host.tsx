@@ -43,10 +43,6 @@ const components = new Map([
   ['ui-button', createRemoteComponentRenderer(Button)],
   ['ui-stack', createRemoteComponentRenderer(Stack)],
   ['ui-modal', createRemoteComponentRenderer(Modal)],
-  ['Text', createRemoteComponentRenderer(Text)],
-  ['Button', createRemoteComponentRenderer(Button)],
-  ['Stack', createRemoteComponentRenderer(Stack)],
-  ['Modal', createRemoteComponentRenderer(Modal)],
   // The `remote-fragment` element is a special element created by Remote DOM when
   // it needs an unstyled container for a list of elements. This is primarily used
   // to convert elements passed as a prop to React or Preact components into a slotted
@@ -81,7 +77,14 @@ const {receiver, example, sandbox} = createState(
     const sandboxToUse = sandbox === 'iframe' ? iframeSandbox : workerSandbox;
 
     if (example === 'react-remote-ui') {
-      const remoteUiChannel = adaptToLegacyRemoteChannel(receiver.connection);
+      const remoteUiChannel = adaptToLegacyRemoteChannel(receiver.connection, {
+        elements: {
+          Text: 'ui-text',
+          Button: 'ui-button',
+          Stack: 'ui-stack',
+          Modal: 'ui-modal',
+        },
+      });
       await sandboxToUse.imports.renderRemoteUi(remoteUiChannel, {
         ...api,
       });
