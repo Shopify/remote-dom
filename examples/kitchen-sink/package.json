@@ -9,6 +9,7 @@
   "dependencies": {
     "@preact/signals": "^1.3.0",
     "@quilted/threads": "^3.0.0",
+    "@remote-dom/compat": "workspace:*",
     "@remote-dom/core": "workspace:*",
     "@remote-dom/preact": "workspace:*",
     "@remote-dom/react": "workspace:*",

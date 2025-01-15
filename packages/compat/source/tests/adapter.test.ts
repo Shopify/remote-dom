@@ -1,8 +1,8 @@
-import '../../polyfill.ts';
+import '@remote-dom/core/polyfill';
 
 import {describe, expect, it, vi, type Mocked} from 'vitest';
 
-import {adaptToLegacyRemoteChannel} from '../../legacy/host.ts';
+import {adaptToLegacyRemoteChannel} from '../adapter/host.ts';
 
 import {
   ACTION_INSERT_CHILD,
@@ -23,9 +23,9 @@ import {
   NODE_TYPE_ELEMENT,
   NODE_TYPE_TEXT,
   ROOT_ID,
-} from '../../constants';
+} from '@remote-dom/core';
 
-import {RemoteReceiver} from '../../receivers/RemoteReceiver.ts';
+import {RemoteReceiver} from '@remote-dom/core/receivers';
 
 describe('adaptToLegacyRemoteChannel()', () => {
   describe('ACTION_MOUNT', () => {

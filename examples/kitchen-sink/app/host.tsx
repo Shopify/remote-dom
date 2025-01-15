@@ -9,7 +9,7 @@ import {ThreadIframe, ThreadWebWorker} from '@quilted/threads';
 import type {SandboxAPI} from './types.ts';
 import {Button, Modal, Stack, Text, ControlPanel} from './host/components.tsx';
 import {createState} from './host/state.ts';
-import {adaptToLegacyRemoteChannel} from '@remote-dom/core/legacy';
+import {adaptToLegacyRemoteChannel} from '@remote-dom/compat';
 
 // We will put any remote elements we want to render in this root element.
 const uiRoot = document.querySelector('main')!;

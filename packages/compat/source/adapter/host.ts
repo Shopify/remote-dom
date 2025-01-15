@@ -19,7 +19,7 @@ import type {
   RemoteElementSerialization,
   RemoteConnection,
   RemoteNodeSerialization,
-} from '../types.ts';
+} from '@remote-dom/core';
 import {
   ROOT_ID,
   NODE_TYPE_TEXT,
@@ -28,7 +28,7 @@ import {
   MUTATION_TYPE_REMOVE_CHILD,
   MUTATION_TYPE_UPDATE_PROPERTY,
   MUTATION_TYPE_UPDATE_TEXT,
-} from '../constants.ts';
+} from '@remote-dom/core';
 
 export interface LegacyRemoteChannelElementMap {
   [key: string]: string;
@@ -56,7 +56,7 @@ export interface LegacyRemoteChannelOptions {
  * @example
  * ```tsx
  * import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
- * import {adaptToLegacyRemoteChannel} from '@remote-dom/core/legacy';
+ * import {adaptToLegacyRemoteChannel} from '@remote-dom/compat';
  *
  * const receiver = new DOMRemoteReceiver();
  * const channel = adaptToLegacyRemoteChannel(receiver.connection);
