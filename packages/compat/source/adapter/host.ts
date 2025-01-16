@@ -13,13 +13,6 @@ import {
   type RemoteFragmentSerialization as LegacyRemoteFragmentSerialization,
 } from '@remote-ui/core';
 
-import type {
-  RemoteMutationRecord,
-  RemoteTextSerialization,
-  RemoteElementSerialization,
-  RemoteConnection,
-  RemoteNodeSerialization,
-} from '@remote-dom/core';
 import {
   ROOT_ID,
   NODE_TYPE_TEXT,
@@ -28,6 +21,11 @@ import {
   MUTATION_TYPE_REMOVE_CHILD,
   MUTATION_TYPE_UPDATE_PROPERTY,
   MUTATION_TYPE_UPDATE_TEXT,
+  type RemoteMutationRecord,
+  type RemoteTextSerialization,
+  type RemoteElementSerialization,
+  type RemoteConnection,
+  type RemoteNodeSerialization,
 } from '@remote-dom/core';
 
 export interface LegacyRemoteChannelElementMap {
