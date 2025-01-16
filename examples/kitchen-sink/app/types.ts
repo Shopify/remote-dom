@@ -63,7 +63,7 @@ export interface RenderAPI {
  */
 export interface SandboxAPI {
   render(connection: RemoteConnection, api: RenderAPI): Promise<unknown>;
-  renderRemoteUi(channel: RemoteChannel, api: RenderAPI): Promise<unknown>;
+  renderLegacy(channel: RemoteChannel, api: RenderAPI): Promise<unknown>;
 }
 
 // These property and method types will be used by both the host and remote environments.

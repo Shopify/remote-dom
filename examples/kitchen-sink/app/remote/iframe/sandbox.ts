@@ -2,7 +2,7 @@ import {RemoteMutationObserver} from '@remote-dom/core/elements';
 import {ThreadNestedIframe} from '@quilted/threads';
 
 import '../elements.ts';
-import {render, renderRemoteUi} from '../render.ts';
+import {render, renderLegacy} from '../render.ts';
 import type {SandboxAPI} from '../../types.ts';
 
 // We use the `@quilted/threads` library to create a “thread” for our iframe,
@@ -32,8 +32,8 @@ new ThreadNestedIframe<never, SandboxAPI>({
 
       await render(root, api);
     },
-    async renderRemoteUi(channel, api) {
-      await renderRemoteUi(channel, api);
+    async renderLegacy(channel, api) {
+      await renderLegacy(channel, api);
     },
   },
 });

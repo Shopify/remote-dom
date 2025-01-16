@@ -33,7 +33,7 @@ export async function render(root: Element, api: RenderAPI) {
   }
 }
 
-export async function renderRemoteUi(channel: RemoteChannel, api: RenderAPI) {
+export async function renderLegacy(channel: RemoteChannel, api: RenderAPI) {
   const {renderUsingReactRemoteUI} = await import(
     './examples/react-remote-ui.tsx'
   );

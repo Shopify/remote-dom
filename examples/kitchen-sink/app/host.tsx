@@ -85,7 +85,7 @@ const {receiver, example, sandbox} = createState(
           Modal: 'ui-modal',
         },
       });
-      await sandboxToUse.imports.renderRemoteUi(remoteUiChannel, {
+      await sandboxToUse.imports.renderLegacy(remoteUiChannel, {
         ...api,
       });
     } else {
