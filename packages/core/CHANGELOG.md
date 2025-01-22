@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.5
+
+### Patch Changes
+
+- [#522](https://github.com/Shopify/remote-dom/pull/522) [`0ade5f7`](https://github.com/Shopify/remote-dom/commit/0ade5f74ad96bdb2b8513b2b18c0b9298717e672) Thanks [@thomas-marcucci](https://github.com/thomas-marcucci)! - Fixes an issue when removeChild does not find a child node
+
 ## 2.2.4
 
 ### Patch Changes
