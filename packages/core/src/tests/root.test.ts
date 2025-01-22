@@ -125,6 +125,21 @@ describe('root', () => {
     });
   });
 
+  describe('removeChild', () => {
+    it('does not call channel when child is not found', () => {
+      const channelMock = jest.fn();
+      const root = createRemoteRoot(channelMock);
+      root.mount();
+      // clear channel call from mount
+      channelMock.mockClear();
+
+      const card = root.createComponent('Card');
+      root.removeChild(card);
+
+      expect(channelMock).not.toHaveBeenCalled();
+    });
+  });
+
   describe('hot-swapping', () => {
     it('hot-swaps function props', () => {
       const funcOne = jest.fn();

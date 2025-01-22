@@ -841,16 +841,16 @@ function removeChild(
 ) {
   const {strict} = rootInternals;
 
+  const childIndex = container.children.indexOf(child as any);
+  if (childIndex === -1) {
+    return undefined;
+  }
+
   return perform(container, rootInternals, {
     remote: (channel) =>
-      channel(
-        ACTION_REMOVE_CHILD,
-        (container as any).id,
-        container.children.indexOf(child as any),
-      ),
+      channel(ACTION_REMOVE_CHILD, (container as any).id, childIndex),
     local: () => {
       removeNodeFromContainer(child, rootInternals);
-
       const newChildren = [...internals.children];
       newChildren.splice(newChildren.indexOf(child), 1);
       internals.children = strict ? Object.freeze(newChildren) : newChildren;

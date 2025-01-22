@@ -202,8 +202,10 @@ export function createRemoteReceiver(): RemoteReceiver {
       ) as RemoteReceiverAttachableRoot;
 
       const {children} = attached;
-
       const [removed] = children.splice(index, 1);
+      if (!removed) {
+        return;
+      }
       attached.version += 1;
 
       detach(removed);
