@@ -25,20 +25,27 @@ export class BatchingRemoteConnection {
   }
 
   mutate(records: any[]) {
-    let queued = this.#queued;
+    const queued = this.#queued;
+
+    this.#queued ??= [];
+    this.#queued.push(...records);
 
     if (queued) {
-      queued.push(...records);
       return;
     }
 
-    queued = [...records];
-    this.#queued = queued;
-
     this.#batch(() => {
-      this.#connection.mutate(queued);
-      this.#queued = undefined;
+      this.flush();
     });
+  }
+
+  flush() {
+    if (!this.#queued) {
+      return;
+    }
+
+    this.#connection.mutate(this.#queued);
+    this.#queued = undefined;
   }
 }
 
