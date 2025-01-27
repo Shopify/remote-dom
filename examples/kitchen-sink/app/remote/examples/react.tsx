@@ -19,6 +19,7 @@ const Button = createRemoteComponent('ui-button', ButtonElement, {
     onPress: {event: 'press'},
   },
 });
+
 const Stack = createRemoteComponent('ui-stack', StackElement);
 const Modal = createRemoteComponent('ui-modal', ModalElement, {
   eventProps: {

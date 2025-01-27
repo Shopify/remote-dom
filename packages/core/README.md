@@ -499,7 +499,7 @@ import {RemoteFragmentElement} from '@remote-dom/core/elements';
 customElements.define('remote-fragment', RemoteFragmentElement);
 ```
 
-### `@remote-dom/core/receiver`
+### `@remote-dom/core/receivers`
 
 A “remote receiver” collects updates that happened in a remote environment, and reconstructs them in a way that allows them to be rendered in the host environment.
 

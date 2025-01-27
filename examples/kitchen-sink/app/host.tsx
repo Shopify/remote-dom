@@ -9,6 +9,7 @@ import {ThreadIframe, ThreadWebWorker} from '@quilted/threads';
 import type {SandboxAPI} from './types.ts';
 import {Button, Modal, Stack, Text, ControlPanel} from './host/components.tsx';
 import {createState} from './host/state.ts';
+import {adaptToLegacyRemoteChannel} from '@remote-dom/compat';
 
 // We will put any remote elements we want to render in this root element.
 const uiRoot = document.querySelector('main')!;
@@ -59,27 +60,37 @@ const components = new Map([
 
 const {receiver, example, sandbox} = createState(
   async ({receiver, example, sandbox}) => {
-    if (sandbox === 'iframe') {
-      await iframeSandbox.imports.render(receiver.connection, {
-        sandbox,
-        example,
-        async alert(content) {
-          console.log(
-            `Alert API used by example ${example} in the iframe sandbox`,
-          );
-          window.alert(content);
+    const api = {
+      sandbox,
+      example,
+      async alert(content: string) {
+        console.log(
+          `Alert API used by example ${example} in the iframe sandbox`,
+        );
+        window.alert(content);
+      },
+      async closeModal() {
+        document.querySelector('dialog')?.close();
+      },
+    };
+
+    const sandboxToUse = sandbox === 'iframe' ? iframeSandbox : workerSandbox;
+
+    if (example === 'react-remote-ui') {
+      const remoteUiChannel = adaptToLegacyRemoteChannel(receiver.connection, {
+        elements: {
+          Text: 'ui-text',
+          Button: 'ui-button',
+          Stack: 'ui-stack',
+          Modal: 'ui-modal',
         },
       });
+      await sandboxToUse.imports.renderLegacy(remoteUiChannel, {
+        ...api,
+      });
     } else {
-      await workerSandbox.imports.render(receiver.connection, {
-        sandbox,
-        example,
-        async alert(content) {
-          console.log(
-            `Alert API used by example ${example} in the worker sandbox`,
-          );
-          window.alert(content);
-        },
+      await sandboxToUse.imports.render(receiver.connection, {
+        ...api,
       });
     }
   },
