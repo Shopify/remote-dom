@@ -1,5 +1,11 @@
 # @remote-dom/core
 
+## 1.6.0
+
+### Minor Changes
+
+- [#526](https://github.com/Shopify/remote-dom/pull/526) [`8cbf2c2`](https://github.com/Shopify/remote-dom/commit/8cbf2c2a6130dd0a19088a2adf18b506f468be8b) Thanks [@robin-drexler](https://github.com/robin-drexler)! - add flush method to BatchingRemoteConnection
+
 ## 1.5.2
 
 ### Patch Changes
