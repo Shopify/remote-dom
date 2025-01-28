@@ -1,0 +1,38 @@
+{
+  "name": "@remote-dom/compat",
+  "type": "module",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "@remote-dom/registry": "https://registry.npmjs.org"
+  },
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/remote-dom",
+    "directory": "packages/compat"
+  },
+  "exports": {
+    ".": {
+      "types": "./build/typescript/index.d.ts",
+      "quilt:source": "./source/index.ts",
+      "quilt:esnext": "./build/esnext/index.esnext",
+      "import": "./build/esm/index.mjs",
+      "require": "./build/cjs/index.cjs"
+    }
+  },
+  "types": "./build/typescript/index.d.ts",
+  "scripts": {
+    "build": "rollup --config ./rollup.config.js"
+  },
+  "dependencies": {
+    "@remote-dom/core": "workspace:^1.5.2",
+    "@remote-ui/core": "^2.0.0"
+  },
+  "browserslist": [
+    "defaults and not dead"
+  ]
+}

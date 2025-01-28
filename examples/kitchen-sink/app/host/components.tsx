@@ -159,6 +159,7 @@ export function ControlPanel({
           <option value="svelte">Svelte</option>
           <option value="vue">Vue</option>
           <option value="htm">htm</option>
+          <option value="react-remote-ui">React Remote UI</option>
         </Select>
       </section>
 

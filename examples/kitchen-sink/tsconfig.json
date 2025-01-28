@@ -7,6 +7,7 @@
   },
   "include": ["app"],
   "references": [
+    {"path": "../../packages/compat"},
     {"path": "../../packages/core"},
     {"path": "../../packages/preact"},
     {"path": "../../packages/react"},

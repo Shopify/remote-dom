@@ -1,4 +1,5 @@
 import type {RemoteConnection} from '@remote-dom/core';
+import {RemoteChannel} from '@remote-ui/core';
 
 /**
  * Describes the technology used to sandbox the “remote” code, so that it does
@@ -25,7 +26,8 @@ export type RenderExample =
   | 'preact'
   | 'react'
   | 'svelte'
-  | 'vue';
+  | 'vue'
+  | 'react-remote-ui';
 
 /**
  * The object that the “host” page will pass to the “remote” environment. This
@@ -49,6 +51,11 @@ export interface RenderAPI {
    * alert.
    */
   alert(content: string): Promise<void>;
+
+  /**
+   * Closes the modal.
+   */
+  closeModal(): void;
 }
 
 /**
@@ -56,6 +63,7 @@ export interface RenderAPI {
  */
 export interface SandboxAPI {
   render(connection: RemoteConnection, api: RenderAPI): Promise<unknown>;
+  renderLegacy(channel: RemoteChannel, api: RenderAPI): Promise<unknown>;
 }
 
 // These property and method types will be used by both the host and remote environments.
