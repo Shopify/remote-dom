@@ -58,6 +58,7 @@ function createDefaultBatchFunction() {
       setTimeout(() => {
         queue();
       }, 0);
+      return;
     }
 
     // `MessageChannel` trick that forces the code to run on the next task.
