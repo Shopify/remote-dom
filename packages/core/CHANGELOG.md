@@ -1,5 +1,11 @@
 # @remote-dom/core
 
+## 1.6.1
+
+### Patch Changes
+
+- [#528](https://github.com/Shopify/remote-dom/pull/528) [`df294ab`](https://github.com/Shopify/remote-dom/commit/df294abad5522110e031e5b3e2a978871aa703fb) Thanks [@brianshen1990](https://github.com/brianshen1990)! - return early if falling back to setTimeout for MessageChannel
+
 ## 1.6.0
 
 ### Minor Changes
