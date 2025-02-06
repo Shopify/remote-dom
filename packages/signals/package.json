@@ -30,7 +30,7 @@
   },
   "peerDependencies": {
     "@preact/signals-core": "^1.3.0",
-    "@remote-dom/core": "workspace:^1.6.0"
+    "@remote-dom/core": "workspace:^1.6.1"
   },
   "peerDependenciesMeta": {
     "@preact/signals-core": {
