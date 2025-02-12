@@ -1,6 +1,6 @@
 import type {MaybePromise} from '@remote-ui/rpc';
 
-export type Subscriber<T> = (value: T) => void;
+export type Subscriber<T> = (value: T) => unknown;
 
 export type RemoteSubscribeResult<T> = [() => void, T];
 
