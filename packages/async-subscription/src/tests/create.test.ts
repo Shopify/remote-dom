@@ -72,6 +72,26 @@ describe('createRemoteSubscribable()', () => {
 
     expect(value).toBe(newValue);
   });
+
+  it('allows to catch async errors in the subscriber callback', async () => {
+    expect.assertions(1);
+    const subscription = createSyncSubscribable('abc');
+
+    const remoteSubscription = createRemoteSubscribable({
+      current: subscription.current,
+      subscribe: (subscriber) => {
+        return subscription.subscribe(async (value) => {
+          await expect(() => subscriber(value)).rejects.toThrow('test');
+        });
+      },
+    });
+
+    remoteSubscription.subscribe(async () => {
+      throw new Error('test');
+    });
+
+    subscription.update('xyz');
+  });
 });
 
 function createSyncSubscribable<T>(

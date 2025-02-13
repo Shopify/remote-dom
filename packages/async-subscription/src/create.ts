@@ -14,7 +14,7 @@ export function createRemoteSubscribable<T>(
 
       const unsubscribe = subscription.subscribe(
         (value = subscription.current) => {
-          subscriber(value);
+          return subscriber(value);
         },
       );
 
