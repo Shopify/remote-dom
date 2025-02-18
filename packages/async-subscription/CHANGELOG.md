@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.1.16
+
+### Patch Changes
+
+- [#531](https://github.com/Shopify/remote-dom/pull/531) [`5e74921`](https://github.com/Shopify/remote-dom/commit/5e749216119e566444774b7353c683ee9593c707) Thanks [@robin-drexler](https://github.com/robin-drexler)! - return subscriber result e.g. to catch errors
+
+  ```js
+  function createRemoteSubscribableWrapper(subscription) {
+    return createRemoteSubscribable({
+      current: subscription.current,
+      subscribe: (subscriber) => {
+        return subscription.subscribe(async (value) => {
+          try {
+            await subscriber(value);
+          } catch {
+            // Catch errors and do something with them
+          }
+        });
+      },
+    });
+  }
+  ```
+
 ## 2.1.15
 
 ### Patch Changes

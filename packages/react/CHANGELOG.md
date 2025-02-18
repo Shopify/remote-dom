@@ -1,5 +1,12 @@
 # Changelog
 
+## 5.0.6
+
+### Patch Changes
+
+- Updated dependencies [[`5e74921`](https://github.com/Shopify/remote-dom/commit/5e749216119e566444774b7353c683ee9593c707)]:
+  - @remote-ui/async-subscription@2.1.16
+
 ## 5.0.5
 
 ### Patch Changes
