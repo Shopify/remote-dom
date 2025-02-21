@@ -1,5 +1,5 @@
 {
-  "name": "@remote-dom/core",
+  "name": "@mfalkenberg/remote-dom-core",
   "type": "module",
   "license": "MIT",
   "description": "A collection of DOM-based utilities for synchronizing elements between JavaScript environments",
@@ -7,7 +7,7 @@
     "access": "public",
     "@remote-dom/registry": "https://registry.npmjs.org"
   },
-  "version": "1.5.2",
+  "version": "1.5.6",
   "engines": {
     "node": ">=14.0.0"
   },
@@ -70,6 +70,7 @@
       ]
     }
   },
+  "files": ["build", "source"],
   "sideEffects": [
     "./source/polyfill.ts",
     "./build/cjs/polyfill.cjs",
@@ -80,7 +81,7 @@
     "build": "rollup --config ./rollup.config.js"
   },
   "dependencies": {
-    "@remote-dom/polyfill": "workspace:^1.4.2",
+    "@remote-dom/polyfill": "^1.4.2",
     "htm": "^3.1.1"
   },
   "peerDependencies": {
