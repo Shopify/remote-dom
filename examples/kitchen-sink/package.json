@@ -2,7 +2,7 @@
   "name": "example-kitchen-sink",
   "type": "module",
   "private": true,
-  "version": "0.0.22",
+  "version": "0.0.23",
   "scripts": {
     "start": "vite"
   },

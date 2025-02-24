@@ -1,5 +1,11 @@
 # @remote-dom/react
 
+## 1.2.2
+
+### Patch Changes
+
+- [#536](https://github.com/Shopify/remote-dom/pull/536) [`9abf5be`](https://github.com/Shopify/remote-dom/commit/9abf5bee323dfa522f9061ba61ce2f433a36cb4e) Thanks [@igor10k](https://github.com/igor10k)! - Use the same core dependency version for all packages
+
 ## 1.2.1
 
 ### Patch Changes
