@@ -139,7 +139,7 @@ importers:
   packages/compat:
     dependencies:
       '@remote-dom/core':
-        specifier: workspace:^1.6.0
+        specifier: workspace:^1.7.0
         version: link:../core
       '@remote-ui/core':
         specifier: ^2.0.0
@@ -166,7 +166,7 @@ importers:
   packages/preact:
     dependencies:
       '@remote-dom/core':
-        specifier: workspace:^1.6.0
+        specifier: workspace:^1.7.0
         version: link:../core
       '@remote-dom/signals':
         specifier: workspace:^2.0.0
@@ -191,7 +191,7 @@ importers:
   packages/react:
     dependencies:
       '@remote-dom/core':
-        specifier: workspace:^1.5.0
+        specifier: workspace:^1.7.0
         version: link:../core
       '@types/react':
         specifier: ^18.0.0
