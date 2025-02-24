@@ -214,13 +214,14 @@ importers:
         version: 18.3.1(react@18.3.1)
 
   packages/signals:
+    dependencies:
+      '@remote-dom/core':
+        specifier: workspace:^1.6.1
+        version: link:../core
     devDependencies:
       '@preact/signals-core':
         specifier: ^1.8.0
         version: 1.8.0
-      '@remote-dom/core':
-        specifier: workspace:*
-        version: link:../core
 
 packages:
 
