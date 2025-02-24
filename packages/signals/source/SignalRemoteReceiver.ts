@@ -179,9 +179,13 @@ export class SignalRemoteReceiver {
 
         const [removed] = newChildren.splice(index, 1);
 
+        if (!removed) {
+          return;
+        }
+
         (parent.children as any).value = newChildren;
 
-        detach(removed!);
+        detach(removed);
       },
       updateProperty: (
         id,
