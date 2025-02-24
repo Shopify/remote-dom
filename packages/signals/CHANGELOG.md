@@ -1,5 +1,18 @@
 # @remote-dom/signals
 
+## 2.1.0
+
+### Minor Changes
+
+- [#533](https://github.com/Shopify/remote-dom/pull/533) [`a9a88ab`](https://github.com/Shopify/remote-dom/commit/a9a88abe4ba81b253f0cc6cdd5e82a25bbe908c1) Thanks [@igor10k](https://github.com/igor10k)! - Make `removeChild` less strict in receivers
+
+### Patch Changes
+
+- [#535](https://github.com/Shopify/remote-dom/pull/535) [`79419d9`](https://github.com/Shopify/remote-dom/commit/79419d9377013a979ebc4ece53f59d9a9a893094) Thanks [@igor10k](https://github.com/igor10k)! - Move internal peer dependencies to dependencies
+
+- Updated dependencies [[`a9a88ab`](https://github.com/Shopify/remote-dom/commit/a9a88abe4ba81b253f0cc6cdd5e82a25bbe908c1)]:
+  - @remote-dom/core@1.7.0
+
 ## 2.0.0
 
 ### Patch Changes

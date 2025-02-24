@@ -1,5 +1,13 @@
 # example-kitchen-sink
 
+## 0.0.22
+
+### Patch Changes
+
+- Updated dependencies [[`79419d9`](https://github.com/Shopify/remote-dom/commit/79419d9377013a979ebc4ece53f59d9a9a893094), [`a9a88ab`](https://github.com/Shopify/remote-dom/commit/a9a88abe4ba81b253f0cc6cdd5e82a25bbe908c1)]:
+  - @remote-dom/signals@2.1.0
+  - @remote-dom/core@1.7.0
+
 ## 0.0.21
 
 ### Patch Changes
