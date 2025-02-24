@@ -216,7 +216,7 @@ importers:
   packages/signals:
     dependencies:
       '@remote-dom/core':
-        specifier: workspace:^1.6.1
+        specifier: workspace:^1.7.0
         version: link:../core
     devDependencies:
       '@preact/signals-core':

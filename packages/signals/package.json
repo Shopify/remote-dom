@@ -6,7 +6,7 @@
     "access": "public",
     "@remote-dom/registry": "https://registry.npmjs.org"
   },
-  "version": "2.0.0",
+  "version": "2.1.0",
   "engines": {
     "node": ">=14.0.0"
   },
@@ -43,6 +43,6 @@
     "defaults and not dead"
   ],
   "dependencies": {
-    "@remote-dom/core": "workspace:^1.6.1"
+    "@remote-dom/core": "workspace:^1.7.0"
   }
 }
