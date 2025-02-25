@@ -1,5 +1,11 @@
 # @remote-dom/preact
 
+## 1.3.0
+
+### Minor Changes
+
+- [#538](https://github.com/Shopify/remote-dom/pull/538) [`88d4956`](https://github.com/Shopify/remote-dom/commit/88d495608de6913a084b46384aaa19a6d9e599fb) Thanks [@igor10k](https://github.com/igor10k)! - Bump signals dependency
+
 ## 1.2.3
 
 ### Patch Changes
