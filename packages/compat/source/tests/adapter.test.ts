@@ -117,6 +117,116 @@ describe('adaptToLegacyRemoteChannel()', () => {
       ]);
     });
 
+    it('does not mount fragments', () => {
+      const receiver = new TestRemoteReceiver();
+
+      const channel = adaptToLegacyRemoteChannel(receiver.connection);
+
+      channel(ACTION_MOUNT, [
+        {
+          id: '2',
+          kind: KIND_FRAGMENT,
+          children: [
+            {
+              id: '1',
+              kind: KIND_TEXT,
+              text: 'First text',
+            },
+            {
+              id: '0',
+              kind: KIND_TEXT,
+              text: 'Second text',
+            },
+          ],
+        } as any,
+      ]);
+
+      expect(receiver.connection.mutate).not.toHaveBeenCalledWith();
+
+      expect(receiver.root.children).toStrictEqual([]);
+    });
+
+    it('mounts components ignoring fragment children', () => {
+      const receiver = new TestRemoteReceiver();
+
+      const channel = adaptToLegacyRemoteChannel(receiver.connection);
+
+      channel(ACTION_MOUNT, [
+        {
+          id: '4',
+          kind: KIND_COMPONENT,
+          type: 'Banner',
+          props: {title: 'Title'},
+          children: [
+            {
+              id: '3',
+              kind: KIND_TEXT,
+              text: 'Direct text child',
+            },
+            {
+              id: '2',
+              kind: KIND_FRAGMENT,
+              children: [
+                {
+                  id: '1',
+                  kind: KIND_TEXT,
+                  text: 'Text in fragment',
+                },
+                {
+                  id: '0',
+                  kind: KIND_COMPONENT,
+                  type: 'Button',
+                  props: {},
+                  children: [],
+                },
+              ],
+            } as any,
+          ],
+        },
+      ]);
+
+      expect(receiver.connection.mutate).toHaveBeenCalledWith([
+        [
+          MUTATION_TYPE_INSERT_CHILD,
+          ROOT_ID,
+          {
+            id: '4',
+            type: NODE_TYPE_ELEMENT,
+            element: 'Banner',
+            properties: {title: 'Title'},
+            children: [
+              {
+                id: '3',
+                type: NODE_TYPE_TEXT,
+                data: 'Direct text child',
+              },
+            ],
+          },
+          0,
+        ],
+      ]);
+
+      expect(receiver.root.children).toStrictEqual([
+        {
+          id: '4',
+          type: NODE_TYPE_ELEMENT,
+          element: 'Banner',
+          children: [
+            {
+              id: '3',
+              type: NODE_TYPE_TEXT,
+              data: 'Direct text child',
+              version: 0,
+            },
+          ],
+          properties: {title: 'Title'},
+          attributes: {},
+          eventListeners: {},
+          version: 0,
+        },
+      ]);
+    });
+
     it('mounts component nodes with fragment props', () => {
       const receiver = new TestRemoteReceiver();
 
