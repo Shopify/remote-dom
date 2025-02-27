@@ -61,7 +61,7 @@ export class Element extends ParentNode {
     return sib;
   }
 
-  get previewElementSibling() {
+  get previousElementSibling() {
     let sib = this.previousSibling;
     while (sib && sib.nodeType !== 1) sib = sib.previousSibling;
     return sib;
