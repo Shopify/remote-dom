@@ -1,5 +1,6 @@
 import {
   KIND_TEXT as LEGACY_KIND_TEXT,
+  KIND_COMPONENT as LEGACY_KIND_COMPONENT,
   KIND_FRAGMENT as LEGACY_KIND_FRAGMENT,
   ACTION_MOUNT as LEGACY_ACTION_MOUNT,
   ACTION_INSERT_CHILD as LEGACY_ACTION_INSERT_CHILD,
@@ -70,6 +71,10 @@ export function adaptToLegacyRemoteChannel(
   const tree = new Map<string, {id: string; slot?: string}[]>();
 
   function mutate(records: RemoteMutationRecord[]) {
+    if (!records.length) {
+      return;
+    }
+
     for (const record of records) {
       const [mutationType, parentId] = record;
 
@@ -142,7 +147,7 @@ export function adaptToLegacyRemoteChannel(
         const [nodes] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_MOUNT];
 
-        const records = nodes.map(
+        const records = normalizeNodes(nodes).map(
           (node, index) =>
             [
               MUTATION_TYPE_INSERT_CHILD,
@@ -160,14 +165,16 @@ export function adaptToLegacyRemoteChannel(
         const [parentId, index, child] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_INSERT_CHILD];
 
-        mutate([
-          [
-            MUTATION_TYPE_INSERT_CHILD,
-            parentId ?? ROOT_ID,
-            adaptLegacyNodeSerialization(child, options),
-            index,
-          ],
-        ]);
+        if (isValidChild(child)) {
+          mutate([
+            [
+              MUTATION_TYPE_INSERT_CHILD,
+              parentId ?? ROOT_ID,
+              adaptLegacyNodeSerialization(child, options),
+              index,
+            ] satisfies RemoteMutationRecord,
+          ]);
+        }
 
         break;
 
@@ -213,7 +220,7 @@ export function adaptToLegacyRemoteChannel(
             records.push([
               MUTATION_TYPE_INSERT_CHILD,
               id,
-              adaptLegacyFragmentSerialization(key, value, options),
+              adaptLegacyPropFragmentSerialization(key, value, options),
               tree.get(id)?.length ?? 0,
             ] satisfies RemoteMutationRecord);
           } else {
@@ -243,6 +250,20 @@ export function adaptToLegacyRemoteChannel(
         throw new Error(`Unsupported action type: ${type}`);
     }
   };
+}
+
+function isValidChild(
+  child: any,
+): child is LegacyRemoteComponentSerialization | LegacyRemoteTextSerialization {
+  return (
+    child.kind === LEGACY_KIND_COMPONENT || child.kind === LEGACY_KIND_TEXT
+  );
+}
+
+function normalizeNodes(
+  nodes: any[],
+): (LegacyRemoteComponentSerialization | LegacyRemoteTextSerialization)[] {
+  return nodes.filter(isValidChild);
 }
 
 function adaptLegacyNodeSerialization(
@@ -281,7 +302,7 @@ function adaptLegacyComponentSerialization(
     element,
     properties,
     children: [
-      ...children.map((child) => {
+      ...normalizeNodes(children).map((child) => {
         return adaptLegacyNodeSerialization(child, options);
       }),
       ...adaptLegacyFragmentsSerialization(fragments, options),
@@ -323,11 +344,11 @@ function adaptLegacyFragmentsSerialization(
   options?: LegacyRemoteChannelOptions,
 ): RemoteElementSerialization[] {
   return Object.entries(fragments).map(([slot, fragment]) => {
-    return adaptLegacyFragmentSerialization(slot, fragment, options);
+    return adaptLegacyPropFragmentSerialization(slot, fragment, options);
   });
 }
 
-function adaptLegacyFragmentSerialization(
+function adaptLegacyPropFragmentSerialization(
   slot: string,
   fragment: LegacyRemoteFragmentSerialization,
   options?: LegacyRemoteChannelOptions,
@@ -339,7 +360,7 @@ function adaptLegacyFragmentSerialization(
       slot,
     },
     type: NODE_TYPE_ELEMENT,
-    children: fragment.children.map((child) => {
+    children: normalizeNodes(fragment.children).map((child) => {
       return adaptLegacyNodeSerialization(child, options);
     }),
   };
