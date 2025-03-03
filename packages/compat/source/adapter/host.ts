@@ -264,7 +264,8 @@ function adaptUndefinedLegacyFragmentSerialization(props: any) {
     type: LEGACY_KIND_FRAGMENT,
     element: undefined,
     properties: undefined,
-    children: undefined,
+    data: undefined,
+    children: [],
   };
 }
 
