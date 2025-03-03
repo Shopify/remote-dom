@@ -251,9 +251,21 @@ function adaptLegacyNodeSerialization(
 ): RemoteElementSerialization | RemoteTextSerialization {
   if (child.kind === LEGACY_KIND_TEXT) {
     return adaptLegacyTextSerialization(child);
+  } else if (child.kind === LEGACY_KIND_FRAGMENT) {
+    return adaptUndefinedLegacyFragmentSerialization(child);
   } else {
     return adaptLegacyComponentSerialization(child, options);
   }
+}
+
+function adaptUndefinedLegacyFragmentSerialization(props: any) {
+  return {
+    id: props.id,
+    type: LEGACY_KIND_FRAGMENT,
+    element: undefined,
+    properties: undefined,
+    children: undefined,
+  };
 }
 
 function adaptLegacyTextSerialization({
