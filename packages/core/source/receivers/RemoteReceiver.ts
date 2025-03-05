@@ -22,8 +22,10 @@ import type {RemoteReceiverOptions} from './shared.ts';
  * the addition of a `version` property that is incremented whenever the
  * node is updated.
  */
-export interface RemoteReceiverText extends RemoteTextSerialization {
-  readonly version: number;
+export interface RemoteReceiverText
+  extends Omit<RemoteTextSerialization, 'data'> {
+  version: number;
+  data: string;
 }
 
 /**
@@ -32,7 +34,7 @@ export interface RemoteReceiverText extends RemoteTextSerialization {
  * node is updated.
  */
 export interface RemoteReceiverComment extends RemoteCommentSerialization {
-  readonly version: number;
+  version: number;
 }
 
 /**
@@ -47,8 +49,8 @@ export interface RemoteReceiverElement
   readonly eventListeners: NonNullable<
     RemoteElementSerialization['eventListeners']
   >;
-  readonly children: readonly RemoteReceiverNode[];
-  readonly version: number;
+  readonly children: RemoteReceiverNode[];
+  version: number;
 }
 
 /**
@@ -59,13 +61,13 @@ export interface RemoteReceiverElement
 export interface RemoteReceiverRoot {
   readonly id: typeof ROOT_ID;
   readonly type: typeof NODE_TYPE_ROOT;
-  readonly children: readonly RemoteReceiverNode[];
+  readonly children: RemoteReceiverNode[];
   readonly properties: NonNullable<RemoteElementSerialization['properties']>;
   readonly attributes: NonNullable<RemoteElementSerialization['attributes']>;
   readonly eventListeners: NonNullable<
     RemoteElementSerialization['eventListeners']
   >;
-  readonly version: number;
+  version: number;
 }
 
 /**
@@ -82,10 +84,6 @@ export type RemoteReceiverNode =
 export type RemoteReceiverParent = RemoteReceiverElement | RemoteReceiverRoot;
 
 type RemoteReceiverNodeOrRoot = RemoteReceiverNode | RemoteReceiverRoot;
-
-type Writable<T> = {
-  -readonly [P in keyof T]: T[P];
-};
 
 /**
  * A `RemoteReceiver` stores remote elements into a basic JavaScript representation,
@@ -163,20 +161,23 @@ export class RemoteReceiver {
         return implementationMethod(...args);
       },
       insertChild: (id, child, index) => {
-        const parent = attached.get(id) as Writable<RemoteReceiverParent>;
+        const parent = attached.get(id);
+
+        if (
+          parent?.type !== NODE_TYPE_ROOT &&
+          parent?.type !== NODE_TYPE_ELEMENT
+        ) {
+          return;
+        }
 
         const {children} = parent;
 
         const normalizedChild = attach(child, parent);
 
         if (index === children.length) {
-          (children as Writable<typeof children>).push(normalizedChild);
+          children.push(normalizedChild);
         } else {
-          (children as Writable<typeof children>).splice(
-            index,
-            0,
-            normalizedChild,
-          );
+          children.splice(index, 0, normalizedChild);
         }
 
         parent.version += 1;
@@ -185,14 +186,18 @@ export class RemoteReceiver {
         runSubscribers(parent);
       },
       removeChild: (id, index) => {
-        const parent = attached.get(id) as Writable<RemoteReceiverParent>;
+        const parent = attached.get(id);
+
+        if (
+          parent?.type !== NODE_TYPE_ROOT &&
+          parent?.type !== NODE_TYPE_ELEMENT
+        ) {
+          return;
+        }
 
         const {children} = parent;
 
-        const [removed] = (children as Writable<typeof children>).splice(
-          index,
-          1,
-        );
+        const [removed] = children.splice(index, 1);
 
         if (!removed) {
           return;
@@ -210,7 +215,11 @@ export class RemoteReceiver {
         value,
         type = UPDATE_PROPERTY_TYPE_PROPERTY,
       ) => {
-        const element = attached.get(id) as Writable<RemoteReceiverElement>;
+        const element = attached.get(id);
+
+        if (element?.type !== NODE_TYPE_ELEMENT) {
+          return;
+        }
 
         retain?.(value);
 
@@ -233,7 +242,7 @@ export class RemoteReceiver {
         updateObject[property] = value;
         element.version += 1;
 
-        let parentForUpdate: Writable<RemoteReceiverParent> | undefined;
+        let parentForUpdate: RemoteReceiverNodeOrRoot | undefined;
 
         // If the slot changes, inform parent nodes so they can
         // re-parent it appropriately.
@@ -241,9 +250,7 @@ export class RemoteReceiver {
           const parentId = this.parents.get(id);
 
           parentForUpdate =
-            parentId == null
-              ? parentId
-              : (attached.get(parentId) as Writable<RemoteReceiverParent>);
+            parentId == null ? parentId : attached.get(parentId);
 
           if (parentForUpdate) {
             parentForUpdate.version += 1;
@@ -256,7 +263,11 @@ export class RemoteReceiver {
         release?.(oldValue);
       },
       updateText: (id, newText) => {
-        const text = attached.get(id) as Writable<RemoteReceiverText>;
+        const text = attached.get(id);
+
+        if (text?.type !== NODE_TYPE_TEXT) {
+          return;
+        }
 
         text.data = newText;
         text.version += 1;
@@ -317,7 +328,7 @@ export class RemoteReceiver {
             type,
             element,
             version: 0,
-            children: resolvedChildren as readonly RemoteReceiverNode[],
+            children: resolvedChildren,
             properties: {...properties},
             attributes: {...attributes},
             eventListeners: {...eventListeners},
