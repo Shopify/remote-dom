@@ -16,14 +16,14 @@ jobs:
 
       - id: typescript-cache
         name: Restore TypeScript cache
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: |
             packages/*/build/ts
             packages/*/build/*.tsbuildinfo
-          key: ${{ runner.os }}-typescript-v1-${{ github.sha }}
+          key: ${{ runner.os }}-typescript-v4-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-typescript-v1-
+            ${{ runner.os }}-typescript-v4-
 
       - name: Type check
         run: yarn type-check
@@ -36,12 +36,12 @@ jobs:
 
       - id: jest-cache
         name: Restore jest cache
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: .loom/cache/jest/
-          key: ${{ runner.os }}-jest-v1-${{ github.sha }}
+          key: ${{ runner.os }}-jest-v4-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-jest-v1-
+            ${{ runner.os }}-jest-v4-
 
       - name: Test
         run: yarn test
@@ -55,12 +55,12 @@ jobs:
 
       - id: eslint-cache
         name: Restore ESLint cache
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: .loom/cache/eslint
-          key: ${{ runner.os }}-eslint-v1-${{ github.sha }}
+          key: ${{ runner.os }}-eslint-v4-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-eslint-v1-
+            ${{ runner.os }}-eslint-v4-
 
       - name: Lint
         run: yarn lint
