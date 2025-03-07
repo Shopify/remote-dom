@@ -15,6 +15,7 @@ const FUNCTION = '_@f';
 export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
   const functionsToId = new Map<AnyFunction, string>();
   const idsToFunction = new Map<string, AnyFunction>();
+  const idsToFunctionName = new Map<string, string | undefined>();
   const idsToProxy = new Map<string, AnyFunction>();
 
   return {
@@ -23,10 +24,11 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
     async call(id, args) {
       const stackFrame = new StackFrame();
       const func = idsToFunction.get(id);
+      const funcName = idsToFunctionName.get(id);
 
       if (func == null) {
         throw new Error(
-          'You attempted to call a function that was already released.',
+          `You attempted to call a function that was already released. Function name: ${funcName}`,
         );
       }
 
@@ -62,6 +64,7 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
   function encode(
     value: unknown,
     seen = new Map<any, EncodeResult>(),
+    key?: string,
   ): EncodeResult {
     if (value == null) {
       return [value];
@@ -99,6 +102,7 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
           const [result, nestedTransferables = []] = encode(
             (value as any)[key],
             seen,
+            key,
           );
           transferables.push(...nestedTransferables);
           return {...object, [key]: result};
@@ -125,6 +129,7 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
 
       functionsToId.set(value as AnyFunction, id);
       idsToFunction.set(id, value as AnyFunction);
+      idsToFunctionName.set(id, key);
 
       const result: EncodeResult = [{[FUNCTION]: id}];
       seen.set(value, result);
@@ -138,7 +143,11 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
     return result;
   }
 
-  function decode(value: unknown, retainedBy?: Iterable<Retainer>): any {
+  function decode(
+    value: unknown,
+    retainedBy?: Iterable<Retainer>,
+    key?: string,
+  ): any {
     if (typeof value === 'object') {
       if (value == null) {
         return value as any;
@@ -177,7 +186,7 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
         const proxy = (...args: any[]) => {
           if (released) {
             throw new Error(
-              'You attempted to call a function that was already released.',
+              `You attempted to call a function that was already released. Method name: ${key}`,
             );
           }
 
@@ -209,7 +218,7 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
         return Object.keys(value).reduce(
           (object, key) => ({
             ...object,
-            [key]: decode((value as any)[key], retainedBy),
+            [key]: decode((value as any)[key], retainedBy, key),
           }),
           {},
         ) as any;
