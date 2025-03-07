@@ -64,7 +64,7 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
   function encode(
     value: unknown,
     seen = new Map<any, EncodeResult>(),
-    key?: string,
+    functionName?: string,
   ): EncodeResult {
     if (value == null) {
       return [value];
@@ -81,8 +81,12 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
         seen.set(value, [undefined]);
 
         const transferables: Transferable[] = [];
-        const result = value.map((item) => {
-          const [result, nestedTransferables = []] = encode(item, seen);
+        const result = value.map((item, index) => {
+          const [result, nestedTransferables = []] = encode(
+            item,
+            seen,
+            `${functionName}.${index}`,
+          );
           transferables.push(...nestedTransferables);
           return result;
         });
@@ -102,7 +106,7 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
           const [result, nestedTransferables = []] = encode(
             (value as any)[key],
             seen,
-            key,
+            `${functionName}.${key}`,
           );
           transferables.push(...nestedTransferables);
           return {...object, [key]: result};
@@ -129,7 +133,7 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
 
       functionsToId.set(value as AnyFunction, id);
       idsToFunction.set(id, value as AnyFunction);
-      idsToFunctionName.set(id, key);
+      idsToFunctionName.set(id, functionName);
 
       const result: EncodeResult = [{[FUNCTION]: id}];
       seen.set(value, result);
@@ -146,7 +150,7 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
   function decode(
     value: unknown,
     retainedBy?: Iterable<Retainer>,
-    key?: string,
+    functionName?: string,
   ): any {
     if (typeof value === 'object') {
       if (value == null) {
@@ -154,7 +158,9 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
       }
 
       if (Array.isArray(value)) {
-        return value.map((value) => decode(value, retainedBy));
+        return value.map((value, index) =>
+          decode(value, retainedBy, `${functionName}.${index}`),
+        );
       }
 
       if (FUNCTION in value) {
@@ -186,7 +192,7 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
         const proxy = (...args: any[]) => {
           if (released) {
             throw new Error(
-              `You attempted to call a function that was already released. Method name: ${key}`,
+              `You attempted to call a function that was already released. Method name: ${functionName}`,
             );
           }
 
@@ -218,7 +224,11 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
         return Object.keys(value).reduce(
           (object, key) => ({
             ...object,
-            [key]: decode((value as any)[key], retainedBy, key),
+            [key]: decode(
+              (value as any)[key],
+              retainedBy,
+              `${functionName}.${key}`,
+            ),
           }),
           {},
         ) as any;
