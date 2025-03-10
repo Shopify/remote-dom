@@ -1,0 +1,27 @@
+name: Snapit Remote UI
+
+on:
+  issue_comment:
+    types:
+      - created
+
+jobs:
+  snapit:
+    name: Snapit Remote UI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+
+      - uses: ./.github/workflows/actions/prepare
+
+      - name: Create snapshot
+        uses: Shopify/snapit@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        with:
+          build_script: yarn type-check && yarn build
+          comment_command: /snapit-remote-ui
