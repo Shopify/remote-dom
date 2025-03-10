@@ -6,7 +6,7 @@ import {
   EncodingStrategyApi,
 } from '../types';
 import type {Retainer} from '../memory';
-import {StackFrame, isBasicObject, isMemoryManageable} from '../memory';
+import {isBasicObject, isMemoryManageable} from '../memory';
 
 type AnyFunction = (...args: any[]) => any;
 
@@ -22,7 +22,7 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
     encode,
     decode,
     async call(id, args) {
-      const stackFrame = new StackFrame();
+      const memoryManager = api.createMemoryManager();
       const func = idsToFunction.get(id);
       const funcName = idsToFunctionName.get(id);
 
@@ -34,14 +34,14 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
 
       try {
         const retainedBy = isMemoryManageable(func)
-          ? [stackFrame, ...func[RETAINED_BY]]
-          : [stackFrame];
+          ? [memoryManager, ...func[RETAINED_BY]]
+          : [memoryManager];
 
         const result = await func(...(decode(args, retainedBy) as any[]));
 
         return result;
       } finally {
-        stackFrame.release();
+        memoryManager.release();
       }
     },
     release(id) {

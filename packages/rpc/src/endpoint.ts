@@ -4,8 +4,9 @@ import type {
   RemoteCallable,
   EncodingStrategy,
   EncodingStrategyApi,
+  MemoryManager,
 } from './types';
-import {StackFrame} from './memory';
+import {createDefaultMemoryManager} from './memory';
 import type {Retainer} from './memory';
 
 export const CALL = 0;
@@ -34,6 +35,7 @@ export interface CreateEndpointOptions<T = unknown> {
   uuid?(): string;
   createEncoder?(api: EncodingStrategyApi): EncodingStrategy;
   callable?: (keyof T)[];
+  createMemoryManager?(): MemoryManager;
 }
 
 export interface Endpoint<T> {
@@ -73,6 +75,7 @@ export function createEndpoint<T>(
     uuid = defaultUuid,
     createEncoder = createBasicEncoder,
     callable,
+    createMemoryManager = createDefaultMemoryManager,
   }: CreateEndpointOptions<T> = {},
 ): Endpoint<T> {
   let terminated = false;
@@ -102,6 +105,7 @@ export function createEndpoint<T>(
 
       return done;
     },
+    createMemoryManager,
   });
 
   messenger.addEventListener('message', listener);
@@ -176,7 +180,7 @@ export function createEndpoint<T>(
         break;
       }
       case CALL: {
-        const stackFrame = new StackFrame();
+        const memoryManager = createMemoryManager();
         const [id, property, args] = data[1];
         const func = activeApi.get(property);
 
@@ -188,7 +192,7 @@ export function createEndpoint<T>(
           }
 
           const [encoded, transferables] = encoder.encode(
-            await func(...(encoder.decode(args, [stackFrame]) as any[])),
+            await func(...(encoder.decode(args, [memoryManager]) as any[])),
           );
 
           send(RESULT, [id, undefined, encoded], transferables);
@@ -197,7 +201,7 @@ export function createEndpoint<T>(
           send(RESULT, [id, {name, message, stack}]);
           throw error;
         } finally {
-          stackFrame.release();
+          memoryManager.release();
         }
 
         break;

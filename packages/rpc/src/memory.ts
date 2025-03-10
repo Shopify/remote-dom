@@ -1,10 +1,19 @@
-import {RETAINED_BY, RETAIN_METHOD, RELEASE_METHOD} from './types';
+import {
+  RETAINED_BY,
+  RETAIN_METHOD,
+  RELEASE_METHOD,
+  MemoryManager,
+} from './types';
 import type {Retainer, MemoryManageable} from './types';
 
 export {RETAINED_BY, RETAIN_METHOD, RELEASE_METHOD};
 export type {Retainer, MemoryManageable};
 
-export class StackFrame {
+export function createDefaultMemoryManager(): MemoryManager {
+  return new StackFrame();
+}
+
+export class StackFrame implements MemoryManager {
   private readonly memoryManaged = new Set<MemoryManageable>();
 
   add(memoryManageable: MemoryManageable) {

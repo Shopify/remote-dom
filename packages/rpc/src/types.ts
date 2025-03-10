@@ -57,6 +57,10 @@ export interface Retainer {
   add(manageable: MemoryManageable): void;
 }
 
+export interface MemoryManager extends Retainer {
+  release(): void;
+}
+
 export interface MemoryManageable {
   readonly [RETAINED_BY]: Set<Retainer>;
   [RETAIN_METHOD](): void;
@@ -75,4 +79,5 @@ export interface EncodingStrategyApi {
   uuid(): string;
   release(id: string): void;
   call(id: string, args: any[], retainedBy?: Iterable<Retainer>): Promise<any>;
+  createMemoryManager(): MemoryManager;
 }
