@@ -1,4 +1,4 @@
-name: Snapit Remote UI
+name: Snap Remote UI
 on:
   issue_comment:
     types:
@@ -6,13 +6,13 @@ on:
 
 jobs:
   snapit:
-    name: Snapit Remote UI
+    name: Snap Remote UI
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
-          ref: ${{ github.event.comment.user.login == 'github-actions[bot]' && github.event.issue.pull_request.head.ref || github.event.comment.user.login }}
+          ref: ${{ github.event.issue.pull_request.head.ref }}
 
       - uses: actions/setup-node@v4
         name: Setup node.js and yarn
@@ -32,4 +32,4 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
           build_script: yarn type-check && yarn build
-          comment_command: /snapit-remote-ui
+          comment_command: /snap-remote-ui
