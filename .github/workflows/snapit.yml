@@ -16,20 +16,6 @@ jobs:
 
       - uses: ./.github/workflows/actions/prepare
 
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "build=pnpm build:snapit" >> $GITHUB_OUTPUT
-          elif [ -f "yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "build=yarn build:snapit" >> $GITHUB_OUTPUT
-          else
-            echo "No supported package manager lock file found"
-            exit 1
-          fi
-
       - name: Create snapshot
         uses: Shopify/snapit@main
         env:
@@ -37,5 +23,5 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
-          build_script: ${{ steps.detect-package-manager.outputs.build }}
+          build_script: pnpm build:snapit
           comment_command: /snapit
