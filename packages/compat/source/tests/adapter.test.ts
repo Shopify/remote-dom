@@ -22,6 +22,7 @@ import {
   MUTATION_TYPE_UPDATE_TEXT,
   NODE_TYPE_ELEMENT,
   NODE_TYPE_TEXT,
+  NODE_TYPE_COMMENT,
   ROOT_ID,
 } from '@remote-dom/core';
 
@@ -108,6 +109,145 @@ describe('adaptToLegacyRemoteChannel()', () => {
           element: 'Banner',
           children: [
             {id: '0', type: NODE_TYPE_TEXT, data: 'I am a banner', version: 0},
+          ],
+          properties: {title: 'Title'},
+          attributes: {},
+          eventListeners: {},
+          version: 0,
+        },
+      ]);
+    });
+
+    it('replaces fragments with comment nodes', () => {
+      const receiver = new TestRemoteReceiver();
+
+      const channel = adaptToLegacyRemoteChannel(receiver.connection);
+
+      channel(ACTION_MOUNT, [
+        {
+          id: '2',
+          kind: KIND_FRAGMENT,
+          children: [
+            {
+              id: '1',
+              kind: KIND_TEXT,
+              text: 'First text',
+            },
+            {
+              id: '0',
+              kind: KIND_TEXT,
+              text: 'Second text',
+            },
+          ],
+        } as any,
+      ]);
+
+      expect(receiver.connection.mutate).toHaveBeenCalledWith([
+        [
+          MUTATION_TYPE_INSERT_CHILD,
+          ROOT_ID,
+          {
+            id: '2',
+            type: NODE_TYPE_COMMENT,
+            data: 'added by remote-ui legacy adaptor to replace a fragment rendered as a child',
+          },
+          0,
+        ],
+      ]);
+
+      expect(receiver.root.children).toStrictEqual([
+        {
+          id: '2',
+          type: NODE_TYPE_COMMENT,
+          data: 'added by remote-ui legacy adaptor to replace a fragment rendered as a child',
+          version: 0,
+        },
+      ]);
+    });
+
+    it('mounts components replacing fragment children with comment nodes', () => {
+      const receiver = new TestRemoteReceiver();
+
+      const channel = adaptToLegacyRemoteChannel(receiver.connection);
+
+      channel(ACTION_MOUNT, [
+        {
+          id: '4',
+          kind: KIND_COMPONENT,
+          type: 'Banner',
+          props: {title: 'Title'},
+          children: [
+            {
+              id: '3',
+              kind: KIND_TEXT,
+              text: 'Direct text child',
+            },
+            {
+              id: '2',
+              kind: KIND_FRAGMENT,
+              children: [
+                {
+                  id: '1',
+                  kind: KIND_TEXT,
+                  text: 'Text in fragment',
+                },
+                {
+                  id: '0',
+                  kind: KIND_COMPONENT,
+                  type: 'Button',
+                  props: {},
+                  children: [],
+                },
+              ],
+            } as any,
+          ],
+        },
+      ]);
+
+      expect(receiver.connection.mutate).toHaveBeenCalledWith([
+        [
+          MUTATION_TYPE_INSERT_CHILD,
+          ROOT_ID,
+          {
+            id: '4',
+            type: NODE_TYPE_ELEMENT,
+            element: 'Banner',
+            properties: {title: 'Title'},
+            children: [
+              {
+                id: '3',
+                type: NODE_TYPE_TEXT,
+                data: 'Direct text child',
+              },
+              {
+                id: '2',
+                type: NODE_TYPE_COMMENT,
+                data: 'added by remote-ui legacy adaptor to replace a fragment rendered as a child',
+              },
+            ],
+          },
+          0,
+        ],
+      ]);
+
+      expect(receiver.root.children).toStrictEqual([
+        {
+          id: '4',
+          type: NODE_TYPE_ELEMENT,
+          element: 'Banner',
+          children: [
+            {
+              id: '3',
+              type: NODE_TYPE_TEXT,
+              data: 'Direct text child',
+              version: 0,
+            },
+            {
+              id: '2',
+              type: NODE_TYPE_COMMENT,
+              data: 'added by remote-ui legacy adaptor to replace a fragment rendered as a child',
+              version: 0,
+            },
           ],
           properties: {title: 'Title'},
           attributes: {},

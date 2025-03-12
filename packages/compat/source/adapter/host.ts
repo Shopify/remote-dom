@@ -1,5 +1,6 @@
 import {
   KIND_TEXT as LEGACY_KIND_TEXT,
+  KIND_COMPONENT as LEGACY_KIND_COMPONENT,
   KIND_FRAGMENT as LEGACY_KIND_FRAGMENT,
   ACTION_MOUNT as LEGACY_ACTION_MOUNT,
   ACTION_INSERT_CHILD as LEGACY_ACTION_INSERT_CHILD,
@@ -16,6 +17,7 @@ import {
 import {
   ROOT_ID,
   NODE_TYPE_TEXT,
+  NODE_TYPE_COMMENT,
   NODE_TYPE_ELEMENT,
   MUTATION_TYPE_INSERT_CHILD,
   MUTATION_TYPE_REMOVE_CHILD,
@@ -26,6 +28,7 @@ import {
   type RemoteElementSerialization,
   type RemoteConnection,
   type RemoteNodeSerialization,
+  type RemoteCommentSerialization,
 } from '@remote-dom/core';
 
 export interface LegacyRemoteChannelElementMap {
@@ -233,7 +236,7 @@ export function adaptToLegacyRemoteChannel(
             records.push([
               MUTATION_TYPE_INSERT_CHILD,
               id,
-              adaptLegacyFragmentSerialization(key, value, options),
+              adaptLegacyPropFragmentSerialization(key, value, options),
               tree.get(id)?.length ?? 0,
             ] satisfies RemoteMutationRecord);
           } else {
@@ -266,13 +269,26 @@ export function adaptToLegacyRemoteChannel(
 }
 
 function adaptLegacyNodeSerialization(
-  child: LegacyRemoteComponentSerialization | LegacyRemoteTextSerialization,
+  child:
+    | LegacyRemoteComponentSerialization
+    | LegacyRemoteTextSerialization
+    | LegacyRemoteFragmentSerialization,
   options?: LegacyRemoteChannelOptions,
-): RemoteElementSerialization | RemoteTextSerialization {
-  if (child.kind === LEGACY_KIND_TEXT) {
-    return adaptLegacyTextSerialization(child);
-  } else {
-    return adaptLegacyComponentSerialization(child, options);
+):
+  | RemoteElementSerialization
+  | RemoteTextSerialization
+  | RemoteCommentSerialization {
+  switch (child.kind) {
+    case LEGACY_KIND_TEXT:
+      return adaptLegacyTextSerialization(child);
+    case LEGACY_KIND_COMPONENT:
+      return adaptLegacyComponentSerialization(child, options);
+    default:
+      return {
+        id: child.id,
+        type: NODE_TYPE_COMMENT,
+        data: 'added by remote-ui legacy adaptor to replace a fragment rendered as a child',
+      };
   }
 }
 
@@ -343,11 +359,11 @@ function adaptLegacyFragmentsSerialization(
   options?: LegacyRemoteChannelOptions,
 ): RemoteElementSerialization[] {
   return Object.entries(fragments).map(([slot, fragment]) => {
-    return adaptLegacyFragmentSerialization(slot, fragment, options);
+    return adaptLegacyPropFragmentSerialization(slot, fragment, options);
   });
 }
 
-function adaptLegacyFragmentSerialization(
+function adaptLegacyPropFragmentSerialization(
   slot: string,
   fragment: LegacyRemoteFragmentSerialization,
   options?: LegacyRemoteChannelOptions,
