@@ -457,6 +457,96 @@ describe('adaptToLegacyRemoteChannel()', () => {
       ]);
     });
 
+    it('inserts a child with an id that already exists', () => {
+      const receiver = new TestRemoteReceiver();
+      const channel = adaptToLegacyRemoteChannel(receiver.connection);
+
+      channel(ACTION_MOUNT, [
+        {
+          id: '1',
+          kind: KIND_COMPONENT,
+          type: 'Banner',
+          props: {title: 'Title'},
+          children: [
+            {
+              id: '2',
+              kind: KIND_COMPONENT,
+              type: 'Button',
+              props: {},
+              children: [],
+            },
+            {
+              id: '3',
+              kind: KIND_TEXT,
+              text: 'I am a text',
+            },
+          ],
+        },
+      ]);
+
+      channel(
+        ACTION_INSERT_CHILD,
+        '1',
+        1,
+        {
+          id: '2',
+          kind: KIND_COMPONENT,
+          type: 'Button',
+          props: {},
+          children: [],
+        },
+        false,
+      );
+
+      expect(receiver.connection.mutate).toHaveBeenCalledWith([
+        [MUTATION_TYPE_REMOVE_CHILD, '1', 0],
+        [
+          MUTATION_TYPE_INSERT_CHILD,
+          '1',
+          {
+            id: '2',
+            type: NODE_TYPE_ELEMENT,
+            element: 'Button',
+            properties: {},
+            children: [],
+          },
+          1,
+        ],
+      ]);
+
+      expect(receiver.root.children).toStrictEqual([
+        {
+          id: '1',
+          type: NODE_TYPE_ELEMENT,
+          element: 'Banner',
+          children: [
+            {
+              id: '3',
+              type: NODE_TYPE_TEXT,
+              data: 'I am a text',
+              version: 0,
+            },
+            {
+              id: '2',
+              type: NODE_TYPE_ELEMENT,
+              element: 'Button',
+              children: [],
+              properties: {},
+              attributes: {},
+              eventListeners: {},
+              version: 0,
+            },
+          ],
+          properties: {
+            title: 'Title',
+          },
+          attributes: {},
+          eventListeners: {},
+          version: 2,
+        },
+      ]);
+    });
+
     it('inserts child with fragment props', () => {
       const receiver = new TestRemoteReceiver();
 

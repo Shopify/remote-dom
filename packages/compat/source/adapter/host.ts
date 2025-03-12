@@ -138,7 +138,7 @@ export function adaptToLegacyRemoteChannel(
     ...payload: LegacyActionArgumentMap[T]
   ) {
     switch (type) {
-      case LEGACY_ACTION_MOUNT:
+      case LEGACY_ACTION_MOUNT: {
         const [nodes] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_MOUNT];
 
@@ -155,21 +155,41 @@ export function adaptToLegacyRemoteChannel(
         mutate(records);
 
         break;
+      }
 
-      case LEGACY_ACTION_INSERT_CHILD:
-        const [parentId, index, child] =
+      case LEGACY_ACTION_INSERT_CHILD: {
+        const [parentId = ROOT_ID, index, child] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_INSERT_CHILD];
 
-        mutate([
-          [
-            MUTATION_TYPE_INSERT_CHILD,
-            parentId ?? ROOT_ID,
-            adaptLegacyNodeSerialization(child, options),
-            index,
-          ],
-        ]);
+        const records = [];
+
+        const parentNode = tree.get(parentId);
+
+        if (parentNode) {
+          const existingChildIndex = parentNode.findIndex(
+            ({id}) => id === child.id,
+          );
+
+          if (existingChildIndex >= 0) {
+            records.push([
+              MUTATION_TYPE_REMOVE_CHILD,
+              parentId,
+              existingChildIndex,
+            ] satisfies RemoteMutationRecord);
+          }
+        }
+
+        records.push([
+          MUTATION_TYPE_INSERT_CHILD,
+          parentId,
+          adaptLegacyNodeSerialization(child, options),
+          index,
+        ] satisfies RemoteMutationRecord);
+
+        mutate(records);
 
         break;
+      }
 
       case LEGACY_ACTION_REMOVE_CHILD: {
         const [parentID, removeIndex] =
