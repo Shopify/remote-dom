@@ -1,5 +1,13 @@
 # @remote-dom/compat
 
+## 1.0.2
+
+### Patch Changes
+
+- [#547](https://github.com/Shopify/remote-dom/pull/547) [`ca6a668`](https://github.com/Shopify/remote-dom/commit/ca6a66893f02eb4e7881a7117de5a461c7ae3708) Thanks [@igor10k](https://github.com/igor10k)! - Handle reordering in adapter
+
+- [#545](https://github.com/Shopify/remote-dom/pull/545) [`fe94f9b`](https://github.com/Shopify/remote-dom/commit/fe94f9b6e7087e1146fa2301b3d339c760c9d9a9) Thanks [@igor10k](https://github.com/igor10k)! - Handle fragments in adapter
+
 ## 1.0.1
 
 ### Patch Changes
