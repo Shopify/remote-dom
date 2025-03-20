@@ -4,7 +4,7 @@ export function customElement(name: string) {
     {addInitializer}: ClassDecoratorContext<Class>,
   ) => {
     addInitializer(function defineElement() {
-      customElements.define(name, this);
+      globalThis.customElements.define(name, this);
     });
   };
 }

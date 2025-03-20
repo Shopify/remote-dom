@@ -31,7 +31,7 @@ import type {RemoteConnection, RemoteMutationRecord} from '../types.ts';
  * // to the host environment.
  * observer.observe(document.body);
  */
-export class RemoteMutationObserver extends MutationObserver {
+export class RemoteMutationObserver extends globalThis.MutationObserver {
   constructor(private readonly connection: RemoteConnection) {
     super((records) => {
       const addedNodes: Node[] = [];
@@ -88,7 +88,7 @@ export class RemoteMutationObserver extends MutationObserver {
         } else if (
           record.type === 'attributes' &&
           record.attributeName != null &&
-          record.target instanceof Element &&
+          record.target instanceof globalThis.Element &&
           !record.target.tagName.includes('-')
         ) {
           remoteRecords.push([

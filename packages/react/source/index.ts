@@ -7,3 +7,4 @@ export type {
   RemoteComponentTypeFromElementConstructor,
   RemoteComponentPropsFromElementConstructor,
 } from './types.ts';
+export {patch} from './patch.ts';
