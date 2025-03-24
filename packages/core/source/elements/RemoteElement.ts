@@ -268,7 +268,7 @@ export abstract class RemoteElement<
   Methods extends Record<string, (...args: any[]) => any> = {},
   Slots extends Record<string, any> = {},
   EventListeners extends Record<string, any> = {},
-> extends globalThis.HTMLElement {
+> extends HTMLElement {
   static readonly slottable = true;
 
   static readonly remoteSlots?: any;

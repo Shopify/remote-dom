@@ -94,9 +94,7 @@ export function createRemoteComponent<
   Props extends Record<string, any> = {},
 >(
   tag: Tag,
-  Element: ElementConstructor | undefined = globalThis.customElements.get(
-    tag,
-  ) as any,
+  Element: ElementConstructor | undefined = customElements.get(tag) as any,
   {
     slotProps = true,
     eventProps = {} as any,

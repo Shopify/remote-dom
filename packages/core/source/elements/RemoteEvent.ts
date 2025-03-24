@@ -7,7 +7,7 @@
 export class RemoteEvent<
   Detail = unknown,
   Response = unknown,
-> extends globalThis.CustomEvent<Detail> {
+> extends CustomEvent<Detail> {
   /**
    * The last value received from a `respondWith()` call.
    */

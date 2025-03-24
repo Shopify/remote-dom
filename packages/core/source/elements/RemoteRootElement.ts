@@ -32,7 +32,7 @@ import {
  *
  * element.append('Hello world!');
  */
-export class RemoteRootElement extends globalThis.HTMLElement {
+export class RemoteRootElement extends HTMLElement {
   constructor() {
     super();
     REMOTE_IDS.set(this, ROOT_ID);

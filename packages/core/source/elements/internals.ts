@@ -60,7 +60,7 @@ export function remoteAttributes(node: Node) {
   if (attributes != null) return attributes;
 
   // Custom elements are expected to handle their own attribute updates
-  if (!(node instanceof globalThis.Element) || node.tagName.includes('-'))
+  if (!(node instanceof Element) || node.tagName.includes('-'))
     return undefined;
 
   attributes = {};

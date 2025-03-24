@@ -20,7 +20,7 @@ type DOMRemoteReceiverOptions = NonNullable<
  * console.log(element.connection); // RemoteConnection
  * ```
  */
-export class RemoteReceiverElement extends globalThis.HTMLElement {
+export class RemoteReceiverElement extends HTMLElement {
   /**
    * The `RemoteConnection` object that connects this element to a remote
    * tree of elements.
