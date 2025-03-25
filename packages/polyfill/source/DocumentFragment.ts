@@ -4,5 +4,5 @@ import {ParentNode} from './ParentNode.ts';
 export class DocumentFragment extends ParentNode {
   nodeType = NodeType.DOCUMENT_FRAGMENT_NODE;
   [NAME] = '#document-fragment';
-  [OWNER_DOCUMENT] = globalThis.document as any;
+  [OWNER_DOCUMENT] = window.document as any;
 }

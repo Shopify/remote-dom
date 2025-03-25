@@ -1,4 +1,8 @@
-export function patch(window: typeof globalThis) {
+export function patch(window: any) {
+  if (typeof window !== 'object' || window === null) {
+    return;
+  }
+
   const {HTMLElement, Element, location, navigator} = window;
 
   window.requestAnimationFrame =
