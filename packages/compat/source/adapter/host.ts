@@ -168,26 +168,52 @@ export function adaptToLegacyRemoteChannel(
 
         const parentNode = tree.get(parentId);
 
-        if (parentNode) {
-          const existingChildIndex = parentNode.findIndex(
-            ({id}) => id === child.id,
-          );
+        // switch to false to fix the memory management issue
+        const BROKEN_MEMORY_MANAGEMENT = true;
 
-          if (existingChildIndex >= 0) {
-            records.push([
-              MUTATION_TYPE_REMOVE_CHILD,
-              parentId,
-              existingChildIndex,
-            ] satisfies RemoteMutationRecord);
+        if (BROKEN_MEMORY_MANAGEMENT) {
+          if (parentNode) {
+            const existingChildIndex = parentNode.findIndex(
+              ({id}) => id === child.id,
+            );
+
+            if (existingChildIndex >= 0) {
+              records.push([
+                MUTATION_TYPE_REMOVE_CHILD,
+                parentId,
+                existingChildIndex,
+              ] satisfies RemoteMutationRecord);
+            }
+          }
+
+          records.push([
+            MUTATION_TYPE_INSERT_CHILD,
+            parentId,
+            adaptLegacyNodeSerialization(child, options),
+            index,
+          ] satisfies RemoteMutationRecord);
+        } else {
+          records.push([
+            MUTATION_TYPE_INSERT_CHILD,
+            parentId,
+            adaptLegacyNodeSerialization(child, options),
+            index + 1,
+          ] satisfies RemoteMutationRecord);
+
+          if (parentNode) {
+            const existingChildIndex = parentNode.findIndex(
+              ({id}) => id === child.id,
+            );
+
+            if (existingChildIndex >= 0) {
+              records.push([
+                MUTATION_TYPE_REMOVE_CHILD,
+                parentId,
+                existingChildIndex,
+              ] satisfies RemoteMutationRecord);
+            }
           }
         }
-
-        records.push([
-          MUTATION_TYPE_INSERT_CHILD,
-          parentId,
-          adaptLegacyNodeSerialization(child, options),
-          index,
-        ] satisfies RemoteMutationRecord);
 
         mutate(records);
 
