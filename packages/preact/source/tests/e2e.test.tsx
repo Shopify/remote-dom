@@ -21,7 +21,7 @@ import {matchers, type CustomMatchers} from '@quilted/preact-testing/matchers';
 import {
   RemoteMutationObserver,
   createRemoteElement,
-} from '@remote-dom/core/elements';
+} from '@mfalkenberg/remote-dom-core/elements';
 import {SignalRemoteReceiver} from '@remote-dom/signals';
 
 import {createRemoteComponent} from '../index.ts';

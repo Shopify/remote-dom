@@ -4,7 +4,6 @@ import {
   disconnectRemoteNode,
   serializeRemoteNode,
   REMOTE_IDS,
-  getStructuralMutationIndex,
 } from './internals.ts';
 import {
   ROOT_ID,
@@ -35,61 +34,30 @@ import type {RemoteConnection, RemoteMutationRecord} from '../types.ts';
 export class RemoteMutationObserver extends MutationObserver {
   constructor(private readonly connection: RemoteConnection) {
     super((records) => {
-      const addedNodes: Node[] = [];
       const remoteRecords: RemoteMutationRecord[] = [];
-      const netStructuralMutations = new Map<string, number>();
 
       for (const record of records) {
         const targetId = remoteId(record.target);
-
-        const targetsNetStructuralMutations =
-          netStructuralMutations.get(targetId) ?? 0;
-
         if (record.type === 'childList') {
-          const position = record.previousSibling
-            ? indexOf(record.previousSibling, record.target.childNodes) + 1
-            : 0;
 
           record.removedNodes.forEach((node) => {
             disconnectRemoteNode(node);
-
-            netStructuralMutations.set(
-              targetId,
-              targetsNetStructuralMutations + 1,
-            );
             remoteRecords.push([
               MUTATION_TYPE_REMOVE_CHILD,
               targetId,
-              position,
+              remoteId(node),
             ]);
           });
 
-          // A mutation observer will queue some changes, so we might get one record
-          // for attaching a parent element, and additional records for attaching descendants.
-          // We serialize the entire tree when a new node was added, so we don’t want to
-          // send additional “insert child” records when we see those descendants — they
-          // will already be included the insertion of the parent.
-          record.addedNodes.forEach((node, index) => {
-            if (
-              addedNodes.some((addedNode) => {
-                return addedNode === node || addedNode.contains(node);
-              })
-            ) {
-              return;
-            }
-
-            addedNodes.push(node);
+          record.addedNodes.forEach((node) => {
             connectRemoteNode(node, connection);
-
-            netStructuralMutations.set(
-              targetId,
-              targetsNetStructuralMutations - 1,
-            );
             remoteRecords.push([
               MUTATION_TYPE_INSERT_CHILD,
               targetId,
               serializeRemoteNode(node),
-              position + index,
+              record.previousSibling
+                ? remoteId(record.previousSibling)
+                : "0",
             ]);
           });
         } else if (record.type === 'characterData') {
@@ -113,25 +81,8 @@ export class RemoteMutationObserver extends MutationObserver {
         }
       }
 
-      const hasCompensatedStructuralMutations = Array.from(
-        netStructuralMutations.values(),
-      ).includes(0);
-
-      if (hasCompensatedStructuralMutations) {
-        this.sortStructuralMutations(remoteRecords);
-      }
-
       connection.mutate(remoteRecords);
     });
-  }
-
-  /**
-   * See this issue why sorting is required: https://github.com/Shopify/remote-dom/issues/519
-   */
-  private sortStructuralMutations(records: RemoteMutationRecord[]) {
-    records.sort(
-      (l, r) => getStructuralMutationIndex(l) - getStructuralMutationIndex(r),
-    );
   }
 
   /**
@@ -155,6 +106,7 @@ export class RemoteMutationObserver extends MutationObserver {
 
     if (options?.initial !== false && target.childNodes.length > 0) {
       const records: RemoteMutationRecord[] = [];
+      let prevChild = undefined;
 
       for (let i = 0; i < target.childNodes.length; i++) {
         const node = target.childNodes[i]!;
@@ -164,8 +116,10 @@ export class RemoteMutationObserver extends MutationObserver {
           MUTATION_TYPE_INSERT_CHILD,
           ROOT_ID,
           serializeRemoteNode(node),
-          i,
+          prevChild ? remoteId(prevChild) : "0",
         ]);
+
+        prevChild = node;
       }
 
       this.connection.mutate(records);
@@ -179,12 +133,4 @@ export class RemoteMutationObserver extends MutationObserver {
       ...options,
     });
   }
-}
-
-function indexOf(node: Node, list: NodeList) {
-  for (let i = 0; i < list.length; i++) {
-    if (list[i] === node) return i;
-  }
-
-  return -1;
 }

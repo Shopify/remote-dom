@@ -7,6 +7,6 @@
     "start": "vite"
   },
   "dependencies": {
-    "@remote-dom/core": "workspace:*"
+    "@mfalkenberg/remote-dom-core": "workspace:*"
   }
 }

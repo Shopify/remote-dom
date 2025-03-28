@@ -3,7 +3,7 @@ import type {
   RemoteReceiver,
   RemoteReceiverNode,
   RemoteReceiverRoot,
-} from '@remote-dom/core/receivers';
+} from '@mfalkenberg/remote-dom-core/receivers';
 
 interface ReceivedState<T extends RemoteReceiverNode | RemoteReceiverRoot> {
   receiver: RemoteReceiver;

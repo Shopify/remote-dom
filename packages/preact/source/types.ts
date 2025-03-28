@@ -4,7 +4,7 @@ import type {
   RemotePropertiesFromElementConstructor,
   RemoteMethodsFromElementConstructor,
   RemoteSlotsFromElementConstructor,
-} from '@remote-dom/core/elements';
+} from '@mfalkenberg/remote-dom-core/elements';
 
 /**
  * The props that will be passed to a Preact component when it is rendered

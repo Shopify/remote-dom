@@ -2,7 +2,7 @@ import type {ComponentType} from 'react';
 import type {
   RemoteReceiver,
   RemoteReceiverElement,
-} from '@remote-dom/core/receivers';
+} from '@mfalkenberg/remote-dom-core/receivers';
 
 /**
  * The context needed to render a remote node on the host.

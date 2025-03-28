@@ -1,4 +1,4 @@
-import type {RemoteReceiverText} from '@remote-dom/core/receivers';
+import type {RemoteReceiverText} from '@mfalkenberg/remote-dom-core/receivers';
 
 import {useRemoteReceived} from './hooks/remote-received.ts';
 import type {RemoteNodeRenderOptions} from './types.ts';

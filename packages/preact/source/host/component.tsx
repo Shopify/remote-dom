@@ -1,6 +1,6 @@
 import type {ComponentType} from 'preact';
 import {memo, useRef, useEffect, type MutableRefObject} from 'preact/compat';
-import type {RemoteReceiverElement} from '@remote-dom/core/receivers';
+import type {RemoteReceiverElement} from '@mfalkenberg/remote-dom-core/receivers';
 
 import {
   usePropsForRemoteElement,

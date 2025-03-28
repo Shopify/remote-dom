@@ -33,7 +33,7 @@ export type RemoteMutationRecordInsertChild = [
   /**
    * The index in the parents’ children to insert the new child.
    */
-  index: number,
+  index: string,
 ];
 
 /**
@@ -50,7 +50,7 @@ export type RemoteMutationRecordRemoveChild = [
   /**
    * The index of the child to remove.
    */
-  index: number,
+  index: string,
 ];
 
 /**

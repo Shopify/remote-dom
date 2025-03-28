@@ -2,7 +2,7 @@ import {
   NODE_TYPE_ELEMENT,
   NODE_TYPE_TEXT,
   NODE_TYPE_COMMENT,
-} from '@remote-dom/core';
+} from '@mfalkenberg/remote-dom-core';
 import type {SignalRemoteReceiverNode} from '@remote-dom/signals';
 
 import type {RemoteNodeRenderOptions} from './types.ts';

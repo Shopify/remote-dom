@@ -20,8 +20,9 @@ import {
   type RemoteTextSerialization,
   type RemoteCommentSerialization,
   type RemoteElementSerialization,
-} from '@remote-dom/core';
-import type {RemoteReceiverOptions} from '@remote-dom/core/receivers';
+} from '@mfalkenberg/remote-dom-core';
+import type {RemoteReceiverOptions} from '@mfalkenberg/remote-dom-core/receivers';
+import {getPosition} from '@mfalkenberg/remote-dom-core/utils';
 
 /**
  * Represents a text node of a remote tree in a plain JavaScript format, with
@@ -150,26 +151,27 @@ export class SignalRemoteReceiver {
 
         return implementationMethod(...args);
       },
-      insertChild: (id, child, index) => {
+      insertChild: (id, child, parentRemoteId) => {
         const parent = attached.get(id) as SignalRemoteReceiverParent;
         const newChildren = [...parent.children.peek()];
 
+        const position = getPosition(newChildren, parentRemoteId) + 1;
         const normalizedChild = attach(child, parent);
 
-        if (index === newChildren.length) {
+        if (position === newChildren.length) {
           newChildren.push(normalizedChild);
         } else {
-          newChildren.splice(index, 0, normalizedChild);
+          newChildren.splice(position, 0, normalizedChild);
         }
 
         (parent.children as any).value = newChildren;
       },
-      removeChild: (id, index) => {
+      removeChild: (id, remoteId) => {
         const parent = attached.get(id) as SignalRemoteReceiverParent;
 
         const newChildren = [...parent.children.peek()];
-
-        const [removed] = newChildren.splice(index, 1);
+        const position = getPosition(newChildren, remoteId);
+        const [removed] = newChildren.splice(position, 1);
 
         (parent.children as any).value = newChildren;
 

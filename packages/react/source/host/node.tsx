@@ -1,4 +1,4 @@
-import {type RemoteReceiverNode} from '@remote-dom/core/receivers';
+import {type RemoteReceiverNode} from '@mfalkenberg/remote-dom-core/receivers';
 
 import {RemoteTextRenderer} from './RemoteTextRenderer.tsx';
 import type {RemoteNodeRenderOptions} from './types.ts';

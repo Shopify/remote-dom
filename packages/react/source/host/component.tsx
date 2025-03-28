@@ -1,4 +1,4 @@
-import type {RemoteReceiverElement} from '@remote-dom/core/receivers';
+import type {RemoteReceiverElement} from '@mfalkenberg/remote-dom-core/receivers';
 import {
   memo,
   useRef,

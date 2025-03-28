@@ -51,6 +51,13 @@
       "quilt:esnext": "./build/esnext/receivers.esnext",
       "import": "./build/esm/receivers.mjs",
       "require": "./build/cjs/receivers.cjs"
+    },
+    "./utils": {
+      "types": "./build/typescript/utils.d.ts",
+      "quilt:source": "./source/utils.ts",
+      "quilt:esnext": "./build/esnext/utils.esnext",
+      "import": "./build/esm/utils.mjs",
+      "require": "./build/cjs/utils.cjs"
     }
   },
   "types": "./build/typescript/index.d.ts",

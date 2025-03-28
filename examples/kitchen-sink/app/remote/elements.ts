@@ -3,7 +3,7 @@ import {
   RemoteRootElement,
   RemoteFragmentElement,
   type RemoteEvent,
-} from '@remote-dom/core/elements';
+} from '@mfalkenberg/remote-dom-core/elements';
 
 import type {
   TextProperties,

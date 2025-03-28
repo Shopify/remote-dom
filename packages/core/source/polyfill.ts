@@ -19,7 +19,7 @@ const hooks = window[HOOKS];
 
 Window.setGlobal(window);
 
-hooks.insertChild = (parent, node, index) => {
+hooks.insertChild = (parent, node) => {
   const connection = remoteConnection(parent);
   if (connection == null) return;
 
@@ -30,18 +30,18 @@ hooks.insertChild = (parent, node, index) => {
       MUTATION_TYPE_INSERT_CHILD,
       remoteId(parent),
       serializeRemoteNode(node),
-      index,
+      remoteId(node),
     ],
   ]);
 };
 
-hooks.removeChild = (parent, node, index) => {
+hooks.removeChild = (parent, node) => {
   const connection = remoteConnection(parent);
   if (connection == null) return;
 
   disconnectRemoteNode(node);
 
-  connection.mutate([[MUTATION_TYPE_REMOVE_CHILD, remoteId(parent), index]]);
+  connection.mutate([[MUTATION_TYPE_REMOVE_CHILD, remoteId(parent), remoteId(node)]]);
 };
 
 hooks.setText = (text, data) => {

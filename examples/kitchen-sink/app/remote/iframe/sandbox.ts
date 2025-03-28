@@ -1,4 +1,4 @@
-import {RemoteMutationObserver} from '@remote-dom/core/elements';
+import {RemoteMutationObserver} from '@mfalkenberg/remote-dom-core/elements';
 import {ThreadNestedIframe} from '@quilted/threads';
 
 import '../elements.ts';

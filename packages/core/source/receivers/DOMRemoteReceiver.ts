@@ -10,6 +10,7 @@ import {
 } from '../constants.ts';
 import type {RemoteNodeSerialization} from '../types.ts';
 import type {RemoteReceiverOptions} from './shared.ts';
+import {getPosition} from '../utils';
 
 const REMOTE_IDS = new WeakMap<Node, string>();
 const REMOTE_PROPERTIES = new WeakMap<Node, Record<string, any>>();
@@ -105,17 +106,20 @@ export class DOMRemoteReceiver {
           ? call(element as any, method, ...args)
           : (element as any)[method](...args);
       },
-      insertChild: (id, child, index) => {
+      insertChild: (id, child, parentRemoteId) => {
         const parent = id === ROOT_ID ? this.root : attached.get(id)!;
+        const position = getPosition(parent, parentRemoteId) + 1;
 
         const existingTimeout = destroyTimeouts.get(id);
         if (existingTimeout) clearTimeout(existingTimeout);
 
-        parent.insertBefore(attach(child), parent.childNodes[index] || null);
+        parent.insertBefore(attach(child), parent.childNodes[position === -1 ? 0 : position] || null);
       },
-      removeChild: (id, index) => {
+      removeChild: (id, remoteId) => {
         const parent = id === ROOT_ID ? this.root : attached.get(id)!;
-        const child = parent.childNodes[index]!;
+
+        const position = getPosition(parent, remoteId);
+        const child = parent.childNodes[position]!;
         child.remove();
 
         if (cache?.maxAge) {

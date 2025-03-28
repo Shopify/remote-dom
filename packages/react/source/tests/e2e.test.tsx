@@ -20,8 +20,8 @@ import {matchers, type CustomMatchers} from '@quilted/react-testing/matchers';
 import {
   RemoteMutationObserver,
   createRemoteElement,
-} from '@remote-dom/core/elements';
-import {RemoteReceiver} from '@remote-dom/core/receivers';
+} from '@mfalkenberg/remote-dom-core/elements';
+import {RemoteReceiver} from '@mfalkenberg/remote-dom-core/receivers';
 
 import {createRemoteComponent} from '../index.ts';
 import {

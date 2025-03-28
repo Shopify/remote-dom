@@ -1,4 +1,4 @@
-import {html} from '@remote-dom/core/html';
+import {html} from '@mfalkenberg/remote-dom-core/html';
 
 import type {RenderAPI} from '../../types.ts';
 import type {Modal, Text} from '../elements.ts';

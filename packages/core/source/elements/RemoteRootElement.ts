@@ -7,6 +7,7 @@ import {
   serializeRemoteNode,
   updateRemoteElementProperty,
   callRemoteElementMethod,
+  remoteId,
   REMOTE_IDS,
 } from './internals.ts';
 
@@ -46,6 +47,7 @@ export class RemoteRootElement extends HTMLElement {
     if (this.childNodes.length === 0) return;
 
     const records: RemoteMutationRecord[] = [];
+    let prevChild = undefined;
 
     for (let i = 0; i < this.childNodes.length; i++) {
       const node = this.childNodes[i]!;
@@ -54,8 +56,9 @@ export class RemoteRootElement extends HTMLElement {
         MUTATION_TYPE_INSERT_CHILD,
         ROOT_ID,
         serializeRemoteNode(node),
-        i,
+        prevChild ? remoteId(prevChild) : "0",
       ]);
+      prevChild = node;
     }
 
     connection.mutate(records);

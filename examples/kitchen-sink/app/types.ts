@@ -1,4 +1,3 @@
-import type {RemoteConnection} from '@remote-dom/core';
 
 /**
  * Describes the technology used to sandbox the “remote” code, so that it does
@@ -55,7 +54,7 @@ export interface RenderAPI {
  *
  */
 export interface SandboxAPI {
-  render(connection: RemoteConnection, api: RenderAPI): Promise<unknown>;
+  render(connection: any, api: RenderAPI): Promise<unknown>;
 }
 
 // These property and method types will be used by both the host and remote environments.

@@ -307,11 +307,3 @@ export function callRemoteElementMethod(
 
   return connection.call(id, method, ...args);
 }
-
-export function getStructuralMutationIndex(record: RemoteMutationRecord) {
-  return record[0] === MUTATION_TYPE_INSERT_CHILD
-    ? record[3]
-    : record[0] === MUTATION_TYPE_REMOVE_CHILD
-      ? record[2]
-      : -1;
-}

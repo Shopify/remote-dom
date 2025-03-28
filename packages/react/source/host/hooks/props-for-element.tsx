@@ -1,4 +1,4 @@
-import type {RemoteReceiverElement} from '@remote-dom/core/receivers';
+import type {RemoteReceiverElement} from '@mfalkenberg/remote-dom-core/receivers';
 
 import {renderRemoteNode} from '../node.tsx';
 import type {RemoteNodeRenderOptions} from '../types.ts';

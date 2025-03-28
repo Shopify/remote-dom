@@ -10,7 +10,7 @@ import type {
   RemoteElement,
   RemoteElementConstructor,
   RemoteEventListenersFromElementConstructor,
-} from '@remote-dom/core/elements';
+} from '@mfalkenberg/remote-dom-core/elements';
 
 import type {
   RemoteComponentTypeFromElementConstructor,
