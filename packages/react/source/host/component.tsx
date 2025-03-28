@@ -85,7 +85,7 @@ export function createRemoteComponentRenderer<
     receiver,
     components,
   }: RemoteComponentRendererProps) {
-    const internalsRef = useRef<Internals>();
+    const internalsRef = useRef<Internals>(null);
 
     const attachedElement = useRemoteReceived(element, receiver);
     const resolvedElement = attachedElement ?? element;

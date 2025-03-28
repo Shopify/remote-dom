@@ -29,7 +29,7 @@ import {
   type RemoteConnection,
   type RemoteNodeSerialization,
   type RemoteCommentSerialization,
-} from '@remote-dom/core';
+} from '@mfalkenberg/remote-dom-core';
 
 export interface LegacyRemoteChannelElementMap {
   [key: string]: string;

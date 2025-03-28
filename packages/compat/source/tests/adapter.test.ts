@@ -24,9 +24,9 @@ import {
   NODE_TYPE_TEXT,
   NODE_TYPE_COMMENT,
   ROOT_ID,
-} from '@remote-dom/core';
+} from '@mfalkenberg/remote-dom-core';
 
-import {RemoteReceiver} from '@remote-dom/core/receivers';
+import {RemoteReceiver} from '@mfalkenberg/remote-dom-core/receivers';
 
 describe('adaptToLegacyRemoteChannel()', () => {
   describe('ACTION_MOUNT', () => {

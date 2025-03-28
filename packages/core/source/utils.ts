@@ -2,7 +2,7 @@
 
 export function getPosition(childrenOrNode: ArrayLike<unknown> | Node, remoteId: string) {
   const children = childrenOrNode instanceof Node ? childrenOrNode.childNodes : childrenOrNode;
-  const position = Array.from(children).findIndex((c) => {
+  return Array.from(children).findIndex((c) => {
     if(!c || typeof c !== "object") {
       return;
     }
@@ -14,7 +14,4 @@ export function getPosition(childrenOrNode: ArrayLike<unknown> | Node, remoteId:
       return c.id === remoteId
     }
   });
-
-
-  return position === -1 ? 0 : position;
 }

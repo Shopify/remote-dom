@@ -122,8 +122,8 @@ export function createRemoteComponent<
       InstanceType<ElementConstructor>,
       RemoteComponentPropsFromElementConstructor<ElementConstructor>
     >(function RemoteComponent(props, ref) {
-      const internalRef = useRef<any>();
-      const lastRemotePropertiesRef = useRef<Record<string, any>>();
+      const internalRef = useRef<any>(null);
+      const lastRemotePropertiesRef = useRef<Record<string, any>>(null);
 
       const remoteProperties: Record<string, any> = {};
       const children = toChildren(props.children);

@@ -118,7 +118,9 @@ export class DOMRemoteReceiver {
       removeChild: (id, remoteId) => {
         const parent = id === ROOT_ID ? this.root : attached.get(id)!;
 
-        const position = getPosition(parent, remoteId);
+        let position = getPosition(parent, remoteId);
+        position = position === -1 ? 0 : position;
+
         const child = parent.childNodes[position]!;
         child.remove();
 

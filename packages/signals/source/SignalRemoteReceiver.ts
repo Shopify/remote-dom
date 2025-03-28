@@ -170,7 +170,10 @@ export class SignalRemoteReceiver {
         const parent = attached.get(id) as SignalRemoteReceiverParent;
 
         const newChildren = [...parent.children.peek()];
-        const position = getPosition(newChildren, remoteId);
+
+        let position = getPosition(newChildren, remoteId);
+        position = position === -1 ? 0 : position;
+
         const [removed] = newChildren.splice(position, 1);
 
         if (!removed) {

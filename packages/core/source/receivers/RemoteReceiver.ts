@@ -184,7 +184,9 @@ export class RemoteReceiver {
         const parent = attached.get(id) as Writable<RemoteReceiverParent>;
         const {children} = parent;
 
-        const position = getPosition(children, remoteId);
+        let position = getPosition(children, remoteId);
+        position = position === -1 ? 0 : position
+
         const [removed] = (children as Writable<typeof children>).splice(
           position,
           1,
