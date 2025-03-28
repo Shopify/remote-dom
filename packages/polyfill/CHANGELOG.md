@@ -1,5 +1,11 @@
 # @remote-dom/polyfill
 
+## 1.4.3
+
+### Patch Changes
+
+- [#541](https://github.com/Shopify/remote-dom/pull/541) [`f42f535`](https://github.com/Shopify/remote-dom/commit/f42f535fb08ace5ba9a4332f39b49281fd0880f3) Thanks [@developit](https://github.com/developit)! - fix typo in previousElementSibling
+
 ## 1.4.2
 
 ### Patch Changes

@@ -189,10 +189,15 @@ export class RemoteReceiver {
           position,
           1,
         );
+
+        if (!removed) {
+          return;
+        }
+
         parent.version += 1;
 
         runSubscribers(parent);
-        detach(removed!);
+        detach(removed);
       },
       updateProperty: (
         id,

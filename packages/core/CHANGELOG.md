@@ -1,5 +1,23 @@
 # @remote-dom/core
 
+## 1.7.0
+
+### Minor Changes
+
+- [#533](https://github.com/Shopify/remote-dom/pull/533) [`a9a88ab`](https://github.com/Shopify/remote-dom/commit/a9a88abe4ba81b253f0cc6cdd5e82a25bbe908c1) Thanks [@igor10k](https://github.com/igor10k)! - Make `removeChild` less strict in receivers
+
+## 1.6.1
+
+### Patch Changes
+
+- [#528](https://github.com/Shopify/remote-dom/pull/528) [`df294ab`](https://github.com/Shopify/remote-dom/commit/df294abad5522110e031e5b3e2a978871aa703fb) Thanks [@brianshen1990](https://github.com/brianshen1990)! - return early if falling back to setTimeout for MessageChannel
+
+## 1.6.0
+
+### Minor Changes
+
+- [#526](https://github.com/Shopify/remote-dom/pull/526) [`8cbf2c2`](https://github.com/Shopify/remote-dom/commit/8cbf2c2a6130dd0a19088a2adf18b506f468be8b) Thanks [@robin-drexler](https://github.com/robin-drexler)! - add flush method to BatchingRemoteConnection
+
 ## 1.5.2
 
 ### Patch Changes

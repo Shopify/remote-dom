@@ -1,20 +1,19 @@
 {
-  "name": "@remote-dom/polyfill",
+  "name": "@remote-dom/compat",
   "type": "module",
   "license": "MIT",
-  "description": "A polyfill for the browser APIs used by Remote DOM",
   "publishConfig": {
     "access": "public",
     "@remote-dom/registry": "https://registry.npmjs.org"
   },
-  "version": "1.4.3",
+  "version": "1.0.2",
   "engines": {
     "node": ">=14.0.0"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/Shopify/remote-dom",
-    "directory": "packages/polyfill"
+    "directory": "packages/compat"
   },
   "exports": {
     ".": {
@@ -26,9 +25,12 @@
     }
   },
   "types": "./build/typescript/index.d.ts",
-  "sideEffects": false,
   "scripts": {
     "build": "rollup --config ./rollup.config.js"
+  },
+  "dependencies": {
+    "@remote-dom/core": "workspace:^1.7.0",
+    "@remote-ui/core": "^2.0.0"
   },
   "browserslist": [
     "defaults and not dead"

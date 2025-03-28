@@ -1,5 +1,25 @@
 # @remote-dom/preact
 
+## 1.3.0
+
+### Minor Changes
+
+- [#538](https://github.com/Shopify/remote-dom/pull/538) [`88d4956`](https://github.com/Shopify/remote-dom/commit/88d495608de6913a084b46384aaa19a6d9e599fb) Thanks [@igor10k](https://github.com/igor10k)! - Bump signals dependency
+
+## 1.2.3
+
+### Patch Changes
+
+- [#536](https://github.com/Shopify/remote-dom/pull/536) [`9abf5be`](https://github.com/Shopify/remote-dom/commit/9abf5bee323dfa522f9061ba61ce2f433a36cb4e) Thanks [@igor10k](https://github.com/igor10k)! - Use the same core dependency version for all packages
+
+## 1.2.2
+
+### Patch Changes
+
+- Updated dependencies [[`8cbf2c2`](https://github.com/Shopify/remote-dom/commit/8cbf2c2a6130dd0a19088a2adf18b506f468be8b)]:
+  - @remote-dom/core@1.6.0
+  - @remote-dom/signals@2.0.0
+
 ## 1.2.1
 
 ### Patch Changes

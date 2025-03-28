@@ -2,17 +2,20 @@
   "name": "example-kitchen-sink",
   "type": "module",
   "private": true,
-  "version": "0.0.19",
+  "version": "0.0.25",
   "scripts": {
     "start": "vite"
   },
   "dependencies": {
     "@preact/signals": "^1.3.0",
     "@quilted/threads": "^3.0.0",
+    "@remote-dom/compat": "workspace:*",
     "@mfalkenberg/remote-dom-core": "workspace:*",
     "@remote-dom/preact": "workspace:*",
     "@remote-dom/react": "workspace:*",
     "@remote-dom/signals": "workspace:*",
+    "@remote-ui/core": "^2.2.4",
+    "@remote-ui/react": "^5.0.4",
     "preact": "^10.22.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",

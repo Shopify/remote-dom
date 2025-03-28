@@ -23,5 +23,5 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
-          build_script: pnpm build
+          build_script: pnpm build:snapit
           comment_command: /snapit

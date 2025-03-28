@@ -15,8 +15,8 @@ importers:
         specifier: ^2.27.0
         version: 2.27.7
       '@playwright/test':
-        specifier: ^1.48.2
-        version: 1.48.2
+        specifier: ^1.49.0
+        version: 1.49.0
       '@quilted/rollup':
         specifier: ^0.2.45
         version: 0.2.45(@babel/template@7.25.0)(@babel/traverse@7.25.6)(@babel/types@7.25.6)(@types/babel__core@7.20.5)(rollup@4.21.2)
@@ -33,8 +33,8 @@ importers:
         specifier: ^25.0.0
         version: 25.0.0
       playwright:
-        specifier: ^1.48.2
-        version: 1.48.2
+        specifier: ^1.49.0
+        version: 1.49.0
       prettier:
         specifier: ^3.3.3
         version: 3.3.3
@@ -56,30 +56,33 @@ importers:
 
   examples/custom-element:
     dependencies:
-      '@mfalkenberg/remote-dom-core':
-        specifier: workspace:*
-        version: link:../../packages/core
       '@quilted/threads':
         specifier: ^3.0.0
         version: 3.0.0(@preact/signals-core@1.8.0)
+      '@remote-dom/core':
+        specifier: workspace:*
+        version: link:../../packages/core
 
   examples/getting-started:
     dependencies:
-      '@mfalkenberg/remote-dom-core':
+      '@remote-dom/core':
         specifier: workspace:*
         version: link:../../packages/core
 
   examples/kitchen-sink:
     dependencies:
-      '@mfalkenberg/remote-dom-core':
-        specifier: workspace:*
-        version: link:../../packages/core
       '@preact/signals':
         specifier: ^1.3.0
         version: 1.3.0(preact@10.22.1)
       '@quilted/threads':
         specifier: ^3.0.0
         version: 3.0.0(@preact/signals-core@1.8.0)
+      '@remote-dom/compat':
+        specifier: workspace:*
+        version: link:../../packages/compat
+      '@remote-dom/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@remote-dom/preact':
         specifier: workspace:*
         version: link:../../packages/preact
@@ -89,6 +92,12 @@ importers:
       '@remote-dom/signals':
         specifier: workspace:*
         version: link:../../packages/signals
+      '@remote-ui/core':
+        specifier: ^2.2.4
+        version: 2.2.4
+      '@remote-ui/react':
+        specifier: ^5.0.4
+        version: 5.0.4(react-reconciler@0.28.0(react@18.3.1))(react@18.3.1)
       preact:
         specifier: ^10.22.0
         version: 10.22.1
@@ -127,11 +136,20 @@ importers:
         specifier: ^5.4.0
         version: 5.4.2(@types/node@20.11.16)(lightningcss@1.22.1)
 
+  packages/compat:
+    dependencies:
+      '@remote-dom/core':
+        specifier: workspace:^1.7.0
+        version: link:../core
+      '@remote-ui/core':
+        specifier: ^2.0.0
+        version: 2.2.4
+
   packages/core:
     dependencies:
       '@remote-dom/polyfill':
-        specifier: ^1.4.2
-        version: 1.4.3
+        specifier: workspace:^1.4.2
+        version: link:../polyfill
       htm:
         specifier: ^3.1.1
         version: 3.1.1
@@ -147,11 +165,11 @@ importers:
 
   packages/preact:
     dependencies:
-      '@mfalkenberg/remote-dom-core':
-        specifier: workspace:*
+      '@remote-dom/core':
+        specifier: workspace:^1.7.0
         version: link:../core
       '@remote-dom/signals':
-        specifier: workspace:^1.1.1
+        specifier: workspace:^2.1.0
         version: link:../signals
       htm:
         specifier: ^3.1.1
@@ -172,8 +190,8 @@ importers:
 
   packages/react:
     dependencies:
-      '@mfalkenberg/remote-dom-core':
-        specifier: workspace:*
+      '@remote-dom/core':
+        specifier: workspace:^1.7.0
         version: link:../core
       '@types/react':
         specifier: ^18.0.0
@@ -196,10 +214,11 @@ importers:
         version: 18.3.1(react@18.3.1)
 
   packages/signals:
-    devDependencies:
-      '@mfalkenberg/remote-dom-core':
-        specifier: workspace:*
+    dependencies:
+      '@remote-dom/core':
+        specifier: workspace:^1.7.0
         version: link:../core
+    devDependencies:
       '@preact/signals-core':
         specifier: ^1.8.0
         version: 1.8.0
@@ -1279,8 +1298,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@playwright/test@1.48.2':
-    resolution: {integrity: sha512-54w1xCWfXuax7dz4W2M9uw0gDyh+ti/0K/MxcCUxChFh37kkdxPdfZDw5QBbuPUJHr1CiHJ1hXgSs+GgeQc5Zw==}
+  '@playwright/test@1.49.0':
+    resolution: {integrity: sha512-DMulbwQURa8rNIQrf94+jPJQ4FmOVdpE5ZppRNvWVjvhC+6sOeo28r8MgIpQRYouXRtt/FCCXU7zn20jnHR4Qw==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -1417,9 +1436,26 @@ packages:
       vitest:
         optional: true
 
-  '@remote-dom/polyfill@1.4.3':
-    resolution: {integrity: sha512-OxgDf8E+xEixw74L8wXJai2uopmHVCqGfl9I/a3nVwSNijUEXQmuHuTLtKHP+tHBjhHYvzS55vzJvJ8Uyul0Hg==}
-    engines: {node: '>=14.0.0'}
+  '@remote-ui/async-subscription@2.1.15':
+    resolution: {integrity: sha512-SdPfO4ExDOVyOPAoCqT9+Tk0UeU97EMplkxlr5qiv3W7c1yRsxgtbETicoBh9l/P49bLzVjiJG6CQIu1au3Vhw==}
+
+  '@remote-ui/core@2.2.4':
+    resolution: {integrity: sha512-7ahrsI5GqYvAGcWTcysbKFKbzbhB/mDgIJr9VurF34gor2IqRCrmrPYemLQuOCQhWqPb3AOEUxWFYNLiB5i6kA==}
+
+  '@remote-ui/react@5.0.4':
+    resolution: {integrity: sha512-zrewan3KqKHW8HOCgnpHduG4Ldqyh9ysouGIv8VeE0PlC03eCqi2MFzA+nKIJ1p58LIAbPQ1asp+RwT6ImVImg==}
+    peerDependencies:
+      react: '>=17.0.0 <19.0.0'
+      react-reconciler: '>=0.26.0 <0.30.0'
+    peerDependenciesMeta:
+      react-reconciler:
+        optional: true
+
+  '@remote-ui/rpc@1.4.5':
+    resolution: {integrity: sha512-Cr+06niG/vmE4A9YsmaKngRuuVSWKMY42NMwtZfy+gctRWGu6Wj9BWuMJg5CEp+JTkRBPToqT5rqnrg1G/Wvow==}
+
+  '@remote-ui/types@1.1.3':
+    resolution: {integrity: sha512-P1kN1F3p0oMgnLN8Of1Ie9am3sLvJ7nhqHH1pvzkrxqjVwhhyPVZNcwOHyUNZPKp62izhDavdrcnqrdXzVJqGA==}
 
   '@rollup/plugin-alias@5.0.1':
     resolution: {integrity: sha512-JObvbWdOHoMy9W7SU0lvGhDtWq9PllP5mjpAy+TUslZG/WzOId9u80Hsqq1vCUn9pFJ0cxpdcnAv+QzU2zFH3Q==}
@@ -1628,6 +1664,9 @@ packages:
 
   '@types/react-dom@18.3.0':
     resolution: {integrity: sha512-EhwApuTmMBmXuFOikhQLIBUn6uFg81SwLMOAUgodJF14SOBOCMdU04gDoYi0WOJJHD144TL32z4yDqCW3dnkQg==}
+
+  '@types/react-reconciler@0.28.8':
+    resolution: {integrity: sha512-SN9c4kxXZonFhbX4hJrZy37yw9e7EIxcpHCxQv5JUS18wDE5ovkQKlqQEkufdJCCMfuI9BnjUJvhYeJ9x5Ra7g==}
 
   '@types/react@18.3.5':
     resolution: {integrity: sha512-WeqMfGJLGuLCqHGYRGHxnKrXcTitc6L/nBUWfWPcTarG3t9PsquqUMuVeXZeca+mglY4Vo5GZjCi0A3Or2lnxA==}
@@ -2711,13 +2750,13 @@ packages:
   pkg-types@1.0.3:
     resolution: {integrity: sha512-nN7pYi0AQqJnoLPC9eHFQ8AcyaixBUOwvqc5TDnIKCMEE6I0y8P7OKA7fPexsXGCGxQDl/cmrLAp26LhcwxZ4A==}
 
-  playwright-core@1.48.2:
-    resolution: {integrity: sha512-sjjw+qrLFlriJo64du+EK0kJgZzoQPsabGF4lBvsid+3CNIZIYLgnMj9V6JY5VhM2Peh20DJWIVpVljLLnlawA==}
+  playwright-core@1.49.0:
+    resolution: {integrity: sha512-R+3KKTQF3npy5GTiKH/T+kdhoJfJojjHESR1YEWhYuEKRVfVaxH3+4+GvXE5xyCngCxhxnykk0Vlah9v8fs3jA==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.48.2:
-    resolution: {integrity: sha512-NjYvYgp4BPmiwfe31j4gHLa3J7bD2WiBz8Lk2RoSsmX38SVIARZ18VYjxLjAcDsAhA+F4iSEXTSGgjua0rrlgQ==}
+  playwright@1.49.0:
+    resolution: {integrity: sha512-eKpmys0UFDnfNb3vfsf8Vx2LEOtflgRebl0Im2eQQnYMA4Aqd+Zw8bEOB+7ZKvN76901mRnqdsiOGKxzVTbi7A==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -2783,6 +2822,12 @@ packages:
 
   react-is@18.2.0:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
+
+  react-reconciler@0.28.0:
+    resolution: {integrity: sha512-sGIHDOpgVjRYgsi8NgosDnbkDvvkYFFSF900ZUhUw0+lSBEA5n76TcKFaVkfYMIuYm+7W6mT8Q673DLBfuTxcQ==}
+    engines: {node: '>=0.10.0'}
+    peerDependencies:
+      react: ^18.1.0
 
   react-refresh@0.14.2:
     resolution: {integrity: sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA==}
@@ -2886,6 +2931,9 @@ packages:
   saxes@6.0.0:
     resolution: {integrity: sha512-xAg7SOnEhrm5zI3puOOKyy1OMcMlIJZYNJY7xLBwSze0UjhPLnWfj2GF2EpT0jmzaJKIWKHLsaSSajf35bcYnA==}
     engines: {node: '>=v12.22.7'}
+
+  scheduler@0.22.0:
+    resolution: {integrity: sha512-6QAm1BgQI88NPYymgGQLCZgvep4FyePDWFpXVK+zNSUgHwlqpJy8VEh8Et0KxTACS4VWwMousBElAZOH9nkkoQ==}
 
   scheduler@0.23.2:
     resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
@@ -4577,9 +4625,9 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/test@1.48.2':
+  '@playwright/test@1.49.0':
     dependencies:
-      playwright: 1.48.2
+      playwright: 1.49.0
 
   '@preact/preset-vite@2.9.0(@babel/core@7.25.2)(preact@10.22.1)(vite@5.4.2(@types/node@20.11.16)(lightningcss@1.22.1))':
     dependencies:
@@ -4784,7 +4832,29 @@ snapshots:
       - rollup
       - supports-color
 
-  '@remote-dom/polyfill@1.4.3': {}
+  '@remote-ui/async-subscription@2.1.15':
+    dependencies:
+      '@remote-ui/rpc': 1.4.5
+
+  '@remote-ui/core@2.2.4':
+    dependencies:
+      '@remote-ui/rpc': 1.4.5
+      '@remote-ui/types': 1.1.3
+
+  '@remote-ui/react@5.0.4(react-reconciler@0.28.0(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@remote-ui/async-subscription': 2.1.15
+      '@remote-ui/core': 2.2.4
+      '@remote-ui/rpc': 1.4.5
+      '@types/react': 18.3.5
+      '@types/react-reconciler': 0.28.8
+      react: 18.3.1
+    optionalDependencies:
+      react-reconciler: 0.28.0(react@18.3.1)
+
+  '@remote-ui/rpc@1.4.5': {}
+
+  '@remote-ui/types@1.1.3': {}
 
   '@rollup/plugin-alias@5.0.1(rollup@4.21.2)':
     dependencies:
@@ -4967,6 +5037,10 @@ snapshots:
   '@types/prop-types@15.7.6': {}
 
   '@types/react-dom@18.3.0':
+    dependencies:
+      '@types/react': 18.3.5
+
+  '@types/react-reconciler@0.28.8':
     dependencies:
       '@types/react': 18.3.5
 
@@ -6058,11 +6132,11 @@ snapshots:
       mlly: 1.4.2
       pathe: 1.1.1
 
-  playwright-core@1.48.2: {}
+  playwright-core@1.49.0: {}
 
-  playwright@1.48.2:
+  playwright@1.49.0:
     dependencies:
-      playwright-core: 1.48.2
+      playwright-core: 1.49.0
     optionalDependencies:
       fsevents: 2.3.2
 
@@ -6120,6 +6194,13 @@ snapshots:
   react-is@17.0.2: {}
 
   react-is@18.2.0: {}
+
+  react-reconciler@0.28.0(react@18.3.1):
+    dependencies:
+      loose-envify: 1.4.0
+      react: 18.3.1
+      scheduler: 0.22.0
+    optional: true
 
   react-refresh@0.14.2: {}
 
@@ -6236,6 +6317,11 @@ snapshots:
   saxes@6.0.0:
     dependencies:
       xmlchars: 2.2.0
+
+  scheduler@0.22.0:
+    dependencies:
+      loose-envify: 1.4.0
+    optional: true
 
   scheduler@0.23.2:
     dependencies:

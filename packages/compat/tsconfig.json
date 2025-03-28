@@ -1,0 +1,4 @@
+{
+  "extends": "@quilted/typescript/tsconfig.package.json",
+  "references": [{"path": "../core"}]
+}

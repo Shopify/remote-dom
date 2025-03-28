@@ -1,5 +1,54 @@
 # example-kitchen-sink
 
+## 0.0.25
+
+### Patch Changes
+
+- Updated dependencies [[`ca6a668`](https://github.com/Shopify/remote-dom/commit/ca6a66893f02eb4e7881a7117de5a461c7ae3708), [`fe94f9b`](https://github.com/Shopify/remote-dom/commit/fe94f9b6e7087e1146fa2301b3d339c760c9d9a9)]:
+  - @remote-dom/compat@1.0.2
+
+## 0.0.24
+
+### Patch Changes
+
+- Updated dependencies [[`88d4956`](https://github.com/Shopify/remote-dom/commit/88d495608de6913a084b46384aaa19a6d9e599fb)]:
+  - @remote-dom/preact@1.3.0
+
+## 0.0.23
+
+### Patch Changes
+
+- Updated dependencies [[`9abf5be`](https://github.com/Shopify/remote-dom/commit/9abf5bee323dfa522f9061ba61ce2f433a36cb4e)]:
+  - @remote-dom/compat@1.0.1
+  - @remote-dom/preact@1.2.3
+  - @remote-dom/react@1.2.2
+
+## 0.0.22
+
+### Patch Changes
+
+- Updated dependencies [[`79419d9`](https://github.com/Shopify/remote-dom/commit/79419d9377013a979ebc4ece53f59d9a9a893094), [`a9a88ab`](https://github.com/Shopify/remote-dom/commit/a9a88abe4ba81b253f0cc6cdd5e82a25bbe908c1)]:
+  - @remote-dom/signals@2.1.0
+  - @remote-dom/core@1.7.0
+
+## 0.0.21
+
+### Patch Changes
+
+- Updated dependencies [[`df294ab`](https://github.com/Shopify/remote-dom/commit/df294abad5522110e031e5b3e2a978871aa703fb)]:
+  - @remote-dom/core@1.6.1
+  - @remote-dom/signals@2.0.0
+
+## 0.0.20
+
+### Patch Changes
+
+- Updated dependencies [[`1a42bf6`](https://github.com/Shopify/remote-dom/commit/1a42bf6d72a1dcfe5403c097dfd406b116a3455b), [`8cbf2c2`](https://github.com/Shopify/remote-dom/commit/8cbf2c2a6130dd0a19088a2adf18b506f468be8b)]:
+  - @remote-dom/compat@1.0.0
+  - @remote-dom/core@1.6.0
+  - @remote-dom/signals@2.0.0
+  - @remote-dom/preact@1.2.2
+
 ## 0.0.19
 
 ### Patch Changes

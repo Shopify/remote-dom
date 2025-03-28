@@ -1,5 +1,26 @@
 # example-getting-started
 
+## 0.0.18
+
+### Patch Changes
+
+- Updated dependencies [[`a9a88ab`](https://github.com/Shopify/remote-dom/commit/a9a88abe4ba81b253f0cc6cdd5e82a25bbe908c1)]:
+  - @remote-dom/core@1.7.0
+
+## 0.0.17
+
+### Patch Changes
+
+- Updated dependencies [[`df294ab`](https://github.com/Shopify/remote-dom/commit/df294abad5522110e031e5b3e2a978871aa703fb)]:
+  - @remote-dom/core@1.6.1
+
+## 0.0.16
+
+### Patch Changes
+
+- Updated dependencies [[`8cbf2c2`](https://github.com/Shopify/remote-dom/commit/8cbf2c2a6130dd0a19088a2adf18b506f468be8b)]:
+  - @remote-dom/core@1.6.0
+
 ## 0.0.15
 
 ### Patch Changes
