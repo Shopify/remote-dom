@@ -1,5 +1,6 @@
 import {signal, effect} from '@preact/signals';
 import {SignalRemoteReceiver} from '@remote-dom/preact/host';
+import {retain, release} from '@remote-ui/rpc';
 
 import type {RenderExample, RenderSandbox} from '../types.ts';
 
@@ -14,6 +15,7 @@ const ALLOWED_EXAMPLE_VALUES = new Set<RenderExample>([
   'react',
   'svelte',
   'vue',
+  'react-remote-ui',
 ]);
 
 export function createState(
@@ -74,7 +76,15 @@ export function createState(
     window.history.replaceState({}, '', newURL.toString());
 
     if (cached == null) {
-      const receiver = new SignalRemoteReceiver();
+      const receiver = new SignalRemoteReceiver({retain, release});
+      const originalMutate = receiver.connection.mutate;
+      Object.defineProperty(receiver.connection, 'mutate', {
+        value: (...args) => {
+          console.log('[host mutate]', ...args);
+          return originalMutate.call(receiver.connection, ...args);
+        },
+      });
+
       cached = Promise.resolve(
         render({
           receiver,

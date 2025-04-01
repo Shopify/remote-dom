@@ -33,15 +33,22 @@ export function renderUsingPreact(root: Element, api: RenderAPI) {
 }
 
 function App({api}: {api: RenderAPI}) {
+  const order = useSignal([1, 2]);
+
   return (
     <Stack spacing>
-      <Text>
-        Rendering example: <Text emphasis>{api.example}</Text>
-      </Text>
-      <Text>
-        Rendering in sandbox: <Text emphasis>{api.sandbox}</Text>
-      </Text>
-      <Button modal={<CountModal alert={api.alert} />}>Open modal</Button>
+      <Button
+        onPress={() => {
+          order.value = [...order.value].reverse();
+        }}
+      >
+        Reverse
+      </Button>
+      {order.value.map((item) => (
+        <Button key={item} onPress={() => console.log(`Pressed ${item}`)}>
+          {item}
+        </Button>
+      ))}
     </Stack>
   );
 }

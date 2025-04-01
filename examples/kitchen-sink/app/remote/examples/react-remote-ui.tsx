@@ -42,15 +42,16 @@ export function renderUsingReactRemoteUI(
 }
 
 function App({api}: {api: RenderAPI}) {
+  const [order, setOrder] = useState([1, 2]);
+
   return (
     <Stack spacing>
-      <Text>
-        Rendering example: <Text emphasis>{api.example}</Text>
-      </Text>
-      <Text>
-        Rendering in sandbox: <Text emphasis>{api.sandbox}</Text>
-      </Text>
-      <Button modal={<CountModal {...api} />}>Open modal</Button>
+      <Button onPress={() => setOrder([...order].reverse())}>Reverse</Button>
+      {order.map((item) => (
+        <Button key={item} onPress={() => console.log(`Pressed ${item}`)}>
+          {item}
+        </Button>
+      ))}
     </Stack>
   );
 }

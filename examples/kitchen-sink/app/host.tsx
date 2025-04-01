@@ -5,6 +5,7 @@ import {
   createRemoteComponentRenderer,
 } from '@remote-dom/preact/host';
 import {ThreadIframe, ThreadWebWorker} from '@quilted/threads';
+import {createEndpoint, fromIframe, fromWebWorker} from '@remote-ui/rpc';
 
 import type {SandboxAPI} from './types.ts';
 import {Button, Modal, Stack, Text, ControlPanel} from './host/components.tsx';
@@ -18,7 +19,7 @@ const uiRoot = document.querySelector('main')!;
 // which lets us communicate over `postMessage` without having to worry about
 // most of its complexities.
 const iframe = document.querySelector('iframe')!;
-const iframeSandbox = new ThreadIframe<SandboxAPI>(iframe);
+const iframeSandbox = createEndpoint<SandboxAPI>(fromIframe(iframe));
 
 // We also use the `@quilted/threads` library to create a “thread” around a Web
 // Worker. We’ll run the same example code in both, depending on the `sandbox`
@@ -29,7 +30,7 @@ const worker = new Worker(
     type: 'module',
   },
 );
-const workerSandbox = new ThreadWebWorker<SandboxAPI>(worker);
+const workerSandbox = createEndpoint<SandboxAPI>(fromWebWorker(worker));
 
 // We will use Preact to render remote elements in this example. The Preact
 // helper library lets you do this by mapping the name of a remote element to
@@ -85,11 +86,11 @@ const {receiver, example, sandbox} = createState(
           Modal: 'ui-modal',
         },
       });
-      await sandboxToUse.imports.renderLegacy(remoteUiChannel, {
+      await sandboxToUse.call.renderLegacy(remoteUiChannel, {
         ...api,
       });
     } else {
-      await sandboxToUse.imports.render(receiver.connection, {
+      await sandboxToUse.call.render(receiver.connection, {
         ...api,
       });
     }
