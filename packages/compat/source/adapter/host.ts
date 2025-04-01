@@ -164,8 +164,6 @@ export function adaptToLegacyRemoteChannel(
         const [parentId = ROOT_ID, index, child] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_INSERT_CHILD];
 
-        const records = [];
-
         const parentNode = tree.get(parentId);
 
         if (parentNode) {
@@ -173,23 +171,23 @@ export function adaptToLegacyRemoteChannel(
             ({id}) => id === child.id,
           );
 
+          // Remove existing child
           if (existingChildIndex >= 0) {
-            records.push([
-              MUTATION_TYPE_REMOVE_CHILD,
-              parentId,
-              existingChildIndex,
-            ] satisfies RemoteMutationRecord);
+            mutate([
+              [MUTATION_TYPE_REMOVE_CHILD, parentId, existingChildIndex],
+            ]);
           }
         }
 
-        records.push([
-          MUTATION_TYPE_INSERT_CHILD,
-          parentId,
-          adaptLegacyNodeSerialization(child, options),
-          index,
-        ] satisfies RemoteMutationRecord);
-
-        mutate(records);
+        // Insert new child
+        mutate([
+          [
+            MUTATION_TYPE_INSERT_CHILD,
+            parentId,
+            adaptLegacyNodeSerialization(child, options),
+            index,
+          ],
+        ]);
 
         break;
       }

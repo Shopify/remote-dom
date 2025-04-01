@@ -281,8 +281,11 @@ export class SignalRemoteReceiver {
             attributes,
             eventListeners,
           } = child;
-          retain?.(properties);
-          retain?.(eventListeners);
+
+          if (retain) {
+            retain(properties);
+            retain(eventListeners);
+          }
 
           const resolvedChildren: SignalRemoteReceiverNode[] = [];
 
@@ -319,8 +322,9 @@ export class SignalRemoteReceiver {
       attached.delete(child.id);
       parents.delete(child.id);
 
-      if (release && 'properties' in child) {
-        release(child.properties.peek());
+      if (release) {
+        if ('properties' in child) release(child.properties.peek());
+        if ('eventListeners' in child) release(child.eventListeners.peek());
       }
 
       if ('children' in child) {
