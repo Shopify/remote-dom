@@ -1,5 +1,6 @@
 import {RemoteMutationObserver} from '@remote-dom/core/elements';
 import {ThreadNestedIframe} from '@quilted/threads';
+import {createEndpoint, fromInsideIframe, retain} from '@remote-ui/rpc';
 
 import '../elements.ts';
 import {render, renderLegacy} from '../render.ts';
@@ -12,28 +13,32 @@ import type {SandboxAPI} from '../../types.ts';
 // This block exposes the `render` method that was used by the host application,
 // in `index.html`. We receive the `RemoteConnection` object, and start synchronizing
 // changes to the `<div id="root">` element that contains our UI.
-new ThreadNestedIframe<never, SandboxAPI>({
-  exports: {
-    async render(connection, api) {
-      // We will observe this DOM node, and send any elements within it to be
-      // reflected on this "host" page.
-      const root = document.createElement('div');
-      root.id = `Example${api.example[0]!.toUpperCase()}${api.example.slice(
-        1,
-      )}${api.sandbox[0]!.toUpperCase()}${api.sandbox.slice(1)}`;
+createEndpoint(fromInsideIframe()).expose({
+  async render(connection, api) {
+    retain(connection);
+    retain(api);
 
-      document.body.append(root);
+    // We will observe this DOM node, and send any elements within it to be
+    // reflected on this "host" page.
+    const root = document.createElement('div');
+    root.id = `Example${api.example[0]!.toUpperCase()}${api.example.slice(
+      1,
+    )}${api.sandbox[0]!.toUpperCase()}${api.sandbox.slice(1)}`;
 
-      // We use the `RemoteMutationObserver` class, which extends the native DOM
-      // `MutationObserver`, to send any changes to a tree of DOM elements over
-      // a `RemoteConnection`.
-      const observer = new RemoteMutationObserver(connection);
-      observer.observe(root);
+    document.body.append(root);
 
-      await render(root, api);
-    },
-    async renderLegacy(channel, api) {
-      await renderLegacy(channel, api);
-    },
+    // We use the `RemoteMutationObserver` class, which extends the native DOM
+    // `MutationObserver`, to send any changes to a tree of DOM elements over
+    // a `RemoteConnection`.
+    const observer = new RemoteMutationObserver(connection);
+    observer.observe(root);
+
+    await render(root, api);
+  },
+  async renderLegacy(channel, api) {
+    retain(channel);
+    retain(api);
+
+    await renderLegacy(channel, api);
   },
 });
