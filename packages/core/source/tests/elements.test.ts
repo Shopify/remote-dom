@@ -783,6 +783,7 @@ describe('RemoteElement', () => {
           expect.objectContaining({
             attributes: {name},
           }),
+          undefined,
         ],
       ]);
     });
@@ -808,6 +809,7 @@ describe('RemoteElement', () => {
           expect.objectContaining({
             attributes: {slot},
           }),
+          undefined,
         ],
       ]);
     });

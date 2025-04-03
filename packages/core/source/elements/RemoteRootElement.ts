@@ -54,6 +54,7 @@ export class RemoteRootElement extends HTMLElement {
         MUTATION_TYPE_INSERT_CHILD,
         ROOT_ID,
         serializeRemoteNode(node),
+        undefined,
       ]);
     }
 

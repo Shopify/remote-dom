@@ -165,6 +165,7 @@ export function adaptToLegacyRemoteChannel(
               MUTATION_TYPE_INSERT_CHILD,
               ROOT_ID,
               adaptLegacyNodeSerialization(node, options),
+              undefined,
             ] satisfies RemoteMutationRecord,
         );
 
@@ -254,6 +255,7 @@ export function adaptToLegacyRemoteChannel(
               MUTATION_TYPE_INSERT_CHILD,
               id,
               adaptLegacyPropFragmentSerialization(key, value, options),
+              undefined,
             ] satisfies RemoteMutationRecord);
           } else {
             if (slotNodeId !== undefined) {

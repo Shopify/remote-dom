@@ -33,7 +33,7 @@ export type RemoteMutationRecordInsertChild = [
   /**
    * The index in the parents’ children to insert the new child.
    */
-  nextSiblingId?: string,
+  nextSiblingId: string | undefined,
 ];
 
 /**
