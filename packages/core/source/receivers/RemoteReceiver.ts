@@ -10,10 +10,10 @@ import {
   UPDATE_PROPERTY_TYPE_PROPERTY,
 } from '../constants.ts';
 import type {
-  RemoteTextSerialization,
   RemoteCommentSerialization,
   RemoteElementSerialization,
   RemoteNodeSerialization,
+  RemoteTextSerialization,
 } from '../types.ts';
 import type {RemoteReceiverOptions} from './shared.ts';
 
@@ -162,21 +162,16 @@ export class RemoteReceiver {
 
         return implementationMethod(...args);
       },
-      insertChild: (id, child, index) => {
-        const parent = attached.get(id) as Writable<RemoteReceiverParent>;
-
-        const {children} = parent;
-
+      insertChild: (parentId, child, nextSiblingId) => {
+        const parent = attached.get(parentId) as Writable<RemoteReceiverParent>;
+        const children = parent.children as Writable<RemoteReceiverNode[]>;
         const normalizedChild = attach(child, parent);
 
-        if (index === children.length) {
-          (children as Writable<typeof children>).push(normalizedChild);
+        if (nextSiblingId === undefined) {
+          children.push(normalizedChild);
         } else {
-          (children as Writable<typeof children>).splice(
-            index,
-            0,
-            normalizedChild,
-          );
+          const sibling = attached.get(nextSiblingId) as RemoteReceiverNode;
+          children.splice(children.indexOf(sibling), 0, normalizedChild);
         }
 
         parent.version += 1;
@@ -184,15 +179,14 @@ export class RemoteReceiver {
 
         runSubscribers(parent);
       },
-      removeChild: (id, index) => {
-        const parent = attached.get(id) as Writable<RemoteReceiverParent>;
+      removeChild: (parentId, id) => {
+        const parent = attached.get(parentId) as Writable<RemoteReceiverParent>;
+        const children = parent.children as Writable<RemoteReceiverNode[]>;
 
-        const {children} = parent;
+        const node = attached.get(id) as Writable<RemoteReceiverNode>;
+        const index = parent.children.indexOf(node);
 
-        const [removed] = (children as Writable<typeof children>).splice(
-          index,
-          1,
-        );
+        const [removed] = children.splice(index, 1);
 
         if (!removed) {
           return;

@@ -1,16 +1,16 @@
 import {
   createRemoteElement,
-  RemoteRootElement,
   RemoteFragmentElement,
+  RemoteRootElement,
   type RemoteEvent,
 } from '@remote-dom/core/elements';
 
 import type {
-  TextProperties,
   ButtonProperties,
-  ModalProperties,
   ModalMethods,
+  ModalProperties,
   StackProperties,
+  TextProperties,
 } from '../types.ts';
 
 // In this file we will define the custom elements that can be rendered in the
@@ -49,6 +49,7 @@ export const Modal = createRemoteElement<
 export const Stack = createRemoteElement<StackProperties>({
   properties: {
     spacing: {type: Boolean},
+    testId: {type: String},
   },
 });
 

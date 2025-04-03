@@ -1,25 +1,25 @@
 import {
-  signal,
   batch,
+  signal,
   type ReadonlySignal,
   type Signal,
 } from '@preact/signals-core';
 
 import {
-  ROOT_ID,
-  NODE_TYPE_ROOT,
-  NODE_TYPE_ELEMENT,
   NODE_TYPE_COMMENT,
+  NODE_TYPE_ELEMENT,
+  NODE_TYPE_ROOT,
   NODE_TYPE_TEXT,
-  UPDATE_PROPERTY_TYPE_PROPERTY,
+  ROOT_ID,
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
   UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+  UPDATE_PROPERTY_TYPE_PROPERTY,
   createRemoteConnection,
+  type RemoteCommentSerialization,
   type RemoteConnection,
+  type RemoteElementSerialization,
   type RemoteNodeSerialization,
   type RemoteTextSerialization,
-  type RemoteCommentSerialization,
-  type RemoteElementSerialization,
 } from '@remote-dom/core';
 import type {RemoteReceiverOptions} from '@remote-dom/core/receivers';
 
@@ -158,24 +158,33 @@ export class SignalRemoteReceiver {
 
         return implementationMethod(...args);
       },
-      insertChild: (id, child, index) => {
-        const parent = attached.get(id) as SignalRemoteReceiverParent;
+      insertChild: (parentId, child, nextSiblingId) => {
+        const parent = attached.get(parentId) as SignalRemoteReceiverParent;
         const newChildren = [...parent.children.peek()];
 
         const normalizedChild = attach(child, parent);
 
-        if (index === newChildren.length) {
+        if (nextSiblingId === undefined) {
           newChildren.push(normalizedChild);
         } else {
-          newChildren.splice(index, 0, normalizedChild);
+          const nextSibling = attached.get(
+            nextSiblingId,
+          ) as SignalRemoteReceiverNode;
+          newChildren.splice(
+            newChildren.indexOf(nextSibling),
+            0,
+            normalizedChild,
+          );
         }
 
         (parent.children as any).value = newChildren;
       },
-      removeChild: (id, index) => {
-        const parent = attached.get(id) as SignalRemoteReceiverParent;
-
+      removeChild: (parentId, id) => {
+        const parent = attached.get(parentId) as SignalRemoteReceiverParent;
         const newChildren = [...parent.children.peek()];
+
+        const node = attached.get(id) as SignalRemoteReceiverNode;
+        const index = newChildren.indexOf(node);
 
         const [removed] = newChildren.splice(index, 1);
 
