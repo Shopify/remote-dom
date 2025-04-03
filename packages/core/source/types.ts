@@ -1,14 +1,14 @@
 import type {
-  NODE_TYPE_ELEMENT,
-  NODE_TYPE_TEXT,
-  NODE_TYPE_COMMENT,
   MUTATION_TYPE_INSERT_CHILD,
   MUTATION_TYPE_REMOVE_CHILD,
-  MUTATION_TYPE_UPDATE_TEXT,
   MUTATION_TYPE_UPDATE_PROPERTY,
-  UPDATE_PROPERTY_TYPE_PROPERTY,
-  UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+  MUTATION_TYPE_UPDATE_TEXT,
+  NODE_TYPE_COMMENT,
+  NODE_TYPE_ELEMENT,
+  NODE_TYPE_TEXT,
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+  UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+  UPDATE_PROPERTY_TYPE_PROPERTY,
 } from './constants.ts';
 
 /**
@@ -20,7 +20,7 @@ export type RemoteMutationRecordInsertChild = [
   /**
    * The ID of the parent node.
    */
-  id: string,
+  parentId: string,
 
   /**
    * A description of the child node being inserted.
@@ -33,7 +33,7 @@ export type RemoteMutationRecordInsertChild = [
   /**
    * The index in the parents’ children to insert the new child.
    */
-  index: number,
+  nextSiblingId?: string,
 ];
 
 /**
@@ -45,12 +45,12 @@ export type RemoteMutationRecordRemoveChild = [
   /**
    * The ID of the parent node.
    */
-  id: string,
+  parentId: string,
 
   /**
-   * The index of the child to remove.
+   * The ID of the child to remove.
    */
-  index: number,
+  id: string,
 ];
 
 /**

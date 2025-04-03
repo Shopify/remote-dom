@@ -1,18 +1,18 @@
 import {
-  remoteId,
-  connectRemoteNode,
-  disconnectRemoteNode,
-  serializeRemoteNode,
-  REMOTE_IDS,
-} from './internals.ts';
-import {
-  ROOT_ID,
   MUTATION_TYPE_INSERT_CHILD,
   MUTATION_TYPE_REMOVE_CHILD,
-  MUTATION_TYPE_UPDATE_TEXT,
   MUTATION_TYPE_UPDATE_PROPERTY,
+  MUTATION_TYPE_UPDATE_TEXT,
+  ROOT_ID,
 } from '../constants.ts';
 import type {RemoteConnection, RemoteMutationRecord} from '../types.ts';
+import {
+  connectRemoteNode,
+  disconnectRemoteNode,
+  REMOTE_IDS,
+  remoteId,
+  serializeRemoteNode,
+} from './internals.ts';
 
 /**
  * Builds on the browser’s [`MutationObserver`](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver)
@@ -41,31 +41,29 @@ export class RemoteMutationObserver extends MutationObserver {
         const targetId = remoteId(record.target);
 
         if (record.type === 'childList') {
-          const position = record.previousSibling
-            ? indexOf(record.previousSibling, record.target.childNodes) + 1
-            : 0;
-
           record.removedNodes.forEach((node) => {
             disconnectRemoteNode(node);
 
             remoteRecords.push([
               MUTATION_TYPE_REMOVE_CHILD,
               targetId,
-              position,
+              remoteId(node),
             ]);
+
+            addedNodes.splice(addedNodes.indexOf(node), 1);
           });
 
-          // A mutation observer will queue some changes, so we might get one record
-          // for attaching a parent element, and additional records for attaching descendants.
-          // We serialize the entire tree when a new node was added, so we don’t want to
-          // send additional “insert child” records when we see those descendants — they
-          // will already be included the insertion of the parent.
-          record.addedNodes.forEach((node, index) => {
+          record.addedNodes.forEach((node) => {
             if (
-              addedNodes.some((addedNode) => {
-                return addedNode === node || addedNode.contains(node);
-              })
+              addedNodes.some(
+                (added) => addedNodes.includes(node) || added.contains(node),
+              )
             ) {
+              // A mutation observer will queue some changes, so we might get one record
+              // for attaching a parent element, and additional records for attaching descendants.
+              // We serialize the entire tree when a new node was added, so we don’t want to
+              // send additional “insert child” records when we see those descendants — they
+              // will already be included the insertion of the parent.
               return;
             }
 
@@ -76,7 +74,7 @@ export class RemoteMutationObserver extends MutationObserver {
               MUTATION_TYPE_INSERT_CHILD,
               targetId,
               serializeRemoteNode(node),
-              position + index,
+              record.nextSibling ? remoteId(record.nextSibling) : undefined,
             ]);
           });
         } else if (record.type === 'characterData') {
@@ -134,7 +132,6 @@ export class RemoteMutationObserver extends MutationObserver {
           MUTATION_TYPE_INSERT_CHILD,
           ROOT_ID,
           serializeRemoteNode(node),
-          i,
         ]);
       }
 
@@ -149,12 +146,4 @@ export class RemoteMutationObserver extends MutationObserver {
       ...options,
     });
   }
-}
-
-function indexOf(node: Node, list: NodeList) {
-  for (let i = 0; i < list.length; i++) {
-    if (list[i] === node) return i;
-  }
-
-  return -1;
 }

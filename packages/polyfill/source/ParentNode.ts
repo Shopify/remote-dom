@@ -1,17 +1,17 @@
+import {ChildNode, toNode} from './ChildNode.ts';
 import {
   CHILD,
-  NEXT,
-  PREV,
-  PARENT,
-  OWNER_DOCUMENT,
-  NodeType,
   HOOKS,
   IS_CONNECTED,
+  NEXT,
+  NodeType,
+  OWNER_DOCUMENT,
+  PARENT,
+  PREV,
 } from './constants.ts';
 import type {Node} from './Node.ts';
-import {ChildNode, toNode} from './ChildNode.ts';
 import {NodeList} from './NodeList.ts';
-import {querySelectorAll, querySelector} from './selectors.ts';
+import {querySelector, querySelectorAll} from './selectors.ts';
 import {selfAndDescendants} from './shared.ts';
 
 export class ParentNode extends ChildNode {
@@ -80,7 +80,7 @@ export class ParentNode extends ChildNode {
     }
 
     if (this.nodeType === NodeType.ELEMENT_NODE) {
-      this[HOOKS].removeChild?.(this as any, child as any, childNodesIndex);
+      this[HOOKS].removeChild?.(this as any, child as any);
     }
   }
 
@@ -163,7 +163,6 @@ export class ParentNode extends ChildNode {
         }
       }
     } else {
-      insertIndex = childNodes.length;
       childNodes.push(child);
       if (isElement) this.children.push(child);
     }
@@ -176,7 +175,7 @@ export class ParentNode extends ChildNode {
     }
 
     if (this.nodeType === NodeType.ELEMENT_NODE) {
-      this[HOOKS].insertChild?.(this as any, child as any, insertIndex);
+      this[HOOKS].insertChild?.(this as any, child as any);
     }
   }
 }
