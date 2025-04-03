@@ -1,16 +1,16 @@
+import type {Signal} from '@preact/signals';
 import {type ComponentChildren} from 'preact';
 import {forwardRef} from 'preact/compat';
-import {useRef, useImperativeHandle} from 'preact/hooks';
-import type {Signal} from '@preact/signals';
+import {useImperativeHandle, useRef} from 'preact/hooks';
 
 import type {
   ButtonProperties,
-  StackProperties,
-  TextProperties,
   ModalMethods,
   ModalProperties,
-  RenderSandbox,
   RenderExample,
+  RenderSandbox,
+  StackProperties,
+  TextProperties,
 } from '../types.ts';
 
 export function Text({
@@ -51,11 +51,13 @@ export function Button({
 }
 
 export function Stack({
+  testId,
   spacing,
   children,
 }: {children?: ComponentChildren} & StackProperties) {
   return (
     <div
+      data-testid={testId}
       class={['Stack', spacing && 'Stack--spacing'].filter(Boolean).join(' ')}
     >
       {children}
@@ -160,6 +162,8 @@ export function ControlPanel({
           <option value="vue">Vue</option>
           <option value="htm">htm</option>
           <option value="react-remote-ui">React Remote UI</option>
+          <option value="react-mutations-1">React Mutations 1</option>
+          <option value="react-mutations-2">React Mutations 2</option>
         </Select>
       </section>
 
@@ -194,6 +198,8 @@ const EXAMPLE_FILE_NAMES = new Map<RenderExample, string>([
   ['htm', 'htm.ts'],
   ['preact', 'preact.tsx'],
   ['react', 'react.tsx'],
+  ['react-mutations-1', 'react-mutations.tsx'],
+  ['react-mutations-2', 'react-mutations.tsx'],
   ['svelte', 'App.svelte'],
   ['vue', 'App.vue'],
 ]);
