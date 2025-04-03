@@ -56,7 +56,7 @@ export class RemoteMutationObserver extends MutationObserver {
           record.addedNodes.forEach((node) => {
             if (
               addedNodes.some(
-                (added) => addedNodes.includes(node) || added.contains(node),
+                (addedNode) => addedNode === node || addedNode.contains(node),
               )
             ) {
               // A mutation observer will queue some changes, so we might get one record
@@ -132,6 +132,7 @@ export class RemoteMutationObserver extends MutationObserver {
           MUTATION_TYPE_INSERT_CHILD,
           ROOT_ID,
           serializeRemoteNode(node),
+          undefined,
         ]);
       }
 
