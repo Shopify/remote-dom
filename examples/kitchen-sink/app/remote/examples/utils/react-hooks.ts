@@ -1,18 +1,4 @@
-import {useEffect, useState} from 'react';
-
-export const useTimer = (ms: number) => {
-  const [ellapsed, setEllapsed] = useState(false);
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setEllapsed(true);
-    }, ms);
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [setEllapsed]);
-  return ellapsed;
-};
+import { useEffect, useState } from 'react';
 
 export const useRenders = (max: number) => {
   const [renders, setRenders] = useState(1);
