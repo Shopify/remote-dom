@@ -87,6 +87,11 @@ export function adaptToLegacyRemoteChannel(
           }
 
           const siblings = tree.get(parentId)!;
+
+          if (siblings.some((existing) => existing.id === node.id)) {
+            return;
+          }
+
           const index =
             nextSiblingId === undefined
               ? siblings.length

@@ -165,6 +165,11 @@ export class RemoteReceiver {
       insertChild: (parentId, child, nextSiblingId) => {
         const parent = attached.get(parentId) as Writable<RemoteReceiverParent>;
         const children = parent.children as Writable<RemoteReceiverNode[]>;
+
+        if (children.some((existing) => existing.id === child.id)) {
+          return;
+        }
+
         const normalizedChild = attach(child, parent);
 
         if (nextSiblingId === undefined) {

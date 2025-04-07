@@ -1,8 +1,9 @@
-import {expect, test} from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 const testSet: Array<[string, string, string]> = [
   ['iframe', 'react-mutations-1', 'Data: 1\nData: 2\nData: 3\nData: 4'],
-  ['iframe', 'react-mutations-2', 'Data: 1\nData: 2'],
+  ['iframe', 'react-mutations-2', 'Data: 1\nData: 2\nData: 3\nData: 4'],
+  ['iframe', 'react-mutations-3', 'Data: 1\nData: 2'],
 ];
 
 testSet.forEach(([sandbox, example, expectedText]) => {

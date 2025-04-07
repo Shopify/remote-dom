@@ -1,12 +1,13 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource react */
 
-import {createRemoteComponent} from '@remote-dom/react';
-import {createRoot} from 'react-dom/client';
+import { createRemoteComponent } from '@remote-dom/react';
+import { createRoot } from 'react-dom/client';
 
-import type {RenderAPI} from '../../types.ts';
-import {Stack as StackElement, Text as TextElement} from '../elements.ts';
-import {useRenders} from './utils/react-hooks.ts';
+import { useEffect, useState } from 'react';
+import type { RenderAPI } from '../../types.ts';
+import { Stack as StackElement, Text as TextElement } from '../elements.ts';
+import { useRenders } from './utils/react-hooks.ts';
 
 const Stack = createRemoteComponent('ui-stack', StackElement);
 const Text = createRemoteComponent('ui-text', TextElement);
@@ -48,6 +49,39 @@ const Example1 = () => {
 };
 
 const Example2 = () => {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(false);
+  }, [setLoading]);
+
+  return (
+    <Stack spacing testId="test-stack">
+      <>
+        {loading && loading1}
+        {!loading && (
+          <>
+            {data1}
+            {data2}
+          </>
+        )}
+      </>
+      <>
+        {loading && loading2}
+        {!loading && (
+          <>
+            {data3}
+            {data4}
+          </>
+        )}
+      </>
+      {!loading && done}
+    </Stack>
+  );
+};
+
+
+const Example3 = () => {
   const renders = useRenders(2);
 
   return (
@@ -60,14 +94,17 @@ const Example2 = () => {
   );
 };
 
-function App({api}: {api: RenderAPI}) {
-  if (api.example === 'react-mutations-1') {
-    return <Example1 />;
-  }
 
-  if (api.example === 'react-mutations-2') {
-    return <Example2 />;
-  }
+function App({api}: {api: RenderAPI}) {
+  const {example} = api;
+
+  return example === 'react-mutations-1' ? (
+    <Example1 />
+  ) : example === 'react-mutations-2' ? (
+    <Example2 />
+  ) : example === 'react-mutations-3' ? (
+    <Example3 />
+  ) : null;
 }
 
 export function renderUsingReact(root: Element, api: RenderAPI) {

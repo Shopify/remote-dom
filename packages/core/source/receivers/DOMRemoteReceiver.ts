@@ -110,6 +110,10 @@ export class DOMRemoteReceiver {
           parentId === ROOT_ID ? this.root : attached.get(parentId)!;
         const normalizedChild = attach(child);
 
+        if (parent.contains(normalizedChild)) {
+          return;
+        }
+
         const existingTimeout = destroyTimeouts.get(parentId);
         if (existingTimeout) clearTimeout(existingTimeout);
 

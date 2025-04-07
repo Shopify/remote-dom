@@ -34,7 +34,6 @@ import {
 export class RemoteMutationObserver extends MutationObserver {
   constructor(private readonly connection: RemoteConnection) {
     super((records) => {
-      const addedNodes: Node[] = [];
       const remoteRecords: RemoteMutationRecord[] = [];
 
       for (const record of records) {
@@ -49,25 +48,9 @@ export class RemoteMutationObserver extends MutationObserver {
               targetId,
               remoteId(node),
             ]);
-
-            addedNodes.splice(addedNodes.indexOf(node), 1);
           });
 
           record.addedNodes.forEach((node) => {
-            if (
-              addedNodes.some(
-                (addedNode) => addedNode === node || addedNode.contains(node),
-              )
-            ) {
-              // A mutation observer will queue some changes, so we might get one record
-              // for attaching a parent element, and additional records for attaching descendants.
-              // We serialize the entire tree when a new node was added, so we don’t want to
-              // send additional “insert child” records when we see those descendants — they
-              // will already be included the insertion of the parent.
-              return;
-            }
-
-            addedNodes.push(node);
             connectRemoteNode(node, connection);
 
             remoteRecords.push([
