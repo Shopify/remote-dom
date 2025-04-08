@@ -70,8 +70,22 @@ export function adaptToLegacyRemoteChannel(
   connection: RemoteConnection,
   options?: LegacyRemoteChannelOptions,
 ): LegacyRemoteChannel {
+  type TreeEntry = {id: string; slot?: string};
+
   // child node list of a given parent
-  const tree = new Map<string, {id: string; slot?: string}[]>();
+  const tree = new Map<string, TreeEntry[]>();
+
+  function getSiblings(parentId: string) {
+    const siblings = tree.get(parentId);
+
+    if (siblings === undefined) {
+      const newSiblings: TreeEntry[] = [];
+      tree.set(parentId, newSiblings);
+      return newSiblings;
+    }
+
+    return siblings;
+  }
 
   function mutate(records: RemoteMutationRecord[]) {
     for (const record of records) {
@@ -79,14 +93,8 @@ export function adaptToLegacyRemoteChannel(
 
       switch (mutationType) {
         case MUTATION_TYPE_INSERT_CHILD: {
-          const parentId = record[1];
-          const node = record[2];
-          const nextSiblingId = record[3];
-          if (!tree.has(parentId)) {
-            tree.set(parentId, []);
-          }
-
-          const siblings = tree.get(parentId)!;
+          const [, parentId, node, nextSiblingId] = record;
+          const siblings = getSiblings(parentId);
 
           if (siblings.some((existing) => existing.id === node.id)) {
             return;
@@ -100,8 +108,8 @@ export function adaptToLegacyRemoteChannel(
           break;
         }
         case MUTATION_TYPE_REMOVE_CHILD: {
-          const index = record[2];
-          removeNode(parentId, index);
+          const id = record[2];
+          removeNode(parentId, id);
           break;
         }
       }
@@ -115,10 +123,7 @@ export function adaptToLegacyRemoteChannel(
     node: RemoteNodeSerialization,
     index: number,
   ) {
-    if (!tree.has(parentId)) {
-      tree.set(parentId, []);
-    }
-    const siblings = tree.get(parentId)!;
+    const siblings = getSiblings(parentId);
     siblings.splice(index, 0, {
       id: node.id,
       slot: 'attributes' in node ? node.attributes?.slot : undefined,
@@ -132,12 +137,11 @@ export function adaptToLegacyRemoteChannel(
   }
 
   function removeNode(parentId: string, id: string) {
-    const siblings = tree.get(parentId);
-    if (!siblings) {
+    const siblings = getSiblings(parentId);
+    const index = siblings.findIndex((child) => child.id === id);
+    if (index === -1) {
       return;
     }
-    const index = siblings?.findIndex((child) => child.id === id);
-    if (index === -1) return;
 
     siblings.splice(index, 1);
     cleanupNode(id);
@@ -185,12 +189,13 @@ export function adaptToLegacyRemoteChannel(
 
         const records = [];
 
-        const siblings = tree.get(parentId) ?? [];
-        const relevantSiblings = [...siblings];
+        const siblings = getSiblings(parentId);
 
-        const existingChildIndex = relevantSiblings.findIndex(
+        const existingChildIndex = siblings.findIndex(
           ({id}) => id === child.id,
         );
+
+        let nextSiblingIndex = index;
 
         if (existingChildIndex >= 0) {
           records.push([
@@ -199,10 +204,12 @@ export function adaptToLegacyRemoteChannel(
             child.id,
           ] satisfies RemoteMutationRecord);
 
-          relevantSiblings.splice(existingChildIndex, 1);
+          if (existingChildIndex <= index) {
+            nextSiblingIndex++;
+          }
         }
 
-        const nextSibling = relevantSiblings[index];
+        const nextSibling = siblings[nextSiblingIndex];
 
         records.push([
           MUTATION_TYPE_INSERT_CHILD,
@@ -238,27 +245,27 @@ export function adaptToLegacyRemoteChannel(
       }
 
       case LEGACY_ACTION_UPDATE_PROPS: {
-        const [id, props] =
+        const [parentId, props] =
           payload as LegacyActionArgumentMap[typeof LEGACY_ACTION_UPDATE_PROPS];
-        const siblings = tree.get(id);
+        const siblings = getSiblings(parentId);
 
         const records = [];
 
         for (const [key, value] of Object.entries(props)) {
-          const slotNodeId = siblings?.find(({slot}) => slot === key)?.id;
+          const slotNodeId = siblings.find(({slot}) => slot === key)?.id;
 
           if (isFragment(value)) {
             if (slotNodeId !== undefined) {
               records.push([
                 MUTATION_TYPE_REMOVE_CHILD,
-                id,
+                parentId,
                 slotNodeId,
               ] satisfies RemoteMutationRecord);
             }
 
             records.push([
               MUTATION_TYPE_INSERT_CHILD,
-              id,
+              parentId,
               adaptLegacyPropFragmentSerialization(key, value, options),
               undefined,
             ] satisfies RemoteMutationRecord);
@@ -266,13 +273,13 @@ export function adaptToLegacyRemoteChannel(
             if (slotNodeId !== undefined) {
               records.push([
                 MUTATION_TYPE_REMOVE_CHILD,
-                id,
+                parentId,
                 slotNodeId,
               ] satisfies RemoteMutationRecord);
             } else {
               records.push([
                 MUTATION_TYPE_UPDATE_PROPERTY,
-                id,
+                parentId,
                 key,
                 value,
               ] satisfies RemoteMutationRecord);

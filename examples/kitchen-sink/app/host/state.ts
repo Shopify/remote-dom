@@ -12,7 +12,6 @@ const ALLOWED_EXAMPLE_VALUES = new Set<RenderExample>([
   'htm',
   'preact',
   'react',
-  'react-mutations',
   'svelte',
   'vue',
   'react-mutations-1',
