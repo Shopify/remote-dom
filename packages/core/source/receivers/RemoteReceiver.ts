@@ -10,10 +10,10 @@ import {
   UPDATE_PROPERTY_TYPE_PROPERTY,
 } from '../constants.ts';
 import type {
+  RemoteTextSerialization,
   RemoteCommentSerialization,
   RemoteElementSerialization,
   RemoteNodeSerialization,
-  RemoteTextSerialization,
 } from '../types.ts';
 import type {RemoteReceiverOptions} from './shared.ts';
 

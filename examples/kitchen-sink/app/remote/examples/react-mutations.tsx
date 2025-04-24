@@ -1,13 +1,13 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource react */
 
-import { createRemoteComponent } from '@remote-dom/react';
-import { createRoot } from 'react-dom/client';
+import {createRemoteComponent} from '@remote-dom/react';
+import {createRoot} from 'react-dom/client';
 
-import { useEffect, useState } from 'react';
-import type { RenderAPI } from '../../types.ts';
-import { Stack as StackElement, Text as TextElement } from '../elements.ts';
-import { useRenders } from './utils/react-hooks.ts';
+import {useEffect, useState} from 'react';
+import type {RenderAPI} from '../../types.ts';
+import {Stack as StackElement, Text as TextElement} from '../elements.ts';
+import {useRenders} from './utils/react-hooks.ts';
 
 const Stack = createRemoteComponent('ui-stack', StackElement);
 const Text = createRemoteComponent('ui-text', TextElement);
@@ -80,7 +80,6 @@ const Example2 = () => {
   );
 };
 
-
 const Example3 = () => {
   const renders = useRenders(2);
 
@@ -93,7 +92,6 @@ const Example3 = () => {
     </Stack>
   );
 };
-
 
 function App({api}: {api: RenderAPI}) {
   const {example} = api;

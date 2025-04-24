@@ -1,4 +1,4 @@
-import {HOOKS, Window, type Hooks} from '@remote-dom/polyfill';
+import {Window, HOOKS, type Hooks} from '@remote-dom/polyfill';
 
 import {
   MUTATION_TYPE_INSERT_CHILD,
@@ -6,10 +6,10 @@ import {
   MUTATION_TYPE_UPDATE_TEXT,
 } from './constants.ts';
 import {
+  remoteId,
+  remoteConnection,
   connectRemoteNode,
   disconnectRemoteNode,
-  remoteConnection,
-  remoteId,
   serializeRemoteNode,
   updateRemoteElementAttribute,
 } from './elements/internals.ts';

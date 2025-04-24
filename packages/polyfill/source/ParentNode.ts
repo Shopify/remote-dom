@@ -1,17 +1,17 @@
-import {ChildNode, toNode} from './ChildNode.ts';
 import {
   CHILD,
+  NEXT,
+  PREV,
+  PARENT,
+  OWNER_DOCUMENT,
+  NodeType,
   HOOKS,
   IS_CONNECTED,
-  NEXT,
-  NodeType,
-  OWNER_DOCUMENT,
-  PARENT,
-  PREV,
 } from './constants.ts';
 import type {Node} from './Node.ts';
+import {ChildNode, toNode} from './ChildNode.ts';
 import {NodeList} from './NodeList.ts';
-import {querySelector, querySelectorAll} from './selectors.ts';
+import {querySelectorAll, querySelector} from './selectors.ts';
 import {selfAndDescendants} from './shared.ts';
 
 export class ParentNode extends ChildNode {

@@ -1,16 +1,16 @@
 import {
   createRemoteElement,
-  RemoteFragmentElement,
   RemoteRootElement,
+  RemoteFragmentElement,
   type RemoteEvent,
 } from '@remote-dom/core/elements';
 
 import type {
-  ButtonProperties,
-  ModalMethods,
-  ModalProperties,
-  StackProperties,
   TextProperties,
+  ButtonProperties,
+  ModalProperties,
+  ModalMethods,
+  StackProperties,
 } from '../types.ts';
 
 // In this file we will define the custom elements that can be rendered in the

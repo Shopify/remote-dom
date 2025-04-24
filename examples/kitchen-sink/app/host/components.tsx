@@ -1,16 +1,16 @@
-import type {Signal} from '@preact/signals';
 import {type ComponentChildren} from 'preact';
 import {forwardRef} from 'preact/compat';
-import {useImperativeHandle, useRef} from 'preact/hooks';
+import {useRef, useImperativeHandle} from 'preact/hooks';
+import type {Signal} from '@preact/signals';
 
 import type {
   ButtonProperties,
-  ModalMethods,
-  ModalProperties,
-  RenderExample,
-  RenderSandbox,
   StackProperties,
   TextProperties,
+  ModalMethods,
+  ModalProperties,
+  RenderSandbox,
+  RenderExample,
 } from '../types.ts';
 
 export function Text({

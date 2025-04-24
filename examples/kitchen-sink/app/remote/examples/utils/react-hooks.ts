@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import {useEffect, useState} from 'react';
 
 export const useRenders = (max: number) => {
   const [renders, setRenders] = useState(1);

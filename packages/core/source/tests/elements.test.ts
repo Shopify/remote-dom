@@ -1,17 +1,9 @@
-import {describe, expect, it, vi, type MockedObject} from 'vitest';
 import '../polyfill.ts';
+import {describe, it, expect, vi, type MockedObject} from 'vitest';
 
-import {NAME, OWNER_DOCUMENT} from '../../../polyfill/source/constants.ts';
 import {
-  MUTATION_TYPE_INSERT_CHILD,
-  MUTATION_TYPE_UPDATE_PROPERTY,
-  UPDATE_PROPERTY_TYPE_ATTRIBUTE,
-  UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
-  UPDATE_PROPERTY_TYPE_PROPERTY,
-} from '../constants.ts';
-import {
-  createRemoteElement,
   RemoteElement,
+  createRemoteElement,
   RemoteEvent,
   // remoteProperties,
   // remoteProperty,
@@ -23,6 +15,14 @@ import {
   RemoteReceiver,
   type RemoteReceiverElement,
 } from '../receivers/RemoteReceiver.ts';
+import {
+  MUTATION_TYPE_UPDATE_PROPERTY,
+  UPDATE_PROPERTY_TYPE_PROPERTY,
+  UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+  MUTATION_TYPE_INSERT_CHILD,
+  UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+} from '../constants.ts';
+import {NAME, OWNER_DOCUMENT} from '../../../polyfill/source/constants.ts';
 
 describe('RemoteElement', () => {
   describe('properties', () => {

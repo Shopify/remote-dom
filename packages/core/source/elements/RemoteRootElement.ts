@@ -1,13 +1,13 @@
-import {MUTATION_TYPE_INSERT_CHILD, ROOT_ID} from '../constants.ts';
+import {ROOT_ID, MUTATION_TYPE_INSERT_CHILD} from '../constants.ts';
 import type {RemoteConnection, RemoteMutationRecord} from '../types.ts';
 
 import {
-  callRemoteElementMethod,
-  connectRemoteNode,
-  REMOTE_IDS,
   remoteConnection,
+  connectRemoteNode,
   serializeRemoteNode,
   updateRemoteElementProperty,
+  callRemoteElementMethod,
+  REMOTE_IDS,
 } from './internals.ts';
 
 /**

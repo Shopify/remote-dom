@@ -1,18 +1,18 @@
 import {
-  MUTATION_TYPE_INSERT_CHILD,
-  MUTATION_TYPE_REMOVE_CHILD,
-  MUTATION_TYPE_UPDATE_PROPERTY,
-  MUTATION_TYPE_UPDATE_TEXT,
-  ROOT_ID,
-} from '../constants.ts';
-import type {RemoteConnection, RemoteMutationRecord} from '../types.ts';
-import {
+  remoteId,
   connectRemoteNode,
   disconnectRemoteNode,
-  REMOTE_IDS,
-  remoteId,
   serializeRemoteNode,
+  REMOTE_IDS,
 } from './internals.ts';
+import {
+  ROOT_ID,
+  MUTATION_TYPE_INSERT_CHILD,
+  MUTATION_TYPE_REMOVE_CHILD,
+  MUTATION_TYPE_UPDATE_TEXT,
+  MUTATION_TYPE_UPDATE_PROPERTY,
+} from '../constants.ts';
+import type {RemoteConnection, RemoteMutationRecord} from '../types.ts';
 
 /**
  * Builds on the browser’s [`MutationObserver`](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver)

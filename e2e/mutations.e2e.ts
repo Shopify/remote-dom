@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import {expect, test} from '@playwright/test';
 
 const testSet: Array<[string, string, string]> = [
   ['iframe', 'react-mutations-1', 'Data: 1\nData: 2\nData: 3\nData: 4'],

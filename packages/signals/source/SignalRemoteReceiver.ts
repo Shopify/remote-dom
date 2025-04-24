@@ -1,25 +1,25 @@
 import {
-  batch,
   signal,
+  batch,
   type ReadonlySignal,
   type Signal,
 } from '@preact/signals-core';
 
 import {
-  NODE_TYPE_COMMENT,
-  NODE_TYPE_ELEMENT,
-  NODE_TYPE_ROOT,
-  NODE_TYPE_TEXT,
   ROOT_ID,
+  NODE_TYPE_ROOT,
+  NODE_TYPE_ELEMENT,
+  NODE_TYPE_COMMENT,
+  NODE_TYPE_TEXT,
+  UPDATE_PROPERTY_TYPE_PROPERTY,
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
   UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
-  UPDATE_PROPERTY_TYPE_PROPERTY,
   createRemoteConnection,
-  type RemoteCommentSerialization,
   type RemoteConnection,
-  type RemoteElementSerialization,
   type RemoteNodeSerialization,
   type RemoteTextSerialization,
+  type RemoteCommentSerialization,
+  type RemoteElementSerialization,
 } from '@remote-dom/core';
 import type {RemoteReceiverOptions} from '@remote-dom/core/receivers';
 

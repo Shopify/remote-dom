@@ -1,4 +1,4 @@
-import {effect, signal} from '@preact/signals';
+import {signal, effect} from '@preact/signals';
 import {SignalRemoteReceiver} from '@remote-dom/preact/host';
 
 import type {RenderExample, RenderSandbox} from '../types.ts';

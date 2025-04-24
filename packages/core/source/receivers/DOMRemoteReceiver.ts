@@ -1,12 +1,12 @@
 import {createRemoteConnection, type RemoteConnection} from '../connection.ts';
 import {
+  NODE_TYPE_TEXT,
   NODE_TYPE_COMMENT,
   NODE_TYPE_ELEMENT,
-  NODE_TYPE_TEXT,
   ROOT_ID,
+  UPDATE_PROPERTY_TYPE_PROPERTY,
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
   UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
-  UPDATE_PROPERTY_TYPE_PROPERTY,
 } from '../constants.ts';
 import type {RemoteNodeSerialization} from '../types.ts';
 import type {RemoteReceiverOptions} from './shared.ts';
