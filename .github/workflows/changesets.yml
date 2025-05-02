@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
           fetch-depth: 0
@@ -21,7 +21,7 @@ jobs:
 
       - uses: ./.github/workflows/actions/prepare
       # @see https://github.com/changesets/action
-      - uses: changesets/action@v1
+      - uses: changesets/action@06245a4e0a36c064a573d4150030f5ec548e4fcc # v1.4.10
         with:
           title: 'Publish packages 🚀'
           commit: 'Publish packages'
