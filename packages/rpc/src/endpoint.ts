@@ -203,10 +203,17 @@ export function createEndpoint<T>(
         break;
       }
       case RESULT: {
-        const [callId] = data[1];
+        const [callId, method] = data[1];
 
-        callIdsToResolver.get(callId)!(...data[1]);
-        callIdsToResolver.delete(callId);
+        try {
+          callIdsToResolver.get(callId)!(...data[1]);
+          callIdsToResolver.delete(callId);
+        } catch (error) {
+          const {message} = error as Error;
+          throw new Error(
+            `Error in result listener. Method: ${method} Error: ${message}`,
+          );
+        }
         break;
       }
       case RELEASE: {
@@ -215,10 +222,17 @@ export function createEndpoint<T>(
         break;
       }
       case FUNCTION_RESULT: {
-        const [callId] = data[1];
+        const [callId, method] = data[1];
 
-        callIdsToResolver.get(callId)!(...data[1]);
-        callIdsToResolver.delete(callId);
+        try {
+          callIdsToResolver.get(callId)!(...data[1]);
+          callIdsToResolver.delete(callId);
+        } catch (error) {
+          const {message} = error as Error;
+          throw new Error(
+            `Error in function result listener. Method: ${method} Error: ${message}`,
+          );
+        }
         break;
       }
       case FUNCTION_APPLY: {
