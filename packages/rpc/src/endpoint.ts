@@ -44,6 +44,25 @@ export interface Endpoint<T> {
   terminate(): void;
 }
 
+export class MissingResolverError extends Error {
+  callId: string;
+  error?: Error;
+
+  constructor(callId: string, error?: Error, ...args: unknown[]) {
+    const errorMessage = error
+      ? ` Error: ${error.message || String(error)}`
+      : '';
+    const argsMessage = args.length > 0 ? ` Args: ${JSON.stringify(args)}` : '';
+    super(
+      `No resolver found for call ID: ${callId}${errorMessage}${argsMessage}`,
+    );
+
+    this.name = 'MissingResolverError';
+    this.callId = callId;
+    this.error = error;
+  }
+}
+
 /**
  * An endpoint wraps around a messenger, acting as the intermediary for all
  * messages both send from, and received by, that messenger. The endpoint sends
@@ -203,17 +222,15 @@ export function createEndpoint<T>(
         break;
       }
       case RESULT: {
-        const [callId, method] = data[1];
+        const [callId, error, args] = data[1];
+        const resolver = callIdsToResolver.get(callId);
 
-        try {
-          callIdsToResolver.get(callId)!(...data[1]);
-          callIdsToResolver.delete(callId);
-        } catch (error) {
-          const {message} = error as Error;
-          throw new Error(
-            `Error in result listener. Method: ${method} Error: ${message}`,
-          );
+        if (resolver == null) {
+          throw new MissingResolverError(callId, error, args);
         }
+
+        resolver(...data[1]);
+        callIdsToResolver.delete(callId);
         break;
       }
       case RELEASE: {
@@ -222,17 +239,15 @@ export function createEndpoint<T>(
         break;
       }
       case FUNCTION_RESULT: {
-        const [callId, method] = data[1];
+        const [callId, error, args] = data[1];
+        const resolver = callIdsToResolver.get(callId);
 
-        try {
-          callIdsToResolver.get(callId)!(...data[1]);
-          callIdsToResolver.delete(callId);
-        } catch (error) {
-          const {message} = error as Error;
-          throw new Error(
-            `Error in function result listener. Method: ${method} Error: ${message}`,
-          );
+        if (resolver == null) {
+          throw new MissingResolverError(callId, error, args);
         }
+
+        resolver(...data[1]);
+        callIdsToResolver.delete(callId);
         break;
       }
       case FUNCTION_APPLY: {
