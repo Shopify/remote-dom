@@ -1,5 +1,5 @@
 import {MessageEndpoint} from '../types';
-import {createEndpoint, TERMINATE} from '../endpoint';
+import {createEndpoint, TERMINATE, MissingResolverError} from '../endpoint';
 import {fromMessagePort} from '../adaptors';
 import {release, retain} from '../memory';
 
@@ -193,6 +193,20 @@ describe('createEndpoint()', () => {
       release(callMeBack);
 
       expect(port1MessageSpy).not.toHaveBeenCalled();
+    });
+
+    it('throws a MissingResolverError error when calling a function that is no longer registered', async () => {
+      const {port1} = new MessageChannel();
+      port1.start();
+      const messenger = fromMessagePort(port1);
+      createEndpoint(messenger);
+
+      await expect(
+        // @ts-expect-error Accessing private property for testing - we need to simulate a message event
+        (port1.listeners as Set<EventListener>).values().next().value!({
+          data: [1, ['callId']],
+        } as any),
+      ).rejects.toBeInstanceOf(MissingResolverError);
     });
   });
 });

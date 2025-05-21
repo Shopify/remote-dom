@@ -16,7 +16,7 @@ jobs:
 
       - id: typescript-cache
         name: Restore TypeScript cache
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: |
             packages/*/build/ts
@@ -36,7 +36,7 @@ jobs:
 
       - id: jest-cache
         name: Restore jest cache
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: .loom/cache/jest/
           key: ${{ runner.os }}-jest-v1-${{ github.sha }}
@@ -55,7 +55,7 @@ jobs:
 
       - id: eslint-cache
         name: Restore ESLint cache
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: .loom/cache/eslint
           key: ${{ runner.os }}-eslint-v1-${{ github.sha }}

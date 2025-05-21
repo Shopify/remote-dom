@@ -44,6 +44,29 @@ export interface Endpoint<T> {
   terminate(): void;
 }
 
+export class MissingResolverError extends Error {
+  readonly callId: string;
+  readonly error?: Error;
+  readonly result?: unknown;
+
+  constructor(message: {callId: string; error?: Error; result?: unknown}) {
+    const {callId, error, result} = message;
+
+    const errorMessage = error ? ` Error: ${String(error)}` : '';
+    const resultMessage =
+      result == null ? '' : ` Result: ${JSON.stringify(result)}`;
+
+    super(
+      `No resolver found for call ID: ${callId}${errorMessage}${resultMessage}`,
+    );
+
+    this.name = 'MissingResolverError';
+    this.callId = callId;
+    this.error = error;
+    this.result = result;
+  }
+}
+
 /**
  * An endpoint wraps around a messenger, acting as the intermediary for all
  * messages both send from, and received by, that messenger. The endpoint sends
@@ -203,9 +226,14 @@ export function createEndpoint<T>(
         break;
       }
       case RESULT: {
-        const [callId] = data[1];
+        const [callId, error, result] = data[1];
+        const resolver = callIdsToResolver.get(callId);
 
-        callIdsToResolver.get(callId)!(...data[1]);
+        if (resolver == null) {
+          throw new MissingResolverError({callId, error, result});
+        }
+
+        resolver(...data[1]);
         callIdsToResolver.delete(callId);
         break;
       }
@@ -215,9 +243,14 @@ export function createEndpoint<T>(
         break;
       }
       case FUNCTION_RESULT: {
-        const [callId] = data[1];
+        const [callId, error, result] = data[1];
+        const resolver = callIdsToResolver.get(callId);
 
-        callIdsToResolver.get(callId)!(...data[1]);
+        if (resolver == null) {
+          throw new MissingResolverError({callId, error, result});
+        }
+
+        resolver(...data[1]);
         callIdsToResolver.delete(callId);
         break;
       }
