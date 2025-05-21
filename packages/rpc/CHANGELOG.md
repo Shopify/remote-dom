@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.6
+
+### Patch Changes
+
+- [#568](https://github.com/Shopify/remote-dom/pull/568) [`4d7da5f`](https://github.com/Shopify/remote-dom/commit/4d7da5f47f9a8c5c6340cc6726c8403475d599b2) Thanks [@josemiguel-alvarez](https://github.com/josemiguel-alvarez)! - An endpoint will trigger an uncaught promise rejection with a `MissingResolverError` error when it receives messages to call a function that is no longer registered.
+
 ## 1.4.5
 
 ### Patch Changes

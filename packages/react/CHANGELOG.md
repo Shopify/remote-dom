@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.0.7
+
+### Patch Changes
+
+- Updated dependencies [[`4d7da5f`](https://github.com/Shopify/remote-dom/commit/4d7da5f47f9a8c5c6340cc6726c8403475d599b2)]:
+  - @remote-ui/rpc@1.4.6
+  - @remote-ui/async-subscription@2.1.17
+  - @remote-ui/core@2.2.6
+
 ## 5.0.6
 
 ### Patch Changes

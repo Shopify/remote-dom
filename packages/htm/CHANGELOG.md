@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @remote-ui/core@2.2.6
+
 ## 2.3.3
 
 ### Patch Changes
