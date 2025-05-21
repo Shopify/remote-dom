@@ -45,21 +45,25 @@ export interface Endpoint<T> {
 }
 
 export class MissingResolverError extends Error {
-  callId: string;
-  error?: Error;
+  readonly callId: string;
+  readonly error?: Error;
+  readonly result?: unknown;
 
-  constructor(callId: string, error?: Error, ...args: unknown[]) {
-    const errorMessage = error
-      ? ` Error: ${error.message || String(error)}`
-      : '';
-    const argsMessage = args.length > 0 ? ` Args: ${JSON.stringify(args)}` : '';
+  constructor(message: {callId: string; error?: Error; result?: unknown}) {
+    const {callId, error, result} = message;
+
+    const errorMessage = error ? ` Error: ${String(error)}` : '';
+    const resultMessage =
+      result == null ? '' : ` Result: ${JSON.stringify(result)}`;
+
     super(
-      `No resolver found for call ID: ${callId}${errorMessage}${argsMessage}`,
+      `No resolver found for call ID: ${callId}${errorMessage}${resultMessage}`,
     );
 
     this.name = 'MissingResolverError';
     this.callId = callId;
     this.error = error;
+    this.result = result;
   }
 }
 
@@ -222,11 +226,11 @@ export function createEndpoint<T>(
         break;
       }
       case RESULT: {
-        const [callId, error, args] = data[1];
+        const [callId, error, result] = data[1];
         const resolver = callIdsToResolver.get(callId);
 
         if (resolver == null) {
-          throw new MissingResolverError(callId, error, args);
+          throw new MissingResolverError({callId, error, result});
         }
 
         resolver(...data[1]);
@@ -239,11 +243,11 @@ export function createEndpoint<T>(
         break;
       }
       case FUNCTION_RESULT: {
-        const [callId, error, args] = data[1];
+        const [callId, error, result] = data[1];
         const resolver = callIdsToResolver.get(callId);
 
         if (resolver == null) {
-          throw new MissingResolverError(callId, error, args);
+          throw new MissingResolverError({callId, error, result});
         }
 
         resolver(...data[1]);
