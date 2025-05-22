@@ -75,12 +75,24 @@ export class Window extends EventTarget {
       }
     }
 
+    const properties = Object.getOwnPropertyDescriptors(window);
     const eventTargetPrototypeProperties = Object.getOwnPropertyDescriptors(
       EventTarget.prototype,
     );
-    const properties = Object.getOwnPropertyDescriptors(window);
 
-    Object.defineProperties(globalThis, eventTargetPrototypeProperties);
+    for (const [key, descriptor] of Object.entries(
+      eventTargetPrototypeProperties,
+    )) {
+      eventTargetPrototypeProperties[key] = {
+        ...descriptor,
+        value:
+          typeof descriptor.value === 'function'
+            ? descriptor.value.bind(window)
+            : descriptor.value,
+      };
+    }
+
     Object.defineProperties(globalThis, properties);
+    Object.defineProperties(globalThis, eventTargetPrototypeProperties);
   }
 }
