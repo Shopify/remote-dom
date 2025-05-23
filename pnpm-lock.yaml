@@ -98,6 +98,9 @@ importers:
       '@remote-ui/react':
         specifier: ^5.0.4
         version: 5.0.4(react-reconciler@0.28.0(react@18.3.1))(react@18.3.1)
+      '@remote-ui/rpc':
+        specifier: ^1.4.5
+        version: 1.4.5
       preact:
         specifier: ^10.22.0
         version: 10.22.1
