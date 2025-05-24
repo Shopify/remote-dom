@@ -22,6 +22,12 @@ export async function render(root: Element, api: RenderAPI) {
       const {renderUsingReact} = await import('./examples/react.tsx');
       return renderUsingReact(root, api);
     }
+    case 'react-mutations-1':
+    case 'react-mutations-2':
+    case 'react-mutations-3': {
+      const {renderUsingReact} = await import('./examples/react-mutations.tsx');
+      return renderUsingReact(root, api);
+    }
     case 'svelte': {
       const {renderUsingSvelte} = await import('./examples/svelte.ts');
       return renderUsingSvelte(root, api);

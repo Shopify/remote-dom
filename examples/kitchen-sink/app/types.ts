@@ -25,9 +25,13 @@ export type RenderExample =
   | 'htm'
   | 'preact'
   | 'react'
+  | 'react-mutations'
   | 'svelte'
   | 'vue'
-  | 'react-remote-ui';
+  | 'react-remote-ui'
+  | 'react-mutations-1'
+  | 'react-mutations-2'
+  | 'react-mutations-3';
 
 /**
  * The object that the “host” page will pass to the “remote” environment. This
@@ -123,4 +127,6 @@ export interface StackProperties {
    * Whether children should have space between them.
    */
   spacing?: boolean;
+
+  testId?: string;
 }

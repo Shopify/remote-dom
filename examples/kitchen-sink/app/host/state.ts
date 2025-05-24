@@ -14,6 +14,9 @@ const ALLOWED_EXAMPLE_VALUES = new Set<RenderExample>([
   'react',
   'svelte',
   'vue',
+  'react-mutations-1',
+  'react-mutations-2',
+  'react-mutations-3',
 ]);
 
 export function createState(

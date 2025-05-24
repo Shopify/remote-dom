@@ -52,7 +52,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
             type: NODE_TYPE_TEXT,
             data: 'I am a text',
           },
-          0,
+          undefined,
         ],
       ]);
 
@@ -98,7 +98,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
               },
             ],
           },
-          0,
+          undefined,
         ],
       ]);
 
@@ -151,7 +151,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
             type: NODE_TYPE_COMMENT,
             data: 'added by remote-ui legacy adaptor to replace a fragment rendered as a child',
           },
-          0,
+          undefined,
         ],
       ]);
 
@@ -226,7 +226,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
               },
             ],
           },
-          0,
+          undefined,
         ],
       ]);
 
@@ -314,7 +314,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
               },
             ],
           },
-          0,
+          undefined,
         ],
       ]);
 
@@ -449,7 +449,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
             ],
             properties: {},
           },
-          0,
+          undefined,
         ],
       ]);
 
@@ -559,7 +559,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
             properties: {},
             children: [{id: '2', type: NODE_TYPE_TEXT, data: 'I am a button'}],
           },
-          1,
+          undefined,
         ],
       ]);
 
@@ -639,7 +639,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
       );
 
       expect(receiver.connection.mutate).toHaveBeenCalledWith([
-        [MUTATION_TYPE_REMOVE_CHILD, '1', 0],
+        [MUTATION_TYPE_REMOVE_CHILD, '1', '2'],
         [
           MUTATION_TYPE_INSERT_CHILD,
           '1',
@@ -650,7 +650,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
             properties: {},
             children: [],
           },
-          1,
+          undefined,
         ],
       ]);
 
@@ -755,7 +755,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
             ],
             properties: {},
           },
-          1,
+          undefined,
         ],
       ]);
 
@@ -834,7 +834,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
       channel(ACTION_REMOVE_CHILD, '2', 0);
 
       expect(receiver.connection.mutate).toHaveBeenCalledWith([
-        [MUTATION_TYPE_REMOVE_CHILD, '2', 0],
+        [MUTATION_TYPE_REMOVE_CHILD, '2', '1'],
       ]);
 
       expect(receiver.root.children).toStrictEqual([
@@ -881,7 +881,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
       channel(ACTION_REMOVE_CHILD, '3', 1);
 
       expect(receiver.connection.mutate).toHaveBeenCalledWith([
-        [MUTATION_TYPE_REMOVE_CHILD, '3', 1],
+        [MUTATION_TYPE_REMOVE_CHILD, '3', '2'],
       ]);
 
       expect(receiver.root.children).toStrictEqual([
@@ -1034,7 +1034,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
               },
             ],
           },
-          0,
+          undefined,
         ],
       ]);
 
@@ -1102,7 +1102,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
             properties: {},
             children: [],
           },
-          0,
+          undefined,
         ],
       ]);
     });
@@ -1167,7 +1167,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
               },
             ],
           },
-          0,
+          undefined,
         ],
       ]);
 
@@ -1250,7 +1250,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
       channel(ACTION_REMOVE_CHILD, '2', 0);
 
       expect(receiver.connection.mutate).toHaveBeenCalledWith([
-        [MUTATION_TYPE_REMOVE_CHILD, '2', 0],
+        [MUTATION_TYPE_REMOVE_CHILD, '2', '1'],
       ]);
 
       expect(receiver.root.children).toStrictEqual([
@@ -1277,7 +1277,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
       channel(ACTION_REMOVE_CHILD, '2', 0);
 
       expect(receiver.connection.mutate).toHaveBeenCalledWith([
-        [MUTATION_TYPE_REMOVE_CHILD, '2', 0],
+        [MUTATION_TYPE_REMOVE_CHILD, '2', '0'],
       ]);
 
       expect(receiver.root.children).toStrictEqual([
@@ -1342,7 +1342,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
             type: NODE_TYPE_TEXT,
             data: 'I am the third child',
           },
-          1,
+          '0',
         ],
       ]);
 
@@ -1382,7 +1382,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
       channel(ACTION_REMOVE_CHILD, '2', 0);
 
       expect(receiver.connection.mutate).toHaveBeenCalledWith([
-        [MUTATION_TYPE_REMOVE_CHILD, '2', 0],
+        [MUTATION_TYPE_REMOVE_CHILD, '2', '1'],
       ]);
 
       expect(receiver.root.children).toStrictEqual([
@@ -1415,7 +1415,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
       channel(ACTION_REMOVE_CHILD, '2', 0);
 
       expect(receiver.connection.mutate).toHaveBeenCalledWith([
-        [MUTATION_TYPE_REMOVE_CHILD, '2', 0],
+        [MUTATION_TYPE_REMOVE_CHILD, '2', '3'],
       ]);
 
       expect(receiver.root.children).toStrictEqual([
@@ -1467,7 +1467,7 @@ describe('adaptToLegacyRemoteChannel()', () => {
       channel(ACTION_REMOVE_CHILD, ROOT_ID, 0);
 
       expect(receiver.connection.mutate).toHaveBeenCalledWith([
-        [MUTATION_TYPE_REMOVE_CHILD, ROOT_ID, 0],
+        [MUTATION_TYPE_REMOVE_CHILD, ROOT_ID, '1'],
       ]);
 
       expect(receiver.root.children).toStrictEqual([]);

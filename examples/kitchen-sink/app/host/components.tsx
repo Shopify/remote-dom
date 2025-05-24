@@ -51,11 +51,13 @@ export function Button({
 }
 
 export function Stack({
+  testId,
   spacing,
   children,
 }: {children?: ComponentChildren} & StackProperties) {
   return (
     <div
+      data-testid={testId}
       class={['Stack', spacing && 'Stack--spacing'].filter(Boolean).join(' ')}
     >
       {children}
@@ -160,6 +162,9 @@ export function ControlPanel({
           <option value="vue">Vue</option>
           <option value="htm">htm</option>
           <option value="react-remote-ui">React Remote UI</option>
+          <option value="react-mutations-1">React Mutations 1</option>
+          <option value="react-mutations-2">React Mutations 2</option>
+          <option value="react-mutations-3">React Mutations 3</option>
         </Select>
       </section>
 
@@ -194,6 +199,9 @@ const EXAMPLE_FILE_NAMES = new Map<RenderExample, string>([
   ['htm', 'htm.ts'],
   ['preact', 'preact.tsx'],
   ['react', 'react.tsx'],
+  ['react-mutations-1', 'react-mutations.tsx'],
+  ['react-mutations-2', 'react-mutations.tsx'],
+  ['react-mutations-3', 'react-mutations.tsx'],
   ['svelte', 'App.svelte'],
   ['vue', 'App.vue'],
 ]);

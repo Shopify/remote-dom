@@ -49,6 +49,7 @@ export const Modal = createRemoteElement<
 export const Stack = createRemoteElement<StackProperties>({
   properties: {
     spacing: {type: Boolean},
+    testId: {type: String},
   },
 });
 
