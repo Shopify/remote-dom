@@ -22,10 +22,10 @@ import type {Element} from './Element.ts';
 // const attributeTokenizer = / ([^<>'"\n=\s]+)=(['"])([^>'"\n]*)\2/g;
 
 const elementTokenizer =
-  /(?:<([a-z][a-z0-9-:]*)((?:\s[^<>'"=\n\s]+(?:=(['"])[^\n]*?\3|=[^>'"\n\s]*|))*)\s*(\/?)\s*>|<\/([a-z][a-z0-9-:]*)>|<!--(.*?)-->|([^&<>]+))/gi;
+  /(?:<([a-z][a-z0-9-:]*)((?:[\s]+[^<>'"=\s]+(?:=(['"])[^]*?\3|=[^>'"\s]*|))*)[\s]*(\/?)\s*>|<\/([a-z][a-z0-9-:]*)>|<!--(.*?)-->|([^&<>]+))/gi;
 
 const attributeTokenizer =
-  /\s([^<>'"=\n\s]+)(?:=(['"])([^\n]*?)\2|=([^>'"\n\s]*)|)/g;
+  /\s([^<>'"=\n\s]+)(?:=(["'])([\s\S]*?)\2|=([^>'"\n\s]*)|)/g;
 
 export function parseHtml(html: string, contextNode: Node) {
   const document = contextNode.ownerDocument;
