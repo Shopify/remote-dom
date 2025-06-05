@@ -1,5 +1,11 @@
 # @remote-dom/polyfill
 
+## 1.4.5
+
+### Patch Changes
+
+- [#571](https://github.com/Shopify/remote-dom/pull/571) [`0bba42b`](https://github.com/Shopify/remote-dom/commit/0bba42b3246fd100fce6cc03900f2b4645092264) Thanks [@robin-drexler](https://github.com/robin-drexler)! - fix Element.innerHTML not allowing newlines before attributes
+
 ## 1.4.4
 
 ### Patch Changes
