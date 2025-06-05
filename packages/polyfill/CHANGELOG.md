@@ -1,5 +1,11 @@
 # @remote-dom/polyfill
 
+## 1.4.4
+
+### Patch Changes
+
+- [#570](https://github.com/Shopify/remote-dom/pull/570) [`33baaba`](https://github.com/Shopify/remote-dom/commit/33baaba512ca461068f57dcba707ef1cc640bfca) Thanks [@robin-drexler](https://github.com/robin-drexler)! - fix event listener methods not being bound to correctly
+
 ## 1.4.3
 
 ### Patch Changes

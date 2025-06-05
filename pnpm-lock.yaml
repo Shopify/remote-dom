@@ -148,7 +148,7 @@ importers:
   packages/core:
     dependencies:
       '@remote-dom/polyfill':
-        specifier: workspace:^1.4.2
+        specifier: workspace:^1.4.4
         version: link:../polyfill
       htm:
         specifier: ^3.1.1
