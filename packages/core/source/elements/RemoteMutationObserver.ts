@@ -41,6 +41,16 @@ export class RemoteMutationObserver extends MutationObserver {
 
         if (record.type === 'childList') {
           record.removedNodes.forEach((node) => {
+            if (!REMOTE_IDS.has(node)) {
+              /**
+               * This happens if the node was not recognized during the
+               * `serializeRemoteNode` of a (probably direct and extensive)
+               * previous mutation-record, when it was no longer in the DOM
+               * at that time of processing.
+               */
+              return;
+            }
+
             disconnectRemoteNode(node);
 
             remoteRecords.push([
