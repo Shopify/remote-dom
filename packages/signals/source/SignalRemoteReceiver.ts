@@ -158,24 +158,33 @@ export class SignalRemoteReceiver {
 
         return implementationMethod(...args);
       },
-      insertChild: (id, child, index) => {
-        const parent = attached.get(id) as SignalRemoteReceiverParent;
-        const newChildren = [...parent.children.peek()];
+      insertChild: (parentId, child, nextSiblingId) => {
+        const parent = attached.get(parentId) as SignalRemoteReceiverParent;
+        const children = [...parent.children.peek()];
+
+        if (children.some((existing) => existing.id === child.id)) {
+          return;
+        }
 
         const normalizedChild = attach(child, parent);
 
-        if (index === newChildren.length) {
-          newChildren.push(normalizedChild);
+        if (nextSiblingId === undefined) {
+          children.push(normalizedChild);
         } else {
-          newChildren.splice(index, 0, normalizedChild);
+          const nextSibling = attached.get(
+            nextSiblingId,
+          ) as SignalRemoteReceiverNode;
+          children.splice(children.indexOf(nextSibling), 0, normalizedChild);
         }
 
-        (parent.children as any).value = newChildren;
+        (parent.children as any).value = children;
       },
-      removeChild: (id, index) => {
-        const parent = attached.get(id) as SignalRemoteReceiverParent;
-
+      removeChild: (parentId, id) => {
+        const parent = attached.get(parentId) as SignalRemoteReceiverParent;
         const newChildren = [...parent.children.peek()];
+
+        const node = attached.get(id) as SignalRemoteReceiverNode;
+        const index = newChildren.indexOf(node);
 
         const [removed] = newChildren.splice(index, 1);
 

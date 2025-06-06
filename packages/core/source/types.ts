@@ -20,7 +20,7 @@ export type RemoteMutationRecordInsertChild = [
   /**
    * The ID of the parent node.
    */
-  id: string,
+  parentId: string,
 
   /**
    * A description of the child node being inserted.
@@ -33,7 +33,7 @@ export type RemoteMutationRecordInsertChild = [
   /**
    * The index in the parents’ children to insert the new child.
    */
-  index: number,
+  nextSiblingId: string | undefined,
 ];
 
 /**
@@ -45,12 +45,12 @@ export type RemoteMutationRecordRemoveChild = [
   /**
    * The ID of the parent node.
    */
-  id: string,
+  parentId: string,
 
   /**
-   * The index of the child to remove.
+   * The ID of the child to remove.
    */
-  index: number,
+  id: string,
 ];
 
 /**

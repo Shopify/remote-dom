@@ -105,27 +105,36 @@ export class DOMRemoteReceiver {
           ? call(element as any, method, ...args)
           : (element as any)[method](...args);
       },
-      insertChild: (id, child, index) => {
-        const parent = id === ROOT_ID ? this.root : attached.get(id)!;
+      insertChild: (parentId, child, nextSiblingId) => {
+        const parent =
+          parentId === ROOT_ID ? this.root : attached.get(parentId)!;
+        const normalizedChild = attach(child);
 
-        const existingTimeout = destroyTimeouts.get(id);
+        if (parent.contains(normalizedChild)) {
+          return;
+        }
+
+        const existingTimeout = destroyTimeouts.get(parentId);
         if (existingTimeout) clearTimeout(existingTimeout);
 
-        parent.insertBefore(attach(child), parent.childNodes[index] || null);
+        if (nextSiblingId === undefined) {
+          parent.appendChild(normalizedChild);
+        } else {
+          parent.insertBefore(normalizedChild, attached.get(nextSiblingId)!);
+        }
       },
-      removeChild: (id, index) => {
-        const parent = id === ROOT_ID ? this.root : attached.get(id)!;
-        const child = parent.childNodes[index]!;
+      removeChild: (parentId, id) => {
+        const child = attached.get(id) as ChildNode;
         child.remove();
 
         if (cache?.maxAge) {
-          const existingTimeout = destroyTimeouts.get(id);
+          const existingTimeout = destroyTimeouts.get(parentId);
           if (existingTimeout) clearTimeout(existingTimeout);
 
           const timeout = setTimeout(() => {
             detach(child);
           }, cache.maxAge);
-          destroyTimeouts.set(id, timeout as any);
+          destroyTimeouts.set(parentId, timeout as any);
         } else {
           detach(child);
         }
