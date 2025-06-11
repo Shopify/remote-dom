@@ -187,6 +187,10 @@ export function createEndpoint<T>(
   }
 
   async function listener(event: MessageEvent) {
+    if (terminated) {
+      return;
+    }
+
     const {data} = event;
 
     if (!isMessageData(data)) {

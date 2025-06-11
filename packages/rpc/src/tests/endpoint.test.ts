@@ -208,6 +208,29 @@ describe('createEndpoint()', () => {
         } as any),
       ).rejects.toBeInstanceOf(MissingResolverError);
     });
+
+    it('does not process messages after the endpoint is terminated', async () => {
+      const {port1, port2} = new MessageChannel();
+      port1.start();
+      port2.start();
+
+      const endpoint1 = createEndpoint<{hello(): string}>(
+        fromMessagePort(port1),
+      );
+      const endpoint2 = createEndpoint(fromMessagePort(port2));
+
+      const spy = jest.fn(() => 'world');
+      endpoint2.expose({hello: spy});
+
+      endpoint2.terminate();
+
+      // Try to call a method after termination
+      await expect(endpoint1.call.hello()).rejects.toMatchObject({
+        message: expect.stringContaining('terminated'),
+      });
+
+      expect(spy).not.toHaveBeenCalled();
+    });
   });
 });
 
