@@ -48,9 +48,15 @@ export class MissingResolverError extends Error {
   readonly callId: string;
   readonly error?: Error;
   readonly result?: unknown;
+  readonly groupingHash: string;
 
-  constructor(message: {callId: string; error?: Error; result?: unknown}) {
-    const {callId, error, result} = message;
+  constructor(message: {
+    callId: string;
+    groupingHash: string;
+    error?: Error;
+    result?: unknown;
+  }) {
+    const {callId, error, result, groupingHash} = message;
 
     const errorMessage = error ? ` Error: ${String(error)}` : '';
     const resultMessage =
@@ -64,6 +70,7 @@ export class MissingResolverError extends Error {
     this.callId = callId;
     this.error = error;
     this.result = result;
+    this.groupingHash = groupingHash;
   }
 }
 
@@ -234,7 +241,12 @@ export function createEndpoint<T>(
         const resolver = callIdsToResolver.get(callId);
 
         if (resolver == null) {
-          throw new MissingResolverError({callId, error, result});
+          throw new MissingResolverError({
+            callId,
+            error,
+            result,
+            groupingHash: 'MissingResolverError::Result',
+          });
         }
 
         resolver(...data[1]);
@@ -251,7 +263,12 @@ export function createEndpoint<T>(
         const resolver = callIdsToResolver.get(callId);
 
         if (resolver == null) {
-          throw new MissingResolverError({callId, error, result});
+          throw new MissingResolverError({
+            callId,
+            error,
+            result,
+            groupingHash: 'MissingResolverError::FunctionResult',
+          });
         }
 
         resolver(...data[1]);
