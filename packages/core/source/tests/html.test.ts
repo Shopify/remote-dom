@@ -1,4 +1,4 @@
-import '../polyfill.ts';
+import '../polyfill/polyfill.ts';
 import {describe, it, expect} from 'vitest';
 
 import {html, type PropertiesWithChildren} from '../html.ts';
