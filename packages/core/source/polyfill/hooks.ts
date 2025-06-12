@@ -1,10 +1,11 @@
-import {Window, HOOKS, type Hooks} from '@remote-dom/polyfill';
+import {HOOKS, type Hooks} from '@remote-dom/polyfill';
 
 import {
   MUTATION_TYPE_INSERT_CHILD,
   MUTATION_TYPE_REMOVE_CHILD,
   MUTATION_TYPE_UPDATE_TEXT,
-} from './constants.ts';
+} from '../constants.ts';
+
 import {
   remoteId,
   remoteConnection,
@@ -12,12 +13,11 @@ import {
   disconnectRemoteNode,
   serializeRemoteNode,
   updateRemoteElementAttribute,
-} from './elements/internals.ts';
+} from '../elements/internals.ts';
 
-const window = new Window();
+import {window} from './window.ts';
+
 const hooks = window[HOOKS];
-
-Window.setGlobal(window);
 
 hooks.insertChild = (parent, node, index) => {
   const connection = remoteConnection(parent);
@@ -72,4 +72,4 @@ hooks.removeAttribute = (element, name) => {
   updateRemoteElementAttribute(element, name);
 };
 
-export {hooks, window, Window, type Hooks};
+export {hooks, type Hooks};

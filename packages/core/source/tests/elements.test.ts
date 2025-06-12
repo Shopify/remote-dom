@@ -1,4 +1,4 @@
-import '../polyfill.ts';
+import '../polyfill/polyfill.ts';
 import {describe, it, expect, vi, type MockedObject} from 'vitest';
 
 import {

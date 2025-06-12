@@ -39,11 +39,18 @@
       "require": "./build/cjs/html.cjs"
     },
     "./polyfill": {
-      "types": "./build/typescript/polyfill.d.ts",
-      "quilt:source": "./source/polyfill.ts",
-      "quilt:esnext": "./build/esnext/polyfill.esnext",
-      "import": "./build/esm/polyfill.mjs",
-      "require": "./build/cjs/polyfill.cjs"
+      "types": "./build/typescript/polyfill/polyfill.d.ts",
+      "quilt:source": "./source/polyfill/polyfill.ts",
+      "quilt:esnext": "./build/esnext/polyfill/polyfill.esnext",
+      "import": "./build/esm/polyfill/polyfill.mjs",
+      "require": "./build/cjs/polyfill/polyfill.cjs"
+    },
+    "./polyfill/hooks": {
+      "types": "./build/typescript/polyfill/hooks.d.ts",
+      "quilt:source": "./source/polyfill/hooks.ts",
+      "quilt:esnext": "./build/esnext/polyfill/hooks.esnext",
+      "import": "./build/esm/polyfill/hooks.mjs",
+      "require": "./build/cjs/polyfill/hooks.cjs"
     },
     "./receivers": {
       "types": "./build/typescript/receivers.d.ts",
@@ -63,7 +70,10 @@
         "./build/typescript/html.d.ts"
       ],
       "polyfill": [
-        "./build/typescript/polyfill.d.ts"
+        "./build/typescript/polyfill/polyfill.d.ts"
+      ],
+      "polyfill/hooks": [
+        "./build/typescript/polyfill/hooks.d.ts"
       ],
       "receivers": [
         "./build/typescript/receivers.d.ts"
@@ -71,7 +81,7 @@
     }
   },
   "sideEffects": [
-    "./source/polyfill.ts",
+    "./source/polyfill/polyfill.ts",
     "./build/cjs/polyfill.cjs",
     "./build/esm/polyfill.mjs",
     "./build/esnext/polyfill.esnext"
