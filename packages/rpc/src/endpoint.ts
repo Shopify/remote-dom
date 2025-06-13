@@ -48,15 +48,10 @@ export class MissingResolverError extends Error {
   readonly callId: string;
   readonly error?: Error;
   readonly result?: unknown;
-  readonly groupingHash: string;
+  readonly groupingHash: string = 'RemoteUI::MissingResolverError';
 
-  constructor(message: {
-    callId: string;
-    groupingHash: string;
-    error?: Error;
-    result?: unknown;
-  }) {
-    const {callId, error, result, groupingHash} = message;
+  constructor(message: {callId: string; error?: Error; result?: unknown}) {
+    const {callId, error, result} = message;
 
     const errorMessage = error ? ` Error: ${String(error)}` : '';
     const resultMessage =
@@ -70,7 +65,6 @@ export class MissingResolverError extends Error {
     this.callId = callId;
     this.error = error;
     this.result = result;
-    this.groupingHash = groupingHash;
   }
 }
 
@@ -245,7 +239,6 @@ export function createEndpoint<T>(
             callId,
             error,
             result,
-            groupingHash: 'MissingResolverError::Result',
           });
         }
 
@@ -267,7 +260,6 @@ export function createEndpoint<T>(
             callId,
             error,
             result,
-            groupingHash: 'MissingResolverError::FunctionResult',
           });
         }
 
