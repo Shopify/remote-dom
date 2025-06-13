@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.5
+
+### Patch Changes
+
+- Updated dependencies [[`ec8cbe8`](https://github.com/Shopify/remote-dom/commit/ec8cbe8c61d15a494ccd60b4b0515e201a132dae)]:
+  - @remote-ui/rpc@1.4.7
+  - @remote-ui/core@2.2.7
+
 ## 0.4.4
 
 ### Patch Changes

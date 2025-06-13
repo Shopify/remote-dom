@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.18
+
+### Patch Changes
+
+- Updated dependencies [[`ec8cbe8`](https://github.com/Shopify/remote-dom/commit/ec8cbe8c61d15a494ccd60b4b0515e201a132dae)]:
+  - @remote-ui/rpc@1.4.7
+
 ## 2.1.17
 
 ### Patch Changes

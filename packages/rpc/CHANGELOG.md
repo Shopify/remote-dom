@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.7
+
+### Patch Changes
+
+- [#575](https://github.com/Shopify/remote-dom/pull/575) [`ec8cbe8`](https://github.com/Shopify/remote-dom/commit/ec8cbe8c61d15a494ccd60b4b0515e201a132dae) Thanks [@josemiguel-alvarez](https://github.com/josemiguel-alvarez)! - Add early return in message listener as a safe guard to make sure we don't run into exceptions processing messages in terminated endpoints.
+
 ## 1.4.6
 
 ### Patch Changes
