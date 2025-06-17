@@ -1,5 +1,11 @@
 # @remote-dom/core
 
+## 1.8.0
+
+### Minor Changes
+
+- [#576](https://github.com/Shopify/remote-dom/pull/576) [`ed2d24c`](https://github.com/Shopify/remote-dom/commit/ed2d24cb0d4a4b4146a1507796a40b4fdc3aaf8d) Thanks [@robin-drexler](https://github.com/robin-drexler)! - Allow to import hooks without global window override side effect
+
 ## 1.7.1
 
 ### Patch Changes
