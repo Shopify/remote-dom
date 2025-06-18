@@ -49,9 +49,17 @@ export class MissingResolverError extends Error {
   readonly error?: Error;
   readonly result?: unknown;
   readonly groupingHash: string = 'RemoteUI::MissingResolverError';
+  readonly previouslyResolved: boolean = false;
+  readonly terminated: boolean = false;
 
-  constructor(message: {callId: string; error?: Error; result?: unknown}) {
-    const {callId, error, result} = message;
+  constructor(message: {
+    callId: string;
+    error?: Error;
+    result?: unknown;
+    previouslyResolved: boolean;
+    terminated: boolean;
+  }) {
+    const {callId, error, result, previouslyResolved, terminated} = message;
 
     const errorMessage = error ? ` Error: ${String(error)}` : '';
     const resultMessage =
@@ -65,6 +73,8 @@ export class MissingResolverError extends Error {
     this.callId = callId;
     this.error = error;
     this.result = result;
+    this.previouslyResolved = previouslyResolved;
+    this.terminated = terminated;
   }
 }
 
@@ -109,6 +119,7 @@ export function createEndpoint<T>(
       ...args: MessageMap[typeof FUNCTION_RESULT] | MessageMap[typeof RESULT]
     ) => void
   >();
+  const previouslyResolvedCallIds = new Set<string>();
 
   const call = createCallable<T>(handlerForCall, callable);
 
@@ -239,11 +250,14 @@ export function createEndpoint<T>(
             callId,
             error,
             result,
+            previouslyResolved: previouslyResolvedCallIds.has(callId),
+            terminated,
           });
         }
 
         resolver(...data[1]);
         callIdsToResolver.delete(callId);
+        previouslyResolvedCallIds.add(callId);
         break;
       }
       case RELEASE: {
@@ -260,11 +274,14 @@ export function createEndpoint<T>(
             callId,
             error,
             result,
+            previouslyResolved: previouslyResolvedCallIds.has(callId),
+            terminated,
           });
         }
 
         resolver(...data[1]);
         callIdsToResolver.delete(callId);
+        previouslyResolvedCallIds.add(callId);
         break;
       }
       case FUNCTION_APPLY: {
@@ -331,6 +348,7 @@ export function createEndpoint<T>(
     terminated = true;
     activeApi.clear();
     callIdsToResolver.clear();
+    previouslyResolvedCallIds.clear();
     encoder.terminate?.();
     messenger.removeEventListener('message', listener);
   }
