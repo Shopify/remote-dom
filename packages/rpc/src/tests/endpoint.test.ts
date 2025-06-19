@@ -1,5 +1,5 @@
 import {MessageEndpoint} from '../types';
-import {createEndpoint, TERMINATE, MissingResolverError} from '../endpoint';
+import {createEndpoint, TERMINATE} from '../endpoint';
 import {fromMessagePort} from '../adaptors';
 import {release, retain} from '../memory';
 
@@ -206,7 +206,41 @@ describe('createEndpoint()', () => {
         (port1.listeners as Set<EventListener>).values().next().value!({
           data: [1, ['callId']],
         } as any),
-      ).rejects.toBeInstanceOf(MissingResolverError);
+      ).rejects.toMatchObject({
+        name: 'MissingResolverError',
+        callId: 'callId',
+        previouslyResolved: false,
+        terminated: false,
+      });
+    });
+
+    it('on MissingResolverError, previouslyResolved is true when the callId has been resolved before', async () => {
+      const {port1, port2} = new MessageChannel();
+      port1.start();
+      port2.start();
+
+      const endpoint1 = createEndpoint<{hello(): string}>(
+        fromMessagePort(port1),
+        {uuid: () => 'callId'},
+      );
+
+      const endpoint2 = createEndpoint(fromMessagePort(port2));
+
+      endpoint2.expose({hello: () => 'world'});
+      // first call works
+      await endpoint1.call.hello();
+
+      await expect(
+        // @ts-expect-error Accessing private property for testing - we need to simulate a message event
+        (port1.listeners as Set<EventListener>).values().next().value!({
+          data: [1, ['callId']],
+        } as any),
+      ).rejects.toMatchObject({
+        name: 'MissingResolverError',
+        callId: 'callId',
+        previouslyResolved: true,
+        terminated: false,
+      });
     });
 
     it('does not process messages after the endpoint is terminated', async () => {
