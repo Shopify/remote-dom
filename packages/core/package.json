@@ -74,7 +74,11 @@
     "./source/polyfill.ts",
     "./build/cjs/polyfill.cjs",
     "./build/esm/polyfill.mjs",
-    "./build/esnext/polyfill.esnext"
+    "./build/esnext/polyfill.esnext",
+    "./source/polyfill/hooks.ts",
+    "./build/cjs/polyfill/hooks.cjs",
+    "./build/esm/polyfill/hooks.mjs",
+    "./build/esnext/polyfill/hooks.esnext"
   ],
   "scripts": {
     "build": "rollup --config ./rollup.config.js"
