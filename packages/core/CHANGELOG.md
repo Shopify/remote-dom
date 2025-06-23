@@ -1,5 +1,11 @@
 # @remote-dom/core
 
+## 1.8.1
+
+### Patch Changes
+
+- [#581](https://github.com/Shopify/remote-dom/pull/581) [`d4fd36d`](https://github.com/Shopify/remote-dom/commit/d4fd36df90a7813b5003c5a88386335958d11d65) Thanks [@robin-drexler](https://github.com/robin-drexler)! - Fix missing side effect declaration
+
 ## 1.8.0
 
 ### Minor Changes
