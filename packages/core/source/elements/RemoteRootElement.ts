@@ -2,12 +2,12 @@ import {ROOT_ID, MUTATION_TYPE_INSERT_CHILD} from '../constants.ts';
 import type {RemoteConnection, RemoteMutationRecord} from '../types.ts';
 
 import {
+  setRemoteId,
   remoteConnection,
   connectRemoteNode,
   serializeRemoteNode,
   updateRemoteElementProperty,
   callRemoteElementMethod,
-  REMOTE_IDS,
 } from './internals.ts';
 
 /**
@@ -35,7 +35,7 @@ import {
 export class RemoteRootElement extends HTMLElement {
   constructor() {
     super();
-    REMOTE_IDS.set(this, ROOT_ID);
+    setRemoteId(this, ROOT_ID);
   }
 
   connect(connection: RemoteConnection): void {

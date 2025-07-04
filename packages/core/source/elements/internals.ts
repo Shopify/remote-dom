@@ -27,10 +27,14 @@ export function remoteId(node: Node) {
   let remoteID = REMOTE_IDS.get(node);
   if (remoteID == null) {
     remoteID = String(id++);
-    REMOTE_IDS.set(node, remoteID);
+    setRemoteId(node, remoteID);
   }
 
   return remoteID;
+}
+
+export function setRemoteId(node: Node, id: string) {
+  REMOTE_IDS.set(node, id);
 }
 
 export const REMOTE_PROPERTIES = new WeakMap<Node, Record<string, any>>();

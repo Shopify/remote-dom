@@ -8,6 +8,7 @@ import {
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
   UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
 } from '../constants.ts';
+import {setRemoteId} from '../elements/internals.ts';
 import type {RemoteNodeSerialization} from '../types.ts';
 import type {RemoteReceiverOptions} from './shared.ts';
 
@@ -228,7 +229,7 @@ export class DOMRemoteReceiver {
         }
       }
 
-      REMOTE_IDS.set(normalizedChild, node.id);
+      setRemoteId(normalizedChild, node.id);
 
       attached.set(node.id, normalizedChild);
 
