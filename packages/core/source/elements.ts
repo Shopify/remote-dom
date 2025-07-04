@@ -26,6 +26,8 @@ export {RemoteEvent} from './elements/RemoteEvent.ts';
 export {RemoteMutationObserver} from './elements/RemoteMutationObserver.ts';
 
 export {
+  remoteId,
+  setRemoteId,
   connectRemoteNode,
   disconnectRemoteNode,
   serializeRemoteNode,
