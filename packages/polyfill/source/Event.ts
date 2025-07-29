@@ -124,7 +124,7 @@ export function fireEvent(
     } catch {
       // eventPhase property may be read-only on native DOM Events
     }
-    
+
     // Safely set currentTarget property only if it's writable
     try {
       event.currentTarget = currentTarget;

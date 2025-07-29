@@ -116,7 +116,7 @@ export class EventTarget {
       // target property is read-only on native DOM Events, which is fine
       // since the native event already has the correct target
     }
-    
+
     try {
       event.srcElement = this;
     } catch {
