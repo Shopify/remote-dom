@@ -122,14 +122,16 @@ export function fireEvent(
       event.eventPhase =
         event.target === currentTarget ? EventPhase.AT_TARGET : phase;
     } catch {
-      // eventPhase property may be read-only on native DOM Events
+      // eventPhase property is read-only on native DOM Events
+      // Event will still function but may have different phase behavior
     }
 
     // Safely set currentTarget property only if it's writable
     try {
       event.currentTarget = currentTarget;
     } catch {
-      // currentTarget property may be read-only on native DOM Events
+      // currentTarget property is read-only on native DOM Events
+      // Event will still function but currentTarget may not update correctly during bubbling
     }
 
     try {
