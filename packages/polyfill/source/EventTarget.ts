@@ -109,8 +109,19 @@ export class EventTarget {
     // while (target instanceof Node && (target = target.parentNode)) {
     //   path.push(target);
     // }
-    event.target = this;
-    event.srcElement = this;
+    // Safely set target property only if it's writable (native DOM Events have read-only target)
+    try {
+      event.target = this;
+    } catch {
+      // target property is read-only on native DOM Events, which is fine
+      // since the native event already has the correct target
+    }
+    
+    try {
+      event.srcElement = this;
+    } catch {
+      // srcElement property may also be read-only on some implementations
+    }
     event[PATH] = path;
 
     for (let i = path.length; i--; ) {

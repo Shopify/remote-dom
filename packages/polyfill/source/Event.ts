@@ -117,9 +117,20 @@ export function fireEvent(
   if (!list) return;
 
   for (const listener of list) {
-    event.eventPhase =
-      event.target === currentTarget ? EventPhase.AT_TARGET : phase;
-    event.currentTarget = currentTarget;
+    // Safely set eventPhase property only if it's writable
+    try {
+      event.eventPhase =
+        event.target === currentTarget ? EventPhase.AT_TARGET : phase;
+    } catch {
+      // eventPhase property may be read-only on native DOM Events
+    }
+    
+    // Safely set currentTarget property only if it's writable
+    try {
+      event.currentTarget = currentTarget;
+    } catch {
+      // currentTarget property may be read-only on native DOM Events
+    }
 
     try {
       if (typeof listener === 'object') {
