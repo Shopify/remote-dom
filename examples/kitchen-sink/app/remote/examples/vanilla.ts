@@ -45,7 +45,7 @@ export function renderUsingVanillaDOM(root: Element, api: RenderAPI) {
     typeof Modal
   >;
 
-  modal.addEventListener('close', handleClose);
+  // modal.addEventListener('close', handleClose);
 
   modal.querySelector('ui-text')!.append(countText);
 
@@ -54,6 +54,19 @@ export function renderUsingVanillaDOM(root: Element, api: RenderAPI) {
   ];
 
   countButton!.addEventListener('press', handlePress);
+
+  // Debug info
+  console.log('[Vanilla] Button element:', countButton);
+  console.log('[Vanilla] Button constructor:', countButton!.constructor.name);
+  console.log(
+    '[Vanilla] Button remoteEvents:',
+    (countButton!.constructor as any).remoteEvents,
+  );
+  console.log(
+    '[Vanilla] Button remoteEventDefinitions:',
+    (countButton!.constructor as any).remoteEventDefinitions,
+  );
+
   primaryActionButton!.addEventListener('press', handlePrimaryAction);
 
   template.innerHTML = `

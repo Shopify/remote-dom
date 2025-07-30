@@ -1,8 +1,8 @@
 import {
   createRemoteElement,
+  RemoteEvent,
   RemoteRootElement,
   RemoteFragmentElement,
-  type RemoteEvent,
 } from '@remote-dom/core/elements';
 
 import type {
@@ -31,9 +31,41 @@ export const Button = createRemoteElement<
   {modal?: true},
   {press(event: RemoteEvent): void}
 >({
-  events: ['press'],
+  attributes: ['variant'],
+  // events: ['press'],
+  events: {
+    press: {
+      dispatchEvent(detail: any) {
+        console.log('[Button] dispatchEvent called with:', detail);
+        return new RemoteEvent('press', {detail});
+      },
+    },
+  },
   slots: ['modal'],
 });
+
+// export class Button extends RemoteElement<ButtonProperties> {
+//   static tagName = 's-button';
+
+//   static get remoteAttributes() {
+//     return ['variant'];
+//   }
+
+//   static get remoteEvents() {
+//     return {
+//       press: {
+//         bubbles: true,
+//         dispatchEvent(detail: any) {
+//           return new RemoteEvent('press', {bubbles: true, detail});
+//         },
+//       },
+//     };
+//   }
+
+//   constructor() {
+//     super();
+//   }
+// }
 
 export const Modal = createRemoteElement<
   ModalProperties,

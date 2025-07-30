@@ -81,6 +81,11 @@ export const REMOTE_EVENT_LISTENERS = new WeakMap<
   Record<string, (...args: any) => void>
 >();
 
+export const REMOTE_EVENT_LISTENER_COUNTS = new WeakMap<
+  Node,
+  Record<string, number>
+>();
+
 /**
  * Gets the remote event listeners of an element node. If the node is not an element
  * node, or does not have explicitly defined remote event listeners, this method returns
@@ -88,6 +93,14 @@ export const REMOTE_EVENT_LISTENERS = new WeakMap<
  */
 export function remoteEventListeners(node: Node) {
   return REMOTE_EVENT_LISTENERS.get(node);
+}
+
+/**
+ * Gets the remote event listener counts. This tracks the actual number of
+ * user-added listeners for each event.
+ */
+export function remoteEventListenerCounts(node: Node) {
+  return REMOTE_EVENT_LISTENER_COUNTS.get(node);
 }
 
 /**
@@ -175,20 +188,33 @@ export function updateRemoteElementEventListener(
   node: Element,
   event: string,
   listener?: (...args: any[]) => any,
+  count?: number,
 ) {
   let eventListeners = REMOTE_EVENT_LISTENERS.get(node);
+  let eventListenerCounts = REMOTE_EVENT_LISTENER_COUNTS.get(node);
 
   if (eventListeners == null) {
     eventListeners = {};
     REMOTE_EVENT_LISTENERS.set(node, eventListeners);
   }
 
-  if (eventListeners[event] === listener) return;
+  if (eventListenerCounts == null) {
+    eventListenerCounts = {};
+    REMOTE_EVENT_LISTENER_COUNTS.set(node, eventListenerCounts);
+  }
+
+  if (
+    eventListeners[event] === listener &&
+    eventListenerCounts[event] === count
+  )
+    return;
 
   if (listener == null) {
     delete eventListeners[event];
+    delete eventListenerCounts[event];
   } else {
     eventListeners[event] = listener;
+    eventListenerCounts[event] = count ?? 0;
   }
 
   const connection = REMOTE_CONNECTIONS.get(node);
@@ -204,6 +230,13 @@ export function updateRemoteElementEventListener(
       UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
     ],
   ]);
+
+  // Always update all counts as a separate property
+  updateRemoteElementProperty(
+    node,
+    '__eventListenerCounts',
+    {...eventListenerCounts}, // Clone to ensure a new object reference
+  );
 }
 
 /**
@@ -259,8 +292,10 @@ export function serializeRemoteNode(node: Node): RemoteNodeSerialization {
         properties: cloneMaybeObject(remoteProperties(node)),
         attributes: cloneMaybeObject(remoteAttributes(node)),
         eventListeners: cloneMaybeObject(remoteEventListeners(node)),
+        eventListenerCounts:
+          cloneMaybeObject(remoteEventListenerCounts(node)) || {},
         children: Array.from(node.childNodes).map(serializeRemoteNode),
-      };
+      } as any;
     }
     // TextNode
     case 3:

@@ -174,6 +174,13 @@ export interface RemoteElementSerialization {
   readonly eventListeners?: Record<string, (...args: any) => any>;
 
   /**
+   * The count of actual user-added event listeners for each event type.
+   * This is always present and tracks the number of listeners excluding
+   * the internal proxy listener.
+   */
+  readonly eventListenerCounts: Record<string, number>;
+
+  /**
    * The list of child nodes of this element.
    */
   readonly children: readonly RemoteNodeSerialization[];

@@ -6,6 +6,7 @@ import {
   callRemoteElementMethod,
   remoteProperties as getRemoteProperties,
   remoteEventListeners as getRemoteEventListeners,
+  remoteEventListenerCounts as getRemoteEventListenerCounts,
 } from './internals.ts';
 import type {
   RemoteElementAttributeDefinition,
@@ -555,6 +556,9 @@ export abstract class RemoteElement<
   constructor() {
     super();
     (this.constructor as typeof RemoteElement).finalize();
+    
+    // Initialize event listener counts
+    updateRemoteElementProperty(this, '__eventListenerCounts', {});
 
     const propertyDescriptors: PropertyDescriptorMap = {};
     const initialPropertiesToSet: Record<string, any> = {};
@@ -748,6 +752,7 @@ export abstract class RemoteElement<
     remoteEvent.listeners.add(listener);
     remoteEvents.listeners.set(listener, listenerRecord);
 
+
     super.addEventListener(type, normalizedListener, options);
 
     if (typeof options === 'object' && options.signal) {
@@ -761,7 +766,8 @@ export abstract class RemoteElement<
     }
 
     if (listenerDefinition) {
-      updateRemoteElementEventListener(this, type, remoteEvent.dispatch);
+      // Pass the actual count of user listeners (not including the proxy)
+      updateRemoteElementEventListener(this, type, remoteEvent.dispatch, remoteEvent.listeners.size);
     } else {
       updateRemoteElementProperty(this, property!, remoteEvent.dispatch);
     }
@@ -916,7 +922,13 @@ function removeRemoteListener(
   remoteEvent.listeners.delete(listener);
   remoteEvents.listeners.delete(listener);
 
-  if (remoteEvent.listeners.size > 0) return;
+  if (remoteEvent.listeners.size > 0) {
+    // Update the count if there are still listeners
+    if (remoteEvent.definition && !remoteEvent.property) {
+      updateRemoteElementEventListener(this, type, remoteEvent.dispatch, remoteEvent.listeners.size);
+    }
+    return;
+  }
 
   remoteEvents.events.delete(type);
 
@@ -928,7 +940,7 @@ function removeRemoteListener(
     }
   } else {
     if (getRemoteEventListeners(this)?.[type] === remoteEvent.dispatch) {
-      updateRemoteElementEventListener(this, type, undefined);
+      updateRemoteElementEventListener(this, type, undefined, 0);
     }
   }
 }

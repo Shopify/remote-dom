@@ -48,7 +48,7 @@ export interface SignalRemoteReceiverComment
 export interface SignalRemoteReceiverElement
   extends Omit<
     RemoteElementSerialization,
-    'children' | 'properties' | 'attributes' | 'eventListeners'
+    'children' | 'properties' | 'attributes' | 'eventListeners' | 'eventListenerCounts'
   > {
   readonly properties: ReadonlySignal<
     NonNullable<RemoteElementSerialization['properties']>
@@ -59,6 +59,7 @@ export interface SignalRemoteReceiverElement
   readonly eventListeners: ReadonlySignal<
     NonNullable<RemoteElementSerialization['eventListeners']>
   >;
+  readonly eventListenerCounts: ReadonlySignal<Record<string, number>>;
   readonly children: ReadonlySignal<readonly SignalRemoteReceiverNode[]>;
 }
 
@@ -78,6 +79,7 @@ export interface SignalRemoteReceiverRoot {
   readonly eventListeners: ReadonlySignal<
     NonNullable<RemoteElementSerialization['eventListeners']>
   >;
+  readonly eventListenerCounts: ReadonlySignal<Record<string, number>>;
   readonly children: ReadonlySignal<readonly SignalRemoteReceiverNode[]>;
 }
 
@@ -119,6 +121,7 @@ export class SignalRemoteReceiver {
     properties: signal({}),
     attributes: signal({}),
     eventListeners: signal({}),
+    eventListenerCounts: signal({}),
     children: signal([]),
   };
 
@@ -219,6 +222,11 @@ export class SignalRemoteReceiver {
         const newUpdateObject = {...oldUpdateObject};
         newUpdateObject[property] = value;
         updateSignal.value = newUpdateObject;
+        
+        // When updating __eventListenerCounts property, also update the dedicated signal
+        if (type === UPDATE_PROPERTY_TYPE_PROPERTY && property === '__eventListenerCounts' && element.eventListenerCounts) {
+          (element.eventListenerCounts as any).value = value || {};
+        }
 
         // If the slot changes, inform parent nodes so they can
         // re-parent it appropriately.
@@ -280,7 +288,8 @@ export class SignalRemoteReceiver {
             properties,
             attributes,
             eventListeners,
-          } = child;
+            eventListenerCounts,
+          } = child as any;
           retain?.(properties);
           retain?.(eventListeners);
 
@@ -296,6 +305,7 @@ export class SignalRemoteReceiver {
             properties: signal(properties ?? {}),
             attributes: signal(attributes ?? {}),
             eventListeners: signal(eventListeners ?? {}),
+            eventListenerCounts: signal(eventListenerCounts ?? {}),
           } satisfies SignalRemoteReceiverElement;
 
           for (const grandChild of children) {

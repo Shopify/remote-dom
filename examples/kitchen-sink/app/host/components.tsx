@@ -30,6 +30,7 @@ export function Button({
   onPress,
   modal,
   children,
+  __eventListenerCounts,
 }: {
   children?: ComponentChildren;
   modal?: ComponentChildren;
@@ -43,7 +44,8 @@ export function Button({
           onPress?.() ?? document.querySelector('dialog')?.showModal()
         }
       >
-        {children}
+        {children}{' '}
+        {__eventListenerCounts.press ? 'press callback' : 'no press callback'}
       </button>
       {modal}
     </>

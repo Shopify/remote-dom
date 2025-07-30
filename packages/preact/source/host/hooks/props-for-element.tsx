@@ -55,6 +55,9 @@ export function usePropsForRemoteElement<
 
   const {children, properties, attributes, eventListeners} = element;
   const resolvedEventListeners = eventListeners.value;
+  
+  // Get listener counts from the dedicated signal first, then fallback to properties
+  const eventListenerCounts = (element as any).eventListenerCounts?.value || properties.value.__eventListenerCounts || {};
 
   const reactChildren: ReturnType<typeof renderRemoteNode>[] = [];
 
@@ -109,6 +112,8 @@ export function usePropsForRemoteElement<
   return {
     ...resolvedProperties,
     children: reactChildren,
+    // Expose listener counts as a special property for monitoring
+    __eventListenerCounts: eventListenerCounts,
   } as unknown as Props;
 }
 
