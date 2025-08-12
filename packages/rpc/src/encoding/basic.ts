@@ -132,6 +132,13 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
       return result;
     }
 
+    if (isTransferable(value)) {
+      const result: EncodeResult = [value, [value]];
+      seen.set(value, result);
+
+      return result;
+    }
+
     const result: EncodeResult = [value];
     seen.set(value, result);
 
@@ -218,4 +225,14 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
 
     return value as any;
   }
+}
+
+function isTransferable(value: unknown): value is Transferable {
+  if (value instanceof ArrayBuffer) return true;
+  if (value instanceof MessagePort) return true;
+  if (value instanceof ReadableStream) return true;
+  if (value instanceof WritableStream) return true;
+  if (value instanceof TransformStream) return true;
+
+  return false;
 }
