@@ -80,19 +80,112 @@
 
     <script type="module">
       import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
+      import {
+        ROOT_ID,
+        NODE_TYPE_ELEMENT,
+        MUTATION_TYPE_INSERT_CHILD,
+        MUTATION_TYPE_UPDATE_TEXT,
+        MUTATION_TYPE_UPDATE_PROPERTY,
+        MUTATION_TYPE_REMOVE_CHILD,
+      } from '@remote-dom/core';
       import {ThreadIframe} from '@quilted/threads';
 
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');
-
-      // In earlier examples, we did not pass any arguments, which allows the DOM
-      // receiver to mirror any element it receives. By passing the `elements` option,
-      // we are restricting the allowed elements to only the ones we list, which in this
-      // case means only our `ui-button` element can be rendered.
-      const receiver = new DOMRemoteReceiver({
-        elements: ['ui-button'],
-      });
+      const receiver = new DOMRemoteReceiver();
       receiver.connect(root);
+
+      // Host-level allowlist: only permit `ui-button` elements to be inserted.
+      // This wrapper filters incoming mutation records before forwarding them to
+      // the receiver. Unknown tags are ignored.
+      const allowedTags = new Set(['ui-button']);
+      const allowedIds = new Set([ROOT_ID]);
+
+      function collectIds(node) {
+        // Collect ids for the node and any descendants
+        const stack = [node];
+        while (stack.length > 0) {
+          const current = stack.pop();
+          if (current && typeof current.id === 'string') {
+            allowedIds.add(current.id);
+          }
+          if (current && current.children) {
+            for (const child of current.children) stack.push(child);
+          }
+        }
+      }
+
+      function sanitizeNode(node) {
+        // Keep text and comment nodes as-is
+        if (node.type !== NODE_TYPE_ELEMENT) return node;
+
+        // Drop disallowed element nodes entirely
+        if (!allowedTags.has(node.element)) return null;
+
+        // Rebuild the element with only sanitized children
+        const sanitizedChildren = [];
+        if (Array.isArray(node.children)) {
+          for (const child of node.children) {
+            const sanitized = sanitizeNode(child);
+            if (sanitized) sanitizedChildren.push(sanitized);
+          }
+        }
+
+        return {
+          ...node,
+          children: sanitizedChildren,
+        };
+      }
+
+      const filteredConnection = {
+        call: (...args) => receiver.connection.call(...args),
+        mutate(records) {
+          const filtered = [];
+
+          for (const record of records) {
+            const [type, ...rest] = record;
+
+            if (type === MUTATION_TYPE_INSERT_CHILD) {
+              const [parentId, child, index] = rest;
+
+              // Only insert under an allowed parent, and only if the child node is allowed
+              if (!allowedIds.has(parentId)) continue;
+              const sanitized = sanitizeNode(child);
+              if (!sanitized) continue;
+
+              collectIds(sanitized);
+              filtered.push([type, parentId, sanitized, index]);
+              continue;
+            }
+
+            if (type === MUTATION_TYPE_UPDATE_TEXT) {
+              const [id] = rest;
+              if (!allowedIds.has(id)) continue;
+              filtered.push(record);
+              continue;
+            }
+
+            if (type === MUTATION_TYPE_UPDATE_PROPERTY) {
+              const [id] = rest;
+              if (!allowedIds.has(id)) continue;
+              filtered.push(record);
+              continue;
+            }
+
+            if (type === MUTATION_TYPE_REMOVE_CHILD) {
+              const [parentId] = rest;
+              if (!allowedIds.has(parentId)) continue;
+              filtered.push(record);
+              continue;
+            }
+
+            // Any other record types (future-proof): pass through
+            filtered.push(record);
+          }
+
+          if (filtered.length > 0) receiver.connection.mutate(filtered);
+        },
+      };
 
       // We use the `@quilted/threads` library to create a “thread” for our iframe,
       // which lets us communicate over `postMessage` without having to worry about
@@ -104,7 +197,7 @@
       // the `receiver.connection` object. This object, called a `RemoteConnection`,
       // allows the remote environment to synchronize its tree of UI elements into
       // the `root` element we connected our `receiver` to above.
-      thread.imports.render(receiver.connection);
+      thread.imports.render(filteredConnection);
     </script>
   </body>
 </html>
