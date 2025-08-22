@@ -1,5 +1,11 @@
 # @remote-dom/polyfill
 
+## 1.4.6
+
+### Patch Changes
+
+- [#590](https://github.com/Shopify/remote-dom/pull/590) [`8994a49`](https://github.com/Shopify/remote-dom/commit/8994a49913cd0122fdfbd21f971448afab3a3207) Thanks [@robin-drexler](https://github.com/robin-drexler)! - fix error events not working
+
 ## 1.4.5
 
 ### Patch Changes
