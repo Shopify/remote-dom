@@ -2,6 +2,8 @@ import {Document} from './Document.ts';
 import {Event} from './Event.ts';
 import {EventTarget} from './EventTarget.ts';
 import {CustomEvent} from './CustomEvent.ts';
+import {ErrorEvent} from './ErrorEvent.ts';
+import {PromiseRejectionEvent} from './PromiseRejectionEvent.ts';
 import {Node} from './Node.ts';
 import {ParentNode} from './ParentNode.ts';
 import {ChildNode} from './ChildNode.ts';
@@ -18,6 +20,16 @@ import {MutationObserver} from './MutationObserver.ts';
 import {HOOKS} from './constants.ts';
 import type {Hooks} from './hooks.ts';
 
+type OnErrorHandler =
+  | ((
+      message: string,
+      filename?: string,
+      lineno?: number,
+      colno?: number,
+      error?: any,
+    ) => void)
+  | null;
+
 export class Window extends EventTarget {
   [HOOKS]: Partial<Hooks> = {};
   name = '';
@@ -30,6 +42,8 @@ export class Window extends EventTarget {
   location = globalThis.location;
   navigator = globalThis.navigator;
   Event = Event;
+  ErrorEvent = ErrorEvent;
+  PromiseRejectionEvent = PromiseRejectionEvent;
   EventTarget = EventTarget;
   CustomEvent = CustomEvent;
   Node = Node;
@@ -45,6 +59,64 @@ export class Window extends EventTarget {
   SVGElement = SVGElement;
   HTMLTemplateElement = HTMLTemplateElement;
   MutationObserver = MutationObserver;
+
+  #currentOnErrorHandler: ((event: any) => void) | null = null;
+  #currentOriginalOnErrorHandler: OnErrorHandler = null;
+  #currentOnUnhandledRejectionHandler: WindowEventHandlers['onunhandledrejection'] =
+    null;
+
+  get onerror() {
+    return this.#currentOriginalOnErrorHandler;
+  }
+  set onerror(handler: OnErrorHandler) {
+    if (this.#currentOnErrorHandler) {
+      this.removeEventListener('error', this.#currentOnErrorHandler);
+    }
+    if (handler && typeof handler === 'function') {
+      // the event listener version receives an event object
+      // whereas winwow.onerror receives 5 arguments instead
+      // we need to wrap the handler to convert the event object to the 5 arguments
+      // and also make sure that when window.onerror is read to return the original handler
+      // https://developer.mozilla.org/en-US/docs/Web/API/Window/error_event#syntax
+      this.#currentOriginalOnErrorHandler = handler;
+      this.#currentOnErrorHandler = (event: ErrorEvent) => {
+        handler(
+          event.message ?? 'Error',
+          event.filename,
+          event.lineno,
+          event.colno,
+          event.error,
+        );
+      };
+      this.addEventListener('error', this.#currentOnErrorHandler);
+    } else {
+      this.#currentOnErrorHandler = null;
+      this.#currentOriginalOnErrorHandler = null;
+    }
+  }
+
+  get onunhandledrejection() {
+    return this.#currentOnUnhandledRejectionHandler;
+  }
+  set onunhandledrejection(
+    handler: WindowEventHandlers['onunhandledrejection'],
+  ) {
+    if (this.#currentOnUnhandledRejectionHandler) {
+      this.removeEventListener(
+        'unhandledrejection',
+        this.#currentOnUnhandledRejectionHandler as any,
+      );
+    }
+    if (handler && typeof handler === 'function') {
+      this.#currentOnUnhandledRejectionHandler = handler;
+      this.addEventListener(
+        'unhandledrejection',
+        this.#currentOnUnhandledRejectionHandler as any,
+      );
+    } else {
+      this.#currentOnUnhandledRejectionHandler = null;
+    }
+  }
 
   static setGlobal(window: Window) {
     const properties = Object.getOwnPropertyDescriptors(window);
