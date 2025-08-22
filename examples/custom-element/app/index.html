@@ -83,6 +83,8 @@
       import {
         ROOT_ID,
         NODE_TYPE_ELEMENT,
+        NODE_TYPE_TEXT,
+        NODE_TYPE_COMMENT,
         MUTATION_TYPE_INSERT_CHILD,
         MUTATION_TYPE_UPDATE_TEXT,
         MUTATION_TYPE_UPDATE_PROPERTY,
@@ -92,100 +94,92 @@
 
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');
-      const receiver = new DOMRemoteReceiver();
+      class ProtectedRemoteDOMReceiver extends DOMRemoteReceiver {
+        #allowedElements;
+        #wrapped = false;
+        constructor(options = {}) {
+          const {allowedElements = [], ...rest} = options;
+          super(rest);
+          this.#allowedElements = new Set(allowedElements);
+        }
+
+        connect(element) {
+          super.connect(element);
+          if (this.#wrapped) return;
+          this.#wrapped = true;
+
+          const allowedTags = this.#allowedElements;
+          const allowedIds = new Set([ROOT_ID]);
+
+          function collectIds(node) {
+            const stack = [node];
+            while (stack.length > 0) {
+              const current = stack.pop();
+              if (current && typeof current.id === 'string') {
+                allowedIds.add(current.id);
+              }
+              if (current && current.children) {
+                for (const child of current.children) stack.push(child);
+              }
+            }
+          }
+
+          const original = this.connection;
+          const filtered = {
+            call: (...args) => original.call(...args),
+            mutate: (records) => {
+              const filteredRecords = [];
+              for (const record of records) {
+                const [type, ...rest] = record;
+                if (type === MUTATION_TYPE_INSERT_CHILD) {
+                  const [parentId, child, index] = rest;
+                  if (!allowedIds.has(parentId)) continue;
+                  if (child.type === NODE_TYPE_ELEMENT) {
+                    if (!allowedTags.has(child.element)) continue;
+                    collectIds(child);
+                  } else if (
+                    child.type === NODE_TYPE_TEXT ||
+                    child.type === NODE_TYPE_COMMENT
+                  ) {
+                    if (child && typeof child.id === 'string') {
+                      allowedIds.add(child.id);
+                    }
+                  }
+                  filteredRecords.push([type, parentId, child, index]);
+                  continue;
+                }
+                if (type === MUTATION_TYPE_UPDATE_TEXT) {
+                  const [id] = rest;
+                  if (!allowedIds.has(id)) continue;
+                  filteredRecords.push(record);
+                  continue;
+                }
+                if (type === MUTATION_TYPE_UPDATE_PROPERTY) {
+                  const [id] = rest;
+                  if (!allowedIds.has(id)) continue;
+                  filteredRecords.push(record);
+                  continue;
+                }
+                if (type === MUTATION_TYPE_REMOVE_CHILD) {
+                  const [parentId] = rest;
+                  if (!allowedIds.has(parentId)) continue;
+                  filteredRecords.push(record);
+                  continue;
+                }
+                filteredRecords.push(record);
+              }
+              if (filteredRecords.length > 0) original.mutate(filteredRecords);
+            },
+          };
+
+          this.connection = filtered;
+        }
+      }
+
+      const receiver = new ProtectedRemoteDOMReceiver({
+        allowedElements: ['ui-button'],
+      });
       receiver.connect(root);
-
-      // Host-level allowlist: only permit `ui-button` elements to be inserted.
-      // This wrapper filters incoming mutation records before forwarding them to
-      // the receiver. Unknown tags are ignored.
-      const allowedTags = new Set(['ui-button']);
-      const allowedIds = new Set([ROOT_ID]);
-
-      function collectIds(node) {
-        // Collect ids for the node and any descendants
-        const stack = [node];
-        while (stack.length > 0) {
-          const current = stack.pop();
-          if (current && typeof current.id === 'string') {
-            allowedIds.add(current.id);
-          }
-          if (current && current.children) {
-            for (const child of current.children) stack.push(child);
-          }
-        }
-      }
-
-      function sanitizeNode(node) {
-        // Keep text and comment nodes as-is
-        if (node.type !== NODE_TYPE_ELEMENT) return node;
-
-        // Drop disallowed element nodes entirely
-        if (!allowedTags.has(node.element)) return null;
-
-        // Rebuild the element with only sanitized children
-        const sanitizedChildren = [];
-        if (Array.isArray(node.children)) {
-          for (const child of node.children) {
-            const sanitized = sanitizeNode(child);
-            if (sanitized) sanitizedChildren.push(sanitized);
-          }
-        }
-
-        return {
-          ...node,
-          children: sanitizedChildren,
-        };
-      }
-
-      const filteredConnection = {
-        call: (...args) => receiver.connection.call(...args),
-        mutate(records) {
-          const filtered = [];
-
-          for (const record of records) {
-            const [type, ...rest] = record;
-
-            if (type === MUTATION_TYPE_INSERT_CHILD) {
-              const [parentId, child, index] = rest;
-
-              // Only insert under an allowed parent, and only if the child node is allowed
-              if (!allowedIds.has(parentId)) continue;
-              const sanitized = sanitizeNode(child);
-              if (!sanitized) continue;
-
-              collectIds(sanitized);
-              filtered.push([type, parentId, sanitized, index]);
-              continue;
-            }
-
-            if (type === MUTATION_TYPE_UPDATE_TEXT) {
-              const [id] = rest;
-              if (!allowedIds.has(id)) continue;
-              filtered.push(record);
-              continue;
-            }
-
-            if (type === MUTATION_TYPE_UPDATE_PROPERTY) {
-              const [id] = rest;
-              if (!allowedIds.has(id)) continue;
-              filtered.push(record);
-              continue;
-            }
-
-            if (type === MUTATION_TYPE_REMOVE_CHILD) {
-              const [parentId] = rest;
-              if (!allowedIds.has(parentId)) continue;
-              filtered.push(record);
-              continue;
-            }
-
-            // Any other record types (future-proof): pass through
-            filtered.push(record);
-          }
-
-          if (filtered.length > 0) receiver.connection.mutate(filtered);
-        },
-      };
 
       // We use the `@quilted/threads` library to create a “thread” for our iframe,
       // which lets us communicate over `postMessage` without having to worry about
@@ -197,7 +191,7 @@
       // the `receiver.connection` object. This object, called a `RemoteConnection`,
       // allows the remote environment to synchronize its tree of UI elements into
       // the `root` element we connected our `receiver` to above.
-      thread.imports.render(filteredConnection);
+      thread.imports.render(receiver.connection);
     </script>
   </body>
 </html>
