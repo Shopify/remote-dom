@@ -80,17 +80,104 @@
 
     <script type="module">
       import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
+      import {
+        ROOT_ID,
+        NODE_TYPE_ELEMENT,
+        NODE_TYPE_TEXT,
+        NODE_TYPE_COMMENT,
+        MUTATION_TYPE_INSERT_CHILD,
+        MUTATION_TYPE_UPDATE_TEXT,
+        MUTATION_TYPE_UPDATE_PROPERTY,
+        MUTATION_TYPE_REMOVE_CHILD,
+      } from '@remote-dom/core';
       import {ThreadIframe} from '@quilted/threads';
 
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');
+      class ProtectedRemoteDOMReceiver extends DOMRemoteReceiver {
+        #allowedElements;
+        #wrapped = false;
+        constructor(options = {}) {
+          const {allowedElements = [], ...rest} = options;
+          super(rest);
+          this.#allowedElements = new Set(allowedElements);
+        }
 
-      // In earlier examples, we did not pass any arguments, which allows the DOM
-      // receiver to mirror any element it receives. By passing the `elements` option,
-      // we are restricting the allowed elements to only the ones we list, which in this
-      // case means only our `ui-button` element can be rendered.
-      const receiver = new DOMRemoteReceiver({
-        elements: ['ui-button'],
+        connect(element) {
+          super.connect(element);
+          if (this.#wrapped) return;
+          this.#wrapped = true;
+
+          const allowedTags = this.#allowedElements;
+          const allowedIds = new Set([ROOT_ID]);
+
+          function collectIds(node) {
+            const stack = [node];
+            while (stack.length > 0) {
+              const current = stack.pop();
+              if (current && typeof current.id === 'string') {
+                allowedIds.add(current.id);
+              }
+              if (current && current.children) {
+                for (const child of current.children) stack.push(child);
+              }
+            }
+          }
+
+          const original = this.connection;
+          const filtered = {
+            call: (...args) => original.call(...args),
+            mutate: (records) => {
+              const filteredRecords = [];
+              for (const record of records) {
+                const [type, ...rest] = record;
+                if (type === MUTATION_TYPE_INSERT_CHILD) {
+                  const [parentId, child, index] = rest;
+                  if (!allowedIds.has(parentId)) continue;
+                  if (child.type === NODE_TYPE_ELEMENT) {
+                    if (!allowedTags.has(child.element)) continue;
+                    collectIds(child);
+                  } else if (
+                    child.type === NODE_TYPE_TEXT ||
+                    child.type === NODE_TYPE_COMMENT
+                  ) {
+                    if (child && typeof child.id === 'string') {
+                      allowedIds.add(child.id);
+                    }
+                  }
+                  filteredRecords.push([type, parentId, child, index]);
+                  continue;
+                }
+                if (type === MUTATION_TYPE_UPDATE_TEXT) {
+                  const [id] = rest;
+                  if (!allowedIds.has(id)) continue;
+                  filteredRecords.push(record);
+                  continue;
+                }
+                if (type === MUTATION_TYPE_UPDATE_PROPERTY) {
+                  const [id] = rest;
+                  if (!allowedIds.has(id)) continue;
+                  filteredRecords.push(record);
+                  continue;
+                }
+                if (type === MUTATION_TYPE_REMOVE_CHILD) {
+                  const [parentId] = rest;
+                  if (!allowedIds.has(parentId)) continue;
+                  filteredRecords.push(record);
+                  continue;
+                }
+                filteredRecords.push(record);
+              }
+              if (filteredRecords.length > 0) original.mutate(filteredRecords);
+            },
+          };
+
+          this.connection = filtered;
+        }
+      }
+
+      const receiver = new ProtectedRemoteDOMReceiver({
+        allowedElements: ['ui-button'],
       });
       receiver.connect(root);
 
