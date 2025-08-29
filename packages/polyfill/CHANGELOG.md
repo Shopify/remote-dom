@@ -1,5 +1,11 @@
 # @remote-dom/polyfill
 
+## 1.5.0
+
+### Minor Changes
+
+- [#593](https://github.com/Shopify/remote-dom/pull/593) [`61f5cba`](https://github.com/Shopify/remote-dom/commit/61f5cbaa9965f7befbea3d3dfc2d2b2a0798c958) Thanks [@developit](https://github.com/developit)! - Add support for `not` in query-selectors
+
 ## 1.4.7
 
 ### Patch Changes
