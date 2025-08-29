@@ -67,7 +67,7 @@ export function parseSelector(selector: string) {
   let part: Part = {combinator: Combinator.Inner, matchers: []};
   const parts = [part];
   const tokenizer =
-    /\s*?([>\s+~]?)\s*?(?:(?:\[\s*([^\]=]+)(?:=(['"])(.*?)\3)?\s*\])|([#.]?)([^\s#.[>:]+)|:(\w+)(?:\((.*?)\))?)/gi;
+    /\s*?([>\s+~]?)\s*?(?:(?:\[\s*([^\]=]+)(?:=(['"])(.*?)\3)?\s*\])|([#.]?)([^\s#.[>:+~]+)|:(\w+)(?:\((.*?)\))?)/gi;
   let token;
   while ((token = tokenizer.exec(selector))) {
     // [1]: ancestor/parent/sibling/adjacent
@@ -95,8 +95,12 @@ export function parseSelector(selector: string) {
       type = token[5] === '#' ? MatcherType.Id : MatcherType.Class;
     } else if (token[7]) {
       type = token[8] == null ? MatcherType.Pseudo : MatcherType.Function;
-    } else if (token[6] && ELEMENT_SELECTOR_TEST.test(token[6])) {
-      type = MatcherType.Element;
+    } else if (token[6]) {
+      if (token[6] === '*') {
+        type = MatcherType.Unknown; // Universal selector matches all
+      } else if (ELEMENT_SELECTOR_TEST.test(token[6])) {
+        type = MatcherType.Element;
+      }
     }
     part.matchers.push({
       type,
@@ -149,22 +153,39 @@ function matchesSelectorRecursive(element: Element, parts: Part[]): boolean {
       ? PARENT
       : PREV;
   let ref = element[link];
-  if (!ref || !matchesSelectorMatcher(ref as Element, matchers)) {
-    return false;
-  }
+  if (!ref) return false;
+
   if (
     combinator === Combinator.Descendant ||
     combinator === Combinator.Sibling
   ) {
-    while ((ref = ref[link])) {
-      if (matchesSelectorMatcher(ref as Element, matchers)) {
+    // For descendant/sibling combinators, search through all ancestors/siblings
+    while (ref) {
+      if (isElementNode(ref) && matchesSelectorMatcher(ref, matchers)) {
         const pp = parts.slice(0, -1);
         if (pp.length === 0) return true;
         if (matchesSelectorRecursive(element, pp)) return true;
       }
+      ref = ref[link];
     }
+    return false;
+  } else {
+    // For child/adjacent combinators, check only the immediate parent/sibling
+    // For sibling combinators, skip non-element siblings
+    if (combinator === Combinator.Adjacent && !isElementNode(ref)) {
+      // Skip to next element sibling
+      while (ref && !isElementNode(ref)) {
+        ref = ref[link];
+      }
+      if (!ref) return false;
+    }
+
+    if (!isElementNode(ref) || !matchesSelectorMatcher(ref, matchers)) {
+      return false;
+    }
+    const pp = parts.slice(0, -1);
+    return pp.length === 0 || matchesSelectorRecursive(element, pp);
   }
-  return false;
 }
 
 function matchesSelectorPart(element: Element, {combinator, matchers}: Part) {
@@ -176,18 +197,30 @@ function matchesSelectorPart(element: Element, {combinator, matchers}: Part) {
       ? PARENT
       : PREV;
   let ref = element[link];
-  if (!ref || !matchesSelectorMatcher(ref as Element, matchers)) {
+  if (!ref) return false;
+
+  // For sibling combinators, skip non-element siblings
+  if (combinator === Combinator.Adjacent && !isElementNode(ref)) {
+    while (ref && !isElementNode(ref)) {
+      ref = ref[link];
+    }
+    if (!ref) return false;
+  }
+
+  if (!isElementNode(ref) || !matchesSelectorMatcher(ref, matchers)) {
     return false;
   }
+
   if (
     combinator === Combinator.Descendant ||
     combinator === Combinator.Sibling
   ) {
     while ((ref = ref[link])) {
-      if (matchesSelectorMatcher(ref as Element, matchers)) return true;
+      if (isElementNode(ref) && matchesSelectorMatcher(ref, matchers))
+        return true;
     }
   }
-  return false;
+  return true;
 }
 
 function matchesSelectorMatcher(
@@ -203,12 +236,16 @@ function matchesSelectorMatcher(
   }
   const {type, name, value} = matcher;
   switch (type) {
+    case MatcherType.Unknown:
+      return name === '*'; // Universal selector
     case MatcherType.Element:
       return element.localName === name;
     case MatcherType.Id:
       return element.getAttribute('id') === name;
     case MatcherType.Class:
-      return element.getAttribute('class') === name;
+      const classAttr = element.getAttribute('class');
+      if (!classAttr) return false;
+      return classAttr.split(/\s+/).includes(name);
     case MatcherType.Attribute:
       return value == null
         ? element.hasAttribute(name)
@@ -222,6 +259,8 @@ function matchesSelectorMatcher(
       switch (name) {
         case 'has':
           return matchesSelector(element, value || '');
+        case 'not':
+          return !matchesSelector(element, value || '');
         default:
           throw Error(`Function :${name}(${value}) not implemented`);
       }
