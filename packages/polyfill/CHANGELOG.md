@@ -1,5 +1,11 @@
 # @remote-dom/polyfill
 
+## 1.4.7
+
+### Patch Changes
+
+- [#594](https://github.com/Shopify/remote-dom/pull/594) [`789a7c7`](https://github.com/Shopify/remote-dom/commit/789a7c7480a445d1e5973bd6e2aa4e8889ec6f85) Thanks [@robin-drexler](https://github.com/robin-drexler)! - add `FocusEvent`, `ClipboardEvent` and `ToggleEvent` to polyfill
+
 ## 1.4.6
 
 ### Patch Changes
