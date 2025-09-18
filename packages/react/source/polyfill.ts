@@ -1,5 +1,5 @@
 class HTMLIFrameElement extends HTMLElement {}
-
+// ignore
 // React checks whether elements are Iframes on initialization.
 defineGlobalProperty('HTMLIFrameElement', {
   value: HTMLIFrameElement,
