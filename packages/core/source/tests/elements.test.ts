@@ -991,6 +991,60 @@ describe('RemoteElement', () => {
       );
     });
 
+    it('passes all arguments to a custom event provided by a `dispatchEvent()` event listener description', async () => {
+      class CustomRemoteEvent extends RemoteEvent {}
+
+      const dispatchListener = vi.fn();
+
+      const ButtonElement = createRemoteElement({
+        events: {
+          press: {
+            dispatchEvent(...args: any[]) {
+              dispatchListener(this, ...args);
+
+              return new CustomRemoteEvent('press', {
+                detail: args,
+              });
+            },
+          },
+        },
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const listener = vi.fn();
+
+      element.addEventListener('press', listener);
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          expect.any(Function),
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+        ],
+      ]);
+
+      const dispatchFunction = receiver.get<RemoteReceiverElement>({
+        id: remoteId(element),
+      })?.eventListeners.press;
+      await dispatchFunction?.('Hello', 'world', '!');
+
+      expect(dispatchListener).toHaveBeenCalledWith(
+        element,
+        'Hello',
+        'world',
+        '!',
+      );
+      expect(listener).toHaveBeenCalledWith(expect.any(CustomRemoteEvent));
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: ['Hello', 'world', '!'],
+        }),
+      );
+    });
+
     it('removes an event listener when the last event listener is removed', () => {
       const ButtonElement = createRemoteElement({
         events: ['press'],

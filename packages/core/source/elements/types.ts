@@ -9,7 +9,7 @@ export interface RemoteElementAttributeDefinition {}
 export interface RemoteElementEventListenerDefinition {
   bubbles?: boolean;
   property?: boolean | string;
-  dispatchEvent?(this: Element, arg: any): Event | undefined | void;
+  dispatchEvent?(this: Element, ...args: any[]): Event | undefined | void;
 }
 
 /**

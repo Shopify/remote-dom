@@ -884,11 +884,11 @@ function getRemoteEventRecord(
       property,
       definition,
       listeners: new Set(),
-      dispatch: (arg: any) => {
+      dispatch: (...args: any[]) => {
         const event =
-          definition?.dispatchEvent?.call(this, arg) ??
+          definition?.dispatchEvent?.apply(this, args) ??
           new RemoteEvent(type, {
-            detail: arg,
+            detail: args[0],
             bubbles: definition?.bubbles,
           });
 
