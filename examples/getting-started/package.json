@@ -1,6 +1,6 @@
 {
   "name": "example-getting-started",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "type": "module",
   "private": true,
   "scripts": {

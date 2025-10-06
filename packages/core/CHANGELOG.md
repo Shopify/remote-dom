@@ -1,5 +1,11 @@
 # @remote-dom/core
 
+## 1.10.0
+
+### Minor Changes
+
+- [#598](https://github.com/Shopify/remote-dom/pull/598) [`2be51e8`](https://github.com/Shopify/remote-dom/commit/2be51e87718929482a598ba3bb3972f539fa9d8d) Thanks [@igor10k](https://github.com/igor10k)! - Add support for multiple arguments in event listners
+
 ## 1.9.0
 
 ### Minor Changes

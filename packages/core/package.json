@@ -7,7 +7,7 @@
     "access": "public",
     "@remote-dom/registry": "https://registry.npmjs.org"
   },
-  "version": "1.9.0",
+  "version": "1.10.0",
   "engines": {
     "node": ">=14.0.0"
   },
