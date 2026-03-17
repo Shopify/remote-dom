@@ -1,5 +1,11 @@
 # @remote-dom/react
 
+## Unreleased
+
+### Patch Changes
+
+- Add React 19 compatibility and update ref handling for cross-version support.
+
 ## 1.2.2
 
 ### Patch Changes
