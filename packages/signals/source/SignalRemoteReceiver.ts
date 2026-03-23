@@ -21,7 +21,10 @@ import {
   type RemoteCommentSerialization,
   type RemoteElementSerialization,
 } from '@remote-dom/core';
-import type {RemoteReceiverOptions} from '@remote-dom/core/receivers';
+import {
+  THROW_DEFAULT,
+  type RemoteReceiverOptions,
+} from '@remote-dom/core/receivers';
 
 /**
  * Represents a text node of a remote tree in a plain JavaScript format, with
@@ -142,7 +145,11 @@ export class SignalRemoteReceiver {
     Record<string, (...args: unknown[]) => unknown>
   >();
 
-  constructor({retain, release}: RemoteReceiverOptions = {}) {
+  constructor({
+    retain,
+    release,
+    onMissingImplementationError,
+  }: RemoteReceiverOptions = {}) {
     const {attached, parents} = this;
 
     const baseConnection = createRemoteConnection({
@@ -151,6 +158,21 @@ export class SignalRemoteReceiver {
         const implementationMethod = implementation?.[method];
 
         if (typeof implementationMethod !== 'function') {
+          if (onMissingImplementationError) {
+            const node = attached.get(id);
+            const element =
+              node && 'element' in node ? node.element : undefined;
+
+            const result = onMissingImplementationError({
+              id,
+              method,
+              args,
+              element,
+            });
+
+            if (result !== THROW_DEFAULT) return result;
+          }
+
           throw new Error(
             `Node ${id} does not implement the ${method}() method`,
           );

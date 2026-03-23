@@ -15,7 +15,7 @@ import type {
   RemoteElementSerialization,
   RemoteNodeSerialization,
 } from '../types.ts';
-import type {RemoteReceiverOptions} from './shared.ts';
+import {THROW_DEFAULT, type RemoteReceiverOptions} from './shared.ts';
 
 /**
  * Represents a text node of a remote tree in a plain JavaScript format, with
@@ -139,6 +139,7 @@ export class RemoteReceiver {
     retain,
     release,
     methods,
+    onMissingImplementationError,
   }: RemoteReceiverOptions & {
     /**
      * A set of [remote methods](https://github.com/Shopify/remote-dom/blob/main/packages/core#remotemethods)
@@ -155,6 +156,23 @@ export class RemoteReceiver {
         const implementationMethod = implementation?.[method];
 
         if (typeof implementationMethod !== 'function') {
+          if (onMissingImplementationError) {
+            const node = attached.get(id);
+            const element =
+              node && 'type' in node && node.type === NODE_TYPE_ELEMENT
+                ? (node as RemoteReceiverElement).element
+                : undefined;
+
+            const result = onMissingImplementationError({
+              id,
+              method,
+              args,
+              element,
+            });
+
+            if (result !== THROW_DEFAULT) return result;
+          }
+
           throw new Error(
             `Node ${id} does not implement the ${method}() method`,
           );
