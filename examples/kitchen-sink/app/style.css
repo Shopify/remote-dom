@@ -97,6 +97,17 @@ li {
   background: rgb(125, 109, 157);
 }
 
+.Button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.Button:disabled:hover,
+.Button:disabled:focus-visible,
+.Button:disabled:active {
+  background: rgb(91, 79, 115);
+}
+
 .Stack {
   display: flex;
   flex-direction: column;
@@ -198,6 +209,15 @@ li {
 
 .Text--emphasis {
   font-weight: bold;
+}
+
+.Banner {
+  display: block;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(7, 204, 204, 0.3);
+  background: rgba(7, 204, 204, 0.08);
+  color: rgb(221, 246, 246);
 }
 
 .ControlPanel {

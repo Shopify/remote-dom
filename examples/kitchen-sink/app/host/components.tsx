@@ -1,4 +1,4 @@
-import {type ComponentChildren} from 'preact';
+import {h, type ComponentChildren} from 'preact';
 import {forwardRef} from 'preact/compat';
 import {useRef, useImperativeHandle} from 'preact/hooks';
 import type {Signal} from '@preact/signals';
@@ -11,6 +11,7 @@ import type {
   ModalProperties,
   RenderSandbox,
   RenderExample,
+  InterceptHandler,
 } from '../types.ts';
 
 export function Text({
@@ -61,6 +62,10 @@ export function Stack({
       {children}
     </div>
   );
+}
+
+export function Banner({children}: {children?: ComponentChildren}) {
+  return h('s-banner' as any, {class: 'Banner'}, children);
 }
 
 export const Modal = forwardRef<
@@ -135,9 +140,13 @@ function Select({
 export function ControlPanel({
   sandbox,
   example,
+  interceptHandler,
+  onInvokeIntercept,
 }: {
   sandbox: Signal<RenderSandbox>;
   example: Signal<RenderExample>;
+  interceptHandler: Signal<InterceptHandler | undefined>;
+  onInvokeIntercept(): void | Promise<void>;
 }) {
   return (
     <div class="ControlPanel">
@@ -155,6 +164,7 @@ export function ControlPanel({
         >
           <option value="vanilla">“Vanilla” DOM</option>
           <option value="preact">Preact</option>
+          <option value="preact-intercept">Preact intercept callback</option>
           <option value="react">React</option>
           <option value="svelte">Svelte</option>
           <option value="vue">Vue</option>
@@ -185,6 +195,27 @@ export function ControlPanel({
           <option value="iframe">iFrame</option>
         </Select>
       </section>
+
+      {example.value === 'preact-intercept' && (
+        <section class="ControlPanel-Section">
+          <h2 class="ControlPanel-SectionHeading">Host action</h2>
+          <p class="ControlPanel-SectionDescription">
+            This button lives on the host. It calls the intercepted sandbox
+            function, waits for its result, and then logs the{' '}
+            <code>s-banner</code> elements it can find.
+          </p>
+          <button
+            class="Button"
+            type="button"
+            disabled={interceptHandler.value == null}
+            onClick={() => {
+              void onInvokeIntercept();
+            }}
+          >
+            Call intercepted function
+          </button>
+        </section>
+      )}
     </div>
   );
 }
@@ -193,9 +224,11 @@ const EXAMPLE_FILE_NAMES = new Map<RenderExample, string>([
   ['vanilla', 'vanilla.ts'],
   ['htm', 'htm.ts'],
   ['preact', 'preact.tsx'],
+  ['preact-intercept', 'preact-intercept.tsx'],
   ['react', 'react.tsx'],
   ['svelte', 'App.svelte'],
   ['vue', 'App.vue'],
+  ['react-remote-ui', 'react-remote-ui.tsx'],
 ]);
 
 function ExampleCodeReference({example}: {example: Signal<RenderExample>}) {

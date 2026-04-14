@@ -18,6 +18,12 @@ export async function render(root: Element, api: RenderAPI) {
       const {renderUsingPreact} = await import('./examples/preact.tsx');
       return renderUsingPreact(root, api);
     }
+    case 'preact-intercept': {
+      const {renderUsingPreactIntercept} = await import(
+        './examples/preact-intercept.tsx'
+      );
+      return renderUsingPreactIntercept(root, api);
+    }
     case 'react': {
       const {renderUsingReact} = await import('./examples/react.tsx');
       return renderUsingReact(root, api);

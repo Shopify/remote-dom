@@ -11,6 +11,7 @@ import type {
   ModalProperties,
   ModalMethods,
   StackProperties,
+  BannerProperties,
 } from '../types.ts';
 
 // In this file we will define the custom elements that can be rendered in the
@@ -52,10 +53,13 @@ export const Stack = createRemoteElement<StackProperties>({
   },
 });
 
+export const Banner = createRemoteElement<BannerProperties>();
+
 customElements.define('ui-text', Text);
 customElements.define('ui-button', Button);
 customElements.define('ui-modal', Modal);
 customElements.define('ui-stack', Stack);
+customElements.define('s-banner', Banner);
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -63,6 +67,7 @@ declare global {
     'ui-button': InstanceType<typeof Button>;
     'ui-stack': InstanceType<typeof Stack>;
     'ui-modal': InstanceType<typeof Modal>;
+    's-banner': InstanceType<typeof Banner>;
   }
 }
 

@@ -1,4 +1,7 @@
-import {RemoteMutationObserver} from '@remote-dom/core/elements';
+import {
+  BatchingRemoteConnection,
+  RemoteMutationObserver,
+} from '@remote-dom/core/elements';
 import {ThreadNestedIframe} from '@quilted/threads';
 
 import '../elements.ts';
@@ -27,6 +30,7 @@ new ThreadNestedIframe<never, SandboxAPI>({
       // We use the `RemoteMutationObserver` class, which extends the native DOM
       // `MutationObserver`, to send any changes to a tree of DOM elements over
       // a `RemoteConnection`.
+      console.log('### on est ici');
       const observer = new RemoteMutationObserver(connection);
       observer.observe(root);
 

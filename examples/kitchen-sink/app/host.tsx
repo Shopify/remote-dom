@@ -1,4 +1,5 @@
 import {render} from 'preact';
+import {effect, signal} from '@preact/signals';
 import {
   RemoteRootRenderer,
   RemoteFragmentRenderer,
@@ -6,8 +7,20 @@ import {
 } from '@remote-dom/preact/host';
 import {ThreadIframe, ThreadWebWorker} from '@quilted/threads';
 
-import type {SandboxAPI} from './types.ts';
-import {Button, Modal, Stack, Text, ControlPanel} from './host/components.tsx';
+import type {
+  InterceptHandler,
+  RenderExample,
+  RenderSandbox,
+  SandboxAPI,
+} from './types.ts';
+import {
+  Banner,
+  Button,
+  Modal,
+  Stack,
+  Text,
+  ControlPanel,
+} from './host/components.tsx';
 import {createState} from './host/state.ts';
 import {adaptToLegacyRemoteChannel} from '@remote-dom/compat';
 
@@ -43,6 +56,7 @@ const components = new Map([
   ['ui-button', createRemoteComponentRenderer(Button)],
   ['ui-stack', createRemoteComponentRenderer(Stack)],
   ['ui-modal', createRemoteComponentRenderer(Modal)],
+  ['s-banner', createRemoteComponentRenderer(Banner)],
   // The `remote-fragment` element is a special element created by Remote DOM when
   // it needs an unstyled container for a list of elements. This is primarily used
   // to convert elements passed as a prop to React or Preact components into a slotted
@@ -58,8 +72,12 @@ const components = new Map([
 // rendered by the remote environment. We use this object later to render these trees
 // to Preact components using the `RemoteRootRenderer` component.
 
+const interceptHandlers = new Map<string, InterceptHandler>();
+const interceptHandler = signal<InterceptHandler | undefined>(undefined);
+
 const {receiver, example, sandbox} = createState(
   async ({receiver, example, sandbox}) => {
+    const key = createExampleKey(example, sandbox);
     const api = {
       sandbox,
       example,
@@ -71,6 +89,15 @@ const {receiver, example, sandbox} = createState(
       },
       async closeModal() {
         document.querySelector('dialog')?.close();
+      },
+      async intercept(handler: InterceptHandler) {
+        interceptHandlers.set(key, handler);
+
+        if (
+          key === createExampleKey(exampleSignalValue(), sandboxSignalValue())
+        ) {
+          interceptHandler.value = handler;
+        }
       },
     };
 
@@ -96,16 +123,53 @@ const {receiver, example, sandbox} = createState(
   },
 );
 
+effect(() => {
+  interceptHandler.value = interceptHandlers.get(
+    createExampleKey(example.value, sandbox.value),
+  );
+});
+
 // We render our Preact application, including the part that renders any remote
 // elements for the current example, and the control panel that lets us change
 // the framework or JavaScript sandbox being used.
 render(
   <>
     <ExampleRenderer />
-    <ControlPanel sandbox={sandbox} example={example} />
+    <ControlPanel
+      sandbox={sandbox}
+      example={example}
+      interceptHandler={interceptHandler}
+      onInvokeIntercept={handleIntercept}
+    />
   </>,
   uiRoot,
 );
+
+async function handleIntercept() {
+  const handler = interceptHandler.value;
+
+  if (handler == null) {
+    console.warn(
+      'No intercepted sandbox callback is registered for this example.',
+    );
+    return;
+  }
+
+  const result = await handler();
+  console.log('## RESULT', result);
+
+  const banners = [...document.querySelectorAll('s-banner')].map(
+    (banner, index) => ({
+      index: index + 1,
+      text: banner.textContent?.trim() ?? '',
+    }),
+  );
+  const bannerTextIsDone = banners[0]?.text === 'DONE';
+
+  console.log('Intercept result:', result);
+  console.log('Host found s-banners:', banners);
+  console.log('Banner text is DONE:', bannerTextIsDone);
+}
 
 function ExampleRenderer() {
   const value = receiver.value;
@@ -125,4 +189,16 @@ function ExampleRenderer() {
       <RemoteRootRenderer receiver={value} components={components} />
     </div>
   );
+}
+
+function createExampleKey(example: RenderExample, sandbox: RenderSandbox) {
+  return `${sandbox}:${example}`;
+}
+
+function exampleSignalValue() {
+  return example.peek();
+}
+
+function sandboxSignalValue() {
+  return sandbox.peek();
 }

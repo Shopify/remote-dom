@@ -24,6 +24,7 @@ export type RenderExample =
   | 'vanilla'
   | 'htm'
   | 'preact'
+  | 'preact-intercept'
   | 'react'
   | 'svelte'
   | 'vue'
@@ -35,6 +36,8 @@ export type RenderExample =
  * to create a sandboxed “remote” environment, `@quilted/threads`, supports
  * passing functions, objects, and other JavaScript types between environments.
  */
+export type InterceptHandler = () => string | Promise<string>;
+
 export interface RenderAPI {
   /**
    * Which sandboxing technology was used to execute our code?
@@ -56,6 +59,11 @@ export interface RenderAPI {
    * Closes the modal.
    */
   closeModal(): void;
+
+  /**
+   * Registers a function the host can call later.
+   */
+  intercept(handler: InterceptHandler): Promise<void>;
 }
 
 /**
@@ -124,3 +132,8 @@ export interface StackProperties {
    */
   spacing?: boolean;
 }
+
+/**
+ * A `Banner` element renders a highlighted message.
+ */
+export interface BannerProperties {}

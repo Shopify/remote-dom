@@ -11,9 +11,11 @@ const ALLOWED_EXAMPLE_VALUES = new Set<RenderExample>([
   'vanilla',
   'htm',
   'preact',
+  'preact-intercept',
   'react',
   'svelte',
   'vue',
+  'react-remote-ui',
 ]);
 
 export function createState(

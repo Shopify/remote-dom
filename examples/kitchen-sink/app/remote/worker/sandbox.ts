@@ -1,6 +1,7 @@
 import '@remote-dom/core/polyfill';
 import '@remote-dom/react/polyfill';
 
+import {BatchingRemoteConnection} from '@remote-dom/core/elements';
 import {ThreadWebWorker} from '@quilted/threads';
 
 import '../elements.ts';
@@ -22,7 +23,7 @@ new ThreadWebWorker<never, SandboxAPI>(self as any as Worker, {
       // library, and provides a convenient `connect()` method that starts
       // synchronizing its children over a `RemoteConnection`.
       const root = document.createElement('remote-root');
-      root.connect(connection);
+      root.connect(new BatchingRemoteConnection(connection));
       document.body.append(root);
 
       await render(root, api);
