@@ -159,6 +159,7 @@ export class SignalRemoteReceiver {
         return implementationMethod(...args);
       },
       insertChild: (id, child, index) => {
+        console.log('HOST: mutation arrived (insert)', child);
         const parent = attached.get(id) as SignalRemoteReceiverParent;
         const newChildren = [...parent.children.peek()];
 
@@ -173,6 +174,7 @@ export class SignalRemoteReceiver {
         (parent.children as any).value = newChildren;
       },
       removeChild: (id, index) => {
+        console.log('HOST: mutation arrived (remove)', id, index);
         const parent = attached.get(id) as SignalRemoteReceiverParent;
 
         const newChildren = [...parent.children.peek()];

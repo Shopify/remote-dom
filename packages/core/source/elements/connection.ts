@@ -61,6 +61,9 @@ function createDefaultBatchFunction() {
       return;
     }
 
+    // the fix:
+    // Promise.resolve().then(queue);
+
     // `MessageChannel` trick that forces the code to run on the next task.
     channel ??= new MessageChannel();
     channel.port1.onmessage = () => {

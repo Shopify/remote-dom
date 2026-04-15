@@ -156,7 +156,10 @@ async function handleIntercept() {
   }
 
   const result = await handler();
-  console.log('## RESULT', result);
+  console.log(
+    'HOST: rpc (the handler or perform in checkout-web) response arrived',
+    result,
+  );
 
   const banners = [...document.querySelectorAll('s-banner')].map(
     (banner, index) => ({
