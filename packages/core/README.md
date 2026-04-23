@@ -474,7 +474,7 @@ root.connect(connection);
 
 The `RemoteConnection` object you receive from `RemoteReceiver.connection` is a simple object that immediately communicates all updates to the host environment. When using `RemoteMutationObserver`, documented above, this is not a major issue, since the `MutationObserver` API automatically batches DOM mutations. However, it can be more of a problem when using Remote DOM in a web worker (typically, with the `RemoteRootElement` wrapper), where no such batching is performed.
 
-To improve performance in these cases, you can use the `BatchingRemoteConnection` class, which batches updates from the remote environment that happen in the same JavaScript task. This class is a subclass of `RemoteConnection`, and can be used directly in place of the original connection object:
+To improve performance in these cases, you can use the `BatchingRemoteConnection` class, which batches updates from the remote environment. By default, queued mutations are flushed on a microtask (falling back to `Promise.resolve()`), so that mutations are observable on the host before any `await`ed RPC response resolves. You can override this by passing a custom `batch` function — for example, to defer flushes to a macrotask via `MessageChannel` or `setTimeout`. This class is a subclass of `RemoteConnection`, and can be used directly in place of the original connection object:
 
 ```ts
 import {

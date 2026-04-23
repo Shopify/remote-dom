@@ -1,11 +1,15 @@
 import '../../polyfill/polyfill.ts';
 
-import {describe, expect, it, vi, type MockedObject} from 'vitest';
+import {afterEach, describe, expect, it, vi, type MockedObject} from 'vitest';
 
 import {BatchingRemoteConnection, RemoteConnection} from '../../elements';
 
 describe('BatchingRemoteConnection', () => {
-  it('batches mutations', async () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('batches mutations on a microtask', async () => {
     const connection = createRemoteConnectionSpy();
     const batchingConnection = new BatchingRemoteConnection(connection);
 
@@ -14,7 +18,7 @@ describe('BatchingRemoteConnection', () => {
 
     expect(connection.mutate).not.toHaveBeenCalled();
 
-    await waitForNextTask();
+    await waitForNextMicrotask();
 
     expect(connection.mutate).toHaveBeenCalledTimes(1);
     expect(connection.mutate).toHaveBeenCalledWith([1, 2, 3, 4, 5, 6]);
@@ -23,37 +27,60 @@ describe('BatchingRemoteConnection', () => {
 
     expect(connection.mutate).toHaveBeenCalledTimes(1);
 
-    await waitForNextTask();
+    await waitForNextMicrotask();
 
     expect(connection.mutate).toHaveBeenCalledTimes(2);
     expect(connection.mutate).toHaveBeenCalledWith([7, 8, 9]);
   });
 
-  it('batches mutations with setTimeout when there is no MessageChannel', async () => {
-    vi.useFakeTimers();
-    vi.spyOn(globalThis, 'MessageChannel', 'get').mockReturnValue(
-      undefined as any,
-    );
-    const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+  it('flushes mutations before an awaited promise resolves', async () => {
     const connection = createRemoteConnectionSpy();
     const batchingConnection = new BatchingRemoteConnection(connection);
 
     batchingConnection.mutate([1, 2, 3]);
-    batchingConnection.mutate([4, 5, 6]);
 
-    expect(connection.mutate).not.toHaveBeenCalled();
+    // An `await` yields to the microtask queue, so microtask-scheduled
+    // flushes must have run by the time execution resumes here.
+    await Promise.resolve();
 
-    vi.runAllTimers();
-
-    expect(setTimeoutSpy).toHaveBeenCalledTimes(1);
     expect(connection.mutate).toHaveBeenCalledTimes(1);
-    expect(connection.mutate).toHaveBeenCalledWith([1, 2, 3, 4, 5, 6]);
-
-    vi.restoreAllMocks();
-    vi.useRealTimers();
+    expect(connection.mutate).toHaveBeenCalledWith([1, 2, 3]);
   });
 
-  it('flushes mutations', async () => {
+  it('uses queueMicrotask to schedule the batch flush', () => {
+    const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
+    const connection = createRemoteConnectionSpy();
+    const batchingConnection = new BatchingRemoteConnection(connection);
+
+    batchingConnection.mutate([1, 2, 3]);
+
+    expect(queueMicrotaskSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to Promise.resolve().then() when queueMicrotask is unavailable', async () => {
+    const originalQueueMicrotask = globalThis.queueMicrotask;
+    // @ts-expect-error — intentionally removing to test fallback.
+    delete globalThis.queueMicrotask;
+
+    try {
+      const connection = createRemoteConnectionSpy();
+      const batchingConnection = new BatchingRemoteConnection(connection);
+
+      batchingConnection.mutate([1, 2, 3]);
+      batchingConnection.mutate([4, 5, 6]);
+
+      expect(connection.mutate).not.toHaveBeenCalled();
+
+      await Promise.resolve();
+
+      expect(connection.mutate).toHaveBeenCalledTimes(1);
+      expect(connection.mutate).toHaveBeenCalledWith([1, 2, 3, 4, 5, 6]);
+    } finally {
+      globalThis.queueMicrotask = originalQueueMicrotask;
+    }
+  });
+
+  it('flush() drains queued mutations synchronously', () => {
     const connection = createRemoteConnectionSpy();
     const batchingConnection = new BatchingRemoteConnection(connection);
 
@@ -62,14 +89,24 @@ describe('BatchingRemoteConnection', () => {
 
     expect(connection.mutate).toHaveBeenCalledOnce();
     expect(connection.mutate).toHaveBeenCalledWith([1, 2, 3]);
+  });
 
-    await waitForNextTask();
+  it('flush() prevents the pending microtask from double-firing, and a subsequent mutate() schedules a fresh batch', async () => {
+    const connection = createRemoteConnectionSpy();
+    const batchingConnection = new BatchingRemoteConnection(connection);
 
-    // ensure it wasn't called again
+    batchingConnection.mutate([1, 2, 3]);
+    batchingConnection.flush();
+
+    await waitForNextMicrotask();
+
+    // The scheduled microtask still runs, but flush() drained the queue
+    // already, so the underlying connection isn't called a second time.
     expect(connection.mutate).toHaveBeenCalledOnce();
+
     batchingConnection.mutate([4, 5, 6]);
 
-    await waitForNextTask();
+    await waitForNextMicrotask();
 
     expect(connection.mutate).toHaveBeenCalledTimes(2);
     expect(connection.mutate).toHaveBeenCalledWith([4, 5, 6]);
@@ -94,14 +131,8 @@ describe('BatchingRemoteConnection', () => {
   });
 });
 
-async function waitForNextTask() {
-  const channel = new MessageChannel();
-  const promise = new Promise((resolve) => {
-    channel.port1.onmessage = resolve;
-  });
-  channel.port2.postMessage(null);
-
-  await promise;
+async function waitForNextMicrotask() {
+  await Promise.resolve();
 }
 
 function createRemoteConnectionSpy(): MockedObject<RemoteConnection> {
