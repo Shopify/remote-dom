@@ -18,6 +18,9 @@ jobs:
     needs: [checks]
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write # Required for OIDC authentication
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: ./.github/workflows/actions/prepare
@@ -25,4 +28,4 @@ jobs:
       - run: pnpm run build
       - run: pnpm run deploy
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: '' # Empty string forces OIDC
