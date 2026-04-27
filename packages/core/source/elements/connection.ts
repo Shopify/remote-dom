@@ -1,9 +1,12 @@
 import type {RemoteConnection, RemoteMutationRecord} from '../types.ts';
 
 /**
- * A wrapper around a `RemoteConnection` that batches mutations. By default, this
- * all calls are flushed in a queued microtask, but this can be customized by passing
- * a custom `batch` option.
+ * A wrapper around a `RemoteConnection` that batches mutations. By default,
+ * queued mutations are flushed in a microtask (via `queueMicrotask`, falling
+ * back to `Promise.resolve().then(...)` in environments where
+ * `queueMicrotask` is unavailable). This can be customized by passing a
+ * custom `batch` option — for example, to defer flushes to a macrotask via
+ * `MessageChannel` or `setTimeout`.
  */
 export class BatchingRemoteConnection {
   readonly #connection: RemoteConnection;
@@ -50,22 +53,16 @@ export class BatchingRemoteConnection {
 }
 
 function createDefaultBatchFunction() {
-  let channel: MessageChannel;
-
   return (queue: () => void) => {
-    // In environments without a `MessageChannel`, use a `setTimeout` fallback.
-    if (typeof MessageChannel !== 'function') {
-      setTimeout(() => {
-        queue();
-      }, 0);
+    // Flush on a microtask so that mutations are observable on the host
+    // before any `await`ed RPC response resolves. In environments without
+    // `queueMicrotask`, fall back to `Promise.resolve().then(...)`, which
+    // also schedules on the microtask queue.
+    if (typeof queueMicrotask === 'function') {
+      queueMicrotask(queue);
       return;
     }
 
-    // `MessageChannel` trick that forces the code to run on the next task.
-    channel ??= new MessageChannel();
-    channel.port1.onmessage = () => {
-      queue();
-    };
-    channel.port2.postMessage(null);
+    Promise.resolve().then(queue);
   };
 }
