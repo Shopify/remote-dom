@@ -124,6 +124,7 @@ export class ParentNode extends ChildNode {
       child[NEXT] = before;
       child[PREV] = before[PREV];
       if (before[PREV] === null) this[CHILD] = child;
+      else before[PREV][NEXT] = child;
       before[PREV] = child;
     } else {
       child[NEXT] = null;
