@@ -159,7 +159,15 @@ export class SignalRemoteReceiver {
         return implementationMethod(...args);
       },
       insertChild: (id, child, index) => {
-        const parent = attached.get(id) as SignalRemoteReceiverParent;
+        const parent = attached.get(id) as
+          | SignalRemoteReceiverParent
+          | undefined;
+
+        // The parent may already have been detached if a `removeChild` for an
+        // ancestor was processed before this `insertChild` arrived. Drop the
+        // late mutation; the subtree is already gone.
+        if (!parent) return;
+
         const newChildren = [...parent.children.peek()];
 
         const normalizedChild = attach(child, parent);
@@ -173,12 +181,20 @@ export class SignalRemoteReceiver {
         (parent.children as any).value = newChildren;
       },
       removeChild: (id, index) => {
-        const parent = attached.get(id) as SignalRemoteReceiverParent;
+        const parent = attached.get(id) as
+          | SignalRemoteReceiverParent
+          | undefined;
+
+        // The parent may already have been detached. Drop the late mutation.
+        if (!parent) return;
 
         const newChildren = [...parent.children.peek()];
 
         const [removed] = newChildren.splice(index, 1);
 
+        // The slot at the given index was already empty (e.g. an earlier
+        // late `removeChild` for the same index). Drop the late mutation;
+        // there is nothing to remove.
         if (!removed) {
           return;
         }
@@ -193,7 +209,14 @@ export class SignalRemoteReceiver {
         value,
         type = UPDATE_PROPERTY_TYPE_PROPERTY,
       ) => {
-        const element = attached.get(id) as SignalRemoteReceiverElement;
+        const element = attached.get(id) as
+          | SignalRemoteReceiverElement
+          | undefined;
+
+        // The element may already have been detached if a `removeChild` for an
+        // ancestor was processed before this `updateProperty` arrived. Drop the
+        // late mutation; the node is no longer rendered.
+        if (!element) return;
 
         let updateSignal: Signal<Record<string, any>>;
 
@@ -238,7 +261,11 @@ export class SignalRemoteReceiver {
         release?.(oldValue);
       },
       updateText: (id, newText) => {
-        const text = attached.get(id) as SignalRemoteReceiverText;
+        const text = attached.get(id) as SignalRemoteReceiverText | undefined;
+
+        // The text node may already have been detached. Drop the late mutation.
+        if (!text) return;
+
         (text.data as any).value = newText;
       },
     });
