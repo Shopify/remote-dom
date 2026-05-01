@@ -1,4 +1,3 @@
-// test
 export class CustomElementRegistryImplementation
   implements CustomElementRegistry
 {
