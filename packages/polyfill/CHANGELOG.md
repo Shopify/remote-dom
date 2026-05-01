@@ -1,5 +1,11 @@
 # @remote-dom/polyfill
 
+## 1.5.2
+
+### Patch Changes
+
+- [`7195976`](https://github.com/Shopify/remote-dom/commit/7195976b767479e090b4ba2d3e48dc754a742d95) Thanks [@robin-drexler](https://github.com/robin-drexler)! - test
+
 ## 1.5.1
 
 ### Patch Changes
