@@ -123,7 +123,7 @@ describe('BatchingRemoteConnection', () => {
     batchingConnection.mutate([4, 5, 6]);
     expect(batch).toHaveBeenCalledOnce();
 
-    const batchCallback = batch.mock.calls[0][0];
+    const batchCallback = batch.mock.calls[0]![0];
     batchCallback();
 
     batchingConnection.mutate([7, 8, 9]);
