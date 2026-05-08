@@ -163,7 +163,14 @@ export class RemoteReceiver {
         return implementationMethod(...args);
       },
       insertChild: (id, child, index) => {
-        const parent = attached.get(id) as Writable<RemoteReceiverParent>;
+        const parent = attached.get(id) as
+          | Writable<RemoteReceiverParent>
+          | undefined;
+
+        // The parent may already have been detached if a `removeChild` for an
+        // ancestor was processed before this `insertChild` arrived. Drop the
+        // late mutation; the subtree is already gone.
+        if (!parent) return;
 
         const {children} = parent;
 
@@ -185,7 +192,12 @@ export class RemoteReceiver {
         runSubscribers(parent);
       },
       removeChild: (id, index) => {
-        const parent = attached.get(id) as Writable<RemoteReceiverParent>;
+        const parent = attached.get(id) as
+          | Writable<RemoteReceiverParent>
+          | undefined;
+
+        // The parent may already have been detached. Drop the late mutation.
+        if (!parent) return;
 
         const {children} = parent;
 
@@ -194,6 +206,9 @@ export class RemoteReceiver {
           1,
         );
 
+        // The slot at the given index was already empty (e.g. an earlier
+        // late `removeChild` for the same index). Drop the late mutation;
+        // there is nothing to remove.
         if (!removed) {
           return;
         }
@@ -210,7 +225,14 @@ export class RemoteReceiver {
         value,
         type = UPDATE_PROPERTY_TYPE_PROPERTY,
       ) => {
-        const element = attached.get(id) as Writable<RemoteReceiverElement>;
+        const element = attached.get(id) as
+          | Writable<RemoteReceiverElement>
+          | undefined;
+
+        // The element may already have been detached if a `removeChild` for an
+        // ancestor was processed before this `updateProperty` arrived. Drop the
+        // late mutation; the node is no longer rendered.
+        if (!element) return;
 
         retain?.(value);
 
@@ -256,7 +278,12 @@ export class RemoteReceiver {
         release?.(oldValue);
       },
       updateText: (id, newText) => {
-        const text = attached.get(id) as Writable<RemoteReceiverText>;
+        const text = attached.get(id) as
+          | Writable<RemoteReceiverText>
+          | undefined;
+
+        // The text node may already have been detached. Drop the late mutation.
+        if (!text) return;
 
         text.data = newText;
         text.version += 1;
