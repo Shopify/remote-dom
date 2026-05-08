@@ -1,5 +1,12 @@
 # example-getting-started
 
+## 0.0.26
+
+### Patch Changes
+
+- Updated dependencies [[`f20f6e7`](https://github.com/Shopify/remote-dom/commit/f20f6e75cbd20d673cb32b76f582e0199055d27d)]:
+  - @remote-dom/core@1.11.1
+
 ## 0.0.25
 
 ### Patch Changes
