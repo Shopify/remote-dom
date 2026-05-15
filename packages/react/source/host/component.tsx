@@ -1,11 +1,12 @@
 import type {RemoteReceiverElement} from '@remote-dom/core/receivers';
-import {
-  memo,
-  useRef,
-  useEffect,
-  type MutableRefObject,
-  type ComponentType,
-} from 'react';
+import {memo, useRef, useEffect, type ComponentType} from 'react';
+
+// Compat type: mutable ref object that works across @types/react 17, 18, and 19.
+// Matches runtime shape used by React refs in all supported versions.
+// TODO: When React < 19 support is dropped, replace with `import { type RefObject } from 'react'`.
+interface MutableRef<T> {
+  current: T;
+}
 
 import {useRemoteReceived} from './hooks/remote-received.ts';
 import {
@@ -65,7 +66,7 @@ export interface RemoteComponentRendererOptions<Props = {}>
 
 interface Internals extends Pick<RemoteComponentRendererProps, 'receiver'> {
   id: string;
-  instanceRef: MutableRefObject<unknown>;
+  instanceRef: MutableRef<unknown>;
 }
 
 /**
@@ -85,7 +86,7 @@ export function createRemoteComponentRenderer<
     receiver,
     components,
   }: RemoteComponentRendererProps) {
-    const internalsRef = useRef<Internals>();
+    const internalsRef = useRef<Internals | undefined>(undefined);
 
     const attachedElement = useRemoteReceived(element, receiver);
     const resolvedElement = attachedElement ?? element;
@@ -140,7 +141,7 @@ export function createRemoteComponentRenderer<
 
 function createImplementationRef(
   internals: Pick<Internals, 'id' | 'receiver'>,
-): MutableRefObject<unknown> {
+): MutableRef<unknown> {
   let current: unknown = null;
 
   return {
