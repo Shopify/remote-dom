@@ -2,6 +2,10 @@ import {MessageEndpoint} from '../types';
 import {createEndpoint, TERMINATE, MissingResolverError} from '../endpoint';
 import {fromMessagePort} from '../adaptors';
 import {release, retain} from '../memory';
+import {
+  RemoteFunctionReleasedError,
+  RemoteFunctionRevokedError,
+} from '../encoding';
 
 import {MessageChannel} from './utilities';
 
@@ -231,6 +235,74 @@ describe('createEndpoint()', () => {
 
       expect(spy).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('function proxies', () => {
+  it('throws a RemoteFunctionReleasedError when calling a released function proxy', async () => {
+    const {port1, port2} = new MessageChannel();
+    port1.start();
+    port2.start();
+
+    const endpoint1 = createEndpoint<{callMe(): () => void}>(
+      fromMessagePort(port1),
+    );
+    const endpoint2 = createEndpoint(fromMessagePort(port2));
+    endpoint2.expose({
+      callMe() {
+        return () => {};
+      },
+    });
+
+    const callMeBack = await endpoint1.call.callMe();
+
+    // Retain then release so the proxy's retain count returns to zero and the
+    // proxy is marked as released (use-after-free).
+    retain(callMeBack);
+    release(callMeBack);
+
+    let error: any;
+    try {
+      callMeBack();
+    } catch (caught) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(RemoteFunctionReleasedError);
+    expect(error.name).toBe('RemoteFunctionReleasedError');
+  });
+
+  it('throws a RemoteFunctionRevokedError when calling a function proxy after the endpoint is terminated', async () => {
+    const {port1, port2} = new MessageChannel();
+    port1.start();
+    port2.start();
+
+    const endpoint1 = createEndpoint<{callMe(): () => void}>(
+      fromMessagePort(port1),
+    );
+    const endpoint2 = createEndpoint(fromMessagePort(port2));
+    endpoint2.expose({
+      callMe() {
+        return () => {};
+      },
+    });
+
+    const callMeBack = await endpoint1.call.callMe();
+
+    // Keep the proxy retained (so it is not "released"), then terminate the
+    // endpoint, which revokes the proxy by clearing the encoder's registry.
+    retain(callMeBack);
+    endpoint1.terminate();
+
+    let error: any;
+    try {
+      callMeBack();
+    } catch (caught) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(RemoteFunctionRevokedError);
+    expect(error.name).toBe('RemoteFunctionRevokedError');
   });
 });
 

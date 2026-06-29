@@ -1,6 +1,10 @@
 export {createEndpoint} from './endpoint';
 export type {Endpoint, CreateEndpointOptions} from './endpoint';
-export {createBasicEncoder} from './encoding';
+export {
+  createBasicEncoder,
+  RemoteFunctionReleasedError,
+  RemoteFunctionRevokedError,
+} from './encoding';
 export {
   fromMessagePort,
   fromWebWorker,
