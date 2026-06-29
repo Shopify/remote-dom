@@ -1,1 +1,5 @@
-export {createBasicEncoder} from './basic';
+export {
+  createBasicEncoder,
+  RemoteFunctionReleasedError,
+  RemoteFunctionRevokedError,
+} from './basic';
