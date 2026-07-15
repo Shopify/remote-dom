@@ -1,0 +1,17 @@
+{
+  "name": "@remote-dom/wpt-runner",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "wpt:prepare": "node scripts/prepare-wpt.mjs",
+    "format:capabilities": "node scripts/format-capabilities.mjs",
+    "wpt": "node scripts/run-wpt.mjs"
+  },
+  "dependencies": {
+    "@remote-dom/polyfill": "workspace:*"
+  },
+  "devDependencies": {
+    "tar": "7.5.10"
+  }
+}

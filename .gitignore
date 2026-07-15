@@ -1,5 +1,6 @@
 build/
 node_modules/
+/.cache/wpt/
 .DS_STORE
 packages/*/bin/
 *.log

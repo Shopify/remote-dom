@@ -1,0 +1,79 @@
+import {describe, expect, it} from 'vitest';
+import {evaluateCapabilities} from './evaluate-capabilities.mjs';
+
+const rows = [
+  {path: 'test.html', status: 'supported', case: 'supported case', note: ''},
+  {
+    path: 'test.html',
+    status: 'deferred',
+    case: 'deferred case',
+    note: 'blocked',
+  },
+];
+
+function run(tests, status = 0) {
+  return {
+    state: tests.some((test) => test.status !== 0) ? 'failed' : 'passed',
+    path: 'test.html',
+    result: {tests, status: {status}},
+  };
+}
+
+describe('capability evaluation', () => {
+  it('allows deferred failures and reports deferred passes for promotion', () => {
+    const failedDeferred = evaluateCapabilities(
+      run([
+        {name: 'supported case', status: 0},
+        {name: 'deferred case', status: 1},
+      ]),
+      rows,
+    );
+    expect(failedDeferred.failed).toBe(false);
+    expect(failedDeferred.deferredFailures).toHaveLength(1);
+
+    const passingDeferred = evaluateCapabilities(
+      run([
+        {name: 'supported case', status: 0},
+        {name: 'deferred case', status: 0},
+      ]),
+      rows,
+    );
+    expect(passingDeferred.promotionCandidates).toHaveLength(1);
+  });
+
+  it('fails supported, missing, unlisted, duplicate, harness, and worker errors', () => {
+    expect(
+      evaluateCapabilities(
+        run([
+          {name: 'supported case', status: 1},
+          {name: 'deferred case', status: 1},
+        ]),
+        rows,
+      ).failed,
+    ).toBe(true);
+
+    const drift = evaluateCapabilities(
+      run([
+        {name: 'supported case', status: 0},
+        {name: 'new case', status: 0},
+      ]),
+      rows,
+    );
+    expect(drift.failed).toBe(true);
+    expect(drift.missing.map((row) => row.case)).toEqual(['deferred case']);
+    expect(drift.unlisted.map((test) => test.name)).toEqual(['new case']);
+
+    expect(
+      evaluateCapabilities(
+        run([
+          {name: 'supported case', status: 0},
+          {name: 'supported case', status: 0},
+          {name: 'deferred case', status: 1},
+        ]),
+        rows,
+      ).duplicateResults,
+    ).toEqual(['supported case']);
+    expect(evaluateCapabilities(run([], 1), []).failed).toBe(true);
+    expect(evaluateCapabilities({state: 'error'}, []).failed).toBe(true);
+  });
+});

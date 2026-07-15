@@ -1,0 +1,74 @@
+:root {
+  color: #202223;
+  background: #f6f6f7;
+  font-family: system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  display: grid;
+  gap: 1rem;
+  margin: 0 auto;
+  max-width: 90rem;
+  padding: 1.5rem;
+}
+
+header,
+.controls {
+  align-items: end;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+h1,
+h2,
+p {
+  margin-block: 0;
+}
+
+label {
+  display: grid;
+  flex: 1;
+  gap: 0.35rem;
+}
+
+input,
+button {
+  border: 1px solid #8c9196;
+  border-radius: 0.4rem;
+  font: inherit;
+  padding: 0.6rem 0.75rem;
+}
+
+button {
+  background: #202223;
+  color: white;
+  cursor: pointer;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+}
+
+.panel {
+  background: white;
+  border: 1px solid #e1e3e5;
+  border-radius: 0.6rem;
+  min-width: 0;
+  padding: 1rem;
+}
+
+pre {
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+details + details {
+  margin-top: 0.75rem;
+}

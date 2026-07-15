@@ -1,0 +1,320 @@
+#!/usr/bin/env node
+
+import path from 'node:path';
+import process from 'node:process';
+import {fileURLToPath} from 'node:url';
+import {chromium} from '@playwright/test';
+import {createServer} from 'vite';
+import {
+  compareCodeUnits,
+  readCapabilities,
+  rowsByPath,
+} from './capabilities.mjs';
+import {evaluateCapabilities} from './evaluate-capabilities.mjs';
+import {prepareWpt} from './prepare-wpt.mjs';
+
+const packageRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+);
+const capabilitiesPath = path.join(packageRoot, 'capabilities.tsv');
+const terminalStates = ['passed', 'failed', 'error'];
+const options = parseArguments(process.argv.slice(2));
+
+if (options.help) {
+  printHelp();
+  process.exit(0);
+}
+
+let server;
+let browser;
+let page;
+
+try {
+  const capabilities = await readCapabilities(capabilitiesPath);
+  const groupedCapabilities = rowsByPath(capabilities);
+  const selectedPaths = selectPaths(options, groupedCapabilities);
+  if (selectedPaths.length === 0) throw new Error('No WPT files selected.');
+
+  const wptRoot = await prepareWpt();
+  process.env.WPT_ROOT = wptRoot;
+
+  server = await createServer({
+    root: packageRoot,
+    configFile: path.join(packageRoot, 'vite.config.ts'),
+    logLevel: options.verbose ? 'info' : 'warn',
+    server: {
+      host: options.host,
+      port: options.port,
+      strictPort: options.strictPort,
+      open: false,
+    },
+  });
+  await server.listen();
+  const baseUrl = server.resolvedUrls?.local[0];
+  if (!baseUrl) throw new Error('Vite did not report a local server URL.');
+  console.log(`[wpt] serving ${baseUrl}`);
+
+  browser = await chromium.launch({headless: !options.headed});
+  page = await browser.newPage();
+  if (options.verbose) {
+    page.on('console', (message) =>
+      console.log(`[browser:${message.type()}] ${message.text()}`),
+    );
+  }
+  page.on('pageerror', (error) =>
+    console.error(`[browser:error] ${formatError(error)}`),
+  );
+
+  let failures = 0;
+  for (const testPath of selectedPaths) {
+    const run = await runWpt(page, baseUrl, testPath, options.timeoutMs);
+    const rows = options.enforceCapabilities
+      ? groupedCapabilities.get(testPath)
+      : undefined;
+    const failed = rows
+      ? printCapabilityResult(run, rows)
+      : printExploratoryResult(run);
+    if (failed) failures += 1;
+  }
+
+  console.log(
+    `\n[wpt] ${selectedPaths.length - failures}/${selectedPaths.length} file(s) passed`,
+  );
+  process.exitCode = failures === 0 ? 0 : 1;
+} catch (error) {
+  console.error(`[wpt] ${formatError(error)}`);
+  process.exitCode = 1;
+} finally {
+  await page?.close().catch(() => {});
+  await browser?.close().catch(() => {});
+  await server?.close().catch(() => {});
+}
+
+function parseArguments(arguments_) {
+  const parsed = {
+    enforceCapabilities: false,
+    headed: false,
+    help: false,
+    host: '127.0.0.1',
+    port: undefined,
+    strictPort: false,
+    testPaths: [],
+    timeoutMs: 30_000,
+    verbose: false,
+  };
+
+  for (let index = 0; index < arguments_.length; index += 1) {
+    const argument = arguments_[index];
+    if (argument === '--') continue;
+    if (argument === '-h' || argument === '--help') parsed.help = true;
+    else if (argument === '--capabilities') parsed.enforceCapabilities = true;
+    else if (argument === '--headed') parsed.headed = true;
+    else if (argument === '--strict-port') parsed.strictPort = true;
+    else if (argument === '--verbose') parsed.verbose = true;
+    else if (argument === '--host')
+      parsed.host = requireValue(arguments_, ++index, argument);
+    else if (argument.startsWith('--host='))
+      parsed.host = argument.slice('--host='.length);
+    else if (argument === '--port')
+      parsed.port = parsePort(requireValue(arguments_, ++index, argument));
+    else if (argument.startsWith('--port='))
+      parsed.port = parsePort(argument.slice('--port='.length));
+    else if (argument === '--timeout') {
+      parsed.timeoutMs = parseDuration(
+        requireValue(arguments_, ++index, argument),
+      );
+    } else if (argument.startsWith('--timeout=')) {
+      parsed.timeoutMs = parseDuration(argument.slice('--timeout='.length));
+    } else if (argument.startsWith('-'))
+      throw new Error(`Unknown option: ${argument}`);
+    else parsed.testPaths.push(argument);
+  }
+
+  if (parsed.testPaths.length === 0) parsed.enforceCapabilities = true;
+  return parsed;
+}
+
+function selectPaths(options, groupedCapabilities) {
+  if (options.testPaths.length === 0) return [...groupedCapabilities.keys()];
+
+  const paths = [...new Set(options.testPaths)].sort(compareCodeUnits);
+  if (options.enforceCapabilities) {
+    const missing = paths.filter(
+      (testPath) => !groupedCapabilities.has(testPath),
+    );
+    if (missing.length > 0) {
+      throw new Error(
+        `WPT path(s) are not in capabilities.tsv: ${missing.map(JSON.stringify).join(', ')}`,
+      );
+    }
+  }
+  return paths;
+}
+
+async function runWpt(browserPage, baseUrl, testPath, timeoutMs) {
+  const url = new URL(baseUrl);
+  url.searchParams.set('path', testPath);
+  url.searchParams.set('autorun', '1');
+  url.searchParams.set('timeout', String(timeoutMs));
+  console.log(`\n[wpt] RUN ${testPath}`);
+  await browserPage.goto(url.href, {waitUntil: 'domcontentloaded'});
+
+  try {
+    await browserPage.waitForFunction(
+      (states) => states.includes(window.__WPT_LAST_RUN__?.state),
+      terminalStates,
+      {timeout: timeoutMs + 1_000},
+    );
+    return await browserPage.evaluate(() => window.__WPT_LAST_RUN__);
+  } catch {
+    const lastRun = await browserPage.evaluate(
+      (path) =>
+        window.__WPT_LAST_RUN__ ?? {
+          state: 'error',
+          path,
+          warnings: [],
+          logs: [],
+        },
+      testPath,
+    );
+    return {
+      ...lastRun,
+      state: 'error',
+      error: `Timed out after ${timeoutMs}ms. Last state: ${lastRun.state}`,
+    };
+  }
+}
+
+function printExploratoryResult(run) {
+  const tests = run.result?.tests ?? [];
+  const failedTests = tests.filter((test) => test.status !== 0);
+  const failed =
+    run.state === 'error' ||
+    run.result?.status.status !== 0 ||
+    failedTests.length > 0;
+  console.log(
+    `[wpt] ${failed ? 'FAIL' : 'PASS'} ${run.path} (${tests.length} test(s))`,
+  );
+  printWarnings(run);
+  printHarnessFailure(run);
+  for (const test of failedTests) printTestFailure(test, '  - ');
+  printRunError(run);
+  return failed;
+}
+
+function printCapabilityResult(run, rows) {
+  const tests = run.result?.tests ?? [];
+  const summary = evaluateCapabilities(run, rows);
+
+  console.log(
+    `[wpt] ${summary.failed ? 'FAIL' : 'PASS'} ${run.path} (${tests.length} test(s), classified)`,
+  );
+  console.log(
+    `  supported: ${summary.supportedPassed.length} passed, ${summary.supportedFailures.length} failed`,
+  );
+  console.log(
+    `  deferred: ${summary.promotionCandidates.length} passed, ${summary.deferredFailures.length} failed`,
+  );
+  console.log(
+    `  unlisted: ${summary.unlisted.length}; missing: ${summary.missing.length}`,
+  );
+  printWarnings(run);
+  printHarnessFailure(run);
+
+  for (const {test} of summary.supportedFailures)
+    printTestFailure(test, '  - ');
+  for (const name of summary.duplicateResults)
+    console.log(`  duplicate result: ${name}`);
+  for (const test of summary.unlisted) console.log(`  unlisted: ${test.name}`);
+  for (const row of summary.missing) console.log(`  missing: ${row.case}`);
+  for (const {row} of summary.deferredFailures) {
+    console.log(`  deferred failure: ${row.case} — ${row.note}`);
+  }
+  for (const {row} of summary.promotionCandidates) {
+    console.log(`  promotion candidate: ${row.case} — ${row.note}`);
+  }
+  printRunError(run);
+  return summary.failed;
+}
+
+function printWarnings(run) {
+  for (const warning of run.warnings ?? [])
+    console.log(`  warning: ${warning}`);
+}
+
+function printHarnessFailure(run) {
+  if (run.result && run.result.status.status !== 0) {
+    console.log(
+      `  harness status ${run.result.status.status}: ${run.result.status.message || '<no message>'}`,
+    );
+  }
+}
+
+function printTestFailure(test, prefix) {
+  console.log(`${prefix}${test.name}: status ${test.status}`);
+  if (test.message) console.log(indent(test.message, '    '));
+  if (test.stack) console.log(indent(test.stack, '    '));
+}
+
+function printRunError(run) {
+  if (run.error) console.log(indent(run.error, '  '));
+  if (run.state === 'error' && run.logs?.length > 0) {
+    console.log('  recent logs:');
+    for (const line of run.logs.slice(-20)) console.log(indent(line, '    '));
+  }
+}
+
+function requireValue(arguments_, index, flag) {
+  const value = arguments_[index];
+  if (!value) throw new Error(`${flag} requires a value.`);
+  return value;
+}
+
+function parsePort(value) {
+  const port = Number(value);
+  if (!Number.isInteger(port) || port < 0 || port > 65_535) {
+    throw new Error(`Invalid --port value: ${value}`);
+  }
+  return port;
+}
+
+function parseDuration(value) {
+  const match = /^(\d+)(ms|s)?$/.exec(value);
+  if (!match) throw new Error(`Invalid --timeout value: ${value}`);
+  return Number(match[1]) * (match[2] === 's' ? 1000 : 1);
+}
+
+function indent(text, prefix) {
+  return String(text)
+    .split('\n')
+    .map((line) => `${prefix}${line}`)
+    .join('\n');
+}
+
+function formatError(error) {
+  return error instanceof Error ? error.stack || error.message : String(error);
+}
+
+function printHelp() {
+  console.log(`Run selected WPT testharness HTML files against @remote-dom/polyfill.
+
+Usage:
+  pnpm test:wpt
+  pnpm test:wpt -- [options] [wpt-path ...]
+
+Options:
+  --capabilities       Enforce capabilities.tsv for explicit paths.
+  --headed             Show Playwright Chromium.
+  --verbose            Print browser console and Vite logs.
+  --timeout <duration> Per-file timeout (30000, 30000ms, or 30s).
+  --host <host>        Vite host (default: 127.0.0.1).
+  --port <port>        Vite port.
+  --strict-port        Fail when the requested port is unavailable.
+  -h, --help           Show this help.
+
+With no paths, the runner executes every unique capabilities.tsv path in canonical
+order and enforces every row. Explicit paths are exploratory unless --capabilities
+is present. Set WPT_ROOT to reuse an existing checkout or WPT_CACHE_DIR to override
+the revision-addressed download cache.`);
+}

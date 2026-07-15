@@ -1,0 +1,9 @@
+{
+  "extends": "@quilted/typescript/tsconfig.package.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src", "vite.config.ts"],
+  "references": [{"path": "../polyfill"}]
+}
