@@ -3,6 +3,7 @@
 import path from 'node:path';
 import process from 'node:process';
 import {fileURLToPath} from 'node:url';
+import {parseArgs} from 'node:util';
 import {chromium} from '@playwright/test';
 import {createServer} from 'vite';
 import {
@@ -92,47 +93,37 @@ try {
 }
 
 function parseArguments(arguments_) {
-  const parsed = {
-    enforceCapabilities: false,
-    headed: false,
-    help: false,
-    host: '127.0.0.1',
-    port: undefined,
-    strictPort: false,
-    testPaths: [],
-    timeoutMs: 30_000,
-    verbose: false,
+  const normalizedArguments =
+    arguments_[0] === '--' ? arguments_.slice(1) : arguments_;
+  const {values, positionals} = parseArgs({
+    args: normalizedArguments,
+    allowPositionals: true,
+    options: {
+      capabilities: {type: 'boolean'},
+      headed: {type: 'boolean'},
+      help: {type: 'boolean', short: 'h'},
+      host: {type: 'string'},
+      port: {type: 'string'},
+      'strict-port': {type: 'boolean'},
+      timeout: {type: 'string'},
+      verbose: {type: 'boolean'},
+    },
+    strict: true,
+  });
+
+  return {
+    enforceCapabilities:
+      Boolean(values.capabilities) || positionals.length === 0,
+    headed: Boolean(values.headed),
+    help: Boolean(values.help),
+    host: values.host ?? '127.0.0.1',
+    port: values.port === undefined ? undefined : parsePort(values.port),
+    strictPort: Boolean(values['strict-port']),
+    testPaths: positionals,
+    timeoutMs:
+      values.timeout === undefined ? 30_000 : parseDuration(values.timeout),
+    verbose: Boolean(values.verbose),
   };
-
-  for (let index = 0; index < arguments_.length; index += 1) {
-    const argument = arguments_[index];
-    if (argument === '--') continue;
-    if (argument === '-h' || argument === '--help') parsed.help = true;
-    else if (argument === '--capabilities') parsed.enforceCapabilities = true;
-    else if (argument === '--headed') parsed.headed = true;
-    else if (argument === '--strict-port') parsed.strictPort = true;
-    else if (argument === '--verbose') parsed.verbose = true;
-    else if (argument === '--host')
-      parsed.host = requireValue(arguments_, ++index, argument);
-    else if (argument.startsWith('--host='))
-      parsed.host = argument.slice('--host='.length);
-    else if (argument === '--port')
-      parsed.port = parsePort(requireValue(arguments_, ++index, argument));
-    else if (argument.startsWith('--port='))
-      parsed.port = parsePort(argument.slice('--port='.length));
-    else if (argument === '--timeout') {
-      parsed.timeoutMs = parseDuration(
-        requireValue(arguments_, ++index, argument),
-      );
-    } else if (argument.startsWith('--timeout=')) {
-      parsed.timeoutMs = parseDuration(argument.slice('--timeout='.length));
-    } else if (argument.startsWith('-'))
-      throw new Error(`Unknown option: ${argument}`);
-    else parsed.testPaths.push(argument);
-  }
-
-  if (parsed.testPaths.length === 0) parsed.enforceCapabilities = true;
-  return parsed;
 }
 
 function selectPaths(options, groupedCapabilities) {
@@ -263,12 +254,6 @@ function printRunError(run) {
     console.log('  recent logs:');
     for (const line of run.logs.slice(-20)) console.log(indent(line, '    '));
   }
-}
-
-function requireValue(arguments_, index, flag) {
-  const value = arguments_[index];
-  if (!value) throw new Error(`${flag} requires a value.`);
-  return value;
 }
 
 function parsePort(value) {

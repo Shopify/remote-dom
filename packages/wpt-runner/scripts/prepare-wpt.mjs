@@ -38,15 +38,33 @@ export async function prepareWpt({
   const sourceRoot = path.join(revisionRoot, 'source');
   log(`[wpt] cache root: ${cacheRoot}`);
 
-  if (await isCompletedSource(sourceRoot, lock)) {
+  if (await isCompletedRevision(revisionRoot, lock)) {
     log(`[wpt] using cached WPT ${lock.revision}`);
     return sourceRoot;
   }
 
-  await fs.mkdir(revisionRoot, {recursive: true});
+  const existingRevision = await fs.stat(revisionRoot).catch(() => null);
+  if (existingRevision) {
+    if (await isCompletedRevision(revisionRoot, lock)) {
+      log(`[wpt] another process installed WPT ${lock.revision}; reusing it`);
+      return sourceRoot;
+    }
+    throw new Error(
+      `Invalid WPT cache entry at ${revisionRoot}. Remove it and retry.`,
+    );
+  }
+
+  await fs.mkdir(cacheRoot, {recursive: true});
   const nonce = `${process.pid}-${randomBytes(8).toString('hex')}`;
-  const archivePath = path.join(revisionRoot, `.archive-${nonce}.tar.gz`);
-  const temporarySource = path.join(revisionRoot, `.source-${nonce}`);
+  const archivePath = path.join(
+    cacheRoot,
+    `.archive-${lock.revision}-${nonce}.tar.gz`,
+  );
+  const temporaryRevision = path.join(
+    cacheRoot,
+    `.revision-${lock.revision}-${nonce}`,
+  );
+  const temporarySource = path.join(temporaryRevision, 'source');
 
   try {
     log(`[wpt] downloading ${lock.archiveUrl}`);
@@ -54,7 +72,7 @@ export async function prepareWpt({
     assertChecksum(actualChecksum, lock.sha256);
     await validateArchive(archivePath, lock.revision);
 
-    await fs.mkdir(temporarySource);
+    await fs.mkdir(temporarySource, {recursive: true});
     await extract({
       cwd: temporarySource,
       file: archivePath,
@@ -63,35 +81,35 @@ export async function prepareWpt({
     });
     await verifySentinels(temporarySource);
     await fs.writeFile(
-      path.join(temporarySource, completionMarker),
+      path.join(temporaryRevision, completionMarker),
       `${JSON.stringify({revision: lock.revision, sha256: lock.sha256}, null, 2)}\n`,
       {flag: 'wx'},
     );
 
-    await publishPreparedSource(temporarySource, sourceRoot, lock, log);
+    await publishPreparedRevision(temporaryRevision, revisionRoot, lock, log);
     return sourceRoot;
   } finally {
     await Promise.allSettled([
       fs.rm(archivePath, {force: true}),
-      fs.rm(temporarySource, {force: true, recursive: true}),
+      fs.rm(temporaryRevision, {force: true, recursive: true}),
     ]);
   }
 }
 
-export async function publishPreparedSource(
-  temporarySource,
-  sourceRoot,
+export async function publishPreparedRevision(
+  temporaryRevision,
+  revisionRoot,
   lock,
   log = console.log,
 ) {
   try {
-    await fs.rename(temporarySource, sourceRoot);
+    await fs.rename(temporaryRevision, revisionRoot);
     log(`[wpt] installed WPT ${lock.revision}`);
   } catch (error) {
     if (!isDestinationExistsError(error)) throw error;
-    if (!(await isCompletedSource(sourceRoot, lock))) {
+    if (!(await isCompletedRevision(revisionRoot, lock))) {
       throw new Error(
-        `Another process created an invalid WPT cache entry at ${sourceRoot}. Remove it and retry.`,
+        `Another process created an invalid WPT cache entry at ${revisionRoot}. Remove it and retry.`,
         {cause: error},
       );
     }
@@ -119,46 +137,6 @@ export function assertChecksum(actual, expected) {
     throw new Error(
       `WPT archive checksum mismatch: expected ${expected}, got ${actual}.`,
     );
-  }
-}
-
-export function validateArchiveEntry(entry, revision) {
-  const expectedRoot = `wpt-${revision}`;
-  const entryPath = validateArchivePath(
-    entry.path,
-    expectedRoot,
-    'archive entry',
-  );
-  const allowedTypes = new Set([
-    'File',
-    'OldFile',
-    'Directory',
-    'SymbolicLink',
-    'ExtendedHeader',
-    'GlobalExtendedHeader',
-  ]);
-
-  if (!allowedTypes.has(entry.type)) {
-    throw new Error(
-      `Unsafe WPT archive entry type ${JSON.stringify(entry.type)} for ${JSON.stringify(entry.path)}.`,
-    );
-  }
-
-  if (entry.type === 'SymbolicLink') {
-    const linkPath = entry.linkpath;
-    if (
-      !linkPath ||
-      path.posix.isAbsolute(linkPath) ||
-      linkPath.includes('\\')
-    ) {
-      throw new Error(
-        `Unsafe WPT archive symlink target for ${JSON.stringify(entry.path)}.`,
-      );
-    }
-    const target = path.posix.normalize(
-      path.posix.join(path.posix.dirname(entryPath), linkPath),
-    );
-    validateArchivePath(target, expectedRoot, 'archive symlink target');
   }
 }
 
@@ -226,6 +204,46 @@ async function validateArchive(archivePath, revision) {
   if (validationError) throw validationError;
 }
 
+export function validateArchiveEntry(entry, revision) {
+  const expectedRoot = `wpt-${revision}`;
+  const entryPath = validateArchivePath(
+    entry.path,
+    expectedRoot,
+    'archive entry',
+  );
+  const allowedTypes = new Set([
+    'File',
+    'OldFile',
+    'Directory',
+    'SymbolicLink',
+    'ExtendedHeader',
+    'GlobalExtendedHeader',
+  ]);
+
+  if (!allowedTypes.has(entry.type)) {
+    throw new Error(
+      `Unsafe WPT archive entry type ${JSON.stringify(entry.type)} for ${JSON.stringify(entry.path)}.`,
+    );
+  }
+
+  if (entry.type === 'SymbolicLink') {
+    const linkPath = entry.linkpath;
+    if (
+      !linkPath ||
+      path.posix.isAbsolute(linkPath) ||
+      linkPath.includes('\\')
+    ) {
+      throw new Error(
+        `Unsafe WPT archive symlink target for ${JSON.stringify(entry.path)}.`,
+      );
+    }
+    const target = path.posix.normalize(
+      path.posix.join(path.posix.dirname(entryPath), linkPath),
+    );
+    validateArchivePath(target, expectedRoot, 'archive symlink target');
+  }
+}
+
 function validateArchivePath(value, expectedRoot, label) {
   if (!value || value.includes('\\') || path.posix.isAbsolute(value)) {
     throw new Error(`Unsafe WPT ${label}: ${JSON.stringify(value)}.`);
@@ -256,11 +274,11 @@ async function verifySentinels(sourceRoot) {
   }
 }
 
-async function isCompletedSource(sourceRoot, lock) {
+async function isCompletedRevision(revisionRoot, lock) {
   try {
-    await verifySentinels(sourceRoot);
+    await verifySentinels(path.join(revisionRoot, 'source'));
     const marker = JSON.parse(
-      await fs.readFile(path.join(sourceRoot, completionMarker), 'utf8'),
+      await fs.readFile(path.join(revisionRoot, completionMarker), 'utf8'),
     );
     return marker.revision === lock.revision && marker.sha256 === lock.sha256;
   } catch {

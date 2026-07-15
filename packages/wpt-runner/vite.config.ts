@@ -3,13 +3,38 @@ import type {ServerResponse} from 'node:http';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {defineConfig, type Plugin} from 'vite';
-import {resolveServedWptFile} from './src/paths.ts';
 
 const packageRoot = path.dirname(fileURLToPath(import.meta.url));
 const fixtureRoot = path.join(packageRoot, 'fixtures');
 const wptRoot = process.env.WPT_ROOT
   ? path.resolve(process.env.WPT_ROOT)
   : undefined;
+
+export function resolveServedWptFile(
+  rawPath: string | null,
+  {fixtureRoot, wptRoot}: {fixtureRoot: string; wptRoot?: string},
+) {
+  if (!rawPath || rawPath.includes('\\') || path.posix.isAbsolute(rawPath)) {
+    return null;
+  }
+  const segments = rawPath.split('/');
+  if (segments.some((segment) => segment === '..' || segment === '')) {
+    return null;
+  }
+
+  if (rawPath.startsWith('__runner__/')) {
+    return containedPath(fixtureRoot, rawPath.slice('__runner__/'.length));
+  }
+  return wptRoot ? containedPath(wptRoot, rawPath) : null;
+}
+
+function containedPath(root: string, relativePath: string) {
+  const resolved = path.resolve(root, relativePath);
+  if (resolved !== root && !resolved.startsWith(`${root}${path.sep}`)) {
+    return null;
+  }
+  return resolved;
+}
 
 function sendText(response: ServerResponse, status: number, text: string) {
   response.statusCode = status;

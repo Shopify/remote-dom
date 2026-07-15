@@ -5,7 +5,7 @@ import {afterEach, describe, expect, it} from 'vitest';
 import {
   assertChecksum,
   prepareWpt,
-  publishPreparedSource,
+  publishPreparedRevision,
   resolveCacheRoot,
   validateArchiveEntry,
 } from './prepare-wpt.mjs';
@@ -54,23 +54,29 @@ describe('WPT preparation', () => {
     expect(logs.join('\n')).toContain('WPT root override');
   });
 
-  it('publishes one complete source when concurrent prepares race', async () => {
+  it('publishes one revision when concurrent prepares race and ignores source markers', async () => {
     const root = await fs.mkdtemp(
       path.join(os.tmpdir(), 'remote-dom-wpt-race-'),
     );
     temporaryDirectories.push(root);
     const lock = {revision: 'a'.repeat(40), sha256: 'b'.repeat(64)};
-    const source = path.join(root, 'source');
+    const revisionRoot = path.join(root, lock.revision);
     const candidates = [
       path.join(root, 'candidate-1'),
       path.join(root, 'candidate-2'),
     ];
 
     for (const candidate of candidates) {
-      await fs.mkdir(path.join(candidate, 'resources'), {recursive: true});
+      await fs.mkdir(path.join(candidate, 'source/resources'), {
+        recursive: true,
+      });
       await fs.writeFile(
-        path.join(candidate, 'resources/testharness.js'),
+        path.join(candidate, 'source/resources/testharness.js'),
         '/* harness */',
+      );
+      await fs.writeFile(
+        path.join(candidate, 'source/.remote-dom-wpt-complete.json'),
+        JSON.stringify({revision: 'archive-provided'}),
       );
       await fs.writeFile(
         path.join(candidate, '.remote-dom-wpt-complete.json'),
@@ -80,12 +86,21 @@ describe('WPT preparation', () => {
 
     await Promise.all(
       candidates.map((candidate) =>
-        publishPreparedSource(candidate, source, lock, () => {}),
+        publishPreparedRevision(candidate, revisionRoot, lock, () => {}),
       ),
     );
     await expect(
-      fs.readFile(path.join(source, 'resources/testharness.js'), 'utf8'),
+      fs.readFile(
+        path.join(revisionRoot, 'source/resources/testharness.js'),
+        'utf8',
+      ),
     ).resolves.toBe('/* harness */');
+    await expect(
+      fs.readFile(
+        path.join(revisionRoot, '.remote-dom-wpt-complete.json'),
+        'utf8',
+      ),
+    ).resolves.toContain(lock.revision);
   });
 
   it('rejects checksum mismatches', () => {

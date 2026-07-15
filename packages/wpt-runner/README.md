@@ -43,7 +43,7 @@ The cache root resolves in this order:
 3. `${XDG_CACHE_HOME}/remote-dom/wpt`
 4. `${HOME}/.cache/remote-dom/wpt`
 
-Each revision installs under `<cache-root>/<revision>/source`. Download and extraction happen in process-unique temporary paths. A completed source tree is moved into place atomically, so concurrent worktrees can safely race to populate the shared cache. Old revisions are not deleted automatically.
+Each revision installs under `<cache-root>/<revision>/source`, with the runner-owned completion marker beside `source` at the revision root. Download and extraction happen in a process-unique temporary revision directory, which is moved into place atomically so concurrent worktrees can safely race to populate the shared cache. Keeping the marker outside `source` leaves the extracted WPT checkout untouched. Old revisions are not deleted automatically.
 
 WPT files are pinned but remain untrusted test inputs. The preparation script validates archive paths and checksums before extraction, and the browser server rejects traversal. Do not execute downloaded repository scripts outside the isolated runner.
 

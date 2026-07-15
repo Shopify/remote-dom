@@ -1,6 +1,6 @@
 import path from 'node:path';
 import {describe, expect, it} from 'vitest';
-import {resolveServedWptFile} from '../src/paths.ts';
+import {resolveServedWptFile} from '../vite.config.ts';
 
 const roots = {fixtureRoot: '/fixtures', wptRoot: '/wpt'};
 
