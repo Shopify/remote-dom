@@ -86,6 +86,33 @@ export function cloneNode(
   }
 }
 
+/**
+ * The `NonElementParentNode.getElementById()` lookup, shared by `Document` and
+ * `DocumentFragment`.
+ *
+ * Matches the `id` attribute literally instead of delegating to
+ * `querySelector('#' + id)`: an id is a string, not a selector, and the selector
+ * tokenizer has no escape handling, so an id containing `.`, `:`, `[`, or
+ * whitespace would parse as a different selector.
+ */
+export function getElementById(within: ParentNode, id: string): Element | null {
+  const child = within[CHILD];
+  return child ? findElementById(child, String(id)) : null;
+}
+
+function findElementById(node: Node, id: string): Element | null {
+  if (isElementNode(node)) {
+    if (node.getAttribute('id') === id) return node;
+    const child = node[CHILD];
+    if (child) {
+      const found = findElementById(child, id);
+      if (found) return found;
+    }
+  }
+  const next = node[NEXT];
+  return next ? findElementById(next, id) : null;
+}
+
 export function descendants(node: Node) {
   const nodes: Node[] = [];
   const walk = (node: Node) => {
