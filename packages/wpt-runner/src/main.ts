@@ -145,8 +145,7 @@ function createRun(state: WptRunRecord['state'], path: string): WptRunRecord {
 
 function appendLog(message: string) {
   currentRun.logs.push(message);
-  elements.log.textContent += `${message}\n`;
-  sync();
+  elements.log.append(`${message}\n`);
 }
 
 function sync() {

@@ -12,6 +12,8 @@
     "@remote-dom/polyfill": "workspace:*"
   },
   "devDependencies": {
-    "tar": "7.5.10"
+    "@playwright/test": "^1.49.0",
+    "tar": "7.5.10",
+    "vite": "^5.4.0"
   }
 }

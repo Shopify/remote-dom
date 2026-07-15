@@ -267,7 +267,14 @@ function parsePort(value) {
 function parseDuration(value) {
   const match = /^(\d+)(ms|s)?$/.exec(value);
   if (!match) throw new Error(`Invalid --timeout value: ${value}`);
-  return Number(match[1]) * (match[2] === 's' ? 1000 : 1);
+
+  const duration = Number(match[1]) * (match[2] === 's' ? 1000 : 1);
+  if (!Number.isSafeInteger(duration) || duration <= 0) {
+    throw new Error(
+      `Invalid --timeout value: ${value}. Expected a positive duration.`,
+    );
+  }
+  return duration;
 }
 
 function indent(text, prefix) {
