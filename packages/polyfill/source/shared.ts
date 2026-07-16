@@ -86,6 +86,29 @@ export function cloneNode(
   }
 }
 
+export function getElementById(within: ParentNode, elementId: string) {
+  const id = String(elementId);
+  if (id === '') return null;
+
+  const child = within[CHILD];
+  return child ? findElementById(child, id) : null;
+}
+
+function findElementById(node: Node, id: string): Element | null {
+  if (isElementNode(node)) {
+    if (node.getAttribute('id') === id) return node;
+
+    const child = node[CHILD];
+    if (child) {
+      const found = findElementById(child, id);
+      if (found) return found;
+    }
+  }
+
+  const next = node[NEXT];
+  return next ? findElementById(next, id) : null;
+}
+
 export function descendants(node: Node) {
   const nodes: Node[] = [];
   const walk = (node: Node) => {

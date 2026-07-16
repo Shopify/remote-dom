@@ -22,6 +22,14 @@ export class Element extends ParentNode {
 
   [anyProperty: string]: any;
 
+  get id() {
+    return this.getAttribute('id') ?? '';
+  }
+
+  set id(id: string) {
+    this.setAttribute('id', String(id));
+  }
+
   get slot() {
     return this.getAttribute('slot') ?? '';
   }
