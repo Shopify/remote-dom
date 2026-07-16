@@ -8,21 +8,23 @@ export function FormData(form?: Element) {
   if (form) {
     for (const control of form.querySelectorAll('[name]')) {
       const name = control.getAttribute('name');
+      if (!name) continue;
+
+      const disabled = control.disabled ?? control.hasAttribute('disabled');
+      if (disabled) continue;
+      if (control.localName.toLowerCase() === 'button') continue;
+
       const type = String(
         control.type ?? control.getAttribute('type') ?? '',
       ).toLowerCase();
-      const disabled = control.disabled ?? control.hasAttribute('disabled');
+      if (type === 'button') continue;
+      if (type === 'image') continue;
+      if (type === 'reset') continue;
+      if (type === 'submit') continue;
 
       if (
-        !name ||
-        disabled ||
-        control.localName.toLowerCase() === 'button' ||
-        type === 'button' ||
-        type === 'image' ||
-        type === 'reset' ||
-        type === 'submit' ||
-        ('checked' in control &&
-          !(control.checked ?? control.hasAttribute('checked')))
+        'checked' in control &&
+        !(control.checked ?? control.hasAttribute('checked'))
       ) {
         continue;
       }

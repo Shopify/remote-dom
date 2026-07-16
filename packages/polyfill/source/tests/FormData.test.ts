@@ -64,6 +64,43 @@ describe('FormData', () => {
     expect(new FormData(form).get('message')).toBe('current');
   });
 
+  it('stops reading control state after an early omission', () => {
+    const form = document.createElement('form');
+    const unnamed = document.createElement('remote-input');
+    const disabled = document.createElement('remote-input');
+
+    unnamed.setAttribute('name', '');
+    Object.defineProperties(unnamed, {
+      disabled: {
+        get() {
+          throw new Error('disabled should not be read');
+        },
+      },
+      type: {
+        get() {
+          throw new Error('type should not be read');
+        },
+      },
+    });
+    disabled.setAttribute('name', 'disabled');
+    Object.defineProperties(disabled, {
+      disabled: {value: true},
+      type: {
+        get() {
+          throw new Error('type should not be read');
+        },
+      },
+      checked: {
+        get() {
+          throw new Error('checked should not be read');
+        },
+      },
+    });
+    form.append(unnamed, disabled);
+
+    expect(() => new FormData(form)).not.toThrow();
+  });
+
   it('omits unsuccessful controls', () => {
     const form = document.createElement('form');
     const controls = [
