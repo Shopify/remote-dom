@@ -12,7 +12,6 @@ export function FormData(form?: Element) {
         control.type ?? control.getAttribute('type') ?? '',
       ).toLowerCase();
       const disabled = control.disabled ?? control.hasAttribute('disabled');
-      const checked = control.checked ?? control.hasAttribute('checked');
 
       if (
         !name ||
@@ -22,7 +21,8 @@ export function FormData(form?: Element) {
         type === 'image' ||
         type === 'reset' ||
         type === 'submit' ||
-        ((type === 'checkbox' || type === 'radio') && !checked)
+        ('checked' in control &&
+          !(control.checked ?? control.hasAttribute('checked')))
       ) {
         continue;
       }

@@ -70,8 +70,8 @@ describe('FormData', () => {
       ['input', null, 'unnamed'],
       ['input', 'disabled-attribute', 'disabled'],
       ['input', 'disabled-property', null],
-      ['input', 'unchecked-checkbox', 'checkbox'],
-      ['input', 'unchecked-radio', 'radio'],
+      ['remote-checkbox', 'unchecked-checkbox', null],
+      ['remote-radio', 'unchecked-radio', null],
       ['button', 'button-element', null],
       ['BUTTON', 'uppercase-button-element', null],
       ['input', 'button-input', 'button'],
@@ -89,13 +89,14 @@ describe('FormData', () => {
         control.setAttribute('disabled', '');
       } else if (name === 'disabled-property') {
         control.disabled = true;
+      } else if (name?.startsWith('unchecked-')) {
+        control.checked = false;
       }
       form.append(control);
     }
 
-    const unchecked = document.createElement('input');
+    const unchecked = document.createElement('remote-toggle') as any;
     unchecked.setAttribute('name', 'currently-unchecked');
-    unchecked.setAttribute('type', 'checkbox');
     unchecked.setAttribute('checked', '');
     unchecked.checked = false;
     form.append(unchecked);
@@ -103,22 +104,29 @@ describe('FormData', () => {
     expect([...new FormData(form)]).toEqual([]);
   });
 
-  it('includes checked checkboxes and radios', () => {
+  it('uses the checked property exposed by custom elements', () => {
     const form = document.createElement('form');
-    const checkbox = document.createElement('input');
-    const radio = document.createElement('input');
+    const checked = document.createElement('remote-checkbox') as any;
+    const initiallyChecked = document.createElement('remote-radio') as any;
+    const unmodeled = document.createElement('input');
 
-    checkbox.setAttribute('name', 'choice');
-    checkbox.setAttribute('type', 'checkbox');
-    checkbox.setAttribute('value', 'one');
-    checkbox.checked = true;
-    radio.setAttribute('name', 'choice');
-    radio.type = 'radio';
-    radio.value = 'two';
-    radio.setAttribute('checked', '');
-    form.append(checkbox, radio);
+    checked.setAttribute('name', 'choice');
+    checked.setAttribute('value', 'one');
+    checked.checked = true;
+    initiallyChecked.setAttribute('name', 'choice');
+    initiallyChecked.setAttribute('value', 'two');
+    initiallyChecked.setAttribute('checked', '');
+    initiallyChecked.checked = undefined;
+    unmodeled.setAttribute('name', 'choice');
+    unmodeled.setAttribute('type', 'checkbox');
+    unmodeled.setAttribute('value', 'three');
+    form.append(checked, initiallyChecked, unmodeled);
 
-    expect(new FormData(form).getAll('choice')).toEqual(['one', 'two']);
+    expect(new FormData(form).getAll('choice')).toEqual([
+      'one',
+      'two',
+      'three',
+    ]);
   });
 
   it('passes Blob and File values to the native FormData', async () => {
