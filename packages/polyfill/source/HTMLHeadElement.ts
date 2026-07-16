@@ -1,3 +1,3 @@
-import {Element} from './Element.ts';
+import {HTMLElement} from './HTMLElement.ts';
 
-export class HTMLHeadElement extends Element {}
+export class HTMLHeadElement extends HTMLElement {}

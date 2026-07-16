@@ -15,6 +15,7 @@ import {getElementsByClassName as findElementsByClassName} from './getElementsBy
 import {Event} from './Event.ts';
 import {ParentNode} from './ParentNode.ts';
 import {Element} from './Element.ts';
+import {HTMLElement} from './HTMLElement.ts';
 import {SVGElement} from './SVGElement.ts';
 import {Text} from './Text.ts';
 import {Comment} from './Comment.ts';
@@ -56,12 +57,15 @@ export class Document extends ParentNode {
     return findElementsByClassName(this, classNames);
   }
 
-  createElement(localName: string) {
-    return createElement(this, localName);
+  createElement<T extends HTMLElement = HTMLElement>(localName: string) {
+    return createElement<T>(this, localName);
   }
 
-  createElementNS(namespaceURI: NamespaceURI, localName: string) {
-    return createElement(this, localName, namespaceURI);
+  createElementNS<T extends Element = Element>(
+    namespaceURI: NamespaceURI,
+    localName: string,
+  ) {
+    return createElement<T>(this, localName, namespaceURI);
   }
 
   createTextNode(data: any) {
@@ -128,7 +132,7 @@ export function createElement<T extends Element>(
     element = new HTMLTemplateElement() as any;
   } else {
     const CustomElement = ownerDocument.defaultView.customElements.get(name);
-    element = CustomElement ? (new CustomElement() as any) : new Element();
+    element = CustomElement ? (new CustomElement() as any) : new HTMLElement();
   }
 
   return setupElement(element, ownerDocument, name, namespace);
