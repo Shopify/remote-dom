@@ -3,7 +3,6 @@ import {
   OWNER_DOCUMENT,
   ATTRIBUTES,
   NodeType,
-  NamespaceURI,
   CHILD,
   NEXT,
 } from './constants.ts';
@@ -16,6 +15,7 @@ import type {Element} from './Element.ts';
 import type {CharacterData} from './CharacterData.ts';
 import type {Text} from './Text.ts';
 import {NodeList} from './NodeList.ts';
+import {querySelector, querySelectorAll, MatcherType} from './selectors.ts';
 
 export function isCharacterData(node: Node): node is CharacterData {
   return DATA in node;
@@ -92,23 +92,7 @@ export function getElementById(within: ParentNode, elementId: string) {
   const id = String(elementId);
   if (id === '') return null;
 
-  const child = within[CHILD];
-  return child ? findElementById(child, id) : null;
-}
-
-function findElementById(node: Node, id: string): Element | null {
-  if (isElementNode(node)) {
-    if (node.getAttribute('id') === id) return node;
-
-    const child = node[CHILD];
-    if (child) {
-      const found = findElementById(child, id);
-      if (found) return found;
-    }
-  }
-
-  const next = node[NEXT];
-  return next ? findElementById(next, id) : null;
+  return querySelector(within, [{type: MatcherType.Id, name: id}]);
 }
 
 export function getElementsByTagName(
@@ -116,21 +100,13 @@ export function getElementsByTagName(
   qualifiedName: string,
 ) {
   const name = String(qualifiedName);
-  const htmlName = name.toLowerCase();
+
+  const results = querySelectorAll(within, [
+    {type: name === '*' ? MatcherType.Unknown : MatcherType.Element, name},
+  ]);
+
   const matches = new NodeList();
-
-  for (const node of descendants(within)) {
-    if (
-      isElementNode(node) &&
-      (name === '*' ||
-        (node.namespaceURI === NamespaceURI.XHTML
-          ? node.localName.toLowerCase() === htmlName
-          : node.localName === name))
-    ) {
-      matches.push(node);
-    }
-  }
-
+  matches.push(...results);
   return matches;
 }
 

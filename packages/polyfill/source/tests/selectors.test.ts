@@ -1,5 +1,11 @@
 import {Window} from '../index.ts';
-import {parseSelector} from '../selectors.ts';
+import {
+  parseSelector,
+  querySelector,
+  querySelectorAll,
+  MatcherType,
+} from '../selectors.ts';
+import type {ParentNode} from '../ParentNode.ts';
 
 import {describe, it, expect, beforeEach} from 'vitest';
 
@@ -275,6 +281,101 @@ describe('selector parsing and matching', () => {
 
       const allElements = container.querySelectorAll('*');
       expect(allElements.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('querySelector and querySelectorAll with Matcher[] argument', () => {
+    let container: Element;
+
+    beforeEach(() => {
+      container = document.createElement('div');
+      container.innerHTML = `
+        <article class="post" id="main-post">
+          <h1 class="title">Main Title</h1>
+          <div class="content">
+            <p class="text">First paragraph</p>
+            <p class="text hidden">Hidden paragraph</p>
+            <span class="highlight">Highlighted text</span>
+          </div>
+        </article>
+      `;
+    });
+
+    // The standalone querySelector/querySelectorAll functions expect the polyfill's
+    // ParentNode, but `container` is typed as the global Element (lib.dom.d.ts).
+    // At runtime, Window.setGlobalThis replaces globals with polyfill instances.
+    const asPolyfill = (node: Element) => node as unknown as ParentNode;
+
+    it('selects by ID matcher without parsing', () => {
+      const main = querySelector(asPolyfill(container), [
+        {type: MatcherType.Id, name: 'main-post'},
+      ]);
+      expect(main?.tagName.toLowerCase()).toBe('article');
+    });
+
+    it('selects by element matcher without parsing', () => {
+      const paragraphs = querySelectorAll(asPolyfill(container), [
+        {type: MatcherType.Element, name: 'p'},
+      ]);
+      expect(paragraphs).toHaveLength(2);
+    });
+
+    it('matches ids with special characters literally (no CSS escaping)', () => {
+      const element = document.createElement('div');
+      element.id = 'a.b:c#d';
+      container.appendChild(element);
+
+      const result = querySelector(asPolyfill(container), [
+        {type: MatcherType.Id, name: 'a.b:c#d'},
+      ]);
+      expect(result).toBe(element);
+    });
+
+    it('matches HTML tag names case-insensitively via element matcher', () => {
+      const upper = querySelectorAll(asPolyfill(container), [
+        {type: MatcherType.Element, name: 'ARTICLE'},
+      ]);
+      expect(upper).toHaveLength(1);
+
+      const mixed = querySelectorAll(asPolyfill(container), [
+        {type: MatcherType.Element, name: 'SpAn'},
+      ]);
+      expect(mixed).toHaveLength(1);
+      expect(mixed[0]!.getAttribute('class')).toBe('highlight');
+    });
+
+    it('returns same results as string selectors for compound queries', () => {
+      const byString = container.querySelectorAll('p.text.hidden');
+      const byObject = querySelectorAll(asPolyfill(container), [
+        {type: MatcherType.Element, name: 'p'},
+        {type: MatcherType.Class, name: 'text'},
+        {type: MatcherType.Class, name: 'hidden'},
+      ]);
+
+      expect(byObject).toHaveLength(byString.length);
+      expect(byObject[0]?.textContent?.trim()).toBe('Hidden paragraph');
+    });
+
+    it('wildcard matcher returns all elements', () => {
+      const all = querySelectorAll(asPolyfill(container), [
+        {type: MatcherType.Unknown, name: '*'},
+      ]);
+      expect(all.length).toBeGreaterThan(0);
+      // Should include article, h1, div, p, p, span
+      expect(all.length).toBe(6);
+    });
+
+    it('returns null/empty for non-matching matchers', () => {
+      expect(
+        querySelector(asPolyfill(container), [
+          {type: MatcherType.Id, name: 'nope'},
+        ]),
+      ).toBeNull();
+      expect(
+        querySelectorAll(asPolyfill(container), [
+          {type: MatcherType.Element, name: 'table'},
+        ]),
+      ).toHaveLength(0);
     });
   });
 });

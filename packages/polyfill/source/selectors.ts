@@ -1,4 +1,4 @@
-import {CHILD, NEXT, PARENT, PREV} from './constants.ts';
+import {CHILD, NEXT, PARENT, PREV, NamespaceURI} from './constants.ts';
 import {isElementNode} from './shared.ts';
 
 import type {Node} from './Node.ts';
@@ -7,7 +7,7 @@ import type {ParentNode} from './ParentNode.ts';
 
 // TODO: Replace this enum with an erasable constant object.
 // @ts-expect-error -- Legacy enum; keep this exception scoped to this declaration.
-const enum Combinator {
+export const enum Combinator {
   Descendant,
   Child,
   Sibling,
@@ -17,7 +17,7 @@ const enum Combinator {
 
 // TODO: Replace this enum with an erasable constant object.
 // @ts-expect-error -- Legacy enum; keep this exception scoped to this declaration.
-const enum MatcherType {
+export const enum MatcherType {
   Unknown,
   Element,
   Id,
@@ -27,12 +27,12 @@ const enum MatcherType {
   Function,
 }
 
-interface Part {
+export interface Part {
   combinator: Combinator;
   matchers: Matcher[];
 }
 
-interface Matcher {
+export interface Matcher {
   type: MatcherType;
   name: string;
   value?: string;
@@ -40,8 +40,14 @@ interface Matcher {
 
 const ELEMENT_SELECTOR_TEST = /[a-z]/;
 
-export function querySelector(within: ParentNode, selector: string) {
-  const parts = parseSelector(selector);
+export function querySelector(
+  within: ParentNode,
+  selector: string | Matcher[],
+): Element | null {
+  const parts =
+    typeof selector === 'string'
+      ? parseSelector(selector)
+      : [{combinator: Combinator.Inner, matchers: selector}];
   let result: Element | null = null;
 
   const child = within[CHILD];
@@ -54,8 +60,14 @@ export function querySelector(within: ParentNode, selector: string) {
   return result;
 }
 
-export function querySelectorAll(within: ParentNode, selector: string) {
-  const parts = parseSelector(selector);
+export function querySelectorAll(
+  within: ParentNode,
+  selector: string | Matcher[],
+): Element[] {
+  const parts =
+    typeof selector === 'string'
+      ? parseSelector(selector)
+      : [{combinator: Combinator.Inner, matchers: selector}];
   const results: Element[] = [];
 
   const child = within[CHILD];
@@ -243,7 +255,9 @@ function matchesSelectorMatcher(
     case MatcherType.Unknown:
       return name === '*'; // Universal selector
     case MatcherType.Element:
-      return element.localName === name;
+      return element.namespaceURI === NamespaceURI.XHTML
+        ? element.localName.toLowerCase() === name.toLowerCase()
+        : element.localName === name;
     case MatcherType.Id:
       return element.getAttribute('id') === name;
     case MatcherType.Class:
