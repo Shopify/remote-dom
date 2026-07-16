@@ -14,6 +14,14 @@ import {serializeNode, serializeChildren, parseHtml} from './serialization.ts';
 import {getElementsByTagName as findElementsByTagName} from './shared.ts';
 import {matchesSelector} from './selectors.ts';
 
+const DATA_ATTRIBUTE_PREFIX = 'data-';
+
+function toDataAttributeName(name: string) {
+  return `${DATA_ATTRIBUTE_PREFIX}${name
+    .replace(/[A-Z]/g, '-$&')
+    .toLowerCase()}`;
+}
+
 class DOMTokenList {
   constructor(private element: Element) {}
 
@@ -107,6 +115,28 @@ export class Element extends ParentNode {
 
   get classList() {
     return new DOMTokenList(this);
+  }
+
+  get dataset(): DOMStringMap {
+    const element = this;
+
+    return new Proxy({} as DOMStringMap, {
+      get(target, name) {
+        if (typeof name !== 'string') return Reflect.get(target, name);
+        return element.getAttribute(toDataAttributeName(name)) ?? undefined;
+      },
+      set(target, name, value) {
+        if (typeof name !== 'string') return Reflect.set(target, name, value);
+        element.setAttribute(toDataAttributeName(name), String(value));
+        return true;
+      },
+      deleteProperty(target, name) {
+        if (typeof name !== 'string')
+          return Reflect.deleteProperty(target, name);
+        element.removeAttribute(toDataAttributeName(name));
+        return true;
+      },
+    });
   }
 
   [ATTRIBUTES]!: NamedNodeMap;

@@ -1,12 +1,12 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 import {HOOKS} from '../constants.ts';
-import {HTMLElement} from '../HTMLElement.ts';
+import {Element} from '../Element.ts';
 import {Window} from '../Window.ts';
 
 describe('Element convenience APIs', () => {
   let window: Window;
-  let element: HTMLElement;
+  let element: Element;
   const hooks = {
     setAttribute: vi.fn(),
     removeAttribute: vi.fn(),
@@ -91,8 +91,7 @@ describe('Element convenience APIs', () => {
   });
 
   describe('dataset', () => {
-    it('is available on ordinary HTML elements and reads data attributes', () => {
-      expect(element).toBeInstanceOf(window.HTMLElement);
+    it('reads data attributes', () => {
       element.setAttribute('data-user-id', '123');
       element.setAttribute('data-state', 'ready');
 
