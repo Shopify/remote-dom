@@ -3,6 +3,76 @@ import {ParentNode} from './ParentNode.ts';
 import {NamedNodeMap} from './NamedNodeMap.ts';
 import {Attr} from './Attr.ts';
 import {serializeNode, serializeChildren, parseHtml} from './serialization.ts';
+import {matchesSelector} from './selectors.ts';
+
+class DOMTokenList {
+  constructor(private element: Element) {}
+
+  private get tokens() {
+    return this.element.className.trim().split(/\s+/).filter(Boolean);
+  }
+
+  get length() {
+    return this.tokens.length;
+  }
+
+  get value() {
+    return this.element.className;
+  }
+
+  set value(value: string) {
+    this.element.className = String(value);
+  }
+
+  item(index: number) {
+    return this.tokens[index] ?? null;
+  }
+
+  contains(token: string) {
+    return this.tokens.includes(String(token));
+  }
+
+  add(...tokens: string[]) {
+    this.value = [...new Set([...this.tokens, ...tokens.map(String)])].join(
+      ' ',
+    );
+  }
+
+  remove(...tokens: string[]) {
+    const removed = new Set(tokens.map(String));
+    this.value = this.tokens.filter((token) => !removed.has(token)).join(' ');
+  }
+
+  toggle(token: string, force?: boolean) {
+    const present = this.contains(token);
+    const next = force === undefined ? !present : Boolean(force);
+
+    if (next !== present) {
+      if (next) this.add(token);
+      else this.remove(token);
+    }
+
+    return next;
+  }
+
+  replace(token: string, newToken: string) {
+    const tokens = this.tokens;
+    const index = tokens.indexOf(String(token));
+    if (index < 0) return false;
+
+    tokens[index] = String(newToken);
+    this.value = [...new Set(tokens)].join(' ');
+    return true;
+  }
+
+  toString() {
+    return this.value;
+  }
+
+  [Symbol.iterator]() {
+    return this.tokens[Symbol.iterator]();
+  }
+}
 
 export class Element extends ParentNode {
   static readonly observedAttributes?: string[];
@@ -16,6 +86,18 @@ export class Element extends ParentNode {
 
   get tagName() {
     return this.nodeName;
+  }
+
+  get className() {
+    return this.getAttribute('class') ?? '';
+  }
+
+  set className(value: string) {
+    this.setAttribute('class', String(value));
+  }
+
+  get classList() {
+    return new DOMTokenList(this);
   }
 
   [ATTRIBUTES]!: NamedNodeMap;
@@ -101,6 +183,21 @@ export class Element extends ParentNode {
 
   removeAttributeNS(namespace: NamespaceURI | null, name: string) {
     this.attributes.removeNamedItemNS(namespace, name);
+  }
+
+  matches(selector: string) {
+    return matchesSelector(this, selector);
+  }
+
+  closest(selector: string) {
+    let element: Element | null = this;
+
+    while (element) {
+      if (element.matches(selector)) return element;
+      element = element.parentElement as Element | null;
+    }
+
+    return null;
   }
 
   get outerHTML() {
