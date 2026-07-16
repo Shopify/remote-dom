@@ -3,6 +3,7 @@ import {ParentNode} from './ParentNode.ts';
 import {NamedNodeMap} from './NamedNodeMap.ts';
 import {Attr} from './Attr.ts';
 import {serializeNode, serializeChildren, parseHtml} from './serialization.ts';
+import {getElementsByTagName as findElementsByTagName} from './shared.ts';
 
 export class Element extends ParentNode {
   static readonly observedAttributes?: string[];
@@ -53,6 +54,10 @@ export class Element extends ParentNode {
 
   getAttributeNames() {
     return [...this.attributes].map((attr) => attr.name);
+  }
+
+  getElementsByTagName(qualifiedName: string) {
+    return findElementsByTagName(this, qualifiedName);
   }
 
   get firstElementChild() {

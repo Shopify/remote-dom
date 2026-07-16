@@ -3,6 +3,7 @@ import {
   OWNER_DOCUMENT,
   ATTRIBUTES,
   NodeType,
+  NamespaceURI,
   CHILD,
   NEXT,
 } from './constants.ts';
@@ -14,6 +15,7 @@ import type {ParentNode} from './ParentNode.ts';
 import type {Element} from './Element.ts';
 import type {CharacterData} from './CharacterData.ts';
 import type {Text} from './Text.ts';
+import {NodeList} from './NodeList.ts';
 
 export function isCharacterData(node: Node): node is CharacterData {
   return DATA in node;
@@ -107,6 +109,29 @@ function findElementById(node: Node, id: string): Element | null {
 
   const next = node[NEXT];
   return next ? findElementById(next, id) : null;
+}
+
+export function getElementsByTagName(
+  within: ParentNode,
+  qualifiedName: string,
+) {
+  const name = String(qualifiedName);
+  const htmlName = name.toLowerCase();
+  const matches = new NodeList();
+
+  for (const node of descendants(within)) {
+    if (
+      isElementNode(node) &&
+      (name === '*' ||
+        (node.namespaceURI === NamespaceURI.XHTML
+          ? node.localName.toLowerCase() === htmlName
+          : node.localName === name))
+    ) {
+      matches.push(node);
+    }
+  }
+
+  return matches;
 }
 
 export function descendants(node: Node) {
