@@ -18,8 +18,9 @@ export class ParentNode extends ChildNode {
   readonly childNodes = new NodeList();
   readonly children = new NodeList();
 
-  appendChild(child: Node) {
+  appendChild<T extends Node>(child: T) {
     this.insertInto(child, null);
+    return child;
   }
 
   insertBefore(child: Node, ref?: Node | null) {

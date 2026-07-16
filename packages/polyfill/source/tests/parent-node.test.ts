@@ -7,6 +7,15 @@ beforeEach(() => {
   Window.setGlobalThis(window);
 });
 
+describe('ParentNode.appendChild', () => {
+  it('returns the appended child', () => {
+    const parent = document.createElement('div');
+    const child = document.createElement('span');
+
+    expect(parent.appendChild(child)).toBe(child);
+  });
+});
+
 describe('ParentNode.insertBefore', () => {
   it('links an element inserted before a middle child into tree order', () => {
     const parent = document.createElement('div');
