@@ -2,21 +2,58 @@ path	status	case	note
 __runner__/runner-smoke.html?runner=smoke	supported	runner smoke
 __runner__/runner-smoke.html?runner=smoke	supported	runner worker CSP blocks fetch
 __runner__/runner-smoke.html?runner=smoke	supported	runner worker CSP blocks nested workers
-dom/nodes/Document-getElementById.html	supported	Calling document.getElementById with a null argument.	
-dom/nodes/Document-getElementById.html	supported	Calling document.getElementById with an empty string argument.	
-dom/nodes/Document-getElementById.html	supported	Calling document.getElementById with an undefined argument.	
-dom/nodes/Document-getElementById.html	supported	Document.getElementById must not return nodes not present in document	
+dom/nodes/Document-getElementById.html	supported	Calling document.getElementById with a null argument.
+dom/nodes/Document-getElementById.html	supported	Calling document.getElementById with an empty string argument.
+dom/nodes/Document-getElementById.html	supported	Calling document.getElementById with an undefined argument.
+dom/nodes/Document-getElementById.html	supported	Document.getElementById must not return nodes not present in document
 dom/nodes/Document-getElementById.html	deferred	Document.getElementById with a script-inserted element	Requires concrete `HTMLDivElement` constructor support.
-dom/nodes/Document-getElementById.html	supported	Ensure that the id attribute only affects elements present in a document	
-dom/nodes/Document-getElementById.html	supported	Inserting an id by inserting its parent node	
-dom/nodes/Document-getElementById.html	supported	Modern browsers optimize this method with using internal id cache. This test checks that their optimization should effect only append to `Document`, not append to `Node`.	
+dom/nodes/Document-getElementById.html	supported	Ensure that the id attribute only affects elements present in a document
+dom/nodes/Document-getElementById.html	supported	Inserting an id by inserting its parent node
+dom/nodes/Document-getElementById.html	supported	Modern browsers optimize this method with using internal id cache. This test checks that their optimization should effect only append to `Document`, not append to `Node`.
 dom/nodes/Document-getElementById.html	deferred	add id attribute via innerHTML	Requires concrete `HTMLDivElement` constructor support.
 dom/nodes/Document-getElementById.html	deferred	add id attribute via outerHTML	Requires an `outerHTML` setter.
 dom/nodes/Document-getElementById.html	deferred	changing attribute's value via `Attr` gotten from `Element.attribute`.	Requires indexed `NamedNodeMap` access.
-dom/nodes/Document-getElementById.html	supported	in tree order, within the context object's tree	
+dom/nodes/Document-getElementById.html	supported	in tree order, within the context object's tree
 dom/nodes/Document-getElementById.html	deferred	on static page	Requires concrete `HTMLDivElement` constructor support.
-dom/nodes/Document-getElementById.html	supported	remove id attribute via innerHTML	
+dom/nodes/Document-getElementById.html	supported	remove id attribute via innerHTML
 dom/nodes/Document-getElementById.html	deferred	remove id attribute via outerHTML	Requires an `outerHTML` setter.
-dom/nodes/Document-getElementById.html	supported	update `id` attribute via element.id	
-dom/nodes/Document-getElementById.html	supported	update `id` attribute via setAttribute/removeAttribute	
-dom/nodes/Document-getElementById.html	supported	where insertion order and tree order don't match	
+dom/nodes/Document-getElementById.html	supported	update `id` attribute via element.id
+dom/nodes/Document-getElementById.html	supported	update `id` attribute via setAttribute/removeAttribute
+dom/nodes/Document-getElementById.html	supported	where insertion order and tree order don't match
+dom/nodes/Document-getElementsByTagName.html	supported	Caching is allowed
+dom/nodes/Document-getElementsByTagName.html	deferred	Element in HTML namespace, no prefix, non-ascii characters in name	Requires ASCII-only case folding for HTML qualified names.
+dom/nodes/Document-getElementsByTagName.html	deferred	Element in HTML namespace, prefix, non-ascii characters in name	Requires ASCII-only case folding for HTML qualified names.
+dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, no prefix, lowercase name
+dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, no prefix, uppercase name
+dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, non-ascii characters in name
+dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, lowercase name
+dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, non-ascii characters in name
+dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, uppercase name
+dom/nodes/Document-getElementsByTagName.html	deferred	HTML element with uppercase tagName never matches in HTML Documents	Requires HTML-document qualified-name matching for uppercase-created XHTML elements.
+dom/nodes/Document-getElementsByTagName.html	deferred	Interfaces	Requires `HTMLCollection` and exposed collection constructors.
+dom/nodes/Document-getElementsByTagName.html	deferred	Should be able to set expando shadowing a proto prop (item)	Requires `HTMLCollection.prototype.item`.
+dom/nodes/Document-getElementsByTagName.html	deferred	Should be able to set expando shadowing a proto prop (namedItem)	Requires `HTMLCollection.prototype.namedItem`.
+dom/nodes/Document-getElementsByTagName.html	deferred	Shouldn't be able to set unsigned properties on a HTMLCollection (non-strict mode)	Requires Web IDL indexed `HTMLCollection` properties.
+dom/nodes/Document-getElementsByTagName.html	deferred	Shouldn't be able to set unsigned properties on a HTMLCollection (strict mode)	Requires Web IDL indexed `HTMLCollection` properties.
+dom/nodes/Document-getElementsByTagName.html	deferred	getElementsByTagName('*')	Requires `Node.ELEMENT_NODE` constant support.
+dom/nodes/Document-getElementsByTagName.html	deferred	getElementsByTagName() should be a live collection	Requires a live `HTMLCollection`.
+dom/nodes/Document-getElementsByTagName.html	deferred	hasOwnProperty, getOwnPropertyDescriptor, getOwnPropertyNames	Requires `HTMLCollection` named property semantics.
+dom/nodes/Element-getElementsByTagName.html	supported	Caching is allowed
+dom/nodes/Element-getElementsByTagName.html	deferred	Element in HTML namespace, no prefix, non-ascii characters in name	Requires ASCII-only case folding for HTML qualified names.
+dom/nodes/Element-getElementsByTagName.html	deferred	Element in HTML namespace, prefix, non-ascii characters in name	Requires ASCII-only case folding for HTML qualified names.
+dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, no prefix, lowercase name
+dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, no prefix, uppercase name
+dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, non-ascii characters in name
+dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, lowercase name
+dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, non-ascii characters in name
+dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, uppercase name
+dom/nodes/Element-getElementsByTagName.html	deferred	HTML element with uppercase tagName never matches in HTML Documents	Requires HTML-document qualified-name matching for uppercase-created XHTML elements.
+dom/nodes/Element-getElementsByTagName.html	deferred	Interfaces	Requires `HTMLCollection` and exposed collection constructors.
+dom/nodes/Element-getElementsByTagName.html	supported	Matching the context object
+dom/nodes/Element-getElementsByTagName.html	deferred	Should be able to set expando shadowing a proto prop (item)	Requires `HTMLCollection.prototype.item`.
+dom/nodes/Element-getElementsByTagName.html	deferred	Should be able to set expando shadowing a proto prop (namedItem)	Requires `HTMLCollection.prototype.namedItem`.
+dom/nodes/Element-getElementsByTagName.html	deferred	Shouldn't be able to set unsigned properties on a HTMLCollection (non-strict mode)	Requires Web IDL indexed `HTMLCollection` properties.
+dom/nodes/Element-getElementsByTagName.html	deferred	Shouldn't be able to set unsigned properties on a HTMLCollection (strict mode)	Requires Web IDL indexed `HTMLCollection` properties.
+dom/nodes/Element-getElementsByTagName.html	deferred	getElementsByTagName('*')	Requires `Node.ELEMENT_NODE` constant support.
+dom/nodes/Element-getElementsByTagName.html	deferred	getElementsByTagName() should be a live collection	Requires a live `HTMLCollection`.
+dom/nodes/Element-getElementsByTagName.html	deferred	hasOwnProperty, getOwnPropertyDescriptor, getOwnPropertyNames	Requires `HTMLCollection` named property semantics.
