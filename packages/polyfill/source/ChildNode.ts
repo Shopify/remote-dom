@@ -12,11 +12,14 @@ export class ChildNode extends Node {
   replaceWith(...nodes: (Node | string)[]) {
     const parent = this.parentNode;
     if (!parent) return;
-    const node = toNode(parent, nodes[0]);
-    const next = node[NEXT];
-    parent.replaceChild(this, node);
-    for (let i = 1; i < nodes.length; i++) {
-      parent.insertBefore(toNode(parent, nodes[i]), next);
+    // Anchor on the first following sibling that isn't itself being moved, so
+    // that replacing a node with one of its own siblings still has a reference
+    // node left to insert before.
+    let next = this[NEXT];
+    while (next && nodes.includes(next)) next = next[NEXT];
+    parent.removeChild(this);
+    for (const node of nodes) {
+      parent.insertBefore(toNode(parent, node), next);
     }
   }
 
