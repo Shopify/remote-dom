@@ -91,6 +91,14 @@ describe('Element convenience APIs', () => {
   });
 
   describe('dataset', () => {
+    it('returns the same live object on every access', () => {
+      const dataset = element.dataset;
+      expect(element.dataset).toBe(dataset);
+
+      element.setAttribute('data-state', 'ready');
+      expect(dataset.state).toBe('ready');
+    });
+
     it('reads data attributes', () => {
       element.setAttribute('data-user-id', '123');
       element.setAttribute('data-state', 'ready');

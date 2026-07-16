@@ -4,6 +4,7 @@ export const NS = Symbol('ns');
 export const OWNER_ELEMENT = Symbol('owner');
 export const OWNER_DOCUMENT = Symbol('owner_document');
 export const ATTRIBUTES = Symbol('attributes');
+export const DATASET = Symbol('dataset');
 export const PREV = Symbol('prev');
 export const NEXT = Symbol('next');
 export const CHILD = Symbol('child');
