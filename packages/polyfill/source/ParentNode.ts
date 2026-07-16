@@ -121,9 +121,11 @@ export class ParentNode extends ChildNode {
       if (before.parentNode !== this) {
         throw Error('reference node is not a child of this parent');
       }
+      const prev = before[PREV];
       child[NEXT] = before;
-      child[PREV] = before[PREV];
-      if (before[PREV] === null) this[CHILD] = child;
+      child[PREV] = prev;
+      if (prev === null) this[CHILD] = child;
+      else prev[NEXT] = child;
       before[PREV] = child;
     } else {
       child[NEXT] = null;
