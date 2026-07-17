@@ -23,8 +23,9 @@ export class ParentNode extends ChildNode {
     return child;
   }
 
-  insertBefore(child: Node, ref?: Node | null) {
+  insertBefore<T extends Node>(child: T, ref?: Node | null) {
     this.insertInto(child, ref || null);
+    return child;
   }
 
   append(...nodes: (Node | string)[]) {

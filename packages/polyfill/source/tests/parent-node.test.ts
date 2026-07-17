@@ -25,8 +25,8 @@ describe('ParentNode.insertBefore', () => {
 
     parent.appendChild(first);
     parent.appendChild(last);
-    parent.insertBefore(middle, last);
 
+    expect(parent.insertBefore(middle, last)).toBe(middle);
     expect(Array.from(parent.childNodes)).toEqual([first, middle, last]);
     expect(first.nextSibling).toBe(middle);
     expect(middle.previousSibling).toBe(first);
