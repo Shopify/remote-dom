@@ -46,6 +46,6 @@ describe('getElementsByTagName', () => {
     expect(results.item).toBeTypeOf('function');
     expect(results.item(0)?.localName).toBe('div');
     expect(results.item(1)?.localName).toBe('span');
-    expect(results.item(3)).toBeUndefined();
+    expect(results.item(3)).toBeNull();
   });
 });
