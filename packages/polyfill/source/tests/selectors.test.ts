@@ -183,8 +183,8 @@ describe('selector parsing and matching', () => {
       `;
     });
 
-    it('selects by element name', () => {
-      const articles = container.querySelectorAll('article');
+    it('selects HTML element names case-insensitively', () => {
+      const articles = container.querySelectorAll('ARTICLE');
       expect(articles).toHaveLength(1);
       expect(articles[0]!.getAttribute('class')).toBe('post');
 

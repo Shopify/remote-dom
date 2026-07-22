@@ -38,7 +38,7 @@ export interface Matcher {
   value?: string;
 }
 
-const ELEMENT_SELECTOR_TEST = /[a-z]/;
+const ELEMENT_SELECTOR_TEST = /[a-zA-Z]/;
 
 export function querySelector(
   within: ParentNode,
