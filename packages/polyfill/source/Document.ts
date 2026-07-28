@@ -21,6 +21,8 @@ import {isParentNode, cloneNode} from './shared.ts';
 import {HTMLBodyElement} from './HTMLBodyElement.ts';
 import {HTMLHeadElement} from './HTMLHeadElement.ts';
 import {HTMLHtmlElement} from './HTMLHtmlElement.ts';
+import {HTML_ELEMENT_CONSTRUCTORS, HTMLUnknownElement} from './HTMLElements.ts';
+import {HTMLElement} from './HTMLElement.ts';
 
 export class Document extends ParentNode {
   nodeType = NodeType.DOCUMENT_NODE;
@@ -108,7 +110,11 @@ export function createElement<T extends Element>(
     element = new HTMLTemplateElement() as any;
   } else {
     const CustomElement = ownerDocument.defaultView.customElements.get(name);
-    element = CustomElement ? (new CustomElement() as any) : new Element();
+    const ElementConstructor =
+      CustomElement ??
+      HTML_ELEMENT_CONSTRUCTORS[lowerName] ??
+      (lowerName.includes('-') ? HTMLElement : HTMLUnknownElement);
+    element = new ElementConstructor() as any;
   }
 
   return setupElement(element, ownerDocument, name, namespace);
