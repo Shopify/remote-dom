@@ -1,17 +1,66 @@
-import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
+import {
+  attributeObserversActive,
+  characterDataObserversActive,
+  childListObserversActive,
+  type MutationCallback,
+} from '../MutationObserver.ts';
 import {Window} from '../Window.ts';
 
 describe('MutationObserver', () => {
   let window: Window;
+  let observers: InstanceType<Window['MutationObserver']>[];
 
   beforeEach(() => {
     window = new Window();
+    observers = [];
+  });
+
+  afterEach(() => {
+    for (const observer of observers) observer.disconnect();
+  });
+
+  function createObserver(callback: MutationCallback) {
+    const observer = new window.MutationObserver(callback);
+    observers.push(observer);
+    return observer;
+  }
+
+  it('only enables tracking for mutation types that are observed', () => {
+    const first = createObserver(() => {});
+    const second = createObserver(() => {});
+    const target = window.document.createElement('div');
+
+    expect(attributeObserversActive).toBe(false);
+    expect(characterDataObserversActive).toBe(false);
+    expect(childListObserversActive).toBe(false);
+
+    first.observe(target, {attributes: true});
+    first.observe(target, {attributes: true, attributeOldValue: true});
+    expect(attributeObserversActive).toBe(true);
+    expect(characterDataObserversActive).toBe(false);
+    expect(childListObserversActive).toBe(false);
+
+    first.observe(target, {childList: true});
+    second.observe(target, {characterData: true});
+    expect(attributeObserversActive).toBe(false);
+    expect(characterDataObserversActive).toBe(true);
+    expect(childListObserversActive).toBe(true);
+
+    first.disconnect();
+    expect(characterDataObserversActive).toBe(true);
+    expect(childListObserversActive).toBe(false);
+
+    second.disconnect();
+    expect(attributeObserversActive).toBe(false);
+    expect(characterDataObserversActive).toBe(false);
+    expect(childListObserversActive).toBe(false);
   });
 
   it('observes and batches child-list changes', async () => {
     const callback = vi.fn();
-    const observer = new window.MutationObserver(callback);
+    const observer = createObserver(callback);
     const parent = window.document.createElement('div');
     const first = window.document.createElement('span');
     const second = window.document.createElement('span');
@@ -53,7 +102,7 @@ describe('MutationObserver', () => {
 
   it('observes filtered attributes in a subtree with old values', async () => {
     const callback = vi.fn();
-    const observer = new window.MutationObserver(callback);
+    const observer = createObserver(callback);
     const parent = window.document.createElement('div');
     const child = window.document.createElement('span');
     parent.appendChild(child);
@@ -94,11 +143,11 @@ describe('MutationObserver', () => {
     const withoutOldValue = vi.fn();
     const text = window.document.createTextNode('before');
 
-    new window.MutationObserver(withOldValue).observe(text, {
+    createObserver(withOldValue).observe(text, {
       characterData: true,
       characterDataOldValue: true,
     });
-    new window.MutationObserver(withoutOldValue).observe(text, {
+    createObserver(withoutOldValue).observe(text, {
       characterData: true,
     });
     text.data = 'after';
@@ -111,7 +160,7 @@ describe('MutationObserver', () => {
 
   it('supports takeRecords() and disconnect()', async () => {
     const callback = vi.fn();
-    const observer = new window.MutationObserver(callback);
+    const observer = createObserver(callback);
     const parent = window.document.createElement('div');
 
     observer.observe(parent, {childList: true});
@@ -131,7 +180,7 @@ describe('MutationObserver', () => {
   it('validates the callback and observation options', () => {
     expect(() => new window.MutationObserver(null as any)).toThrow(TypeError);
 
-    const observer = new window.MutationObserver(() => {});
+    const observer = createObserver(() => {});
     const target = window.document.createElement('div');
 
     expect(() => observer.observe(target)).toThrow(TypeError);

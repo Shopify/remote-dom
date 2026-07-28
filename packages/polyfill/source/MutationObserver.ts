@@ -52,10 +52,26 @@ type MutationRecordInit = Pick<MutationRecord, 'target' | 'type'> &
     >
   >;
 
-const registrations = new WeakMap<
+type Registrations = WeakMap<
   Node,
   Map<MutationObserver, NormalizedMutationObserverInit>
->();
+>;
+
+let registrations: Registrations | undefined;
+let registrationCount = 0;
+let attributeRegistrationCount = 0;
+let characterDataRegistrationCount = 0;
+let childListRegistrationCount = 0;
+
+// Mutation sites read these live bindings before capturing old values or
+// allocating record data. Keep them split so observing one mutation type does
+// not add work to unrelated mutations.
+/** @internal */
+export let attributeObserversActive = false;
+/** @internal */
+export let characterDataObserversActive = false;
+/** @internal */
+export let childListObserversActive = false;
 
 export class MutationObserver {
   readonly #callback: MutationCallback;
@@ -73,29 +89,50 @@ export class MutationObserver {
 
   observe(target: Node, options: MutationObserverInit = {}) {
     const normalizedOptions = normalizeOptions(options);
-    let targetRegistrations = registrations.get(target);
+    const currentRegistrations = (registrations ??= new WeakMap());
+    let targetRegistrations = currentRegistrations.get(target);
 
     if (targetRegistrations == null) {
       targetRegistrations = new Map();
-      registrations.set(target, targetRegistrations);
+      currentRegistrations.set(target, targetRegistrations);
+    }
+
+    const previousOptions = targetRegistrations.get(this);
+    if (previousOptions == null) {
+      registrationCount++;
+    } else {
+      updateRegistrationCounts(previousOptions, -1);
     }
 
     targetRegistrations.set(this, normalizedOptions);
+    updateRegistrationCounts(normalizedOptions, 1);
     this.#targets.add(target);
   }
 
   disconnect() {
+    const currentRegistrations = registrations;
+    if (currentRegistrations == null) return;
+
     for (const target of this.#targets) {
-      const targetRegistrations = registrations.get(target);
-      targetRegistrations?.delete(this);
+      const targetRegistrations = currentRegistrations.get(target);
+      const options = targetRegistrations?.get(this);
+      if (options != null) {
+        targetRegistrations!.delete(this);
+        registrationCount--;
+        updateRegistrationCounts(options, -1);
+      }
 
       if (targetRegistrations?.size === 0) {
-        registrations.delete(target);
+        currentRegistrations.delete(target);
       }
     }
 
     this.#targets.clear();
     this.#records.length = 0;
+
+    if (registrationCount === 0) {
+      registrations = undefined;
+    }
   }
 
   takeRecords() {
@@ -122,11 +159,14 @@ export class MutationObserver {
 
 /** @internal */
 export function queueMutationRecord(init: MutationRecordInit) {
+  const currentRegistrations = registrations;
+  if (currentRegistrations == null) return;
+
   const interestedObservers = new Map<MutationObserver, boolean>();
   let node: Node | null = init.target;
 
   while (node) {
-    const targetRegistrations = registrations.get(node);
+    const targetRegistrations = currentRegistrations.get(node);
 
     if (targetRegistrations) {
       for (const [observer, options] of targetRegistrations) {
@@ -225,4 +265,17 @@ function normalizeOptions(
     childList,
     subtree: options.subtree === true,
   };
+}
+
+function updateRegistrationCounts(
+  options: NormalizedMutationObserverInit,
+  delta: 1 | -1,
+) {
+  if (options.attributes) attributeRegistrationCount += delta;
+  if (options.characterData) characterDataRegistrationCount += delta;
+  if (options.childList) childListRegistrationCount += delta;
+
+  attributeObserversActive = attributeRegistrationCount > 0;
+  characterDataObserversActive = characterDataRegistrationCount > 0;
+  childListObserversActive = childListRegistrationCount > 0;
 }

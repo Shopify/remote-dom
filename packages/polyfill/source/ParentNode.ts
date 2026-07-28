@@ -14,7 +14,11 @@ import {ChildNode, toNode} from './ChildNode.ts';
 import {NodeList} from './NodeList.ts';
 import {querySelectorAll, querySelector} from './selectors.ts';
 import {selfAndDescendants} from './shared.ts';
-import {mutationNodeList, queueMutationRecord} from './MutationObserver.ts';
+import {
+  childListObserversActive,
+  mutationNodeList,
+  queueMutationRecord,
+} from './MutationObserver.ts';
 
 export class ParentNode extends ChildNode {
   readonly childNodes = new NodeList();
@@ -83,13 +87,15 @@ export class ParentNode extends ChildNode {
       }
     }
 
-    queueMutationRecord({
-      type: 'childList',
-      target: this,
-      removedNodes: mutationNodeList(child),
-      previousSibling: prev,
-      nextSibling: next,
-    });
+    if (childListObserversActive) {
+      queueMutationRecord({
+        type: 'childList',
+        target: this,
+        removedNodes: mutationNodeList(child),
+        previousSibling: prev,
+        nextSibling: next,
+      });
+    }
 
     if (this.nodeType === NODE_TYPE_ELEMENT) {
       this[HOOKS].removeChild?.(this as any, child as any, childNodesIndex);
@@ -189,13 +195,15 @@ export class ParentNode extends ChildNode {
       }
     }
 
-    queueMutationRecord({
-      type: 'childList',
-      target: this,
-      addedNodes: mutationNodeList(child),
-      previousSibling: child[PREV],
-      nextSibling: child[NEXT],
-    });
+    if (childListObserversActive) {
+      queueMutationRecord({
+        type: 'childList',
+        target: this,
+        addedNodes: mutationNodeList(child),
+        previousSibling: child[PREV],
+        nextSibling: child[NEXT],
+      });
+    }
 
     if (this.nodeType === NODE_TYPE_ELEMENT) {
       this[HOOKS].insertChild?.(this as any, child as any, insertIndex);
