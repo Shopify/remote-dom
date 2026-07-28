@@ -17,9 +17,10 @@ import {CharacterData} from './CharacterData.ts';
 import {Text} from './Text.ts';
 import {Comment} from './Comment.ts';
 import {DocumentFragment} from './DocumentFragment.ts';
+import {HTMLTemplateElement} from './HTMLTemplateElement.ts';
 import {CustomElementRegistryImplementation} from './CustomElementRegistry.ts';
 import {MutationObserver} from './MutationObserver.ts';
-import * as HTMLElements from './HTMLElements.ts';
+import {HTML_ELEMENT_GLOBALS} from './HTMLElements.ts';
 import {HOOKS} from './constants.ts';
 import type {Hooks} from './hooks.ts';
 
@@ -32,6 +33,10 @@ type OnErrorHandler =
       error?: any,
     ) => void)
   | null;
+
+type HTMLElementGlobals = typeof HTML_ELEMENT_GLOBALS;
+
+export interface Window extends HTMLElementGlobals {}
 
 export class Window extends EventTarget {
   [HOOKS]: Partial<Hooks> = {};
@@ -62,78 +67,14 @@ export class Window extends EventTarget {
   Text = Text;
   Element = Element;
   HTMLElement = HTMLElement;
-  HTMLAnchorElement = HTMLElements.HTMLAnchorElement;
-  HTMLAreaElement = HTMLElements.HTMLAreaElement;
-  HTMLAudioElement = HTMLElements.HTMLAudioElement;
-  HTMLBaseElement = HTMLElements.HTMLBaseElement;
-  HTMLBodyElement = HTMLElements.HTMLBodyElement;
-  HTMLBRElement = HTMLElements.HTMLBRElement;
-  HTMLButtonElement = HTMLElements.HTMLButtonElement;
-  HTMLCanvasElement = HTMLElements.HTMLCanvasElement;
-  HTMLDataElement = HTMLElements.HTMLDataElement;
-  HTMLDataListElement = HTMLElements.HTMLDataListElement;
-  HTMLDetailsElement = HTMLElements.HTMLDetailsElement;
-  HTMLDialogElement = HTMLElements.HTMLDialogElement;
-  HTMLDirectoryElement = HTMLElements.HTMLDirectoryElement;
-  HTMLDivElement = HTMLElements.HTMLDivElement;
-  HTMLDListElement = HTMLElements.HTMLDListElement;
-  HTMLEmbedElement = HTMLElements.HTMLEmbedElement;
-  HTMLFieldSetElement = HTMLElements.HTMLFieldSetElement;
-  HTMLFontElement = HTMLElements.HTMLFontElement;
-  HTMLFormElement = HTMLElements.HTMLFormElement;
-  HTMLFrameElement = HTMLElements.HTMLFrameElement;
-  HTMLFrameSetElement = HTMLElements.HTMLFrameSetElement;
-  HTMLHeadElement = HTMLElements.HTMLHeadElement;
-  HTMLHeadingElement = HTMLElements.HTMLHeadingElement;
-  HTMLHRElement = HTMLElements.HTMLHRElement;
-  HTMLHtmlElement = HTMLElements.HTMLHtmlElement;
-  HTMLIFrameElement = HTMLElements.HTMLIFrameElement;
-  HTMLImageElement = HTMLElements.HTMLImageElement;
-  HTMLInputElement = HTMLElements.HTMLInputElement;
-  HTMLLabelElement = HTMLElements.HTMLLabelElement;
-  HTMLLegendElement = HTMLElements.HTMLLegendElement;
-  HTMLLIElement = HTMLElements.HTMLLIElement;
-  HTMLLinkElement = HTMLElements.HTMLLinkElement;
-  HTMLMapElement = HTMLElements.HTMLMapElement;
-  HTMLMarqueeElement = HTMLElements.HTMLMarqueeElement;
-  HTMLMediaElement = HTMLElements.HTMLMediaElement;
-  HTMLMenuElement = HTMLElements.HTMLMenuElement;
-  HTMLMetaElement = HTMLElements.HTMLMetaElement;
-  HTMLMeterElement = HTMLElements.HTMLMeterElement;
-  HTMLModElement = HTMLElements.HTMLModElement;
-  HTMLObjectElement = HTMLElements.HTMLObjectElement;
-  HTMLOListElement = HTMLElements.HTMLOListElement;
-  HTMLOptGroupElement = HTMLElements.HTMLOptGroupElement;
-  HTMLOptionElement = HTMLElements.HTMLOptionElement;
-  HTMLOutputElement = HTMLElements.HTMLOutputElement;
-  HTMLParagraphElement = HTMLElements.HTMLParagraphElement;
-  HTMLParamElement = HTMLElements.HTMLParamElement;
-  HTMLPictureElement = HTMLElements.HTMLPictureElement;
-  HTMLPreElement = HTMLElements.HTMLPreElement;
-  HTMLProgressElement = HTMLElements.HTMLProgressElement;
-  HTMLQuoteElement = HTMLElements.HTMLQuoteElement;
-  HTMLScriptElement = HTMLElements.HTMLScriptElement;
-  HTMLSelectElement = HTMLElements.HTMLSelectElement;
-  HTMLSlotElement = HTMLElements.HTMLSlotElement;
-  HTMLSourceElement = HTMLElements.HTMLSourceElement;
-  HTMLSpanElement = HTMLElements.HTMLSpanElement;
-  HTMLStyleElement = HTMLElements.HTMLStyleElement;
-  HTMLTableCaptionElement = HTMLElements.HTMLTableCaptionElement;
-  HTMLTableCellElement = HTMLElements.HTMLTableCellElement;
-  HTMLTableColElement = HTMLElements.HTMLTableColElement;
-  HTMLTableElement = HTMLElements.HTMLTableElement;
-  HTMLTableRowElement = HTMLElements.HTMLTableRowElement;
-  HTMLTableSectionElement = HTMLElements.HTMLTableSectionElement;
   SVGElement = SVGElement;
-  HTMLTemplateElement = HTMLElements.HTMLTemplateElement;
-  HTMLTextAreaElement = HTMLElements.HTMLTextAreaElement;
-  HTMLTimeElement = HTMLElements.HTMLTimeElement;
-  HTMLTitleElement = HTMLElements.HTMLTitleElement;
-  HTMLTrackElement = HTMLElements.HTMLTrackElement;
-  HTMLUListElement = HTMLElements.HTMLUListElement;
-  HTMLUnknownElement = HTMLElements.HTMLUnknownElement;
-  HTMLVideoElement = HTMLElements.HTMLVideoElement;
+  HTMLTemplateElement = HTMLTemplateElement;
   MutationObserver = MutationObserver;
+
+  constructor() {
+    super();
+    Object.assign(this, HTML_ELEMENT_GLOBALS);
+  }
 
   #currentOnErrorHandler: ((event: any) => void) | null = null;
   #currentOriginalOnErrorHandler: OnErrorHandler = null;

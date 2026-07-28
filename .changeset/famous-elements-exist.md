@@ -2,4 +2,4 @@
 '@remote-dom/polyfill': minor
 ---
 
-Install concrete HTML element constructors and use them for elements created by the polyfilled document.
+Install standard HTML element constructor globals with tag-aware `instanceof` checks while preserving the polyfill's flat element model.
