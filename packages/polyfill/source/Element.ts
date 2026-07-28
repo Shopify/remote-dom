@@ -1,5 +1,6 @@
 import {NS, ATTRIBUTES, NamespaceURI, NodeType} from './constants.ts';
 import {ParentNode} from './ParentNode.ts';
+import {getElementsByClassName as findElementsByClassName} from './getElementsByClassName.ts';
 import {NamedNodeMap} from './NamedNodeMap.ts';
 import {Attr} from './Attr.ts';
 import {serializeNode, serializeChildren, parseHtml} from './serialization.ts';
@@ -49,6 +50,10 @@ export class Element extends ParentNode {
 
   get firstElementChild() {
     return this.children[0] ?? null;
+  }
+
+  getElementsByClassName(classNames: string) {
+    return findElementsByClassName(this, classNames);
   }
 
   get lastElementChild() {
