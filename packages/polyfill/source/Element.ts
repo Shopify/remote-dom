@@ -87,6 +87,22 @@ export class Element extends ParentNode {
     return sib;
   }
 
+  focus(options?: FocusOptions) {
+    if (options === undefined) {
+      this.callHostMethod('focus');
+    } else {
+      this.callHostMethod('focus', options);
+    }
+  }
+
+  scrollIntoView(arg?: boolean | ScrollIntoViewOptions) {
+    if (arg === undefined) {
+      this.callHostMethod('scrollIntoView');
+    } else {
+      this.callHostMethod('scrollIntoView', arg);
+    }
+  }
+
   setAttribute(name: string, value: string) {
     this.attributes.setNamedItem(new Attr(name, String(value)));
   }
