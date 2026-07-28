@@ -8,6 +8,7 @@ import {
 } from './constants.ts';
 import type {Attr} from './Attr.ts';
 import type {Element} from './Element.ts';
+import {queueMutationRecord} from './MutationObserver.ts';
 
 export class NamedNodeMap {
   [CHILD]: Attr | null = null;
@@ -65,6 +66,13 @@ export class NamedNodeMap {
       if (attr.name === name && attr[NS] == namespaceURI) {
         if (prev) prev[NEXT] = attr[NEXT];
         if (this[CHILD] === attr) this[CHILD] = attr[NEXT];
+        queueMutationRecord({
+          type: 'attributes',
+          target: ownerElement,
+          attributeName: attr.name,
+          attributeNamespace: attr[NS],
+          oldValue: attr.value,
+        });
         updateElementAttribute(ownerElement, attr.name, attr.value, null);
         ownerElement[HOOKS].removeAttribute?.(
           ownerElement as any,
@@ -111,6 +119,13 @@ export class NamedNodeMap {
 
     // only invoke the protocol if the value changed
     if (!old || old.value !== attr.value) {
+      queueMutationRecord({
+        type: 'attributes',
+        target: ownerElement,
+        attributeName: attr.name,
+        attributeNamespace: attr[NS],
+        oldValue: old?.value ?? null,
+      });
       updateElementAttribute(
         ownerElement,
         attr.name,
