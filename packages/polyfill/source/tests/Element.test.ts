@@ -67,12 +67,12 @@ describe('Element convenience APIs', () => {
       expect([...classes]).toEqual(['three']);
     });
 
-    it('does not allow indexed assignment', () => {
+    it('ignores indexed assignment', () => {
       element.className = 'one two';
 
-      expect(() => {
-        (element.classList as any)[1] = 'three';
-      }).toThrow(TypeError);
+      (element.classList as any)[1] = 'three';
+
+      expect(element.classList[1]).toBe('two');
       expect(element.className).toBe('one two');
     });
 
