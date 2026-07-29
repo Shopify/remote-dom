@@ -47,8 +47,13 @@ describe('Element convenience APIs', () => {
       const classes = element.classList;
       element.setAttribute('class', 'one two');
 
+      expect(element.classList).toBe(classes);
+      expect(Array.isArray(classes)).toBe(false);
       expect([...classes]).toEqual(['one', 'two']);
       expect(classes.length).toBe(2);
+      expect(classes[0]).toBe('one');
+      expect(classes[1]).toBe('two');
+      expect(classes[2]).toBeUndefined();
       expect(classes.item(0)).toBe('one');
       expect(classes.item(2)).toBeNull();
       expect(classes.contains('two')).toBe(true);
@@ -57,7 +62,18 @@ describe('Element convenience APIs', () => {
 
       element.className = 'three';
       expect(element.getAttribute('class')).toBe('three');
+      expect(classes[0]).toBe('three');
+      expect(classes[1]).toBeUndefined();
       expect([...classes]).toEqual(['three']);
+    });
+
+    it('does not allow indexed assignment', () => {
+      element.className = 'one two';
+
+      expect(() => {
+        (element.classList as any)[1] = 'three';
+      }).toThrow(TypeError);
+      expect(element.className).toBe('one two');
     });
 
     it('adds, removes, and replaces classes through attribute hooks', () => {
