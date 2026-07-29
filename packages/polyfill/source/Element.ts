@@ -1,6 +1,7 @@
 import {
   NS,
   ATTRIBUTES,
+  CLASS_LIST,
   DATASET,
   HTML_NAMESPACE,
   NODE_TYPE_ELEMENT,
@@ -19,7 +20,13 @@ function toDataAttributeName(name: string) {
   return 'data-' + name.replace(/[A-Z]/g, '-$&').toLowerCase();
 }
 
+function isTokenIndex(name: PropertyKey) {
+  return typeof name === 'string' && name === String(+name);
+}
+
 class DOMTokenList {
+  readonly [index: number]: string;
+
   constructor(private element: Element) {}
 
   private get tokens() {
@@ -110,8 +117,21 @@ export class Element extends ParentNode {
     this.setAttribute('class', String(value));
   }
 
+  [CLASS_LIST]?: DOMTokenList;
+
   get classList() {
-    return new DOMTokenList(this);
+    return (this[CLASS_LIST] ??= new Proxy(new DOMTokenList(this), {
+      get(target, name, receiver) {
+        return isTokenIndex(name)
+          ? (target.item(+(name as string)) ?? undefined)
+          : Reflect.get(target, name, receiver);
+      },
+      set(target, name, value, receiver) {
+        return (
+          !isTokenIndex(name) && Reflect.set(target, name, value, receiver)
+        );
+      },
+    }));
   }
 
   [DATASET]?: DOMStringMap;
