@@ -3,6 +3,8 @@ import {
   ATTRIBUTES,
   CLASS_LIST,
   DATASET,
+  OWNER_ELEMENT,
+  VALUE,
   HTML_NAMESPACE,
   NODE_TYPE_ELEMENT,
   type NamespaceURI,
@@ -26,42 +28,45 @@ function isTokenIndex(name: PropertyKey) {
 
 class DOMTokenList {
   readonly [index: number]: string;
+  [OWNER_ELEMENT]: Element;
 
-  constructor(private element: Element) {}
+  constructor(element: Element) {
+    this[OWNER_ELEMENT] = element;
+  }
 
-  private get tokens() {
-    return this.element.className.trim().split(/\s+/).filter(Boolean);
+  get [VALUE]() {
+    return this[OWNER_ELEMENT].className.trim().split(/\s+/).filter(Boolean);
   }
 
   get length() {
-    return this.tokens.length;
+    return this[VALUE].length;
   }
 
   get value() {
-    return this.element.className;
+    return this[OWNER_ELEMENT].className;
   }
 
   set value(value: string) {
-    this.element.className = String(value);
+    this[OWNER_ELEMENT].className = String(value);
   }
 
   item(index: number) {
-    return this.tokens[index] ?? null;
+    return this[VALUE][index] ?? null;
   }
 
   contains(token: string) {
-    return this.tokens.includes(String(token));
+    return this[VALUE].includes(String(token));
   }
 
   add(...tokens: string[]) {
-    this.value = [...new Set([...this.tokens, ...tokens.map(String)])].join(
+    this.value = [...new Set([...this[VALUE], ...tokens.map(String)])].join(
       ' ',
     );
   }
 
   remove(...tokens: string[]) {
     const removed = new Set(tokens.map(String));
-    this.value = this.tokens.filter((token) => !removed.has(token)).join(' ');
+    this.value = this[VALUE].filter((token) => !removed.has(token)).join(' ');
   }
 
   toggle(token: string, force?: boolean) {
@@ -77,7 +82,7 @@ class DOMTokenList {
   }
 
   replace(token: string, newToken: string) {
-    const tokens = this.tokens;
+    const tokens = this[VALUE];
     const index = tokens.indexOf(String(token));
     if (index < 0) return false;
 
@@ -91,7 +96,7 @@ class DOMTokenList {
   }
 
   [Symbol.iterator]() {
-    return this.tokens[Symbol.iterator]();
+    return this[VALUE][Symbol.iterator]();
   }
 }
 
@@ -102,7 +107,7 @@ Object.setPrototypeOf(
     {
       get(target, name, receiver) {
         return isTokenIndex(name)
-          ? (receiver as any).tokens[+(name as string)]
+          ? (receiver as DOMTokenList)[VALUE][+(name as string)]
           : Reflect.get(target, name, receiver);
       },
       set(target, name, value, receiver) {
