@@ -91,6 +91,23 @@ class DOMTokenList {
   }
 }
 
+Object.setPrototypeOf(
+  DOMTokenList.prototype,
+  new Proxy(
+    {},
+    {
+      get(target, name, receiver) {
+        return isTokenIndex(name)
+          ? (receiver as any).tokens[+(name as string)]
+          : Reflect.get(target, name, receiver);
+      },
+      set(target, name, value, receiver) {
+        return isTokenIndex(name) || Reflect.set(target, name, value, receiver);
+      },
+    },
+  ),
+);
+
 export class Element extends ParentNode {
   static readonly observedAttributes?: string[];
 
@@ -116,18 +133,7 @@ export class Element extends ParentNode {
   [CLASS_LIST]?: DOMTokenList;
 
   get classList() {
-    return (this[CLASS_LIST] ??= new Proxy(new DOMTokenList(this), {
-      get(target, name, receiver) {
-        return isTokenIndex(name)
-          ? (target.item(+(name as string)) ?? undefined)
-          : Reflect.get(target, name, receiver);
-      },
-      set(target, name, value, receiver) {
-        return (
-          !isTokenIndex(name) && Reflect.set(target, name, value, receiver)
-        );
-      },
-    }));
+    return (this[CLASS_LIST] ??= new DOMTokenList(this));
   }
 
   [DATASET]?: DOMStringMap;
