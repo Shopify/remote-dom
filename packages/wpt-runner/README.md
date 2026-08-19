@@ -49,18 +49,18 @@ WPT files are pinned but remain untrusted test inputs. The preparation script va
 
 ## Capability inventory
 
-`capabilities.tsv` contains one physical row per WPT subtest with four columns:
+`capabilities.tsv` contains one physical row per WPT subtest with four logical columns:
 
 ```text
-path<TAB>status<TAB>case<TAB>note
+path<TAB>status<TAB>case[<TAB>note]
 ```
 
 - `path`: WPT path, including a query string when applicable
 - `status`: exactly `supported` or `deferred`
 - `case`: exact `testharness.js` subtest name
-- `note`: required for deferred cases and normally empty for supported cases
+- `note`: required for deferred cases and normally omitted for supported cases
 
-Use `\\t`, `\\n`, `\\r`, and `\\\\` for literal tab, newline, carriage return, and backslash characters. Other escapes, malformed rows, duplicate `(path, case)` pairs, and noncanonical ordering fail validation.
+Trailing empty columns may be omitted; the formatter removes them from the canonical representation. Use `\\t`, `\\n`, `\\r`, and `\\\\` for literal tab, newline, carriage return, and backslash characters. Other escapes, malformed rows, duplicate `(path, case)` pairs, and noncanonical ordering fail validation.
 
 The formatter sorts by path and case with locale-independent code-unit ordering and writes LF line endings with one final newline. The runner rejects an unformatted table and prints the formatter command.
 

@@ -38,11 +38,12 @@ export function parseCapabilities(source, label = 'capabilities.tsv') {
   for (let index = 1; index < lines.length; index += 1) {
     const lineNumber = index + 1;
     const fields = lines[index].split('\t');
-    if (fields.length !== CAPABILITY_HEADER.length) {
+    if (fields.length > CAPABILITY_HEADER.length) {
       throw new Error(
-        `${label}:${lineNumber}: expected ${CAPABILITY_HEADER.length} columns, got ${fields.length}.`,
+        `${label}:${lineNumber}: expected at most ${CAPABILITY_HEADER.length} columns, got ${fields.length}.`,
       );
     }
+    while (fields.length < CAPABILITY_HEADER.length) fields.push('');
 
     const [rawPath, rawStatus, rawCase, rawNote] = fields;
     const row = {
@@ -80,11 +81,13 @@ export function serializeCapabilities(rows) {
   const sorted = [...rows].sort(compareCapabilityRows);
   const lines = [
     CAPABILITY_HEADER.join('\t'),
-    ...sorted.map((row) =>
-      [row.path, row.status, row.case, row.note]
-        .map((field) => escapeField(field))
-        .join('\t'),
-    ),
+    ...sorted.map((row) => {
+      const fields = [row.path, row.status, row.case, row.note].map((field) =>
+        escapeField(field),
+      );
+      while (fields.at(-1) === '') fields.pop();
+      return fields.join('\t');
+    }),
   ];
   return `${lines.join('\n')}\n`;
 }
