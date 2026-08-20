@@ -1,7 +1,31 @@
 :root {
-  color: #202223;
-  background: #f6f6f7;
+  color-scheme: light;
+  --color-background: #f6f6f7;
+  --color-border: #8c9196;
+  --color-border-subdued: #e1e3e5;
+  --color-button-background: #202223;
+  --color-button-text: #ffffff;
+  --color-control-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-text: #202223;
+
+  background: var(--color-background);
+  color: var(--color-text);
   font-family: system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-background: #111213;
+    --color-border: #616a75;
+    --color-border-subdued: #454a4f;
+    --color-button-background: #f1f2f3;
+    --color-button-text: #202223;
+    --color-control-background: #2c2f33;
+    --color-surface: #202223;
+    --color-text: #f1f2f3;
+  }
 }
 
 body {
@@ -38,15 +62,20 @@ label {
 
 input,
 button {
-  border: 1px solid #8c9196;
+  border: 1px solid var(--color-border);
   border-radius: 0.4rem;
   font: inherit;
   padding: 0.6rem 0.75rem;
 }
 
+input {
+  background: var(--color-control-background);
+  color: var(--color-text);
+}
+
 button {
-  background: #202223;
-  color: white;
+  background: var(--color-button-background);
+  color: var(--color-button-text);
   cursor: pointer;
 }
 
@@ -57,8 +86,8 @@ button {
 }
 
 .panel {
-  background: white;
-  border: 1px solid #e1e3e5;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subdued);
   border-radius: 0.6rem;
   min-width: 0;
   padding: 1rem;
