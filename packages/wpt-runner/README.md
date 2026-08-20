@@ -47,6 +47,8 @@ Each revision installs under `<cache-root>/<revision>/source`, with the runner-o
 
 WPT files are pinned but remain untrusted test inputs. The preparation script validates archive paths and checksums before extraction, and the browser server rejects traversal. Do not execute downloaded repository scripts outside the isolated runner.
 
+The Vite server applies a worker-specific Content Security Policy that blocks network connections and nested workers while allowing same-origin module loading and the current `AsyncFunction` executor. The control page keeps its separate policy so it can load prepared WPT resources.
+
 ## Capability inventory
 
 `capabilities.tsv` contains one physical row per WPT subtest with four logical columns:
@@ -75,6 +77,6 @@ The same schema can later be split mechanically into `dom.tsv`, `html.tsv`, `svg
 
 ## Initial limitations
 
-The first version supports `testharness.js` HTML files, classic top-level scripts, static HTML/SVG markup, and absolute or relative in-repository script resources. It skips `testharnessreport.js` and captures completion programmatically.
+The first version supports selected `testharness.js` HTML files, parser-ordered classic top-level scripts executed in one shared function scope, static HTML/SVG markup, and absolute or relative in-repository script resources. It skips `testharnessreport.js` and captures completion programmatically.
 
-It intentionally does not support `.window.js`, WebIDL preloading, modules, nested scripts or browsing contexts, Window messaging, reftests, crashtests, WPT server substitutions, navigation, or layout assertions. Add execution infrastructure only when a selected capability requires it; never patch a claimed DOM API in runner shims.
+Before classifying a file, verify that it does not observe independent script-global declarations, per-script strictness, or continuation after intentional parse and runtime errors. Those HTML script-processing semantics remain deferred alongside `.window.js`, WebIDL preloading, modules, nested scripts or browsing contexts, Window messaging, reftests, crashtests, WPT server substitutions, navigation, and layout assertions. Add execution infrastructure only when a selected capability requires it; never patch a claimed DOM API in runner shims.
