@@ -18,6 +18,10 @@ const packageRoot = path.resolve(
 const repositoryRoot = path.resolve(packageRoot, '../..');
 const defaultLockPath = path.join(packageRoot, 'wpt.lock.json');
 const completionMarker = '.remote-dom-wpt-complete.json';
+const lockOwnerFile = 'owner.json';
+const lockPollIntervalMs = 100;
+const lockStaleMs = 5 * 60 * 1_000;
+const lockWaitTimeoutMs = 10 * 60 * 1_000;
 const requiredFiles = ['resources/testharness.js'];
 
 export async function prepareWpt({
@@ -43,18 +47,40 @@ export async function prepareWpt({
     return sourceRoot;
   }
 
-  const existingRevision = await fs.stat(revisionRoot).catch(() => null);
-  if (existingRevision) {
+  await fs.mkdir(cacheRoot, {recursive: true});
+  const revisionLockPath = path.join(cacheRoot, `.lock-${lock.revision}`);
+  const releaseLock = await acquireRevisionLock(
+    revisionLockPath,
+    revisionRoot,
+    lock,
+    log,
+  );
+  if (!releaseLock) {
+    log(`[wpt] another process installed WPT ${lock.revision}; reusing it`);
+    return sourceRoot;
+  }
+
+  try {
     if (await isCompletedRevision(revisionRoot, lock)) {
       log(`[wpt] another process installed WPT ${lock.revision}; reusing it`);
       return sourceRoot;
     }
-    throw new Error(
-      `Invalid WPT cache entry at ${revisionRoot}. Remove it and retry.`,
-    );
-  }
 
-  await fs.mkdir(cacheRoot, {recursive: true});
+    const existingRevision = await fs.stat(revisionRoot).catch(() => null);
+    if (existingRevision) {
+      throw new Error(
+        `Invalid WPT cache entry at ${revisionRoot}. Remove it and retry.`,
+      );
+    }
+
+    await installWptRevision(cacheRoot, revisionRoot, lock, log);
+    return sourceRoot;
+  } finally {
+    await releaseLock();
+  }
+}
+
+async function installWptRevision(cacheRoot, revisionRoot, lock, log) {
   const nonce = `${process.pid}-${randomBytes(8).toString('hex')}`;
   const archivePath = path.join(
     cacheRoot,
@@ -87,13 +113,98 @@ export async function prepareWpt({
     );
 
     await publishPreparedRevision(temporaryRevision, revisionRoot, lock, log);
-    return sourceRoot;
   } finally {
     await Promise.allSettled([
       fs.rm(archivePath, {force: true}),
       fs.rm(temporaryRevision, {force: true, recursive: true}),
     ]);
   }
+}
+
+async function acquireRevisionLock(lockPath, revisionRoot, lock, log) {
+  const startedAt = Date.now();
+  const token = randomBytes(16).toString('hex');
+  let announcedWait = false;
+
+  while (true) {
+    if (await isCompletedRevision(revisionRoot, lock)) return null;
+
+    try {
+      await fs.mkdir(lockPath);
+      try {
+        await fs.writeFile(
+          path.join(lockPath, lockOwnerFile),
+          `${JSON.stringify({pid: process.pid, token})}\n`,
+          {flag: 'wx'},
+        );
+      } catch (error) {
+        await fs.rm(lockPath, {force: true, recursive: true});
+        throw error;
+      }
+
+      return async () => {
+        const owner = await readLockOwner(lockPath);
+        if (owner?.token === token) {
+          await fs.rm(lockPath, {force: true, recursive: true});
+        }
+      };
+    } catch (error) {
+      if (error?.code !== 'EEXIST') throw error;
+    }
+
+    if (await isStaleLock(lockPath)) {
+      log(`[wpt] removing stale preparation lock ${lockPath}`);
+      await fs.rm(lockPath, {force: true, recursive: true});
+      continue;
+    }
+
+    if (Date.now() - startedAt >= lockWaitTimeoutMs) {
+      throw new Error(
+        `Timed out waiting for WPT preparation lock ${lockPath}. Remove it if no preparation is running.`,
+      );
+    }
+    if (!announcedWait) {
+      log(`[wpt] waiting for another process to prepare WPT ${lock.revision}`);
+      announcedWait = true;
+    }
+    await delay(lockPollIntervalMs);
+  }
+}
+
+async function isStaleLock(lockPath) {
+  const owner = await readLockOwner(lockPath);
+  if (owner) return !isProcessAlive(owner.pid);
+
+  const stat = await fs.stat(lockPath).catch(() => null);
+  return Boolean(stat && Date.now() - stat.mtimeMs >= lockStaleMs);
+}
+
+async function readLockOwner(lockPath) {
+  try {
+    const owner = JSON.parse(
+      await fs.readFile(path.join(lockPath, lockOwnerFile), 'utf8'),
+    );
+    return Number.isInteger(owner.pid) &&
+      owner.pid > 0 &&
+      typeof owner.token === 'string'
+      ? owner
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function isProcessAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error?.code !== 'ESRCH';
+  }
+}
+
+function delay(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 export async function publishPreparedRevision(
