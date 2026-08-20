@@ -1,0 +1,11 @@
+{
+  "name": "@remote-dom/wpt-runner",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "wpt:prepare": "node scripts/prepare-wpt.mjs"
+  },
+  "devDependencies": {
+    "tar": "7.5.10"
+  }
+}
