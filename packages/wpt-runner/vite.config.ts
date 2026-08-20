@@ -29,11 +29,35 @@ export function resolveServedWptFile(
 }
 
 function containedPath(root: string, relativePath: string) {
-  const resolved = path.resolve(root, relativePath);
-  if (resolved !== root && !resolved.startsWith(`${root}${path.sep}`)) {
-    return null;
+  const realRoot = fs.realpathSync.native(root);
+  const candidate = path.resolve(realRoot, relativePath);
+  if (!isContainedPath(realRoot, candidate)) return null;
+
+  try {
+    const realCandidate = fs.realpathSync.native(candidate);
+    return isContainedPath(realRoot, realCandidate) ? realCandidate : null;
+  } catch (error) {
+    if (isMissingPathError(error)) return null;
+    throw error;
   }
-  return resolved;
+}
+
+function isContainedPath(root: string, candidate: string) {
+  const relative = path.relative(root, candidate);
+  return (
+    relative === '' ||
+    (!path.isAbsolute(relative) &&
+      relative !== '..' &&
+      !relative.startsWith(`..${path.sep}`))
+  );
+}
+
+function isMissingPathError(error: unknown) {
+  const code =
+    typeof error === 'object' && error !== null && 'code' in error
+      ? error.code
+      : undefined;
+  return code === 'ENOENT' || code === 'ENOTDIR';
 }
 
 function sendText(response: ServerResponse, status: number, text: string) {
@@ -58,7 +82,7 @@ function wptFilesPlugin(): Plugin {
         if (!file) return sendText(response, 400, 'Invalid WPT path.');
         const stat = fs.statSync(file, {throwIfNoEntry: false});
         if (!stat?.isFile())
-          return sendText(response, 404, `Missing WPT file: ${file}`);
+          return sendText(response, 404, 'Missing WPT file.');
 
         response.statusCode = 200;
         response.setHeader('content-type', 'text/plain; charset=utf-8');
