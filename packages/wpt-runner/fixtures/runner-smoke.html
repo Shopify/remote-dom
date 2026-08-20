@@ -1,0 +1,24 @@
+<!doctype html>
+<title>Remote DOM WPT runner smoke test</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<section>Static HTML</section>
+<svg viewBox="0 0 10 10">
+  <rect width="10" height="10" fill="green"></rect>
+</svg>
+<script>
+  test(() => {
+    assert_equals(document.body.children[0].localName, 'section');
+    assert_equals(document.body.children[0].textContent, 'Static HTML');
+    assert_equals(
+      document.body.children[1].namespaceURI,
+      'http://www.w3.org/2000/svg',
+    );
+    assert_equals(
+      document.body.children[1].children[0].getAttribute('fill'),
+      'green',
+    );
+    assert_equals(location.pathname, '/__runner__/runner-smoke.html');
+    assert_equals(location.search, '?runner=smoke');
+  }, 'runner smoke');
+</script>
