@@ -1,5 +1,6 @@
 import {buildWptBundle} from './adapter.ts';
-import type {WorkerResponse, WptHarnessResult, WptRunRecord} from './types.ts';
+import {executeWorker} from './run-worker.ts';
+import type {WptHarnessResult, WptRunRecord} from './types.ts';
 import './style.css';
 
 declare const __WPT_ROOT__: string;
@@ -22,8 +23,12 @@ const elements = {
   harness: requireElement<HTMLPreElement>('harness'),
 };
 
-let activeWorker: Worker | undefined;
-let activeTimeout: ReturnType<typeof setTimeout> | undefined;
+interface RunSession {
+  controller: AbortController;
+  record: WptRunRecord;
+}
+
+let activeRun: RunSession | undefined;
 let currentRun: WptRunRecord = createRun('idle', '');
 window.__WPT_LAST_RUN__ = currentRun;
 window.__WPT_RUN_TEST__ = runWptTest;
@@ -48,15 +53,18 @@ async function runCurrentPath() {
   try {
     return await runWptTest(testPath);
   } finally {
-    elements.run.disabled = false;
+    if (!activeRun) elements.run.disabled = false;
   }
 }
 
 async function runWptTest(testPath: string): Promise<WptRunRecord> {
-  reset(testPath);
+  const session = startRun(testPath);
 
   try {
     const bundle = await buildWptBundle(testPath);
+    session.controller.signal.throwIfAborted();
+    if (!isActive(session)) return session.record;
+
     currentRun.warnings = bundle.warnings;
     sync();
     elements.original.textContent = bundle.sourceHtml;
@@ -67,44 +75,38 @@ async function runWptTest(testPath: string): Promise<WptRunRecord> {
     const worker = new Worker(new URL('./worker.ts', import.meta.url), {
       type: 'module',
     });
-    activeWorker = worker;
-    worker.onerror = (event) => finishWithError(event.error ?? event.message);
-    worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
-      if (worker !== activeWorker) return;
-      const message = event.data;
-      if (message.type === 'ready') {
+    const result = await executeWorker(worker, {
+      request: {
+        type: 'run',
+        path: testPath,
+        source: bundle.generatedSource,
+      },
+      signal: session.controller.signal,
+      timeoutMs,
+      onReady() {
+        if (!isActive(session)) return;
         currentRun.state = 'waiting';
         elements.status.textContent =
           'Worker ready; waiting for testharness completion…';
         sync();
-      } else if (message.type === 'log') {
+      },
+      onLog(message) {
+        if (!isActive(session)) return;
         appendLog(`[${message.level}] ${message.text}`);
-      } else if (message.type === 'complete') {
-        finishWithResult(message.result);
-      } else if (message.type === 'error') {
-        finishWithError(message.error);
-      }
-    };
-    worker.postMessage({
-      type: 'run',
-      path: testPath,
-      source: bundle.generatedSource,
+      },
     });
-    activeTimeout = setTimeout(() => {
-      worker.terminate();
-      finishWithError(
-        `Timed out after ${timeoutMs}ms waiting for testharness completion.`,
-      );
-    }, timeoutMs);
+
+    if (isActive(session)) finishWithResult(result);
   } catch (error) {
-    finishWithError(error);
+    if (isActive(session)) finishWithError(error);
+  } finally {
+    if (isActive(session)) activeRun = undefined;
   }
 
-  return currentRun;
+  return session.record;
 }
 
 function finishWithResult(result: WptHarnessResult) {
-  clearActiveTimeout();
   currentRun.result = result;
   currentRun.state = hasFailures(result) ? 'failed' : 'passed';
   elements.status.textContent =
@@ -114,7 +116,6 @@ function finishWithResult(result: WptHarnessResult) {
 }
 
 function finishWithError(error: unknown) {
-  clearActiveTimeout();
   const message =
     error instanceof Error ? error.stack || error.message : String(error);
   currentRun.state = 'error';
@@ -125,11 +126,17 @@ function finishWithError(error: unknown) {
   sync();
 }
 
-function reset(testPath: string) {
-  clearActiveTimeout();
-  activeWorker?.terminate();
-  activeWorker = undefined;
-  currentRun = createRun('running', testPath);
+function startRun(testPath: string): RunSession {
+  activeRun?.controller.abort(
+    new DOMException('Superseded by a new WPT run.', 'AbortError'),
+  );
+
+  const session = {
+    controller: new AbortController(),
+    record: createRun('running', testPath),
+  };
+  activeRun = session;
+  currentRun = session.record;
   sync();
   elements.status.textContent = 'Preparing WPT source…';
   elements.result.textContent = 'Waiting for testharness completion…';
@@ -137,6 +144,11 @@ function reset(testPath: string) {
   elements.original.textContent = 'Loading…';
   elements.harness.textContent = 'Loading…';
   elements.generated.textContent = 'Loading…';
+  return session;
+}
+
+function isActive(session: RunSession) {
+  return activeRun === session;
 }
 
 function createRun(state: WptRunRecord['state'], path: string): WptRunRecord {
@@ -160,11 +172,6 @@ function hasFailures(result: WptHarnessResult) {
   return (
     result.status.status !== 0 || result.tests.some((test) => test.status !== 0)
   );
-}
-
-function clearActiveTimeout() {
-  if (activeTimeout) clearTimeout(activeTimeout);
-  activeTimeout = undefined;
 }
 
 function parseTimeout(value: string | null) {
