@@ -1,0 +1,103 @@
+:root {
+  color-scheme: light;
+  --color-background: #f6f6f7;
+  --color-border: #8c9196;
+  --color-border-subdued: #e1e3e5;
+  --color-button-background: #202223;
+  --color-button-text: #ffffff;
+  --color-control-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-text: #202223;
+
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-background: #111213;
+    --color-border: #616a75;
+    --color-border-subdued: #454a4f;
+    --color-button-background: #f1f2f3;
+    --color-button-text: #202223;
+    --color-control-background: #2c2f33;
+    --color-surface: #202223;
+    --color-text: #f1f2f3;
+  }
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  display: grid;
+  gap: 1rem;
+  margin: 0 auto;
+  max-width: 90rem;
+  padding: 1.5rem;
+}
+
+header,
+.controls {
+  align-items: end;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+h1,
+h2,
+p {
+  margin-block: 0;
+}
+
+label {
+  display: grid;
+  flex: 1;
+  gap: 0.35rem;
+}
+
+input,
+button {
+  border: 1px solid var(--color-border);
+  border-radius: 0.4rem;
+  font: inherit;
+  padding: 0.6rem 0.75rem;
+}
+
+input {
+  background: var(--color-control-background);
+  color: var(--color-text);
+}
+
+button {
+  background: var(--color-button-background);
+  color: var(--color-button-text);
+  cursor: pointer;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+}
+
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subdued);
+  border-radius: 0.6rem;
+  min-width: 0;
+  padding: 1rem;
+}
+
+pre {
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+details + details {
+  margin-top: 0.75rem;
+}

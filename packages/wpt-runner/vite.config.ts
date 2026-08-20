@@ -10,6 +10,24 @@ const wptRoot = process.env.WPT_ROOT
   ? path.resolve(process.env.WPT_ROOT)
   : undefined;
 
+export const workerContentSecurityPolicy = [
+  "default-src 'none'",
+  "script-src 'self' 'unsafe-eval'",
+  "connect-src 'none'",
+  "worker-src 'none'",
+  "child-src 'none'",
+].join('; ');
+
+export function isRunnerWorkerRequest(rawUrl: string | undefined) {
+  if (!rawUrl) return false;
+  const url = new URL(rawUrl, 'http://localhost');
+  return (
+    url.pathname === '/src/worker.ts' &&
+    url.searchParams.has('worker_file') &&
+    url.searchParams.get('type') === 'module'
+  );
+}
+
 export function resolveServedWptFile(
   rawPath: string | null,
   {fixtureRoot, wptRoot}: {fixtureRoot: string; wptRoot?: string},
@@ -76,6 +94,13 @@ function wptFilesPlugin(): Plugin {
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
         if (!request.url) return next();
+        if (isRunnerWorkerRequest(request.url)) {
+          response.setHeader(
+            'content-security-policy',
+            workerContentSecurityPolicy,
+          );
+          return next();
+        }
 
         const url = new URL(request.url, 'http://localhost');
         if (url.pathname !== '/__wpt-file') return next();
