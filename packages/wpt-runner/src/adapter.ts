@@ -1,9 +1,6 @@
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 const WPT_ORIGIN = 'https://wpt.local';
-const RUNNER_SOURCE_PATHS = {
-  harnessSetup: `${import.meta.env.BASE_URL}wpt-runner/harness-setup.js`,
-  runtimeShims: `${import.meta.env.BASE_URL}wpt-runner/runtime-shims.js`,
-};
+const RUNTIME_SHIMS_PATH = `${import.meta.env.BASE_URL}wpt-runner/runtime-shims.js`;
 
 interface WptUrl {
   path: string;
@@ -52,10 +49,9 @@ export async function buildWptBundle(testPath: string): Promise<WptBundle> {
     );
   }
 
-  const [sourceHtml, runtimeShims, harnessSetup] = await Promise.all([
+  const [sourceHtml, runtimeShims] = await Promise.all([
     fetchWptFile(testUrl.path),
-    fetchRunnerSource(RUNNER_SOURCE_PATHS.runtimeShims),
-    fetchRunnerSource(RUNNER_SOURCE_PATHS.harnessSetup),
+    fetchRunnerSource(RUNTIME_SHIMS_PATH),
   ]);
   const warnings: string[] = [];
   const operations = await collectOperations(
@@ -92,11 +88,10 @@ export async function buildWptBundle(testPath: string): Promise<WptBundle> {
     generatedSource: [
       `const __WPT_CONTEXT__ = ${context};`,
       runtimeShims,
-      harnessSetup,
       operationSource,
       `dispatchEvent(new Event('load'));`,
     ].join('\n\n'),
-    harnessSource: [runtimeShims, harnessSetup, harnessSource].join('\n\n'),
+    harnessSource: [runtimeShims, harnessSource].join('\n\n'),
     sourceHtml,
     testSource,
     warnings,
@@ -315,7 +310,7 @@ function emitOperation(operation: Operation) {
       `  if (descriptor) Object.defineProperty(globalThis, name, descriptor);`,
       `  else delete globalThis[name];`,
       `}`,
-      `__afterWptHarness();`,
+      `globalThis.__REMOTE_DOM_WPT_HARNESS_READY__();`,
     ].join('\n');
   }
 

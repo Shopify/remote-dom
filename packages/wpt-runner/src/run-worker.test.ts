@@ -1,32 +1,43 @@
 import {describe, expect, it, vi} from 'vitest';
 import {executeWorker} from './run-worker.ts';
-import type {WorkerRequest, WorkerResponse, WptHarnessResult} from './types.ts';
+import type {
+  WorkerRequest,
+  WorkerRunRequest,
+  WptHarnessResult,
+} from './types.ts';
 
-const request: WorkerRequest = {
+const request: WorkerRunRequest = {
   type: 'run',
   path: 'fixture.html',
   source: 'test(() => {}, "fixture");',
 };
 const passingResult: WptHarnessResult = {
-  tests: [{name: 'fixture', status: 0}],
-  status: {status: 0},
+  tests: [{name: 'fixture', status: 0, message: null, stack: null}],
+  status: {status: 0, message: null, stack: null},
 };
 
 class FakeWorker {
   onerror: Worker['onerror'] = null;
   onmessage: Worker['onmessage'] = null;
-  posted: unknown[] = [];
+  posted: WorkerRequest[] = [];
   terminated = false;
 
-  postMessage(message: unknown) {
+  postMessage(message: WorkerRequest) {
     this.posted.push(message);
   }
 
   terminate() {
     this.terminated = true;
+    this.posted.at(-1)?.responsePort.close();
   }
 
-  emitMessage(message: WorkerResponse) {
+  emitControlMessage(message: unknown) {
+    const port = this.posted.at(-1)?.responsePort;
+    if (!port) throw new Error('Worker has no response port.');
+    port.postMessage(message);
+  }
+
+  emitPublicMessage(message: unknown) {
     this.onmessage?.call(
       this as unknown as Worker,
       new MessageEvent('message', {data: message}),
@@ -67,7 +78,7 @@ describe('worker execution', () => {
     const error = new Error('worker failed');
 
     worker.emitError(error);
-    worker.emitMessage({type: 'complete', result: passingResult});
+    worker.emitControlMessage({type: 'complete', result: passingResult});
 
     await expect(completion).rejects.toBe(error);
     expect(worker.terminated).toBe(true);
@@ -76,11 +87,44 @@ describe('worker execution', () => {
   it('keeps completion as the terminal outcome when an error follows', async () => {
     const {completion, worker} = startExecution();
 
-    worker.emitMessage({type: 'complete', result: passingResult});
-    worker.emitError(new Error('late worker error'));
+    worker.emitControlMessage({type: 'complete', result: passingResult});
+    worker.emitControlMessage({type: 'error', error: 'late worker error'});
 
-    await expect(completion).resolves.toBe(passingResult);
+    await expect(completion).resolves.toEqual(passingResult);
     expect(worker.terminated).toBe(true);
+  });
+
+  it('ignores messages forged on the worker public channel', async () => {
+    const {completion, worker} = startExecution();
+
+    worker.emitPublicMessage({type: 'complete', result: passingResult});
+    worker.emitControlMessage({type: 'error', error: 'trusted failure'});
+
+    await expect(completion).rejects.toThrow('trusted failure');
+  });
+
+  it.each([
+    null,
+    {},
+    {type: 'unknown'},
+    {type: 'log', level: 'unknown', text: 'hello'},
+    {type: 'error', error: 42},
+    {type: 'complete', result: null},
+    {
+      type: 'complete',
+      result: {
+        tests: [{name: 'fixture', status: 'passed'}],
+        status: {status: 0},
+      },
+    },
+  ])('rejects malformed control message %#', async (message) => {
+    const {completion, worker} = startExecution();
+
+    worker.emitControlMessage(message);
+
+    await expect(completion).rejects.toThrow(
+      'Received a malformed WPT worker message.',
+    );
   });
 
   it('rejects on timeout and terminates the worker', async () => {
@@ -113,9 +157,9 @@ describe('worker execution', () => {
     const {completion, onLog, onReady, worker} = startExecution();
     const log = {type: 'log', level: 'info', text: 'hello'} as const;
 
-    worker.emitMessage({type: 'ready'});
-    worker.emitMessage(log);
-    worker.emitMessage({type: 'complete', result: passingResult});
+    worker.emitControlMessage({type: 'ready'});
+    worker.emitControlMessage(log);
+    worker.emitControlMessage({type: 'complete', result: passingResult});
 
     await completion;
     expect(onReady).toHaveBeenCalledOnce();

@@ -1,14 +1,14 @@
 export interface WptHarnessTestResult {
   name: string;
   status: number;
-  message?: string;
-  stack?: string;
+  message?: string | null;
+  stack?: string | null;
 }
 
 export interface WptHarnessStatus {
   status: number;
-  message?: string;
-  stack?: string;
+  message?: string | null;
+  stack?: string | null;
 }
 
 export interface WptHarnessResult {
@@ -33,14 +33,20 @@ export interface WptRunRecord {
   error?: string;
 }
 
-export type WorkerRequest = {
+export interface WorkerRunRequest {
   type: 'run';
   path: string;
   source: string;
-};
+}
+
+export interface WorkerRequest extends WorkerRunRequest {
+  responsePort: MessagePort;
+}
+
+export type WorkerLogLevel = 'debug' | 'info' | 'log' | 'warn' | 'error';
 
 export type WorkerResponse =
   | {type: 'ready'}
-  | {type: 'log'; level: string; text: string}
+  | {type: 'log'; level: WorkerLogLevel; text: string}
   | {type: 'complete'; result: WptHarnessResult}
   | {type: 'error'; error: string};

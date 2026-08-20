@@ -77,4 +77,4 @@ The same schema can later be split mechanically into `dom.tsv`, `html.tsv`, `svg
 
 The first version supports `testharness.js` HTML files, classic top-level scripts, static HTML/SVG markup, and absolute or relative in-repository script resources. It skips `testharnessreport.js` and captures completion programmatically.
 
-It intentionally does not support `.window.js`, WebIDL preloading, modules, nested scripts or browsing contexts, reftests, crashtests, WPT server substitutions, navigation, or layout assertions. Add execution infrastructure only when a selected capability requires it; never patch a claimed DOM API in runner shims.
+It intentionally does not support `.window.js`, WebIDL preloading, modules, nested scripts or browsing contexts, Window messaging, reftests, crashtests, WPT server substitutions, navigation, or layout assertions. Add execution infrastructure only when a selected capability requires it; never patch a claimed DOM API in runner shims.

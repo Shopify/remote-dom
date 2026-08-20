@@ -1,15 +1,30 @@
 /// <reference lib="webworker" />
 
 import {Window} from '@remote-dom/polyfill';
-import type {WorkerRequest, WorkerResponse} from './types.ts';
+import type {
+  WorkerRequest,
+  WorkerResponse,
+  WptHarnessResult,
+  WptHarnessStatus,
+  WptHarnessTestResult,
+} from './types.ts';
 
 const workerGlobal = globalThis as unknown as DedicatedWorkerGlobalScope;
-const nativePostMessage = workerGlobal.postMessage.bind(workerGlobal);
 const nativeConsole = globalThis.console;
 const nativeAddEventListener = workerGlobal.addEventListener.bind(workerGlobal);
+let responsePort: MessagePort | undefined;
+let harnessReady = false;
+
+interface WptHarnessGlobal {
+  add_completion_callback?: (
+    callback: (tests: WptHarnessTestResult[], status: WptHarnessStatus) => void,
+  ) => void;
+  setup?: (...arguments_: unknown[]) => unknown;
+  window?: {setup?: (...arguments_: unknown[]) => unknown};
+}
 
 function respond(message: WorkerResponse) {
-  nativePostMessage(message);
+  responsePort?.postMessage(message);
 }
 
 nativeAddEventListener('error', (event) => {
@@ -20,20 +35,19 @@ nativeAddEventListener('unhandledrejection', (event) => {
   respond({type: 'error', error: formatError(event.reason)});
 });
 
-workerGlobal.onmessage = (event: MessageEvent<WorkerRequest>) => {
+nativeAddEventListener('message', (event: MessageEvent<WorkerRequest>) => {
   if (event.data.type !== 'run') return;
   void run(event.data);
-};
+});
 
-async function run(request: Extract<WorkerRequest, {type: 'run'}>) {
+async function run(request: WorkerRequest) {
+  responsePort = request.responsePort;
+
   try {
     const window = new Window();
     Window.setGlobalThis(window);
-    Object.defineProperty(globalThis, 'postMessage', {
-      configurable: true,
-      value: nativePostMessage,
-      writable: true,
-    });
+    installWindowPostMessage(window);
+    installHarnessReadyHook();
     installConsoleTransport();
     respond({type: 'ready'});
 
@@ -45,6 +59,82 @@ async function run(request: Extract<WorkerRequest, {type: 'run'}>) {
   } catch (error) {
     respond({type: 'error', error: formatError(error)});
   }
+}
+
+function installWindowPostMessage(window: Window) {
+  const windowPostMessage = Reflect.get(window, 'postMessage');
+
+  // The native worker method posts outward to the ignored public channel; it
+  // does not implement Window messaging. Keep the missing capability
+  // replaceable, and preserve a future implementation supplied by Window.
+  Object.defineProperty(globalThis, 'postMessage', {
+    configurable: true,
+    value:
+      typeof windowPostMessage === 'function'
+        ? windowPostMessage.bind(window)
+        : undefined,
+    writable: typeof windowPostMessage === 'function',
+  });
+}
+
+function installHarnessReadyHook() {
+  Object.defineProperty(globalThis, '__REMOTE_DOM_WPT_HARNESS_READY__', {
+    configurable: false,
+    value: registerHarnessCompletion,
+    writable: false,
+  });
+}
+
+function registerHarnessCompletion() {
+  if (harnessReady) return;
+
+  const scope = globalThis as unknown as WptHarnessGlobal;
+  const originalSetup = scope.setup;
+  const addCompletionCallback = scope.add_completion_callback;
+  if (!originalSetup || !addCompletionCallback) {
+    throw new Error('WPT testharness did not install its expected globals.');
+  }
+  harnessReady = true;
+
+  const wrappedSetup = function (this: unknown, ...arguments_: unknown[]) {
+    if (arguments_.length === 1 && typeof arguments_[0] === 'function') {
+      return originalSetup(arguments_[0], {});
+    }
+    return originalSetup.apply(this, arguments_);
+  };
+  scope.setup = wrappedSetup;
+  if (scope.window) scope.window.setup = wrappedSetup;
+
+  wrappedSetup({output: false});
+  addCompletionCallback((tests, status) => {
+    try {
+      respond({
+        type: 'complete',
+        result: serializeHarnessResult(tests, status),
+      });
+    } catch (error) {
+      respond({type: 'error', error: formatError(error)});
+    }
+  });
+}
+
+function serializeHarnessResult(
+  tests: WptHarnessTestResult[],
+  status: WptHarnessStatus,
+): WptHarnessResult {
+  return {
+    tests: tests.map((test) => ({
+      name: test.name,
+      status: test.status,
+      message: test.message,
+      stack: test.stack,
+    })),
+    status: {
+      status: status.status,
+      message: status.message,
+      stack: status.stack,
+    },
+  };
 }
 
 function installConsoleTransport() {
