@@ -63,17 +63,21 @@ describe('capability evaluation', () => {
     expect(drift.missing.map((row) => row.case)).toEqual(['deferred case']);
     expect(drift.unlisted.map((test) => test.name)).toEqual(['new case']);
 
-    expect(
-      evaluateCapabilities(
-        run([
-          {name: 'supported case', status: 0},
-          {name: 'supported case', status: 0},
-          {name: 'deferred case', status: 1},
-        ]),
-        rows,
-      ).duplicateResults,
-    ).toEqual(['supported case']);
+    const duplicate = evaluateCapabilities(
+      run([
+        {name: 'supported case', status: 0},
+        {name: 'supported case', status: 0},
+        {name: 'deferred case', status: 1},
+      ]),
+      rows,
+    );
+    expect(duplicate.failed).toBe(true);
+    expect(duplicate.duplicateResults).toEqual(['supported case']);
+
     expect(evaluateCapabilities(run([], 1), []).failed).toBe(true);
+    expect(
+      evaluateCapabilities({state: 'passed', path: 'test.html'}, []).failed,
+    ).toBe(true);
     expect(evaluateCapabilities({state: 'error'}, []).failed).toBe(true);
   });
 });
