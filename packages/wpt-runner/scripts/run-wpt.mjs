@@ -66,10 +66,13 @@ try {
   page.on('pageerror', (error) =>
     console.error(`[browser:error] ${formatError(error)}`),
   );
+  const runnerUrl = new URL(baseUrl);
+  runnerUrl.searchParams.set('timeout', String(options.timeoutMs));
+  await page.goto(runnerUrl.href, {waitUntil: 'domcontentloaded'});
 
   let failures = 0;
   for (const testPath of selectedPaths) {
-    const run = await runWpt(page, baseUrl, testPath, options.timeoutMs);
+    const run = await runWpt(page, testPath, options.timeoutMs);
     const rows = options.enforceCapabilities
       ? groupedCapabilities.get(testPath)
       : undefined;
@@ -143,13 +146,11 @@ function selectPaths(options, groupedCapabilities) {
   return paths;
 }
 
-async function runWpt(browserPage, baseUrl, testPath, timeoutMs) {
-  const url = new URL(baseUrl);
-  url.searchParams.set('path', testPath);
-  url.searchParams.set('autorun', '1');
-  url.searchParams.set('timeout', String(timeoutMs));
+async function runWpt(browserPage, testPath, timeoutMs) {
   console.log(`\n[wpt] RUN ${testPath}`);
-  await browserPage.goto(url.href, {waitUntil: 'domcontentloaded'});
+  await browserPage.evaluate((path) => {
+    void window.__WPT_RUN_TEST__(path);
+  }, testPath);
 
   try {
     await browserPage.waitForFunction(

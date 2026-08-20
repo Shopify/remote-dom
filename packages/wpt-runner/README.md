@@ -30,6 +30,8 @@ pnpm wpt:format
 
 Useful runner options include `--headed`, `--verbose`, `--timeout 60s`, `--port 5174`, and `--strict-port`.
 
+The CLI loads one control page and creates a fresh worker for each selected WPT path. Served WPT files use ETag revalidation, so shared resources such as `testharness.js` avoid repeated response bodies without an application-level source cache.
+
 Set `WPT_ROOT=/path/to/wpt` to use an existing checkout. The runner verifies `resources/testharness.js` and skips all downloads. Set `WPT_CACHE_DIR` to override the download cache.
 
 ## Pinned source and cache

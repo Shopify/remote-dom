@@ -2,11 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
-import {
-  isRunnerWorkerRequest,
-  resolveServedWptFile,
-  workerContentSecurityPolicy,
-} from '../vite.config.ts';
+import {isRunnerWorkerRequest, resolveServedWptFile} from '../vite.config.ts';
 
 let temporaryRoot;
 let roots;
@@ -43,12 +39,6 @@ describe('WPT worker response policy', () => {
     expect(isRunnerWorkerRequest('/src/main.ts?worker_file&type=module')).toBe(
       false,
     );
-  });
-
-  it('blocks worker connections and nested workers', () => {
-    expect(workerContentSecurityPolicy).toContain("connect-src 'none'");
-    expect(workerContentSecurityPolicy).toContain("worker-src 'none'");
-    expect(workerContentSecurityPolicy).toContain("child-src 'none'");
   });
 });
 

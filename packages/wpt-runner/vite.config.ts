@@ -78,6 +78,10 @@ function isMissingPathError(error: unknown) {
   return code === 'ENOENT' || code === 'ENOTDIR';
 }
 
+function createFileEtag({size, mtimeMs}: fs.Stats): string {
+  return `W/"${size.toString(16)}-${Math.trunc(mtimeMs).toString(16)}"`;
+}
+
 function sendText(response: ServerResponse, status: number, text: string) {
   response.statusCode = status;
   response.setHeader('content-type', 'text/plain; charset=utf-8');
@@ -107,8 +111,18 @@ function wptFilesPlugin(): Plugin {
         });
         if (!file) return sendText(response, 400, 'Invalid WPT path.');
         const stat = fs.statSync(file, {throwIfNoEntry: false});
-        if (!stat?.isFile())
+        if (!stat?.isFile()) {
           return sendText(response, 404, 'Missing WPT file.');
+        }
+
+        const etag = createFileEtag(stat);
+        response.setHeader('cache-control', 'no-cache');
+        response.setHeader('etag', etag);
+        if (request.headers['if-none-match'] === etag) {
+          response.statusCode = 304;
+          response.end();
+          return;
+        }
 
         response.statusCode = 200;
         response.setHeader('content-type', 'text/plain; charset=utf-8');
