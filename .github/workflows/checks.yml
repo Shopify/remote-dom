@@ -49,7 +49,7 @@ jobs:
 
   wpt:
     name: Web Platform Tests 🌐
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       WPT_CACHE_DIR: ${{ github.workspace }}/.cache/wpt
