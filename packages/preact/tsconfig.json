@@ -1,6 +1,7 @@
 {
   "extends": "@quilted/typescript/tsconfig.package.json",
   "compilerOptions": {
+    "jsx": "react-jsx",
     "jsxImportSource": "preact"
   },
   "references": [{"path": "../core"}, {"path": "../signals"}]
