@@ -24,10 +24,10 @@ No blanket Shopify rule saying that all Shopify-owned actions must remain unpinn
 
 ## Current Shopify-owned action guidance
 
-| Action | Repository usage | Current owner guidance | Finding |
-| --- | --- | --- | --- |
-| `Shopify/snapit` | `@v0.1.0` | `@main`, job-scoped `GITHUB_TOKEN`, npm OIDC, and explicit permissions | `v0.1.0` and `main` currently resolve to the same commit. Snapit validates commenter write/admin permission and rejects fork PRs before checking out PR code. |
-| `Shopify/shopify-cla-action` | `@v1` | `@v1` with `actions: write` and `pull-requests: write` | The reference matches owner guidance, but this repository lacks the documented explicit permissions. The action still declares the Node 16 action runtime and its rolling `v1` ref is behind `main`; confirm maintenance expectations with its owner. |
+| Action                       | Repository usage | Current owner guidance                                                 | Finding                                                                                                                                                                                                                                               |
+| ---------------------------- | ---------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Shopify/snapit`             | `@v0.1.0`        | `@main`, job-scoped `GITHUB_TOKEN`, npm OIDC, and explicit permissions | `v0.1.0` and `main` currently resolve to the same commit. Snapit validates commenter write/admin permission and rejects fork PRs before checking out PR code.                                                                                         |
+| `Shopify/shopify-cla-action` | `@v1`            | `@v1` with `actions: write` and `pull-requests: write`                 | The reference matches owner guidance, but this repository lacks the documented explicit permissions. The action still declares the Node 16 action runtime and its rolling `v1` ref is behind `main`; confirm maintenance expectations with its owner. |
 
 Snapit's metadata and implementation currently disagree about the command input: documentation declares `trigger_comment`, while the bundled implementation reads `comment_command`. This repository's existing `comment_command` works with the current implementation and should not be renamed until Snapit fixes or confirms the contract.
 
@@ -44,9 +44,25 @@ Snapit's metadata and implementation currently disagree about the command input:
 - **Scope:** `.github/workflows/**`, `.github/dependabot.yml`
 - **Recommendation:** Use owner-supported rolling refs for Shopify-owned actions, reviewed SHAs for third-party actions by default, and documented exceptions such as `changesets/action@v1` for npm OIDC.
 - **Acceptance criteria:**
-  - Every external `uses:` entry is classified as GitHub-owned, Shopify-owned, or third-party.
+  - The reference policy is documented and applied to new or modified workflows.
   - Every non-SHA reference has a comment or documentation explaining why it is intentionally rolling.
-  - Dependabot continues to cover the `github-actions` ecosystem.
+
+#### INFRA-026 — Update and verify all GitHub Action versions
+
+- **Status:** Proposed
+- **Priority:** P1
+- **Scope:** `.github/workflows/**`, including `.github/workflows/actions/prepare/action.yml`
+- **Recommendation:** Inventory every external `uses:` reference and update all actions together to their current supported refs under INFRA-001's reference policy.
+- **Target updates:**
+  - Move `actions/checkout` and `actions/setup-node` from v4-era commits to their current v6 releases.
+  - Move `pnpm/action-setup` from v3 to its current v4 release.
+  - Move the old `changesets/action` v1.4.10 commit to the specifically recommended rolling `changesets/action@v1` OIDC path.
+  - Verify `actions/upload-artifact`, the changelog reminder, `Shopify/shopify-cla-action`, and `Shopify/snapit` against their current owner guidance and update where needed.
+- **Acceptance criteria:**
+  - Every external action appears in a reviewed version inventory with its previous ref, new ref, ownership class, and release notes.
+  - Runtime and breaking changes for each new major are addressed.
+  - CI, CLA, changeset reminder, release PR creation, deploy, preview, and Snapit paths pass targeted validation.
+  - GitHub Actions remain covered by Dependabot for subsequent reviewable updates.
 
 #### INFRA-002 — Align Snapit with its supported authentication model
 
@@ -72,26 +88,23 @@ Snapit's metadata and implementation currently disagree about the command input:
   - Remote DOM uses the confirmed input.
   - A non-matching comment is a no-op and `/snapit` triggers exactly once.
 
-#### INFRA-004 — Align the CLA workflow with owner guidance
+#### INFRA-004 — Align CLA workflow permissions and behavior
 
 - **Status:** Proposed
 - **Priority:** P1
 - **Scope:** `.github/workflows/cla.yml`
-- **Recommendation:** Keep `Shopify/shopify-cla-action@v1`, add the documented `actions: write` and `pull-requests: write` permissions, and verify the workflow still handles both PR updates and signed-comment reruns.
-- **Follow-up:** Ask the action owner whether the Node 16 runtime and stale `v1` ref are intentionally supported; do not switch to an arbitrary `main` SHA without that confirmation.
+- **Recommendation:** Add the documented `actions: write` and `pull-requests: write` permissions, and verify the workflow still handles both PR updates and signed-comment reruns.
 - **Acceptance criteria:**
   - Workflow permissions are explicit and no broader than the owner example.
   - A normal PR runs the CLA check.
   - A matching signed comment reruns the failed check.
-  - The action owner confirms the supported long-term reference/runtime.
 
-#### INFRA-005 — Move Changesets to the supported npm OIDC path
+#### INFRA-005 — Validate the Changesets npm OIDC path
 
 - **Status:** Proposed
 - **Priority:** P0
 - **Scope:** `.github/workflows/changesets.yml`, `.github/workflows/deploy.yml`
-- **Recommendation:** Replace the old `changesets/action` v1.4.10 SHA with the specifically recommended rolling `changesets/action@v1`, then validate version-PR creation, OIDC publication, tags, and GitHub releases.
-- **Notes:** This is an explicit exception to the default third-party SHA policy in current Shopify npm Trusted Publisher guidance.
+- **Recommendation:** Validate version-PR creation, OIDC publication, tags, and GitHub releases against the current npm Trusted Publisher guidance.
 - **Acceptance criteria:**
   - The version PR is created and updated correctly.
   - Publication uses OIDC with `id-token: write`, an empty `NPM_TOKEN`, and provenance.
@@ -184,14 +197,16 @@ Snapit's metadata and implementation currently disagree about the command input:
 
 #### INFRA-013 — Upgrade the development runtime and package manager
 
-- **Status:** Proposed
+- **Status:** In progress
 - **Priority:** P1
-- **Scope:** `.nvmrc`, `package.json`, `pnpm-lock.yaml`, CI setup
-- **Recommendation:** Move development and CI to Node 24 LTS and pnpm 11, using the exact Corepack-pinned package-manager version.
+- **Scope:** `.nvmrc`, `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, CI setup
+- **Outcome:** Upgraded to Node 24.19.0, npm 11.17.0, pnpm 11.21.0, and Node 24 types. Updated Quilt Rollup and esbuild for Node 24 and Vite 8 compatibility, removed global npm installation, and enabled pnpm supply-chain protections.
 - **Acceptance criteria:**
-  - Local setup, CI, build, test, and release all use the same pinned pnpm version.
-  - Frozen-lockfile installation succeeds.
-  - npm OIDC publishing works without an unpinned global npm installation.
+  - [x] Local setup and CI use Node 24.19.0 and the same integrity-pinned pnpm 11.21.0 release.
+  - [x] Frozen-lockfile installation and pnpm supply-chain verification succeed against Shopify's proxy and npmjs.org.
+  - [x] Lint, type checking, 174 unit tests, package builds, peer checks, and 13 CI-mode Playwright tests pass.
+  - [x] Node's bundled npm exceeds the npm Trusted Publisher minimum without a global installation.
+  - [ ] Deploy, preview, and Snapit npm OIDC publication are verified in GitHub Actions.
 
 #### INFRA-014 — Land the Vite and Vitest modernization
 
@@ -281,7 +296,7 @@ Snapit's metadata and implementation currently disagree about the command input:
 - **Scope:** `.github/dependabot.yml`, package-proxy audit support
 - **Recommendation:** Group related non-major updates, isolate toolchain/framework majors, reduce update noise, and restore a functioning vulnerability-audit path.
 - **Acceptance criteria:**
-  - Dependabot groups Vite/Vitest, framework, build, and GitHub Action updates sensibly.
+  - Dependabot groups Vite/Vitest, framework, and build updates sensibly.
   - Major upgrades remain separately reviewable.
   - A documented audit command succeeds in CI or an equivalent repository alerting control is verified.
 
@@ -338,19 +353,19 @@ Snapit's metadata and implementation currently disagree about the command input:
 
 ## Related pull request overlap
 
-| Pull request | Infrastructure value | Recommended disposition |
-| --- | --- | --- |
-| [#615](https://github.com/Shopify/remote-dom/pull/615) | Merged Vite 8/Vitest 4, centralized Vitest configuration, configuration hardening, and removal of package-local Quilt Vite configs. | Completed INFRA-014 on 2026-08-20; use it as the baseline and close superseded #513. |
-| [#617](https://github.com/Shopify/remote-dom/pull/617) | Adds pinned/checksummed WPT sources, a capability inventory, focused tests, caching, and a dedicated CI job. | Finish and land as INFRA-025; keep its scope distinct from cross-browser E2E. |
-| [#602](https://github.com/Shopify/remote-dom/pull/602) | Adds React 19 compatibility and updates React package metadata. | Rebase and validate against packed artifacts as part of INFRA-016. |
-| [#463](https://github.com/Shopify/remote-dom/pull/463) | Adds substantial polyfill unit coverage, but is a stale 2024 draft with package-local Vitest setup. | Port valuable tests onto PR #615's centralized test configuration; do not merge as-is. |
-| #435, #452, #486, #493, #504, #509, #510, #513, #515 | Old Dependabot point upgrades for Quilt Threads, Vite, Rollup, Preact, TypeScript, Vitest, and Node types. | Close as stale/superseded and recreate coordinated updates at current target versions. |
+| Pull request                                           | Infrastructure value                                                                                                                | Recommended disposition                                                                |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| [#615](https://github.com/Shopify/remote-dom/pull/615) | Merged Vite 8/Vitest 4, centralized Vitest configuration, configuration hardening, and removal of package-local Quilt Vite configs. | Completed INFRA-014 on 2026-08-20; use it as the baseline and close superseded #513.   |
+| [#617](https://github.com/Shopify/remote-dom/pull/617) | Adds pinned/checksummed WPT sources, a capability inventory, focused tests, caching, and a dedicated CI job.                        | Finish and land as INFRA-025; keep its scope distinct from cross-browser E2E.          |
+| [#602](https://github.com/Shopify/remote-dom/pull/602) | Adds React 19 compatibility and updates React package metadata.                                                                     | Rebase and validate against packed artifacts as part of INFRA-016.                     |
+| [#463](https://github.com/Shopify/remote-dom/pull/463) | Adds substantial polyfill unit coverage, but is a stale 2024 draft with package-local Vitest setup.                                 | Port valuable tests onto PR #615's centralized test configuration; do not merge as-is. |
+| #435, #452, #486, #493, #504, #509, #510, #513, #515   | Old Dependabot point upgrades for Quilt Threads, Vite, Rollup, Preact, TypeScript, Vitest, and Node types.                          | Close as stale/superseded and recreate coordinated updates at current target versions. |
 
-No open PR currently addresses the release-workflow consolidation, PAT removal, explicit package validation, package file allowlists, semantic linting, or dependency-update grouping recommendations.
+No open PR currently addresses the GitHub Action version refresh, release-workflow consolidation, PAT removal, explicit package validation, package file allowlists, semantic linting, or dependency-update grouping recommendations.
 
 ## Suggested execution order
 
-1. INFRA-001 through INFRA-009: GitHub Actions, credentials, and release safety.
+1. INFRA-001 through INFRA-009 and INFRA-026: GitHub Actions, credentials, and release safety.
 2. INFRA-010 through INFRA-012: published package assurance.
 3. INFRA-013 through INFRA-017: runtime, tooling, and compatibility modernization; INFRA-014 is complete.
 4. INFRA-024 through INFRA-025: existing PR follow-through and standards coverage.

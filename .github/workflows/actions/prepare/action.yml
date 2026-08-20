@@ -9,9 +9,6 @@ runs:
         cache: pnpm
         registry-url: 'https://registry.npmjs.org'
         node-version-file: '.nvmrc'
-    - name: Enable Corepack
-      run: corepack enable && pnpm -v
-      shell: bash
     - name: Install dependencies
       run: pnpm install --frozen-lockfile && pnpm prune
       shell: bash

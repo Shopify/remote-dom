@@ -25,9 +25,10 @@
     "@changesets/changelog-github": "^0.5.0",
     "@changesets/cli": "^2.27.0",
     "@playwright/test": "^1.49.0",
-    "@quilted/rollup": "^0.2.45",
+    "@quilted/rollup": "^0.6.1",
     "@quilted/typescript": "^0.4.2",
-    "@types/node": "~20.11.0",
+    "@types/node": "~24.13.0",
+    "esbuild": "^0.28.2",
     "jsdom": "^25.0.0",
     "playwright": "^1.49.0",
     "prettier": "^3.3.3",
@@ -37,7 +38,7 @@
     "vite": "^8.0.0",
     "vitest": "^4.1.5"
   },
-  "packageManager": "pnpm@9.14.2+sha256.06e65a4965baff6d6097f9c8f75c35f6d420974dbc03d775009056a69edfd271",
+  "packageManager": "pnpm@11.21.0+sha512.521705bce689924eac72f5a3587122f362689ef6571e55ba80076fd637c11132ecffada26fad4ea79c485bfddbfd3d5a2a5b05805a77e893de71ec8a6cca3bb1",
   "prettier": {
     "arrowParens": "always",
     "bracketSpacing": false,

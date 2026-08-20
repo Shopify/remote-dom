@@ -1,3 +1,20 @@
 packages:
   - examples/*
   - packages/*
+
+# Allow only reviewed dependency lifecycle scripts.
+allowBuilds:
+  esbuild: true
+strictDepBuilds: true
+
+# Restrict dependency resolution to registry packages that have aged for one day.
+blockExoticSubdeps: true
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: true
+
+# Reject recent releases whose npm publishing trust evidence has weakened.
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  # Shopify's package proxy no longer includes publish-time metadata for this version.
+  - playwright-core@1.49.0
+trustPolicyIgnoreAfter: 10080
