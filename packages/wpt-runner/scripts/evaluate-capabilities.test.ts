@@ -1,6 +1,11 @@
 import {describe, expect, it} from 'vitest';
 import {evaluateCapabilities} from './evaluate-capabilities.mjs';
 
+interface TestResult {
+  name: string;
+  status: number;
+}
+
 const rows = [
   {path: 'test.html', status: 'supported', case: 'supported case', note: ''},
   {
@@ -11,7 +16,7 @@ const rows = [
   },
 ];
 
-function run(tests, status = 0) {
+function run(tests: TestResult[], status = 0) {
   return {
     state: tests.some((test) => test.status !== 0) ? 'failed' : 'passed',
     path: 'test.html',
@@ -60,8 +65,12 @@ describe('capability evaluation', () => {
       rows,
     );
     expect(drift.failed).toBe(true);
-    expect(drift.missing.map((row) => row.case)).toEqual(['deferred case']);
-    expect(drift.unlisted.map((test) => test.name)).toEqual(['new case']);
+    expect(drift.missing.map((row: {case: string}) => row.case)).toEqual([
+      'deferred case',
+    ]);
+    expect(drift.unlisted.map((test: TestResult) => test.name)).toEqual([
+      'new case',
+    ]);
 
     const duplicate = evaluateCapabilities(
       run([

@@ -4,8 +4,8 @@ import path from 'node:path';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import {isRunnerWorkerRequest, resolveServedWptFile} from '../vite.config.ts';
 
-let temporaryRoot;
-let roots;
+let temporaryRoot: string;
+let roots: {fixtureRoot: string; wptRoot: string};
 
 beforeAll(() => {
   temporaryRoot = fs.mkdtempSync(

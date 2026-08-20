@@ -17,7 +17,14 @@ const repositoryRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '../../..',
 );
-const temporaryDirectories = [];
+interface ArchiveFixture {
+  archive: Buffer;
+  revision: string;
+  root: string;
+  sha256: string;
+}
+
+const temporaryDirectories: string[] = [];
 
 afterEach(async () => {
   vi.unstubAllGlobals();
@@ -28,7 +35,9 @@ afterEach(async () => {
   );
 });
 
-async function createArchiveFixture({unsafeSymlink = false} = {}) {
+async function createArchiveFixture({
+  unsafeSymlink = false,
+}: {unsafeSymlink?: boolean} = {}): Promise<ArchiveFixture> {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), 'remote-dom-wpt-archive-'),
   );
@@ -52,7 +61,11 @@ async function createArchiveFixture({unsafeSymlink = false} = {}) {
   return {archive, revision, root, sha256};
 }
 
-async function writeArchiveLock({revision, root, sha256}) {
+async function writeArchiveLock({
+  revision,
+  root,
+  sha256,
+}: Pick<ArchiveFixture, 'revision' | 'root' | 'sha256'>) {
   const lockPath = path.join(root, 'wpt.lock.json');
   await fs.writeFile(
     lockPath,
@@ -91,11 +104,11 @@ describe('WPT preparation', () => {
       return new Response(fixture.archive);
     });
     vi.stubGlobal('fetch', fetchArchive);
-    const logs = [];
+    const logs: string[] = [];
     const options = {
       env: {WPT_CACHE_DIR: cacheRoot},
       lockPath,
-      log: (message) => logs.push(message),
+      log: (message: string) => logs.push(message),
     };
 
     const [first, second] = await Promise.all([
@@ -126,13 +139,13 @@ describe('WPT preparation', () => {
       'fetch',
       vi.fn(async () => new Response(fixture.archive)),
     );
-    const logs = [];
+    const logs: string[] = [];
 
     await expect(
       prepareWpt({
         env: {WPT_CACHE_DIR: cacheRoot},
         lockPath,
-        log: (message) => logs.push(message),
+        log: (message: string) => logs.push(message),
       }),
     ).resolves.toContain(path.join(fixture.revision, 'source'));
     expect(logs.join('\n')).toContain('removing stale preparation lock');
@@ -163,10 +176,13 @@ describe('WPT preparation', () => {
       path.join(root, 'resources/testharness.js'),
       '/* harness */',
     );
-    const logs = [];
+    const logs: string[] = [];
 
     await expect(
-      prepareWpt({env: {WPT_ROOT: root}, log: (message) => logs.push(message)}),
+      prepareWpt({
+        env: {WPT_ROOT: root},
+        log: (message: string) => logs.push(message),
+      }),
     ).resolves.toBe(root);
     expect(logs.join('\n')).toContain('WPT root override');
   });
