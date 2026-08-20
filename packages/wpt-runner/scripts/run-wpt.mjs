@@ -19,7 +19,6 @@ const packageRoot = path.resolve(
   '..',
 );
 const capabilitiesPath = path.join(packageRoot, 'capabilities.tsv');
-const terminalStates = ['passed', 'failed', 'error'];
 const options = parseArguments(process.argv.slice(2));
 
 if (options.help) {
@@ -72,7 +71,7 @@ try {
 
   let failures = 0;
   for (const testPath of selectedPaths) {
-    const run = await runWpt(page, testPath, options.timeoutMs);
+    const run = await runWpt(page, testPath);
     const rows = options.enforceCapabilities
       ? groupedCapabilities.get(testPath)
       : undefined;
@@ -146,34 +145,20 @@ function selectPaths(options, groupedCapabilities) {
   return paths;
 }
 
-async function runWpt(browserPage, testPath, timeoutMs) {
+async function runWpt(browserPage, testPath) {
   console.log(`\n[wpt] RUN ${testPath}`);
-  await browserPage.evaluate((path) => {
-    void window.__WPT_RUN_TEST__(path);
-  }, testPath);
-
   try {
-    await browserPage.waitForFunction(
-      (states) => states.includes(window.__WPT_LAST_RUN__?.state),
-      terminalStates,
-      {timeout: timeoutMs + 1_000},
-    );
-    return await browserPage.evaluate(() => window.__WPT_LAST_RUN__);
-  } catch {
-    const lastRun = await browserPage.evaluate(
-      (path) =>
-        window.__WPT_LAST_RUN__ ?? {
-          state: 'error',
-          path,
-          warnings: [],
-          logs: [],
-        },
+    return await browserPage.evaluate(
+      (path) => window.__WPT_RUN_TEST__(path),
       testPath,
     );
+  } catch (error) {
     return {
-      ...lastRun,
       state: 'error',
-      error: `Timed out after ${timeoutMs}ms. Last state: ${lastRun.state}`,
+      path: testPath,
+      warnings: [],
+      logs: [],
+      error: `Runner page evaluation failed: ${formatError(error)}`,
     };
   }
 }

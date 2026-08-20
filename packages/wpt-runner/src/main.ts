@@ -7,7 +7,6 @@ declare const __WPT_ROOT__: string;
 
 declare global {
   interface Window {
-    __WPT_LAST_RUN__: WptRunRecord;
     __WPT_RUN_TEST__: (path: string) => Promise<WptRunRecord>;
   }
 }
@@ -29,8 +28,6 @@ interface RunSession {
 }
 
 let activeRun: RunSession | undefined;
-let currentRun: WptRunRecord = createRun('idle', '');
-window.__WPT_LAST_RUN__ = currentRun;
 window.__WPT_RUN_TEST__ = runWptTest;
 elements.status.textContent = `WPT root: ${__WPT_ROOT__}`;
 
@@ -48,7 +45,7 @@ elements.path.addEventListener('keydown', (event) => {
 
 async function runCurrentPath() {
   const testPath = elements.path.value.trim();
-  if (!testPath) return currentRun;
+  if (!testPath) return;
   elements.run.disabled = true;
   try {
     return await runWptTest(testPath);
@@ -65,12 +62,12 @@ async function runWptTest(testPath: string): Promise<WptRunRecord> {
     session.controller.signal.throwIfAborted();
     if (!isActive(session)) return session.record;
 
-    currentRun.warnings = bundle.warnings;
-    sync();
+    session.record.warnings = bundle.warnings;
     elements.original.textContent = bundle.sourceHtml;
     elements.harness.textContent = bundle.harnessSource;
     elements.generated.textContent = bundle.testSource;
-    for (const warning of bundle.warnings) appendLog(`warning: ${warning}`);
+    for (const warning of bundle.warnings)
+      appendLog(session.record, `warning: ${warning}`);
 
     const worker = new Worker(new URL('./worker.ts', import.meta.url), {
       type: 'module',
@@ -85,20 +82,19 @@ async function runWptTest(testPath: string): Promise<WptRunRecord> {
       timeoutMs,
       onReady() {
         if (!isActive(session)) return;
-        currentRun.state = 'waiting';
+        session.record.state = 'waiting';
         elements.status.textContent =
           'Worker ready; waiting for testharness completion…';
-        sync();
       },
       onLog(message) {
         if (!isActive(session)) return;
-        appendLog(`[${message.level}] ${message.text}`);
+        appendLog(session.record, `[${message.level}] ${message.text}`);
       },
     });
 
-    if (isActive(session)) finishWithResult(result);
+    if (isActive(session)) finishWithResult(session.record, result);
   } catch (error) {
-    if (isActive(session)) finishWithError(error);
+    if (isActive(session)) finishWithError(session.record, error);
   } finally {
     if (isActive(session)) activeRun = undefined;
   }
@@ -106,24 +102,22 @@ async function runWptTest(testPath: string): Promise<WptRunRecord> {
   return session.record;
 }
 
-function finishWithResult(result: WptHarnessResult) {
-  currentRun.result = result;
-  currentRun.state = hasFailures(result) ? 'failed' : 'passed';
+function finishWithResult(record: WptRunRecord, result: WptHarnessResult) {
+  record.result = result;
+  record.state = hasFailures(result) ? 'failed' : 'passed';
   elements.status.textContent =
-    currentRun.state === 'passed' ? 'PASS' : 'Completed with failures.';
+    record.state === 'passed' ? 'PASS' : 'Completed with failures.';
   elements.result.textContent = JSON.stringify(result, null, 2);
-  sync();
 }
 
-function finishWithError(error: unknown) {
+function finishWithError(record: WptRunRecord, error: unknown) {
   const message =
     error instanceof Error ? error.stack || error.message : String(error);
-  currentRun.state = 'error';
-  currentRun.error = message;
+  record.state = 'error';
+  record.error = message;
   elements.status.textContent = 'Runner error.';
   elements.result.textContent = message;
-  appendLog(message);
-  sync();
+  appendLog(record, message);
 }
 
 function startRun(testPath: string): RunSession {
@@ -136,8 +130,6 @@ function startRun(testPath: string): RunSession {
     record: createRun('running', testPath),
   };
   activeRun = session;
-  currentRun = session.record;
-  sync();
   elements.status.textContent = 'Preparing WPT source…';
   elements.result.textContent = 'Waiting for testharness completion…';
   elements.log.textContent = '';
@@ -155,17 +147,9 @@ function createRun(state: WptRunRecord['state'], path: string): WptRunRecord {
   return {state, path, warnings: [], logs: []};
 }
 
-function appendLog(message: string) {
-  currentRun.logs.push(message);
+function appendLog(record: WptRunRecord, message: string) {
+  record.logs.push(message);
   elements.log.append(`${message}\n`);
-}
-
-function sync() {
-  window.__WPT_LAST_RUN__ = {
-    ...currentRun,
-    warnings: [...currentRun.warnings],
-    logs: [...currentRun.logs],
-  };
 }
 
 function hasFailures(result: WptHarnessResult) {
