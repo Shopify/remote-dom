@@ -222,14 +222,16 @@ Snapit's metadata and implementation currently disagree about the command input:
 
 #### INFRA-015 — Upgrade Playwright and expand browser coverage
 
-- **Status:** Proposed
+- **Status:** In progress
 - **Priority:** P1
 - **Scope:** `playwright.config.ts`, `.github/workflows/checks.yml`, `package.json`
-- **Recommendation:** Upgrade Playwright, require Chromium on PRs, and add Firefox and WebKit on `main` or nightly before promoting them to required checks.
+- **Outcome:** Upgraded `@playwright/test` to 1.62.1, removed the redundant direct `playwright` dependency, and removed the pnpm trust-policy exception for Playwright 1.49 metadata.
 - **Acceptance criteria:**
-  - DOM, custom-element, event, worker, and framework-adapter smoke tests run in all three engines.
-  - Failures retain traces and reports.
-  - Browser installation is reproducible and cached appropriately.
+  - [x] Current Playwright passes all 13 Chromium tests under CI settings.
+  - [x] Playwright and its transitive packages pass pnpm supply-chain verification without exceptions.
+  - [ ] DOM, custom-element, event, worker, and framework-adapter smoke tests run in Chromium, Firefox, and WebKit.
+  - [ ] Failures retain traces and reports in each browser.
+  - [ ] Browser installation is reproducible and cached appropriately.
 
 #### INFRA-016 — Define and test runtime and framework compatibility
 
@@ -285,9 +287,10 @@ Snapit's metadata and implementation currently disagree about the command input:
 - **Scope:** `package.json`, `.github/workflows/actions/prepare/action.yml`, Playwright dependencies
 - **Recommendation:** Add explicit `test:ci`/`test:watch` scripts, remove `pnpm prune` unless justified, and remove the duplicate direct `playwright` dependency if `@playwright/test` supplies all required APIs and binaries.
 - **Acceptance criteria:**
-  - CI never depends on implicit watch-mode detection.
-  - A frozen install is the only dependency mutation in check jobs.
-  - Local contributor commands remain simple and documented.
+  - [ ] CI never depends on implicit watch-mode detection.
+  - [ ] A frozen install is the only dependency mutation in check jobs.
+  - [x] The redundant direct `playwright` dependency is removed.
+  - [ ] Local contributor commands remain simple and documented.
 
 #### INFRA-021 — Improve dependency automation and vulnerability visibility
 
