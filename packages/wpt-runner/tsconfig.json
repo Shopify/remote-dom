@@ -3,7 +3,7 @@
   "compilerOptions": {
     "isolatedDeclarations": true,
     "rootDir": ".",
-    "types": ["node"]
+    "types": ["node", "vite/client"]
   },
-  "include": ["scripts"]
+  "include": ["scripts", "src", "vite.config.ts"]
 }
