@@ -14,6 +14,7 @@
     "format": "prettier --write --cache .",
     "lint": "prettier --check --cache .",
     "test": "vitest",
+    "wpt:prepare": "pnpm --filter @remote-dom/wpt-runner wpt:prepare",
     "type-check": "tsc --build --pretty",
     "version-bump": "changeset version && pnpm install --no-frozen-lockfile",
     "deploy": "pnpm publish -r",

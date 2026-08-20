@@ -1,0 +1,9 @@
+{
+  "extends": "@quilted/typescript/tsconfig.package.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "rootDir": ".",
+    "types": ["node"]
+  },
+  "include": ["scripts"]
+}
