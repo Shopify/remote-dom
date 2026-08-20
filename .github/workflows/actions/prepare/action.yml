@@ -1,4 +1,5 @@
 name: Prepare repo
+description: Set up Node.js and pnpm, then install repository dependencies
 runs:
   using: 'composite'
   steps:
