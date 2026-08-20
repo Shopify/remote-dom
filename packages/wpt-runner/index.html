@@ -21,17 +21,18 @@
         </div>
       </header>
 
-      <section class="controls">
+      <form id="controls" class="controls">
         <label>
           <span>WPT path</span>
           <input
             id="path"
             value="__runner__/runner-smoke.html?runner=smoke"
             spellcheck="false"
+            required
           />
         </label>
-        <button id="run">Run test</button>
-      </section>
+        <button type="submit">Run test</button>
+      </form>
 
       <section class="grid">
         <section class="panel">

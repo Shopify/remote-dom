@@ -12,7 +12,7 @@ declare global {
 }
 
 const elements = {
-  run: requireElement<HTMLButtonElement>('run'),
+  controls: requireElement<HTMLFormElement>('controls'),
   path: requireElement<HTMLInputElement>('path'),
   status: requireElement<HTMLPreElement>('status'),
   result: requireElement<HTMLPreElement>('result'),
@@ -36,22 +36,13 @@ const initialPath = parameters.get('path');
 const timeoutMs = parseTimeout(parameters.get('timeout'));
 if (initialPath) elements.path.value = initialPath;
 
-parameters.get('autorun') === '1' &&
-  queueMicrotask(() => void runCurrentPath());
-elements.run.addEventListener('click', () => void runCurrentPath());
-elements.path.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') void runCurrentPath();
-});
-
-async function runCurrentPath() {
+elements.controls.addEventListener('submit', (event) => {
+  event.preventDefault();
   const testPath = elements.path.value.trim();
-  if (!testPath) return;
-  elements.run.disabled = true;
-  try {
-    return await runWptTest(testPath);
-  } finally {
-    if (!activeRun) elements.run.disabled = false;
-  }
+  if (testPath) void runWptTest(testPath);
+});
+if (parameters.get('autorun') === '1') {
+  queueMicrotask(() => elements.controls.requestSubmit());
 }
 
 async function runWptTest(testPath: string): Promise<WptRunRecord> {
@@ -125,9 +116,9 @@ function startRun(testPath: string): RunSession {
     new DOMException('Superseded by a new WPT run.', 'AbortError'),
   );
 
-  const session = {
+  const session: RunSession = {
     controller: new AbortController(),
-    record: createRun('running', testPath),
+    record: {state: 'running', path: testPath, warnings: [], logs: []},
   };
   activeRun = session;
   elements.status.textContent = 'Preparing WPT source…';
@@ -141,10 +132,6 @@ function startRun(testPath: string): RunSession {
 
 function isActive(session: RunSession) {
   return activeRun === session;
-}
-
-function createRun(state: WptRunRecord['state'], path: string): WptRunRecord {
-  return {state, path, warnings: [], logs: []};
 }
 
 function appendLog(record: WptRunRecord, message: string) {
