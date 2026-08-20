@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
-import {resolveServedWptFile} from '../vite.config.ts';
+import {isRunnerWorkerRequest, resolveServedWptFile} from '../vite.config.ts';
 
 let temporaryRoot: string;
 let roots: {fixtureRoot: string; wptRoot: string};
@@ -25,6 +25,21 @@ beforeAll(() => {
 
 afterAll(() => {
   fs.rmSync(temporaryRoot, {force: true, recursive: true});
+});
+
+describe('WPT worker response policy', () => {
+  it('recognizes only the Vite module-worker request', () => {
+    expect(
+      isRunnerWorkerRequest('/src/worker.ts?worker_file&type=module'),
+    ).toBe(true);
+    expect(isRunnerWorkerRequest('/src/worker.ts')).toBe(false);
+    expect(
+      isRunnerWorkerRequest('/src/worker.ts?worker_file&type=classic'),
+    ).toBe(false);
+    expect(isRunnerWorkerRequest('/src/main.ts?worker_file&type=module')).toBe(
+      false,
+    );
+  });
 });
 
 describe('WPT file serving paths', () => {

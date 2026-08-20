@@ -221,6 +221,10 @@ importers:
         version: 1.8.0
 
   packages/wpt-runner:
+    dependencies:
+      '@remote-dom/polyfill':
+        specifier: workspace:*
+        version: link:../polyfill
     devDependencies:
       tar:
         specifier: 7.5.10

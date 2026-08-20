@@ -3,7 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "node scripts/dev.mjs",
     "wpt:prepare": "node scripts/prepare-wpt.mjs"
+  },
+  "dependencies": {
+    "@remote-dom/polyfill": "workspace:*"
   },
   "devDependencies": {
     "tar": "7.5.10",
