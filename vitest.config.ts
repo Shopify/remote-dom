@@ -1,7 +1,14 @@
-import {defineConfig} from 'vitest/config';
+import {readdirSync} from 'fs';
 import {resolve} from 'path';
+import {defineConfig} from 'vitest/config';
 
 const root = import.meta.dirname!;
+const packageNames = readdirSync(resolve(root, 'packages'), {
+  withFileTypes: true,
+})
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .sort();
 
 function project(name: string) {
   return {
@@ -9,7 +16,7 @@ function project(name: string) {
       alias: [
         // Special case: @remote-dom/core/polyfill → packages/core/source/polyfill/polyfill.ts
         {
-          find: '@remote-dom/core/polyfill',
+          find: /^@remote-dom\/core\/polyfill$/,
           replacement: resolve(
             root,
             'packages/core/source/polyfill/polyfill.ts',
@@ -36,13 +43,6 @@ function project(name: string) {
 
 export default defineConfig({
   test: {
-    projects: [
-      project('core'),
-      project('polyfill'),
-      project('signals'),
-      project('compat'),
-      project('react'),
-      project('preact'),
-    ],
+    projects: packageNames.map(project),
   },
 });
