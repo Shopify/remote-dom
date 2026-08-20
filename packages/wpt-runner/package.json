@@ -4,12 +4,15 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "wpt:prepare": "node scripts/prepare-wpt.mjs"
+    "wpt:prepare": "node scripts/prepare-wpt.mjs",
+    "format:capabilities": "node scripts/format-capabilities.mjs",
+    "wpt": "node scripts/run-wpt.mjs"
   },
   "dependencies": {
     "@remote-dom/polyfill": "workspace:*"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.0",
     "tar": "7.5.10",
     "vite": "^6.4.3"
   }

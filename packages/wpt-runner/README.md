@@ -1,6 +1,8 @@
-# Remote DOM WPT runner — input pipeline
+# Remote DOM WPT runner
 
-Private test infrastructure for acquiring, validating, serving, and adapting upstream Web Platform Tests. This layer downloads a pinned WPT archive, validates it, publishes a contained checkout, serves prepared files with canonical path containment, and adapts supported top-level markup and classic scripts into generated source. It does not execute WPT code.
+Private test infrastructure for running selected upstream Web Platform Tests unchanged against the workspace copy of `@remote-dom/polyfill`.
+
+The runner downloads a pinned WPT archive, parses selected `testharness.js` HTML files in a browser control page, and executes their markup and scripts in a fresh module worker containing `new Window()` from the polyfill. It does not construct a Remote DOM host receiver; transport and host rendering are separate integration concerns.
 
 ## Commands
 
@@ -9,9 +11,28 @@ From the repository root:
 ```bash
 # Prepare or reuse the pinned WPT source.
 pnpm wpt:prepare
+
+# Run every classified file with strict capability enforcement.
+pnpm test:wpt
+
+# Explore an arbitrary test without claiming support.
+pnpm test:wpt -- dom/nodes/Document-getElementById.html
+
+# Enforce the table for one classified file.
+pnpm test:wpt -- --capabilities '__runner__/runner-smoke.html?runner=smoke'
+
+# Open the debug page and inspect original and generated source.
+pnpm wpt:dev
+
+# Canonically sort capabilities.tsv after editing it.
+pnpm wpt:format
 ```
 
-Set `WPT_ROOT=/path/to/wpt` to use an existing checkout. The script verifies `resources/testharness.js` and skips all downloads. Set `WPT_CACHE_DIR` to override the download cache.
+Useful runner options include `--headed`, `--verbose`, `--timeout 60s`, `--port 5174`, and `--strict-port`.
+
+The CLI loads one control page and creates a fresh worker for each selected WPT path. Served WPT files use ETag revalidation, so shared resources such as `testharness.js` avoid repeated response bodies without an application-level source cache.
+
+Set `WPT_ROOT=/path/to/wpt` to use an existing checkout. The runner verifies `resources/testharness.js` and skips all downloads. Set `WPT_CACHE_DIR` to override the download cache.
 
 ## Pinned source and cache
 
@@ -26,16 +47,38 @@ The cache root resolves in this order:
 
 Each revision installs under `<cache-root>/<revision>/source`, with the runner-owned completion marker beside `source` at the revision root. A revision-scoped process lock makes concurrent worktrees wait for one download and extraction, with abandoned-owner recovery and bounded waiting. Preparation still uses a process-unique temporary revision that moves into place atomically. Keeping the marker outside `source` leaves the extracted WPT checkout untouched. Old revisions are not deleted automatically.
 
-WPT files are pinned but remain untrusted test inputs. The preparation script validates archive paths and checksums before extraction. Do not execute downloaded repository scripts outside the isolated runner.
+WPT files are pinned but remain untrusted test inputs. The preparation script validates archive paths and checksums before extraction, and the browser server rejects traversal. Do not execute downloaded repository scripts outside the isolated runner.
 
-## Serving and containment
+The Vite server applies a worker-specific Content Security Policy that blocks network connections and nested workers while allowing same-origin module loading and the current `AsyncFunction` executor. The control page keeps its separate policy so it can load prepared WPT resources.
 
-The Vite server serves prepared WPT files through the `/__wpt-file` route and runner fixtures through the `/__runner__/` prefix. Every served path is resolved with canonical `realpath` containment against its served root, so traversal attempts and symlinks that escape the root are rejected. Missing files return an error without exposing an unchecked path. Served responses use ETag revalidation, so shared resources such as `testharness.js` avoid repeated response bodies on conditional requests. The server binds to a loopback host and restricts Vite filesystem access to the package, fixture, and WPT roots.
+## Capability inventory
 
-## Adaptation
+`capabilities.tsv` contains one physical row per WPT subtest with four logical columns:
 
-The adapter parses selected `testharness.js` HTML files and generates source that preserves supported top-level HTML/SVG markup and classic-script order. Supported script resources are resolved in-repository and reconstructed in a shared function scope. This layer produces generated source only; it does not execute the generated source.
+```text
+path<TAB>status<TAB>case[<TAB>note]
+```
 
-## Supported script-semantic limitations
+- `path`: WPT path, including a query string when applicable
+- `status`: exactly `supported` or `deferred`
+- `case`: exact `testharness.js` subtest name
+- `note`: required for deferred cases and normally omitted for supported cases
 
-The first version supports parser-ordered classic top-level scripts executed in one shared function scope, static HTML/SVG markup, and absolute or relative in-repository script resources. It skips `testharnessreport.js` and does not observe independent script-global declarations, per-script strictness, or continuation after intentional parse and runtime errors. Those HTML script-processing semantics remain deferred alongside `.window.js`, WebIDL preloading, modules, nested scripts or browsing contexts, Window messaging, reftests, crashtests, WPT server substitutions, navigation, and layout assertions.
+Trailing empty columns may be omitted; the formatter removes them from the canonical representation. Use `\\t`, `\\n`, `\\r`, and `\\\\` for literal tab, newline, carriage return, and backslash characters. Other escapes, malformed rows, duplicate `(path, case)` pairs, and noncanonical ordering fail validation.
+
+The formatter sorts by path and case with locale-independent code-unit ordering and writes LF line endings with one final newline. The runner rejects an unformatted table and prints the formatter command.
+
+During an enforced run:
+
+- failed supported cases fail the command;
+- failed deferred cases remain visible with their notes but do not fail it;
+- passing deferred cases are printed as promotion candidates;
+- missing or unlisted cases, harness errors, worker errors, and timeouts always fail.
+
+The same schema can later be split mechanically into `dom.tsv`, `html.tsv`, `svg.tsv`, and similar files if one table becomes unwieldy.
+
+## Initial limitations
+
+The first version supports selected `testharness.js` HTML files, parser-ordered classic top-level scripts executed in one shared function scope, static HTML/SVG markup, and absolute or relative in-repository script resources. It skips `testharnessreport.js` and captures completion programmatically.
+
+Before classifying a file, verify that it does not observe independent script-global declarations, per-script strictness, or continuation after intentional parse and runtime errors. Those HTML script-processing semantics remain deferred alongside `.window.js`, WebIDL preloading, modules, nested scripts or browsing contexts, Window messaging, reftests, crashtests, WPT server substitutions, navigation, and layout assertions. Add execution infrastructure only when a selected capability requires it; never patch a claimed DOM API in runner shims.
