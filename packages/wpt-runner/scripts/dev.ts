@@ -4,12 +4,17 @@ import {spawn} from 'node:child_process';
 import path from 'node:path';
 import process from 'node:process';
 import {fileURLToPath} from 'node:url';
-import {prepareWpt} from './prepare-wpt.mjs';
+import {prepareWpt} from './prepare-wpt.ts';
 
 const packageRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
 );
+const forwardedSignals = [
+  'SIGINT',
+  'SIGTERM',
+  'SIGHUP',
+] as const satisfies readonly NodeJS.Signals[];
 
 try {
   const wptRoot = await prepareWpt();
@@ -23,7 +28,7 @@ try {
     },
   );
 
-  for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+  for (const signal of forwardedSignals) {
     process.on(signal, () => child.kill(signal));
   }
   child.on('exit', (code, signal) => {

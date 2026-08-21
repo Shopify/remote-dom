@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node scripts/dev.mjs",
+    "dev": "node scripts/dev.ts",
     "wpt:prepare": "node scripts/prepare-wpt.ts"
   },
   "dependencies": {
