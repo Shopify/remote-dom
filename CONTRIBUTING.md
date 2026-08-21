@@ -16,7 +16,7 @@ There are many ways to contribute to Remote DOM:
 
 ### Getting started
 
-Clone this repo, then run `pnpm install`. This repo uses [pnpm](https://pnpm.io) for package management. The codebase is entirely written in [TypeScript](https://www.typescriptlang.org).
+Clone this repository, use the Node.js version in [`.nvmrc`](./.nvmrc), and run `pnpm install`. The repository pins its pnpm version in [`package.json`](./package.json) and is entirely written in [TypeScript](https://www.typescriptlang.org).
 
 #### Type check
 
@@ -30,7 +30,7 @@ Run `pnpm lint`, which will run the entire codebase through [Prettier](https://p
 
 #### Test
 
-Run `pnpm test`, which will run all tests in the repo in [Vitest’s](https://vitest.dev/guide/workspace) watch mode.
+Run `pnpm test` to run all tests with [Vitest](https://vitest.dev/guide/). Vitest watches for changes in an interactive development terminal and runs once in CI or other non-interactive environments.
 
 Tests are currently a little sparse, focused mostly on ensuring good end-to-end behavior when using all the libraries together. Additional tests can be added for public APIs in each package by including files with a `.test.ts` or `.test.tsx` extension. Make sure you adhere to the structure of the other tests in the repo, and it would be extra appreciated if you understand a little about [Shopify’s approach to front-end testing (sorry to external contributors, this is an internal Shopify link)](https://github.com/Shopify/web-foundations/blob/main/handbook/Best%20Practices/Testing.md).
 
@@ -38,7 +38,7 @@ Tests are currently a little sparse, focused mostly on ensuring good end-to-end 
 
 To build all the package outputs for the repo, run `pnpm build`. This command uses [Rollup](https://rollupjs.org/), with a good set of configuration options provided by [Quilt](https://github.com/lemonmade/quilt/blob/main/documentation/projects/packages/builds.md). Some of these versions, like the `.esnext` version of the project you will see, preserve most of the original source code, so that build tools can be configured to parse, process, polyfill, and minify this code in the same way the rest of an application’s codebase. This helps to significantly reduce the bundle size of these packages.
 
-`pnpm build` is automatically run before the project is published. You only need to run it manually when you want to verify the outputs it produces (all of which are ignored in `git`).
+`pnpm build` runs in CI and before publication. Generated outputs are ignored by Git, but you should run the command locally before submitting changes that affect package output.
 
 ### Contributing a change
 
@@ -48,12 +48,12 @@ If you are fixing a minor issue, feel free to send a pull request directly. If y
 
 **Before submitting a pull request**, please:
 
-1. Fork the repository and create your branch from `main`
-1. Run `pnpm install` from the repository root
-1. Make sure your changes do not cause errors to be thrown when running `pnpm test`, `pnpm lint`, or `pnpm type-check` (these will also be checked automatically when you open your pull request, as they run as part of Remote DOM’s [GitHub Action-based CI](./.github/workflows/ci.yml))
-1. Add a description of your changes to package’s `CHANGELOG.md`
-1. Add a [changeset using `pnpm changeset add`](#releasing-changes)
-1. If you haven’t already, [sign a Contributor License Agreement](https://cla.shopify.com/)
+1. Fork the repository and create your branch from `main`.
+1. Run `pnpm install` from the repository root.
+1. Run `pnpm lint`, `pnpm type-check`, `pnpm build`, and `pnpm test`. These commands also run in [GitHub Actions CI](./.github/workflows/ci.yml).
+1. When changing examples or browser behavior, run `pnpm exec playwright install chromium` once and then `pnpm exec playwright test`.
+1. Add a [changeset](#releasing-changes) for user-facing public-package changes. Configuration, documentation, examples, and tests generally do not require one.
+1. If you haven’t already, [sign a Contributor License Agreement](https://cla.shopify.com/).
 
 #### Contributor License Agreement (CLA)
 
@@ -61,9 +61,9 @@ Each contributor is required to [sign a CLA](https://cla.shopify.com/). This pro
 
 ### Releasing changes
 
-This repo uses [Changesets](https://github.com/changesets/changesets) to manage releases. As you contribute changes to the repo, you can include changeset files that describe the packages being changed, the significance of the change, and a detailed description.
+This repository uses [Changesets](https://github.com/changesets/changesets) to manage package versions and changelogs. Do not edit package `CHANGELOG.md` files manually; the release process generates them from changesets.
 
-Before you create a PR for your change, run `pnpm changeset`. This command will prompt you to select the packages and type (patch, minor, or major) of change you are working on. You will also be asked for an initial description.
+For a user-facing public-package change, run `pnpm changeset`. This command prompts you to select the affected packages, choose a patch, minor, or major release, and write a description. Repository configuration, documentation, examples, and tests generally do not need a changeset.
 
 This command creates a file in the `.changeset` directory at the root of the repo. The contents of these files will be included in the changelog entries of each affected package. If you have additional detail or migration instructions related to the change, you can add it as markdown to the generated file.
 
@@ -73,4 +73,4 @@ Once you are satisfied with the content of the file, commit it alongside the res
 
 > **Note:** currently, only Shopify developers can publish new versions of packages.
 
-Once changeset files are merged into the `main` branch of this repo, a [Github action](./.github/workflows/changesets.yml) will create a new PR to apply all the outstanding changesets to their respective packages, creating a new set of package versions. You just need to merge that PR, and the robots will take care of publishing the changes to NPM!
+Once changeset files are merged into `main`, a [GitHub Actions workflow](./.github/workflows/changesets.yml) creates or updates a release pull request with the generated package versions and changelogs. Shopify maintainers merge that pull request, and the release workflows publish the packages to npm.
