@@ -113,6 +113,7 @@ try {
   await server?.close().catch(() => {});
 }
 
+/** Parses CLI flags and chooses the default capability enforcement mode. */
 function parseArguments(arguments_: string[]): RunnerOptions {
   const normalizedArguments =
     arguments_[0] === '--' ? arguments_.slice(1) : arguments_;
@@ -147,6 +148,7 @@ function parseArguments(arguments_: string[]): RunnerOptions {
   };
 }
 
+/** Resolves deduplicated WPT paths and verifies enforced paths are classified. */
 function selectPaths(
   options: RunnerOptions,
   groupedCapabilities: ReadonlyMap<string, readonly CapabilityRow[]>,
@@ -167,6 +169,7 @@ function selectPaths(
   return paths;
 }
 
+/** Runs one WPT file and converts page evaluation errors into a run record. */
 async function runWpt(
   browserPage: Page,
   testPath: string,
@@ -189,6 +192,7 @@ async function runWpt(
   }
 }
 
+/** Reports an unclassified run and returns whether any result failed. */
 function printExploratoryResult(run: WptRunRecord): boolean {
   const tests = run.result?.tests ?? [];
   const failedTests = tests.filter((test) => test.status !== 0);
@@ -206,6 +210,7 @@ function printExploratoryResult(run: WptRunRecord): boolean {
   return failed;
 }
 
+/** Evaluates and reports classified results, drift, and promotion candidates. */
 function printCapabilityResult(
   run: WptRunRecord,
   rows: readonly CapabilityRow[],
@@ -263,6 +268,7 @@ function printTestFailure(test: WptHarnessTestResult, prefix: string): void {
   if (test.stack) console.log(indent(test.stack, '    '));
 }
 
+/** Prints a run error and its most recent captured browser logs. */
 function printRunError(run: WptRunRecord): void {
   if (run.error) console.log(indent(run.error, '  '));
   if (run.state === 'error' && run.logs?.length > 0) {

@@ -13,6 +13,7 @@ export interface CapabilityRow {
 
 const VALID_STATUSES: ReadonlySet<string> = new Set(['supported', 'deferred']);
 
+/** Reads a capability table and rejects content that is not canonical. */
 export async function readCapabilities(file: string): Promise<CapabilityRow[]> {
   const source = await fs.readFile(file, 'utf8');
   const rows = parseCapabilities(source, file);
@@ -27,6 +28,7 @@ export async function readCapabilities(file: string): Promise<CapabilityRow[]> {
   return rows;
 }
 
+/** Parses and validates capability rows from escaped TSV source. */
 export function parseCapabilities(
   source: string,
   label = 'capabilities.tsv',
@@ -89,6 +91,7 @@ export function parseCapabilities(
   return rows;
 }
 
+/** Sorts and serializes capability rows as canonical escaped TSV. */
 export function serializeCapabilities(rows: readonly CapabilityRow[]): string {
   const sorted = [...rows].sort(compareCapabilityRows);
   const lines = [
@@ -119,6 +122,7 @@ export function compareCodeUnits(left: string, right: string): number {
   return left < right ? -1 : 1;
 }
 
+/** Groups capability rows by their WPT file while preserving row order. */
 export function rowsByPath(
   rows: readonly CapabilityRow[],
 ): Map<string, CapabilityRow[]> {
@@ -143,6 +147,7 @@ function escapeField(value: string): string {
     .replaceAll('\r', '\\r');
 }
 
+/** Decodes supported TSV escapes and rejects malformed sequences. */
 function unescapeField(
   value: string,
   label: string,
