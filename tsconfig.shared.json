@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "allowUnusedLabels": false,
     "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true
   }
