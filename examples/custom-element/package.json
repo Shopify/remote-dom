@@ -9,5 +9,8 @@
   "dependencies": {
     "@quilted/threads": "catalog:",
     "@remote-dom/core": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "catalog:"
   }
 }
