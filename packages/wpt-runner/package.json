@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "wpt:prepare": "node scripts/prepare-wpt.mjs"
+    "wpt:prepare": "node scripts/prepare-wpt.ts"
   },
   "devDependencies": {
     "tar": "7.5.10"

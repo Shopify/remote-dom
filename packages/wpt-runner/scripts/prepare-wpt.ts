@@ -7,9 +7,29 @@ import os from 'node:os';
 import path from 'node:path';
 import {Readable, Transform} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
+import type {ReadableStream as NodeReadableStream} from 'node:stream/web';
 import process from 'node:process';
 import {fileURLToPath} from 'node:url';
-import {extract, list} from 'tar';
+import {extract, list, type ReadEntry} from 'tar';
+
+type Environment = Readonly<Record<string, string | undefined>>;
+type Log = (message: string) => void;
+
+interface WptLock {
+  repository: string;
+  revision: string;
+  archiveUrl: string;
+  sha256: string;
+}
+
+type RevisionIdentity = Pick<WptLock, 'revision' | 'sha256'>;
+type ArchiveEntry = Pick<ReadEntry, 'path' | 'type' | 'linkpath'>;
+
+interface PrepareWptOptions {
+  env?: Environment;
+  lockPath?: string;
+  log?: Log;
+}
 
 const packageRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -28,7 +48,7 @@ export async function prepareWpt({
   env = process.env,
   lockPath = defaultLockPath,
   log = console.log,
-} = {}) {
+}: PrepareWptOptions = {}): Promise<string> {
   if (env.WPT_ROOT) {
     const override = path.resolve(env.WPT_ROOT);
     await verifySentinels(override);
@@ -80,7 +100,12 @@ export async function prepareWpt({
   }
 }
 
-async function installWptRevision(cacheRoot, revisionRoot, lock, log) {
+async function installWptRevision(
+  cacheRoot: string,
+  revisionRoot: string,
+  lock: WptLock,
+  log: Log,
+): Promise<void> {
   const nonce = `${process.pid}-${randomBytes(8).toString('hex')}`;
   const archivePath = path.join(
     cacheRoot,
@@ -121,7 +146,12 @@ async function installWptRevision(cacheRoot, revisionRoot, lock, log) {
   }
 }
 
-async function acquireRevisionLock(lockPath, revisionRoot, lock, log) {
+async function acquireRevisionLock(
+  lockPath: string,
+  revisionRoot: string,
+  lock: RevisionIdentity,
+  log: Log,
+): Promise<(() => Promise<void>) | null> {
   const startedAt = Date.now();
   const token = randomBytes(16).toString('hex');
   let announcedWait = false;
@@ -149,7 +179,7 @@ async function acquireRevisionLock(lockPath, revisionRoot, lock, log) {
         }
       };
     } catch (error) {
-      if (error?.code !== 'EEXIST') throw error;
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
     }
 
     if (await isStaleLock(lockPath)) {
@@ -171,7 +201,7 @@ async function acquireRevisionLock(lockPath, revisionRoot, lock, log) {
   }
 }
 
-async function isStaleLock(lockPath) {
+async function isStaleLock(lockPath: string): Promise<boolean> {
   const owner = await readLockOwner(lockPath);
   if (owner) return !isProcessAlive(owner.pid);
 
@@ -179,7 +209,9 @@ async function isStaleLock(lockPath) {
   return Boolean(stat && Date.now() - stat.mtimeMs >= lockStaleMs);
 }
 
-async function readLockOwner(lockPath) {
+async function readLockOwner(
+  lockPath: string,
+): Promise<{pid: number; token: string} | null> {
   try {
     const owner = JSON.parse(
       await fs.readFile(path.join(lockPath, lockOwnerFile), 'utf8'),
@@ -194,25 +226,25 @@ async function readLockOwner(lockPath) {
   }
 }
 
-function isProcessAlive(pid) {
+function isProcessAlive(pid: number): boolean {
   try {
     process.kill(pid, 0);
     return true;
   } catch (error) {
-    return error?.code !== 'ESRCH';
+    return (error as NodeJS.ErrnoException).code !== 'ESRCH';
   }
 }
 
-function delay(milliseconds) {
+function delay(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 export async function publishPreparedRevision(
-  temporaryRevision,
-  revisionRoot,
-  lock,
-  log = console.log,
-) {
+  temporaryRevision: string,
+  revisionRoot: string,
+  lock: RevisionIdentity,
+  log: Log = console.log,
+): Promise<void> {
   try {
     await fs.rename(temporaryRevision, revisionRoot);
     log(`[wpt] installed WPT ${lock.revision}`);
@@ -228,7 +260,7 @@ export async function publishPreparedRevision(
   }
 }
 
-export function resolveCacheRoot(env = process.env) {
+export function resolveCacheRoot(env: Environment = process.env): string {
   if (env.WPT_CACHE_DIR) return path.resolve(env.WPT_CACHE_DIR);
   if (env.CI) return path.join(repositoryRoot, '.cache/wpt');
   if (env.XDG_CACHE_HOME)
@@ -243,7 +275,7 @@ export function resolveCacheRoot(env = process.env) {
   return path.resolve(home, '.cache/remote-dom/wpt');
 }
 
-export function assertChecksum(actual, expected) {
+export function assertChecksum(actual: string, expected: string): void {
   if (actual !== expected) {
     throw new Error(
       `WPT archive checksum mismatch: expected ${expected}, got ${actual}.`,
@@ -251,13 +283,17 @@ export function assertChecksum(actual, expected) {
   }
 }
 
-async function readLock(lockPath) {
-  const lock = JSON.parse(await fs.readFile(lockPath, 'utf8'));
+async function readLock(lockPath: string): Promise<WptLock> {
+  const lockData = JSON.parse(await fs.readFile(lockPath, 'utf8')) as Record<
+    string,
+    unknown
+  >;
   for (const key of ['repository', 'revision', 'archiveUrl', 'sha256']) {
-    if (typeof lock[key] !== 'string' || !lock[key]) {
+    if (typeof lockData[key] !== 'string' || !lockData[key]) {
       throw new Error(`Invalid WPT lock ${lockPath}: ${key} is required.`);
     }
   }
+  const lock = lockData as unknown as WptLock;
   if (!/^[0-9a-f]{40}$/.test(lock.revision)) {
     throw new Error(
       `Invalid WPT lock ${lockPath}: revision must be a full commit SHA.`,
@@ -275,7 +311,10 @@ async function readLock(lockPath) {
   return lock;
 }
 
-async function downloadArchive(url, destination) {
+async function downloadArchive(
+  url: string,
+  destination: string,
+): Promise<string> {
   const response = await fetch(url, {redirect: 'follow'});
   if (!response.ok || !response.body) {
     throw new Error(
@@ -292,15 +331,18 @@ async function downloadArchive(url, destination) {
   });
 
   await pipeline(
-    Readable.fromWeb(response.body),
+    Readable.fromWeb(response.body as NodeReadableStream),
     hasher,
     createWriteStream(destination, {flags: 'wx'}),
   );
   return hash.digest('hex');
 }
 
-async function validateArchive(archivePath, revision) {
-  let validationError;
+async function validateArchive(
+  archivePath: string,
+  revision: string,
+): Promise<void> {
+  let validationError: unknown;
   await list({
     file: archivePath,
     onentry(entry) {
@@ -315,7 +357,10 @@ async function validateArchive(archivePath, revision) {
   if (validationError) throw validationError;
 }
 
-export function validateArchiveEntry(entry, revision) {
+export function validateArchiveEntry(
+  entry: ArchiveEntry,
+  revision: string,
+): void {
   const expectedRoot = `wpt-${revision}`;
   const entryPath = validateArchivePath(
     entry.path,
@@ -355,7 +400,11 @@ export function validateArchiveEntry(entry, revision) {
   }
 }
 
-function validateArchivePath(value, expectedRoot, label) {
+function validateArchivePath(
+  value: string,
+  expectedRoot: string,
+  label: string,
+): string {
   if (!value || value.includes('\\') || path.posix.isAbsolute(value)) {
     throw new Error(`Unsafe WPT ${label}: ${JSON.stringify(value)}.`);
   }
@@ -373,7 +422,7 @@ function validateArchivePath(value, expectedRoot, label) {
   return normalized;
 }
 
-async function verifySentinels(sourceRoot) {
+async function verifySentinels(sourceRoot: string): Promise<void> {
   for (const relativePath of requiredFiles) {
     const sentinel = path.join(sourceRoot, relativePath);
     const stat = await fs.stat(sentinel).catch(() => null);
@@ -385,7 +434,10 @@ async function verifySentinels(sourceRoot) {
   }
 }
 
-async function isCompletedRevision(revisionRoot, lock) {
+async function isCompletedRevision(
+  revisionRoot: string,
+  lock: RevisionIdentity,
+): Promise<boolean> {
   try {
     await verifySentinels(path.join(revisionRoot, 'source'));
     const marker = JSON.parse(
@@ -397,8 +449,9 @@ async function isCompletedRevision(revisionRoot, lock) {
   }
 }
 
-function isDestinationExistsError(error) {
-  return error?.code === 'EEXIST' || error?.code === 'ENOTEMPTY';
+function isDestinationExistsError(error: unknown): boolean {
+  const code = (error as NodeJS.ErrnoException).code;
+  return code === 'EEXIST' || code === 'ENOTEMPTY';
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

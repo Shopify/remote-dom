@@ -11,7 +11,7 @@ import {
   publishPreparedRevision,
   resolveCacheRoot,
   validateArchiveEntry,
-} from './prepare-wpt.mjs';
+} from './prepare-wpt.ts';
 
 const repositoryRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
