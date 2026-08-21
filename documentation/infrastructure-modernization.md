@@ -199,12 +199,12 @@ Snapit's metadata and implementation currently disagree about the command input:
 
 - **Status:** In progress
 - **Priority:** P1
-- **Scope:** `.nvmrc`, `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, CI setup
-- **Outcome:** Upgraded to Node 24.19.0, npm 11.17.0, pnpm 11.21.0, and Node 24 types. Updated Quilt Rollup and esbuild for Node 24 and Vite 8 compatibility, removed global npm installation, and enabled pnpm supply-chain protections.
+- **Scope:** `.nvmrc`, `dev.yml`, `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, CI setup
+- **Outcome:** Upgraded to Node 24.19.0, npm 11.17.0, pnpm 10.28.0, and Node 24 types. Added matching Shopify `dev` environment configuration, updated Quilt Rollup and esbuild for Node 24 and Vite 8 compatibility, removed global npm installation, and enabled pnpm supply-chain protections with Shopify's standard seven-day release-age window. pnpm remains on v10 until Shopify `dev up` supports pnpm 11 release archives.
 - **Acceptance criteria:**
-  - [x] Local setup and CI use Node 24.19.0 and the same integrity-pinned pnpm 11.21.0 release.
-  - [x] Frozen-lockfile installation and pnpm supply-chain verification succeed against Shopify's proxy and npmjs.org.
-  - [x] Lint, type checking, 174 unit tests, package builds, peer checks, and 13 CI-mode Playwright tests pass.
+  - [x] Local setup and CI use Node 24.19.0 and the same integrity-pinned pnpm 10.28.0 release.
+  - [x] Frozen-lockfile installation succeeds, and pnpm recognizes the configured release-age, trust, source, and lifecycle-script policies.
+  - [x] Lint, type checking, 174 unit tests, package builds, dependency installation, and 13 CI-mode Playwright tests pass.
   - [x] Node's bundled npm exceeds the npm Trusted Publisher minimum without a global installation.
   - [ ] Deploy, preview, and Snapit npm OIDC publication are verified in GitHub Actions.
 
@@ -327,53 +327,13 @@ Snapit's metadata and implementation currently disagree about the command input:
   - Supported setup, check, and release commands match CI.
   - Security reporting and infrastructure ownership paths are clear.
 
-### Existing PR follow-through and standards coverage
-
-#### INFRA-024 — Triage the stale infrastructure and dependency PR backlog
-
-- **Status:** Proposed
-- **Priority:** P1
-- **Scope:** open pull requests and Dependabot configuration
-- **Recommendation:** Land or rebase the useful coordinated upgrades, close superseded point upgrades, and recreate remaining updates against the chosen modern baseline.
-- **Acceptance criteria:**
-  - [x] PR #615 landed with the Vite 8/Vitest 4 migration.
-  - [ ] PR #513 is closed as superseded by PR #615.
-  - [ ] The old Vite, Rollup, TypeScript, Node types, Preact, and Quilt Threads Dependabot PRs are closed or recreated at current target versions.
-  - [ ] PR #602 is rebased and evaluated as the React 19 compatibility implementation.
-  - [ ] Useful tests from stale draft PR #463 are either ported to the current test architecture or deliberately declined.
-
-#### INFRA-025 — Land and expand the Web Platform Test runner
-
-- **Status:** In progress
-- **Priority:** P1
-- **Scope:** PR #617 and follow-up capability additions
-- **Recommendation:** Land the pinned, checksummed WPT runner infrastructure and use its capability inventory to grow standards coverage for the worker-side DOM polyfill.
-- **Acceptance criteria:**
-  - PR #617 passes all required checks and merges with its archive-integrity and path-containment protections intact.
-  - The capability inventory remains canonical and rejects missing or unlisted outcomes.
-  - Follow-up PRs add focused upstream DOM, HTML, and SVG cases.
-  - WPT coverage is treated as complementary to packed-package and cross-browser integration tests, not a replacement for them.
-
-## Related pull request overlap
-
-| Pull request                                           | Infrastructure value                                                                                                                | Recommended disposition                                                                |
-| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| [#615](https://github.com/Shopify/remote-dom/pull/615) | Merged Vite 8/Vitest 4, centralized Vitest configuration, configuration hardening, and removal of package-local Quilt Vite configs. | Completed INFRA-014 on 2026-08-20; use it as the baseline and close superseded #513.   |
-| [#617](https://github.com/Shopify/remote-dom/pull/617) | Adds pinned/checksummed WPT sources, a capability inventory, focused tests, caching, and a dedicated CI job.                        | Finish and land as INFRA-025; keep its scope distinct from cross-browser E2E.          |
-| [#602](https://github.com/Shopify/remote-dom/pull/602) | Adds React 19 compatibility and updates React package metadata.                                                                     | Rebase and validate against packed artifacts as part of INFRA-016.                     |
-| [#463](https://github.com/Shopify/remote-dom/pull/463) | Adds substantial polyfill unit coverage, but is a stale 2024 draft with package-local Vitest setup.                                 | Port valuable tests onto PR #615's centralized test configuration; do not merge as-is. |
-| #435, #452, #486, #493, #504, #509, #510, #513, #515   | Old Dependabot point upgrades for Quilt Threads, Vite, Rollup, Preact, TypeScript, Vitest, and Node types.                          | Close as stale/superseded and recreate coordinated updates at current target versions. |
-
-No open PR currently addresses the GitHub Action version refresh, release-workflow consolidation, PAT removal, explicit package validation, package file allowlists, semantic linting, or dependency-update grouping recommendations.
-
 ## Suggested execution order
 
 1. INFRA-001 through INFRA-009 and INFRA-026: GitHub Actions, credentials, and release safety.
 2. INFRA-010 through INFRA-012: published package assurance.
 3. INFRA-013 through INFRA-017: runtime, tooling, and compatibility modernization; INFRA-014 is complete.
-4. INFRA-024 through INFRA-025: existing PR follow-through and standards coverage.
-5. INFRA-018 through INFRA-021: quality and maintenance controls.
-6. INFRA-022 through INFRA-023: package contract and stewardship.
+4. INFRA-018 through INFRA-021: quality and maintenance controls.
+5. INFRA-022 through INFRA-023: package contract and stewardship.
 
 ## Audit limitations
 

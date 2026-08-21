@@ -7,10 +7,9 @@ allowBuilds:
   esbuild: true
 strictDepBuilds: true
 
-# Restrict dependency resolution to registry packages that have aged for one day.
+# Restrict dependency resolution to registry packages that have aged for seven days.
 blockExoticSubdeps: true
-minimumReleaseAge: 1440
-minimumReleaseAgeStrict: true
+minimumReleaseAge: 10080
 
 # Reject recent releases whose npm publishing trust evidence has weakened.
 trustPolicy: no-downgrade
