@@ -44,6 +44,7 @@ const lockStaleMs = 5 * 60 * 1_000;
 const lockWaitTimeoutMs = 10 * 60 * 1_000;
 const requiredFiles = ['resources/testharness.js'];
 
+/** Prepares the configured WPT revision and returns its source directory. */
 export async function prepareWpt({
   env = process.env,
   lockPath = defaultLockPath,
@@ -100,6 +101,7 @@ export async function prepareWpt({
   }
 }
 
+/** Downloads, validates, extracts, and publishes a WPT revision. */
 async function installWptRevision(
   cacheRoot: string,
   revisionRoot: string,
@@ -146,6 +148,7 @@ async function installWptRevision(
   }
 }
 
+/** Acquires the filesystem lock for preparing a WPT revision. */
 async function acquireRevisionLock(
   lockPath: string,
   revisionRoot: string,
@@ -201,6 +204,7 @@ async function acquireRevisionLock(
   }
 }
 
+/** Checks whether a preparation lock is no longer owned by a live process. */
 async function isStaleLock(lockPath: string): Promise<boolean> {
   const owner = await readLockOwner(lockPath);
   if (owner) return !isProcessAlive(owner.pid);
@@ -209,6 +213,7 @@ async function isStaleLock(lockPath: string): Promise<boolean> {
   return Boolean(stat && Date.now() - stat.mtimeMs >= lockStaleMs);
 }
 
+/** Reads and validates the owner metadata for a preparation lock. */
 async function readLockOwner(
   lockPath: string,
 ): Promise<{pid: number; token: string} | null> {
@@ -226,6 +231,7 @@ async function readLockOwner(
   }
 }
 
+/** Checks whether a process is still running. */
 function isProcessAlive(pid: number): boolean {
   try {
     process.kill(pid, 0);
@@ -235,10 +241,12 @@ function isProcessAlive(pid: number): boolean {
   }
 }
 
+/** Waits for the requested number of milliseconds. */
 function delay(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
+/** Atomically publishes a prepared revision or reuses a valid competing one. */
 export async function publishPreparedRevision(
   temporaryRevision: string,
   revisionRoot: string,
@@ -260,6 +268,7 @@ export async function publishPreparedRevision(
   }
 }
 
+/** Resolves the WPT cache directory from the current environment. */
 export function resolveCacheRoot(env: Environment = process.env): string {
   if (env.WPT_CACHE_DIR) return path.resolve(env.WPT_CACHE_DIR);
   if (env.CI) return path.join(repositoryRoot, '.cache/wpt');
@@ -275,6 +284,7 @@ export function resolveCacheRoot(env: Environment = process.env): string {
   return path.resolve(home, '.cache/remote-dom/wpt');
 }
 
+/** Throws when an archive checksum does not match the locked checksum. */
 export function assertChecksum(actual: string, expected: string): void {
   if (actual !== expected) {
     throw new Error(
@@ -283,6 +293,7 @@ export function assertChecksum(actual: string, expected: string): void {
   }
 }
 
+/** Reads and validates the pinned WPT revision lock file. */
 async function readLock(lockPath: string): Promise<WptLock> {
   const lockData = JSON.parse(await fs.readFile(lockPath, 'utf8')) as Record<
     string,
@@ -311,6 +322,7 @@ async function readLock(lockPath: string): Promise<WptLock> {
   return lock;
 }
 
+/** Downloads an archive while calculating its SHA-256 checksum. */
 async function downloadArchive(
   url: string,
   destination: string,
@@ -338,6 +350,7 @@ async function downloadArchive(
   return hash.digest('hex');
 }
 
+/** Validates every archive entry before extraction. */
 async function validateArchive(
   archivePath: string,
   revision: string,
@@ -357,6 +370,7 @@ async function validateArchive(
   if (validationError) throw validationError;
 }
 
+/** Rejects archive entries that could escape the expected revision root. */
 export function validateArchiveEntry(
   entry: ArchiveEntry,
   revision: string,
@@ -400,6 +414,7 @@ export function validateArchiveEntry(
   }
 }
 
+/** Validates and normalizes a path contained in the WPT archive. */
 function validateArchivePath(
   value: string,
   expectedRoot: string,
@@ -422,6 +437,7 @@ function validateArchivePath(
   return normalized;
 }
 
+/** Verifies that a WPT source directory contains its required files. */
 async function verifySentinels(sourceRoot: string): Promise<void> {
   for (const relativePath of requiredFiles) {
     const sentinel = path.join(sourceRoot, relativePath);
@@ -434,6 +450,7 @@ async function verifySentinels(sourceRoot: string): Promise<void> {
   }
 }
 
+/** Checks whether a cached revision is complete and matches its lock. */
 async function isCompletedRevision(
   revisionRoot: string,
   lock: RevisionIdentity,
@@ -449,6 +466,7 @@ async function isCompletedRevision(
   }
 }
 
+/** Checks whether an error reports an existing rename destination. */
 function isDestinationExistsError(error: unknown): boolean {
   const code = (error as NodeJS.ErrnoException).code;
   return code === 'EEXIST' || code === 'ENOTEMPTY';

@@ -1,6 +1,7 @@
 {
   "extends": "@quilted/typescript/tsconfig.package.json",
   "compilerOptions": {
+    "isolatedDeclarations": true,
     "rootDir": ".",
     "types": ["node"]
   },
