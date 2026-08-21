@@ -255,6 +255,9 @@ importers:
         specifier: workspace:*
         version: link:../polyfill
     devDependencies:
+      '@playwright/test':
+        specifier: ^1.49.0
+        version: 1.62.1
       tar:
         specifier: 7.5.21
         version: 7.5.21
