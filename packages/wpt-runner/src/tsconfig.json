@@ -1,0 +1,13 @@
+{
+  "extends": "@quilted/typescript/tsconfig.package.json",
+  "compilerOptions": {
+    "erasableSyntaxOnly": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "outDir": "../build/typescript/browser",
+    "rootDir": ".",
+    "types": ["vite/client"],
+    "verbatimModuleSyntax": true
+  },
+  "include": ["."],
+  "references": [{"path": "../../polyfill"}, {"path": "../shared"}]
+}

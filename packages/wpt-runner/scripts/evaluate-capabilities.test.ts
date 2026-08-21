@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import type {WptRunRecord} from '../src/types.ts';
+import type {WptRunRecord} from '../shared/types.ts';
 import type {CapabilityRow} from './capabilities.ts';
 import {evaluateCapabilities} from './evaluate-capabilities.ts';
 

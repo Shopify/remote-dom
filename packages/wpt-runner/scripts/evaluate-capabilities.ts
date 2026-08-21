@@ -1,4 +1,4 @@
-import type {WptHarnessTestResult, WptRunRecord} from '../src/types.ts';
+import type {WptHarnessTestResult, WptRunRecord} from '../shared/types.ts';
 import {compareCodeUnits, type CapabilityRow} from './capabilities.ts';
 
 export function evaluateCapabilities(

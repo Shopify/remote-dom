@@ -1,37 +1,12 @@
-export interface WptHarnessTestResult {
-  name: string;
-  status: number;
-  message?: string | null;
-  stack?: string | null;
-}
+import type {WptHarnessResult} from '../shared/types.ts';
 
-export interface WptHarnessStatus {
-  status: number;
-  message?: string | null;
-  stack?: string | null;
-}
-
-export interface WptHarnessResult {
-  tests: WptHarnessTestResult[];
-  status: WptHarnessStatus;
-}
-
-export type WptRunState =
-  | 'idle'
-  | 'running'
-  | 'waiting'
-  | 'passed'
-  | 'failed'
-  | 'error';
-
-export interface WptRunRecord {
-  state: WptRunState;
-  path: string;
-  warnings: string[];
-  logs: string[];
-  result?: WptHarnessResult;
-  error?: string;
-}
+export type {
+  WptHarnessResult,
+  WptHarnessStatus,
+  WptHarnessTestResult,
+  WptRunRecord,
+  WptRunState,
+} from '../shared/types.ts';
 
 export interface WorkerRunRequest {
   type: 'run';

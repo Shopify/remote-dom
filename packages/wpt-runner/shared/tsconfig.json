@@ -1,0 +1,12 @@
+{
+  "extends": "@quilted/typescript/tsconfig.package.json",
+  "compilerOptions": {
+    "erasableSyntaxOnly": true,
+    "lib": ["esnext"],
+    "outDir": "../build/typescript/shared",
+    "rootDir": ".",
+    "types": [],
+    "verbatimModuleSyntax": true
+  },
+  "include": ["."]
+}

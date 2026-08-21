@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {parseArgs} from 'node:util';
 import {chromium, type Browser, type Page} from '@playwright/test';
 import {createServer, type ViteDevServer} from 'vite';
-import type {WptHarnessTestResult, WptRunRecord} from '../src/types.ts';
+import type {WptHarnessTestResult, WptRunRecord} from '../shared/types.ts';
 import {
   compareCodeUnits,
   readCapabilities,
@@ -21,6 +21,10 @@ const packageRoot = path.resolve(
   '..',
 );
 const capabilitiesPath = path.join(packageRoot, 'capabilities.tsv');
+
+interface RunnerPageGlobal {
+  __WPT_RUN_TEST__(path: string): Promise<WptRunRecord>;
+}
 
 interface RunnerOptions {
   enforceCapabilities: boolean;
@@ -170,7 +174,8 @@ async function runWpt(
   console.log(`\n[wpt] RUN ${testPath}`);
   try {
     return await browserPage.evaluate(
-      (path) => window.__WPT_RUN_TEST__(path),
+      (path) =>
+        (globalThis as unknown as RunnerPageGlobal).__WPT_RUN_TEST__(path),
       testPath,
     );
   } catch (error) {
