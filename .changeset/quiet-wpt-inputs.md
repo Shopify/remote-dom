@@ -1,4 +1,4 @@
 ---
 ---
 
-Add private WPT input preparation and adaptation without releasing a public package.
+Add a private interactive WPT runner without releasing a public package.
