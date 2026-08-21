@@ -18,3 +18,17 @@ From the root of the repository, run the following command:
 ```bash
 pnpm --filter example-kitchen-sink start
 ```
+
+## Why this example uses Vite 5
+
+Keep this package on Vite 5, Svelte 4, and `@sveltejs/vite-plugin-svelte` 3 as a compatible set. Do not upgrade Vite independently or replace its declaration with the workspace's Vite catalog entry.
+
+The Svelte Vite plugin versions that support Vite 6 and newer require Svelte 5. Svelte 5's client runtime depends on DOM behavior that Remote DOM's minimal Web Worker polyfill does not yet implement. An upgrade may work in the `<iframe>` sandbox while breaking the Web Worker sandbox, which is an essential part of this example.
+
+Before upgrading this package:
+
+1. Add the DOM behavior Svelte 5 requires to the Remote DOM polyfill.
+2. Migrate the example to Svelte 5, including its `mount()` API.
+3. Upgrade the Svelte Vite plugin and other framework plugins to versions compatible with the target Vite version.
+4. Run the full Playwright suite against both iframe and Web Worker sandboxes.
+5. Replace the package's Vite declaration with `catalog:` only after both sandbox modes pass.
