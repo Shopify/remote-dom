@@ -172,9 +172,6 @@ importers:
       '@preact/signals-core':
         specifier: 'catalog:'
         version: 1.8.0
-      '@quilted/testing':
-        specifier: ^0.1.6
-        version: 0.1.6
 
   packages/polyfill: {}
 
@@ -1626,10 +1623,6 @@ packages:
     resolution: {integrity: sha512-iGWkDiDpR2xq0FmAF/ix/cz1qUtz2USp+8kam/QnHe0i50uKCBkufv/QHv0QhhB2/eKbHwa8wxKwslCKdiyS2w==}
     engines: {node: '>=14.0.0'}
 
-  '@quilted/testing@0.1.6':
-    resolution: {integrity: sha512-ljvQ5cDF+0IHiegAJXESaC//Os5BepyOpuHIessLagoReUiEyvqNxuvxWFsO+4/KwrSnCTw89nfUji+KA6Skjw==}
-    engines: {node: '>=14.0.0'}
-
   '@quilted/threads@3.0.0':
     resolution: {integrity: sha512-9/+Tjkf/ueRMqqSFjyhvWFmWrAziKzBCFAvCKloB+lBbPjChl64q3/TBUyVN1N53Rzh8XXWtFMyI4o/RHqfHew==, tarball: https://registry.npmjs.org/@quilted/threads/-/threads-3.0.0.tgz}
     engines: {node: '>=14.0.0'}
@@ -2113,9 +2106,6 @@ packages:
 
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==, tarball: https://registry.npmjs.org/@types/estree/-/estree-1.0.9.tgz}
-
-  '@types/jest@27.5.2':
-    resolution: {integrity: sha512-mpT8LJJ4CMeeahobofYWIjFo0xonRS/HfxnVEPMPFSQdGUt1uHCnoPT7Zhb+sjDU2wz0oKV0OLUR0WzrHNgfeA==}
 
   '@types/node@12.20.55':
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
@@ -5398,10 +5388,6 @@ snapshots:
       '@preact/signals-core': 1.8.0
       '@quilted/events': 2.1.1
 
-  '@quilted/testing@0.1.6':
-    dependencies:
-      '@types/jest': 27.5.2
-
   '@quilted/threads@3.0.0(@preact/signals-core@1.8.0)':
     dependencies:
       '@quilted/events': 2.1.1
@@ -5738,11 +5724,6 @@ snapshots:
   '@types/estree@1.0.5': {}
 
   '@types/estree@1.0.9': {}
-
-  '@types/jest@27.5.2':
-    dependencies:
-      jest-matcher-utils: 27.5.1
-      pretty-format: 27.5.1
 
   '@types/node@12.20.55': {}
 

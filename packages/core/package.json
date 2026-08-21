@@ -105,8 +105,7 @@
     }
   },
   "devDependencies": {
-    "@preact/signals-core": "catalog:",
-    "@quilted/testing": "^0.1.6"
+    "@preact/signals-core": "catalog:"
   },
   "browserslist": [
     "defaults and not dead"

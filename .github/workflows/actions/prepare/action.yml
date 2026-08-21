@@ -10,5 +10,5 @@ runs:
         registry-url: 'https://registry.npmjs.org'
         node-version-file: '.nvmrc'
     - name: Install dependencies
-      run: pnpm install --frozen-lockfile && pnpm prune
+      run: pnpm install --frozen-lockfile
       shell: bash
