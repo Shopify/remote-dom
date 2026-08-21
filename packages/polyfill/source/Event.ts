@@ -6,6 +6,8 @@ import {
 } from './constants.ts';
 import type {EventTarget} from './EventTarget.ts';
 
+// TODO: Replace this enum with one-way constants, matching the DOM and Web IDL.
+// @ts-expect-error -- Legacy enum; keep this exception scoped to this declaration.
 export const enum EventPhase {
   NONE = 0,
   CAPTURING_PHASE = 1,
@@ -54,6 +56,7 @@ export class Event {
   [STOP_IMMEDIATE_PROPAGATION] = false;
 
   constructor(
+    // @ts-expect-error -- Legacy parameter property; keep this exception scoped to this declaration.
     public type: string,
     options?: EventInit,
   ) {

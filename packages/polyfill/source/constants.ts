@@ -18,7 +18,8 @@ export const CONTENT = Symbol('content');
 export const HOOKS = Symbol('hooks');
 export const IS_CONNECTED = Symbol('is_connected');
 
-// @TODO remove explicit values
+// TODO: Replace this enum with one-way constants, matching the DOM and Web IDL.
+// @ts-expect-error -- Legacy enum; keep this exception scoped to this declaration.
 export const enum NodeType {
   NODE = 0,
   ELEMENT_NODE = 1,
@@ -34,6 +35,8 @@ export const enum NodeType {
   DOCUMENT_FRAGMENT_NODE = 11,
 }
 
+// TODO: Replace this enum with namespace string constants, matching the DOM.
+// @ts-expect-error -- Legacy enum; keep this exception scoped to this declaration.
 export const enum NamespaceURI {
   XHTML = 'http://www.w3.org/1999/xhtml',
   SVG = 'http://www.w3.org/2000/svg',
