@@ -70,7 +70,7 @@
   "dependencies": {
     "@remote-dom/core": "workspace:^1.7.0",
     "@types/react": "^18.0.0",
-    "htm": "^3.1.1"
+    "htm": "catalog:"
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0"
@@ -82,9 +82,9 @@
   },
   "devDependencies": {
     "@quilted/react-testing": "^0.6.11",
-    "@types/react-dom": "^18.3.0",
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0"
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "browserslist": [
     "defaults and not dead"

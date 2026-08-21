@@ -5,9 +5,47 @@ updates:
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
-      interval: 'daily'
+      interval: 'weekly'
+    groups:
+      test-and-build-tooling:
+        applies-to: version-updates
+        dependency-type: development
+        patterns:
+          - '@playwright/test'
+          - '@quilted/preact-testing'
+          - '@quilted/react-testing'
+          - '@quilted/rollup'
+          - '@quilted/typescript'
+          - '@types/node'
+          - '@vitest/*'
+          - 'jsdom'
+          - 'rollup'
+          - 'typescript'
+          - 'vite'
+          - 'vitest'
+        update-types:
+          - 'minor'
+          - 'patch'
+      release-tooling:
+        applies-to: version-updates
+        dependency-type: development
+        patterns:
+          - '@changesets/*'
+        update-types:
+          - 'minor'
+          - 'patch'
+    ignore:
+      - dependency-name: 'prettier'
 
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
-      interval: 'daily'
+      interval: 'weekly'
+    groups:
+      github-actions-minor-patch:
+        applies-to: version-updates
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'

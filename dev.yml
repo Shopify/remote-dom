@@ -1,0 +1,6 @@
+name: remote-dom
+
+up:
+  - node:
+      version: v24.19.0
+      package_manager: pnpm@10.28.0

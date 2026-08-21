@@ -57,7 +57,7 @@
   "dependencies": {
     "@remote-dom/core": "workspace:^1.7.0",
     "@remote-dom/signals": "workspace:^2.1.0",
-    "htm": "^3.1.1"
+    "htm": "catalog:"
   },
   "peerDependencies": {
     "@preact/signals": "^1.2.0",
@@ -73,10 +73,10 @@
     }
   },
   "devDependencies": {
-    "@preact/signals": "^1.3.0",
-    "@preact/signals-core": "^1.8.0",
+    "@preact/signals": "catalog:",
+    "@preact/signals-core": "catalog:",
     "@quilted/preact-testing": "^0.1.7",
-    "preact": "^10.23.0"
+    "preact": "catalog:"
   },
   "browserslist": [
     "defaults and not dead"

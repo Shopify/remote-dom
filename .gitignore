@@ -4,6 +4,7 @@ node_modules/
 packages/*/bin/
 *.log
 /test-results/
+/coverage/
 /playwright-report/
 /blob-report/
 /playwright/.cache/

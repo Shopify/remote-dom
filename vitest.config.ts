@@ -43,6 +43,28 @@ function project(name: string) {
 
 export default defineConfig({
   test: {
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', 'html', 'json-summary'],
+      reportOnFailure: true,
+      include: ['packages/*/source/**/*.{ts,tsx}'],
+      exclude: [
+        'packages/**/source/**/tests/**',
+        'packages/**/source/**/__fixtures__/**',
+        'packages/**/source/**/fixtures/**',
+        'packages/**/source/**/*.test.{ts,tsx}',
+        'packages/**/source/**/*.generated.{ts,tsx}',
+      ],
+      excludeAfterRemap: true,
+      thresholds: {
+        'packages/compat/source/**': {lines: 96},
+        'packages/core/source/**': {lines: 74},
+        'packages/polyfill/source/**': {lines: 68},
+        'packages/preact/source/**': {lines: 95},
+        'packages/react/source/**': {lines: 84},
+        'packages/signals/source/**': {lines: 87},
+      },
+    },
     projects: packageNames.map(project),
   },
 });

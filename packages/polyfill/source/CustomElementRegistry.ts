@@ -57,4 +57,8 @@ export class CustomElementRegistryImplementation
   upgrade(_root: Node) {
     // TODO
   }
+
+  initialize(_root: Node) {
+    // TODO
+  }
 }

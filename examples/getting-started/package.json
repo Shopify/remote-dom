@@ -8,5 +8,8 @@
   },
   "dependencies": {
     "@remote-dom/core": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "catalog:"
   }
 }
