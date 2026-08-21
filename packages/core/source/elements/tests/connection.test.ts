@@ -2,7 +2,7 @@ import '../../polyfill/polyfill.ts';
 
 import {afterEach, describe, expect, it, vi, type MockedObject} from 'vitest';
 
-import {BatchingRemoteConnection, RemoteConnection} from '../../elements';
+import {BatchingRemoteConnection, type RemoteConnection} from '../../elements';
 
 describe('BatchingRemoteConnection', () => {
   afterEach(() => {

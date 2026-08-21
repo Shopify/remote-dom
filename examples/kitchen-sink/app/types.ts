@@ -1,5 +1,5 @@
 import type {RemoteConnection} from '@remote-dom/core';
-import {RemoteChannel} from '@remote-ui/core';
+import type {RemoteChannel} from '@remote-ui/core';
 
 /**
  * Describes the technology used to sandbox the “remote” code, so that it does
