@@ -1,10 +1,27 @@
 import type {WptHarnessTestResult, WptRunRecord} from '../shared/types.ts';
 import {compareCodeUnits, type CapabilityRow} from './capabilities.ts';
 
+interface EvaluatedCapability {
+  row: CapabilityRow;
+  test: WptHarnessTestResult;
+}
+
+export interface CapabilityEvaluation {
+  deferredFailures: EvaluatedCapability[];
+  duplicateResults: string[];
+  failed: boolean;
+  missing: CapabilityRow[];
+  promotionCandidates: EvaluatedCapability[];
+  supportedFailures: EvaluatedCapability[];
+  supportedPassed: EvaluatedCapability[];
+  unlisted: WptHarnessTestResult[];
+}
+
+/** Compares WPT results against the declared capability matrix. */
 export function evaluateCapabilities(
   run: WptRunRecord,
   rows: readonly CapabilityRow[],
-) {
+): CapabilityEvaluation {
   const tests = run.result?.tests ?? [];
   const testByName = new Map<string, WptHarnessTestResult>();
   const duplicateResults: string[] = [];

@@ -2,6 +2,7 @@
   "extends": "@quilted/typescript/tsconfig.package.json",
   "compilerOptions": {
     "erasableSyntaxOnly": true,
+    "isolatedDeclarations": true,
     "lib": ["esnext"],
     "outDir": "../build/typescript/shared",
     "rootDir": ".",
