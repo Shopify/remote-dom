@@ -30,7 +30,7 @@ Run `pnpm lint`, which will run the entire codebase through [Prettier](https://p
 
 #### Test
 
-Run `pnpm test` to run all tests with [Vitest](https://vitest.dev/guide/). Vitest watches for changes in an interactive development terminal and runs once in CI or other non-interactive environments.
+Run `pnpm test` to run all tests with [Vitest](https://vitest.dev/guide/). Vitest watches for changes in an interactive development terminal and runs once in CI or other non-interactive environments. Run `pnpm test --coverage` to generate an HTML coverage report in `coverage/` and enforce the package coverage thresholds used in CI.
 
 Tests are currently a little sparse, focused mostly on ensuring good end-to-end behavior when using all the libraries together. Additional tests can be added for public APIs in each package by including files with a `.test.ts` or `.test.tsx` extension. Make sure you adhere to the structure of the other tests in the repo, and it would be extra appreciated if you understand a little about [Shopify’s approach to front-end testing (sorry to external contributors, this is an internal Shopify link)](https://github.com/Shopify/web-foundations/blob/main/handbook/Best%20Practices/Testing.md).
 

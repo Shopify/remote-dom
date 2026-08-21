@@ -17,6 +17,7 @@ updates:
           - '@quilted/rollup'
           - '@quilted/typescript'
           - '@types/node'
+          - '@vitest/*'
           - 'jsdom'
           - 'rollup'
           - 'typescript'
