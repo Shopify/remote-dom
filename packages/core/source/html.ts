@@ -97,7 +97,9 @@ function normalizeComponentReturn<
 function normalizedComponentReturnItem<T>(
   value: T,
 ): T extends string ? Exclude<T, string> | Text : T {
-  return typeof value === 'string' || typeof value === 'number'
-    ? document.createTextNode(String(value))
-    : ((value || null) as any);
+  return (
+    typeof value === 'string' || typeof value === 'number'
+      ? document.createTextNode(String(value))
+      : value || null
+  ) as T extends string ? Exclude<T, string> | Text : T;
 }

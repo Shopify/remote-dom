@@ -70,50 +70,51 @@ export function createRemoteComponentRenderer<
   Component: ComponentType<Props>,
   {name, eventProps}: NoInfer<RemoteComponentRendererOptions<Props>> = {},
 ): ComponentType<RemoteComponentRendererProps> {
-  const RemoteComponentRenderer = memo(function RemoteComponentRenderer({
-    element,
-    receiver,
-    components,
-  }: RemoteComponentRendererProps) {
-    const internalsRef = useRef<Internals>();
-
-    const {id} = element;
-    const props = usePropsForRemoteElement<Props>(element, {
+  const RemoteComponentRenderer: ComponentType<RemoteComponentRendererProps> =
+    memo(function RemoteComponentRenderer({
+      element,
       receiver,
       components,
-      eventProps,
-    });
+    }: RemoteComponentRendererProps) {
+      const internalsRef = useRef<Internals>();
 
-    (props as any)[REMOTE_ELEMENT_PROP] = element;
-
-    if (internalsRef.current == null) {
-      const internals: Internals = {
-        id,
+      const {id} = element;
+      const props = usePropsForRemoteElement<Props>(element, {
         receiver,
-      } as any;
+        components,
+        eventProps,
+      });
 
-      internals.instanceRef = createImplementationRef(internals);
-      internalsRef.current = internals;
-    }
+      (props as any)[REMOTE_ELEMENT_PROP] = element;
 
-    internalsRef.current.id = id;
-    internalsRef.current.receiver = receiver;
+      if (internalsRef.current == null) {
+        const internals: Internals = {
+          id,
+          receiver,
+        } as any;
 
-    useEffect(() => {
-      const node = {id};
+        internals.instanceRef = createImplementationRef(internals);
+        internalsRef.current = internals;
+      }
 
-      receiver.implement(
-        node,
-        internalsRef.current?.instanceRef.current as any,
-      );
+      internalsRef.current.id = id;
+      internalsRef.current.receiver = receiver;
 
-      return () => {
-        receiver.implement(node, null);
-      };
-    }, [id, receiver]);
+      useEffect(() => {
+        const node = {id};
 
-    return <Component ref={internalsRef.current.instanceRef} {...props} />;
-  });
+        receiver.implement(
+          node,
+          internalsRef.current?.instanceRef.current as any,
+        );
+
+        return () => {
+          receiver.implement(node, null);
+        };
+      }, [id, receiver]);
+
+      return <Component ref={internalsRef.current.instanceRef} {...props} />;
+    });
 
   RemoteComponentRenderer.displayName =
     name ??
