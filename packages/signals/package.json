@@ -37,7 +37,7 @@
     }
   },
   "devDependencies": {
-    "@preact/signals-core": "^1.8.0"
+    "@preact/signals-core": "catalog:"
   },
   "browserslist": [
     "defaults and not dead"

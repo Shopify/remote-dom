@@ -7,7 +7,7 @@
     "start": "vite"
   },
   "dependencies": {
-    "@quilted/threads": "^3.0.0",
+    "@quilted/threads": "catalog:",
     "@remote-dom/core": "workspace:*"
   }
 }
