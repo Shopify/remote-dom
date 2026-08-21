@@ -52,6 +52,7 @@ jobs:
     permissions:
       contents: read
       id-token: write # Required for OIDC authentication
+      pull-requests: read # Required for Changesets changelog links
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -75,7 +76,7 @@ jobs:
           pnpm changeset version --snapshot preview
           pnpm changeset publish --tag preview --no-git-tag
         env:
-          GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: '' # Empty string forces OIDC
           NPM_CONFIG_PROVENANCE: true
 
@@ -101,7 +102,7 @@ jobs:
       - name: Create snapshot
         uses: Shopify/snapit@efd7ad2bbc01ba82ac9a8495eb49b3a8eed0d9b9 # v0.1.0
         env:
-          GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: '' # Empty string forces OIDC
           NPM_CONFIG_PROVENANCE: true
         with:
