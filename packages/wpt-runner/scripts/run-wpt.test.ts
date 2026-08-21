@@ -2,7 +2,7 @@ import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {describe, expect, it} from 'vitest';
 
-const runnerPath = fileURLToPath(new URL('./run-wpt.mjs', import.meta.url));
+const runnerPath = fileURLToPath(new URL('./run-wpt.ts', import.meta.url));
 
 describe('WPT runner arguments', () => {
   it.each(['0', '0ms', '0s'])('rejects a zero timeout (%s)', (timeout) => {

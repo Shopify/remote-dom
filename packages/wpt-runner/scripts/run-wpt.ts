@@ -4,14 +4,16 @@ import path from 'node:path';
 import process from 'node:process';
 import {fileURLToPath} from 'node:url';
 import {parseArgs} from 'node:util';
-import {chromium} from '@playwright/test';
-import {createServer} from 'vite';
+import {chromium, type Browser, type Page} from '@playwright/test';
+import {createServer, type ViteDevServer} from 'vite';
+import type {WptHarnessTestResult, WptRunRecord} from '../src/types.ts';
 import {
   compareCodeUnits,
   readCapabilities,
   rowsByPath,
-} from './capabilities.mjs';
-import {evaluateCapabilities} from './evaluate-capabilities.mjs';
+  type CapabilityRow,
+} from './capabilities.ts';
+import {evaluateCapabilities} from './evaluate-capabilities.ts';
 import {prepareWpt} from './prepare-wpt.ts';
 
 const packageRoot = path.resolve(
@@ -19,6 +21,19 @@ const packageRoot = path.resolve(
   '..',
 );
 const capabilitiesPath = path.join(packageRoot, 'capabilities.tsv');
+
+interface RunnerOptions {
+  enforceCapabilities: boolean;
+  headed: boolean;
+  help: boolean;
+  host: string;
+  port: number | undefined;
+  strictPort: boolean;
+  testPaths: string[];
+  timeoutMs: number;
+  verbose: boolean;
+}
+
 const options = parseArguments(process.argv.slice(2));
 
 if (options.help) {
@@ -26,9 +41,9 @@ if (options.help) {
   process.exit(0);
 }
 
-let server;
-let browser;
-let page;
+let server: ViteDevServer | undefined;
+let browser: Browser | undefined;
+let page: Page | undefined;
 
 try {
   const capabilities = await readCapabilities(capabilitiesPath);
@@ -94,7 +109,7 @@ try {
   await server?.close().catch(() => {});
 }
 
-function parseArguments(arguments_) {
+function parseArguments(arguments_: string[]): RunnerOptions {
   const normalizedArguments =
     arguments_[0] === '--' ? arguments_.slice(1) : arguments_;
   const {values, positionals} = parseArgs({
@@ -128,7 +143,10 @@ function parseArguments(arguments_) {
   };
 }
 
-function selectPaths(options, groupedCapabilities) {
+function selectPaths(
+  options: RunnerOptions,
+  groupedCapabilities: ReadonlyMap<string, readonly CapabilityRow[]>,
+): string[] {
   if (options.testPaths.length === 0) return [...groupedCapabilities.keys()];
 
   const paths = [...new Set(options.testPaths)].sort(compareCodeUnits);
@@ -138,14 +156,17 @@ function selectPaths(options, groupedCapabilities) {
     );
     if (missing.length > 0) {
       throw new Error(
-        `WPT path(s) are not in capabilities.tsv: ${missing.map(JSON.stringify).join(', ')}`,
+        `WPT path(s) are not in capabilities.tsv: ${missing.map((testPath) => JSON.stringify(testPath)).join(', ')}`,
       );
     }
   }
   return paths;
 }
 
-async function runWpt(browserPage, testPath) {
+async function runWpt(
+  browserPage: Page,
+  testPath: string,
+): Promise<WptRunRecord> {
   console.log(`\n[wpt] RUN ${testPath}`);
   try {
     return await browserPage.evaluate(
@@ -163,7 +184,7 @@ async function runWpt(browserPage, testPath) {
   }
 }
 
-function printExploratoryResult(run) {
+function printExploratoryResult(run: WptRunRecord): boolean {
   const tests = run.result?.tests ?? [];
   const failedTests = tests.filter((test) => test.status !== 0);
   const failed =
@@ -180,7 +201,10 @@ function printExploratoryResult(run) {
   return failed;
 }
 
-function printCapabilityResult(run, rows) {
+function printCapabilityResult(
+  run: WptRunRecord,
+  rows: readonly CapabilityRow[],
+): boolean {
   const tests = run.result?.tests ?? [];
   const summary = evaluateCapabilities(run, rows);
 
@@ -215,12 +239,12 @@ function printCapabilityResult(run, rows) {
   return summary.failed;
 }
 
-function printWarnings(run) {
+function printWarnings(run: WptRunRecord): void {
   for (const warning of run.warnings ?? [])
     console.log(`  warning: ${warning}`);
 }
 
-function printHarnessFailure(run) {
+function printHarnessFailure(run: WptRunRecord): void {
   if (run.result && run.result.status.status !== 0) {
     console.log(
       `  harness status ${run.result.status.status}: ${run.result.status.message || '<no message>'}`,
@@ -228,13 +252,13 @@ function printHarnessFailure(run) {
   }
 }
 
-function printTestFailure(test, prefix) {
+function printTestFailure(test: WptHarnessTestResult, prefix: string): void {
   console.log(`${prefix}${test.name}: status ${test.status}`);
   if (test.message) console.log(indent(test.message, '    '));
   if (test.stack) console.log(indent(test.stack, '    '));
 }
 
-function printRunError(run) {
+function printRunError(run: WptRunRecord): void {
   if (run.error) console.log(indent(run.error, '  '));
   if (run.state === 'error' && run.logs?.length > 0) {
     console.log('  recent logs:');
@@ -242,7 +266,7 @@ function printRunError(run) {
   }
 }
 
-function parsePort(value) {
+function parsePort(value: string): number {
   const port = Number(value);
   if (!Number.isInteger(port) || port < 0 || port > 65_535) {
     throw new Error(`Invalid --port value: ${value}`);
@@ -250,11 +274,11 @@ function parsePort(value) {
   return port;
 }
 
-function parseDuration(value) {
+function parseDuration(value: string): number {
   const match = /^(\d+)(ms|s)?$/.exec(value);
   if (!match) throw new Error(`Invalid --timeout value: ${value}`);
 
-  const duration = Number(match[1]) * (match[2] === 's' ? 1000 : 1);
+  const duration = Number(match[1]!) * (match[2] === 's' ? 1000 : 1);
   if (!Number.isSafeInteger(duration) || duration <= 0) {
     throw new Error(
       `Invalid --timeout value: ${value}. Expected a positive duration.`,
@@ -263,18 +287,18 @@ function parseDuration(value) {
   return duration;
 }
 
-function indent(text, prefix) {
+function indent(text: string, prefix: string): string {
   return String(text)
     .split('\n')
     .map((line) => `${prefix}${line}`)
     .join('\n');
 }
 
-function formatError(error) {
+function formatError(error: unknown): string {
   return error instanceof Error ? error.stack || error.message : String(error);
 }
 
-function printHelp() {
+function printHelp(): void {
   console.log(`Run selected WPT testharness HTML files against @remote-dom/polyfill.
 
 Usage:

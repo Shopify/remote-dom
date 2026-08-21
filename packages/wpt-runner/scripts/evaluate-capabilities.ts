@@ -1,9 +1,13 @@
-import {compareCodeUnits} from './capabilities.mjs';
+import type {WptHarnessTestResult, WptRunRecord} from '../src/types.ts';
+import {compareCodeUnits, type CapabilityRow} from './capabilities.ts';
 
-export function evaluateCapabilities(run, rows) {
+export function evaluateCapabilities(
+  run: WptRunRecord,
+  rows: readonly CapabilityRow[],
+) {
   const tests = run.result?.tests ?? [];
-  const testByName = new Map();
-  const duplicateResults = [];
+  const testByName = new Map<string, WptHarnessTestResult>();
+  const duplicateResults: string[] = [];
   for (const test of tests) {
     if (testByName.has(test.name)) duplicateResults.push(test.name);
     else testByName.set(test.name, test);

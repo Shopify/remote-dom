@@ -1,12 +1,14 @@
 import {describe, expect, it} from 'vitest';
-import {evaluateCapabilities} from './evaluate-capabilities.mjs';
+import type {WptRunRecord} from '../src/types.ts';
+import type {CapabilityRow} from './capabilities.ts';
+import {evaluateCapabilities} from './evaluate-capabilities.ts';
 
 interface TestResult {
   name: string;
   status: number;
 }
 
-const rows = [
+const rows: CapabilityRow[] = [
   {path: 'test.html', status: 'supported', case: 'supported case', note: ''},
   {
     path: 'test.html',
@@ -16,10 +18,12 @@ const rows = [
   },
 ];
 
-function run(tests: TestResult[], status = 0) {
+function run(tests: TestResult[], status = 0): WptRunRecord {
   return {
     state: tests.some((test) => test.status !== 0) ? 'failed' : 'passed',
     path: 'test.html',
+    warnings: [],
+    logs: [],
     result: {tests, status: {status}},
   };
 }
@@ -85,8 +89,16 @@ describe('capability evaluation', () => {
 
     expect(evaluateCapabilities(run([], 1), []).failed).toBe(true);
     expect(
-      evaluateCapabilities({state: 'passed', path: 'test.html'}, []).failed,
+      evaluateCapabilities(
+        {state: 'passed', path: 'test.html', warnings: [], logs: []},
+        [],
+      ).failed,
     ).toBe(true);
-    expect(evaluateCapabilities({state: 'error'}, []).failed).toBe(true);
+    expect(
+      evaluateCapabilities(
+        {state: 'error', path: 'test.html', warnings: [], logs: []},
+        [],
+      ).failed,
+    ).toBe(true);
   });
 });

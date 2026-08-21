@@ -3,7 +3,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {parseCapabilities, serializeCapabilities} from './capabilities.mjs';
+import {parseCapabilities, serializeCapabilities} from './capabilities.ts';
 
 const packageRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

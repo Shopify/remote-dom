@@ -1,9 +1,19 @@
 import fs from 'node:fs/promises';
 
-export const CAPABILITY_HEADER = ['path', 'status', 'case', 'note'];
-const VALID_STATUSES = new Set(['supported', 'deferred']);
+export const CAPABILITY_HEADER = ['path', 'status', 'case', 'note'] as const;
 
-export async function readCapabilities(file) {
+export type CapabilityStatus = 'supported' | 'deferred';
+
+export interface CapabilityRow {
+  path: string;
+  status: CapabilityStatus;
+  case: string;
+  note: string;
+}
+
+const VALID_STATUSES: ReadonlySet<string> = new Set(['supported', 'deferred']);
+
+export async function readCapabilities(file: string): Promise<CapabilityRow[]> {
   const source = await fs.readFile(file, 'utf8');
   const rows = parseCapabilities(source, file);
   const canonical = serializeCapabilities(rows);
@@ -17,7 +27,10 @@ export async function readCapabilities(file) {
   return rows;
 }
 
-export function parseCapabilities(source, label = 'capabilities.tsv') {
+export function parseCapabilities(
+  source: string,
+  label = 'capabilities.tsv',
+): CapabilityRow[] {
   if (source.includes('\r')) {
     throw new Error(
       `${label}: literal carriage returns are not allowed; use \\r escapes.`,
@@ -32,12 +45,12 @@ export function parseCapabilities(source, label = 'capabilities.tsv') {
     );
   }
 
-  const rows = [];
-  const seen = new Set();
+  const rows: CapabilityRow[] = [];
+  const seen = new Set<string>();
 
   for (let index = 1; index < lines.length; index += 1) {
     const lineNumber = index + 1;
-    const fields = lines[index].split('\t');
+    const fields = lines[index]!.split('\t');
     if (fields.length > CAPABILITY_HEADER.length) {
       throw new Error(
         `${label}:${lineNumber}: expected at most ${CAPABILITY_HEADER.length} columns, got ${fields.length}.`,
@@ -45,25 +58,24 @@ export function parseCapabilities(source, label = 'capabilities.tsv') {
     }
     while (fields.length < CAPABILITY_HEADER.length) fields.push('');
 
-    const [rawPath, rawStatus, rawCase, rawNote] = fields;
-    const row = {
-      path: unescapeField(rawPath, label, lineNumber),
-      status: unescapeField(rawStatus, label, lineNumber),
-      case: unescapeField(rawCase, label, lineNumber),
-      note: unescapeField(rawNote, label, lineNumber),
-    };
+    const [rawPath = '', rawStatus = '', rawCase = '', rawNote = ''] = fields;
+    const path = unescapeField(rawPath, label, lineNumber);
+    const status = unescapeField(rawStatus, label, lineNumber);
+    const caseName = unescapeField(rawCase, label, lineNumber);
+    const note = unescapeField(rawNote, label, lineNumber);
 
-    if (!row.path) throw new Error(`${label}:${lineNumber}: path is required.`);
-    if (!VALID_STATUSES.has(row.status)) {
+    if (!path) throw new Error(`${label}:${lineNumber}: path is required.`);
+    if (!isCapabilityStatus(status)) {
       throw new Error(
         `${label}:${lineNumber}: status must be exactly supported or deferred.`,
       );
     }
-    if (!row.case) throw new Error(`${label}:${lineNumber}: case is required.`);
-    if (row.status === 'deferred' && !row.note) {
+    if (!caseName) throw new Error(`${label}:${lineNumber}: case is required.`);
+    if (status === 'deferred' && !note) {
       throw new Error(`${label}:${lineNumber}: deferred rows require a note.`);
     }
 
+    const row: CapabilityRow = {path, status, case: caseName, note};
     const key = `${row.path}\0${row.case}`;
     if (seen.has(key)) {
       throw new Error(
@@ -77,7 +89,7 @@ export function parseCapabilities(source, label = 'capabilities.tsv') {
   return rows;
 }
 
-export function serializeCapabilities(rows) {
+export function serializeCapabilities(rows: readonly CapabilityRow[]): string {
   const sorted = [...rows].sort(compareCapabilityRows);
   const lines = [
     CAPABILITY_HEADER.join('\t'),
@@ -92,20 +104,25 @@ export function serializeCapabilities(rows) {
   return `${lines.join('\n')}\n`;
 }
 
-export function compareCapabilityRows(left, right) {
+export function compareCapabilityRows(
+  left: CapabilityRow,
+  right: CapabilityRow,
+): number {
   return (
     compareCodeUnits(left.path, right.path) ||
     compareCodeUnits(left.case, right.case)
   );
 }
 
-export function compareCodeUnits(left, right) {
+export function compareCodeUnits(left: string, right: string): number {
   if (left === right) return 0;
   return left < right ? -1 : 1;
 }
 
-export function rowsByPath(rows) {
-  const grouped = new Map();
+export function rowsByPath(
+  rows: readonly CapabilityRow[],
+): Map<string, CapabilityRow[]> {
+  const grouped = new Map<string, CapabilityRow[]>();
   for (const row of rows) {
     const pathRows = grouped.get(row.path);
     if (pathRows) pathRows.push(row);
@@ -114,7 +131,11 @@ export function rowsByPath(rows) {
   return grouped;
 }
 
-function escapeField(value) {
+function isCapabilityStatus(value: string): value is CapabilityStatus {
+  return VALID_STATUSES.has(value);
+}
+
+function escapeField(value: string): string {
   return String(value)
     .replaceAll('\\', '\\\\')
     .replaceAll('\t', '\\t')
@@ -122,7 +143,11 @@ function escapeField(value) {
     .replaceAll('\r', '\\r');
 }
 
-function unescapeField(value, label, lineNumber) {
+function unescapeField(
+  value: string,
+  label: string,
+  lineNumber: number,
+): string {
   let result = '';
   for (let index = 0; index < value.length; index += 1) {
     const character = value[index];
@@ -131,7 +156,7 @@ function unescapeField(value, label, lineNumber) {
       continue;
     }
 
-    const escaped = value[++index];
+    const escaped = value[(index += 1)];
     if (escaped === '\\') result += '\\';
     else if (escaped === 't') result += '\t';
     else if (escaped === 'n') result += '\n';

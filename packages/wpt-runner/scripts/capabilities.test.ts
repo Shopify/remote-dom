@@ -6,7 +6,7 @@ import {
   parseCapabilities,
   readCapabilities,
   serializeCapabilities,
-} from './capabilities.mjs';
+} from './capabilities.ts';
 
 const header = 'path\tstatus\tcase\tnote\n';
 
