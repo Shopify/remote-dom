@@ -1,9 +1,11 @@
 {
   "extends": "../../tsconfig.shared.json",
   "compilerOptions": {
+    "erasableSyntaxOnly": true,
     "isolatedDeclarations": true,
     "rootDir": ".",
-    "types": ["node", "vite/client"]
+    "types": ["node", "vite/client"],
+    "verbatimModuleSyntax": true
   },
   "include": ["scripts", "src", "vite.config.ts"],
   "references": [{"path": "../polyfill"}]
