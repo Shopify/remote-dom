@@ -11,12 +11,16 @@ on:
     types:
       - created
 
+permissions: {}
+
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   checks:
     name: Checks 📝
     if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+    permissions:
+      contents: read
     uses: ./.github/workflows/checks.yml
 
   deploy:
@@ -30,6 +34,8 @@ jobs:
       id-token: write # Required for OIDC authentication
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/workflows/actions/prepare
       - run: pnpm run type-check
       - run: pnpm run build
@@ -48,6 +54,8 @@ jobs:
       id-token: write # Required for OIDC authentication
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/workflows/actions/prepare
 
       # Changeset entries are consumed on this branch. We need to reset the
@@ -78,14 +86,15 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
       id-token: write # Required for OIDC authentication
+      issues: write
+      pull-requests: write
     steps:
       # WARNING: DO NOT RUN ANY CUSTOM LOCAL SCRIPT BEFORE RUNNING THE SNAPIT ACTION
       # This action can be executed by 3rd party users and it should not be able to run arbitrary code from a PR.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+          persist-credentials: false
 
       - uses: ./.github/workflows/actions/prepare
 

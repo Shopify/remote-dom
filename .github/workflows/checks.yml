@@ -3,13 +3,19 @@ name: Checks
 on:
   workflow_call:
 
+permissions: {}
+
 jobs:
   lint:
     name: Lint 💅
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/workflows/actions/prepare
       - run: pnpm run lint
 
@@ -17,8 +23,12 @@ jobs:
     name: Type check 🧮
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/workflows/actions/prepare
       - run: pnpm run type-check
       - run: pnpm run build
@@ -27,8 +37,12 @@ jobs:
     name: Tests 🧪
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/workflows/actions/prepare
       - run: pnpm run test --coverage
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -42,8 +56,12 @@ jobs:
     name: Playwright E2E 🎭
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/workflows/actions/prepare
       - run: pnpm exec playwright install --with-deps
       - run: pnpm exec playwright test

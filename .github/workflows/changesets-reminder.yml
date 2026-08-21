@@ -9,14 +9,21 @@ on:
       - '!*.test.*'
       - '!*.md'
 
+permissions: {}
+
 jobs:
   remind:
     name: Changeset Reminder
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
     if: ${{ !github.event.pull_request.draft && !startsWith(github.head_ref, 'changeset-release/') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: mskelton/changelog-reminder-action@41fc0852a6e00fc4506a5d7b8a4178062743133a # v3.0.0
         with:
           changelogRegex: "\\.changeset"

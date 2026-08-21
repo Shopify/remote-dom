@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
 
+permissions: {}
+
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
@@ -11,13 +13,14 @@ jobs:
     name: Changesets 🦋
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
           fetch-depth: 0
-          # This (plus the github-token input on the Changesets action) allows other workflows to run on the PR that Changesets creates.
-          token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+          persist-credentials: false
 
       - uses: ./.github/workflows/actions/prepare
       # @see https://github.com/changesets/action
