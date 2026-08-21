@@ -21,7 +21,7 @@ jobs:
 
       - uses: ./.github/workflows/actions/prepare
       # @see https://github.com/changesets/action
-      - uses: changesets/action@06245a4e0a36c064a573d4150030f5ec548e4fcc # v1.4.10
+      - uses: changesets/action@198f833dd7d863100ea6e28967bc9a9fdefadb0a # v2.1.0
         with:
           title: 'Publish packages 🚀'
           commit: 'Publish packages'
