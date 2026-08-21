@@ -23,6 +23,7 @@ const logLevels = new Set<WorkerLogLevel>([
   'error',
 ]);
 
+/** Executes a WPT request in a worker and returns its test harness result. */
 export function executeWorker(
   worker: Worker,
   {request, signal, timeoutMs, onLog, onReady}: WorkerExecutionOptions,
@@ -89,6 +90,7 @@ export function executeWorker(
   });
 }
 
+/** Validates and normalizes an untrusted response from the WPT worker. */
 export function parseWorkerResponse(value: unknown): WorkerResponse {
   if (!isRecord(value) || typeof value.type !== 'string') {
     throw malformedWorkerMessage();

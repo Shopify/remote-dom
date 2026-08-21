@@ -41,6 +41,13 @@ export interface WptBundle {
   warnings: string[];
 }
 
+/**
+ * Builds an executable worker bundle from a testharness HTML file. This
+ * function parses the WPT test HTML and collects all DOM and script operations
+ * in the order they would be executed in a browser. It includes testharness.js
+ * and the runner shims while replacing testharnessreport.js with programmatic
+ * result capture. The resulting bundle runs against Remote DOM in a worker.
+ */
 export async function buildWptBundle(testPath: string): Promise<WptBundle> {
   const testUrl = parseWptUrl(testPath);
   if (!testUrl.path.endsWith('.html') && !testUrl.path.endsWith('.htm')) {
@@ -98,6 +105,7 @@ export async function buildWptBundle(testPath: string): Promise<WptBundle> {
   };
 }
 
+/** Converts a test document into replayable head and body operations. */
 async function collectOperations(
   source: string,
   ownerPath: string,
@@ -122,6 +130,7 @@ async function collectOperations(
   return operations;
 }
 
+/** Collects one document region while preserving script execution order. */
 async function collectNodes(
   nodes: NodeListOf<ChildNode>,
   target: 'head' | 'body',
@@ -288,6 +297,7 @@ async function fetchRunnerSource(sourcePath: string) {
   return await response.text();
 }
 
+/** Serializes a collected DOM or script operation as executable source. */
 function emitOperation(operation: Operation) {
   if (operation.type === 'append') {
     return `__appendWptNode(document.${operation.target}, ${JSON.stringify(operation.node)});`;

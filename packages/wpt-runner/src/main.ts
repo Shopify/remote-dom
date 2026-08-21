@@ -45,6 +45,7 @@ if (parameters.get('autorun') === '1') {
   queueMicrotask(() => elements.controls.requestSubmit());
 }
 
+/** Runs one WPT path in an isolated worker and updates the runner UI. */
 async function runWptTest(testPath: string): Promise<WptRunRecord> {
   const session = startRun(testPath);
 

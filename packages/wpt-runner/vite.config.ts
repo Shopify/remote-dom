@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import type {ServerResponse} from 'node:http';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {defineConfig, type Plugin} from 'vite';
+import {defineConfig, type Plugin, type UserConfig} from 'vite';
 
 const packageRoot = path.dirname(fileURLToPath(import.meta.url));
 const fixtureRoot = path.join(packageRoot, 'fixtures');
@@ -10,7 +10,7 @@ const wptRoot = process.env.WPT_ROOT
   ? path.resolve(process.env.WPT_ROOT)
   : undefined;
 
-export const workerContentSecurityPolicy = [
+export const workerContentSecurityPolicy: string = [
   "default-src 'none'",
   "script-src 'self' 'unsafe-eval'",
   "connect-src 'none'",
@@ -18,7 +18,7 @@ export const workerContentSecurityPolicy = [
   "child-src 'none'",
 ].join('; ');
 
-export function isRunnerWorkerRequest(rawUrl: string | undefined) {
+export function isRunnerWorkerRequest(rawUrl: string | undefined): boolean {
   if (!rawUrl) return false;
   const url = new URL(rawUrl, 'http://localhost');
   return (
@@ -28,10 +28,11 @@ export function isRunnerWorkerRequest(rawUrl: string | undefined) {
   );
 }
 
+/** Resolves a fixture or WPT file without allowing escapes from its root. */
 export function resolveServedWptFile(
   rawPath: string | null,
   {fixtureRoot, wptRoot}: {fixtureRoot: string; wptRoot?: string},
-) {
+): string | null {
   if (!rawPath || rawPath.includes('\\') || path.posix.isAbsolute(rawPath)) {
     return null;
   }
@@ -88,6 +89,7 @@ function sendText(response: ServerResponse, status: number, text: string) {
   response.end(text);
 }
 
+/** Serves WPT sources and applies the worker's restrictive CSP. */
 function wptFilesPlugin(): Plugin {
   return {
     name: 'wpt-files',
@@ -132,7 +134,7 @@ function wptFilesPlugin(): Plugin {
   };
 }
 
-export default defineConfig({
+const config: UserConfig = defineConfig({
   plugins: [wptFilesPlugin()],
   resolve: {
     conditions: ['quilt:source'],
@@ -147,3 +149,5 @@ export default defineConfig({
     __WPT_ROOT__: JSON.stringify(wptRoot ?? 'not prepared'),
   },
 });
+
+export default config;

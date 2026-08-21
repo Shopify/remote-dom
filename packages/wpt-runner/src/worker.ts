@@ -40,6 +40,7 @@ nativeAddEventListener('message', (event: MessageEvent<WorkerRequest>) => {
   void run(event.data);
 });
 
+/** Initializes the polyfilled Window and evaluates one generated WPT bundle. */
 async function run(request: WorkerRequest) {
   responsePort = request.responsePort;
 
@@ -85,6 +86,7 @@ function installHarnessReadyHook() {
   });
 }
 
+/** Connects testharness completion reporting to the runner response channel. */
 function registerHarnessCompletion() {
   if (harnessReady) return;
 
