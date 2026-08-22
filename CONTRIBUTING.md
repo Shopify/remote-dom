@@ -40,6 +40,16 @@ To build all the package outputs for the repo, run `pnpm build`. This command us
 
 `pnpm build` runs in CI and before publication. Generated outputs are ignored by Git, but you should run the command locally before submitting changes that affect package output.
 
+#### Check browser bundle size
+
+Run `pnpm size` to build the packages and check the aggregate Brotli size of each public package. These package-level guardrails include regular dependencies and exclude the React, Preact, and Preact Signals peer dependencies a consuming application provides.
+
+Run `pnpm size:why` to build the packages and generate esbuild visualizations in `packages/size-limit/reports` when investigating growth. Measurements use a fixed ES2020 browser target so they remain comparable as the repository’s Browserslist query changes.
+
+When adding a public package subpath, add its import to the matching fixture in [`packages/size-limit/fixtures`](./packages/size-limit/fixtures). Normal changes should consume the existing budget headroom. Increase a limit only when reviewed, intentional package growth exceeds it, and explain the reason in the pull request.
+
+These limits measure package-level browser bundle guardrails. They do not represent npm tarball size or the exact bundle size of a specific application.
+
 ### GitHub Actions
 
 Pin external actions to full 40-character commit SHAs with version comments. Adopt stable releases only after seven days and review their migration notes; Dependabot checks weekly with the same cooldown. Keep jobs on `ubuntu-latest`. Validate affected workflow paths without production credentials.
