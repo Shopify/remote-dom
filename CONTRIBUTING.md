@@ -65,6 +65,7 @@ If you are fixing a minor issue, feel free to send a pull request directly. If y
 1. Fork the repository and create your branch from `main`.
 1. Run `pnpm install` from the repository root.
 1. Run `pnpm lint`, `pnpm type-check`, `pnpm build`, and `pnpm test`. These commands also run in [GitHub Actions CI](./.github/workflows/ci.yml).
+1. When changing public package output, run `pnpm size`.
 1. When changing examples or browser behavior, run `pnpm exec playwright install chromium` once and then `pnpm exec playwright test`.
 1. Add a [changeset](#releasing-changes) for user-facing public-package changes. Configuration, documentation, examples, and tests generally do not require one.
 1. If you haven’t already, [sign a Contributor License Agreement](https://cla.shopify.com/).
