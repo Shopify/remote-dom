@@ -1,7 +1,4 @@
 {
-  "extends": [
-    "@quilted/typescript/tsconfig.package.json",
-    "../../tsconfig.shared.json"
-  ],
+  "extends": "../../tsconfig.shared.json",
   "references": []
 }

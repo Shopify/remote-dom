@@ -1,9 +1,7 @@
 {
-  "extends": [
-    "@quilted/typescript/tsconfig.project.json",
-    "../../tsconfig.shared.json"
-  ],
+  "extends": "../../tsconfig.shared.json",
   "compilerOptions": {
+    "rootDir": ".",
     "outDir": "build/typescript",
     "jsx": "react-jsx",
     "jsxImportSource": "preact"

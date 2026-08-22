@@ -1,4 +1,5 @@
 {
+  "extends": "@quilted/typescript/tsconfig.package.json",
   "compilerOptions": {
     "allowUnusedLabels": false,
     "erasableSyntaxOnly": true,
