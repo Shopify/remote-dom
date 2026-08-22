@@ -42,13 +42,13 @@ To build all the package outputs for the repo, run `pnpm build`. This command us
 
 #### Check browser bundle size
 
-Run `pnpm size` to build the packages and check the aggregate Brotli size of each public package. These package-level guardrails include regular dependencies and exclude the React, Preact, and Preact Signals peer dependencies a consuming application provides.
+Run `pnpm size` to build the packages and check the Brotli size of their meaningful browser bundle boundaries. Core, Preact, and React have separate remote and host guardrails; single-role packages have one. The checks include regular dependencies and exclude the React, Preact, and Preact Signals peer dependencies a consuming application provides.
 
 Run `pnpm size:why` to build the packages and generate esbuild visualizations in `packages/size-limit/reports` when investigating growth. Measurements use a fixed ES2020 browser target so they remain comparable as the repository’s Browserslist query changes.
 
-When adding a public package subpath, add its import to the matching fixture in [`packages/size-limit/fixtures`](./packages/size-limit/fixtures). Normal changes should consume the existing budget headroom. Increase a limit only when reviewed, intentional package growth exceeds it, and explain the reason in the pull request.
+When adding a public package subpath, add its import to the fixture matching its execution environment in [`packages/size-limit/fixtures`](./packages/size-limit/fixtures). Normal changes should consume the existing budget headroom. Increase a limit only when reviewed, intentional package growth exceeds it, and explain the reason in the pull request.
 
-These limits measure package-level browser bundle guardrails. They do not represent npm tarball size or the exact bundle size of a specific application.
+These limits measure architecture-oriented package bundle guardrails. They do not represent npm tarball size or the exact bundle size of a specific application.
 
 ### GitHub Actions
 

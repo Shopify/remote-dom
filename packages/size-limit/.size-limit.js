@@ -14,7 +14,7 @@ function modifyEsbuildConfig(config) {
   };
 }
 
-function packageCheck(name, fixture, limit) {
+function bundleCheck(name, fixture, limit) {
   return {
     name,
     path: `fixtures/${fixture}.ts`,
@@ -26,10 +26,13 @@ function packageCheck(name, fixture, limit) {
 }
 
 export default [
-  packageCheck('@remote-dom/compat', 'compat', '1500 B'),
-  packageCheck('@remote-dom/core', 'core', '14500 B'),
-  packageCheck('@remote-dom/polyfill', 'polyfill', '8000 B'),
-  packageCheck('@remote-dom/preact', 'preact', '3500 B'),
-  packageCheck('@remote-dom/react', 'react', '4000 B'),
-  packageCheck('@remote-dom/signals', 'signals', '1500 B'),
+  bundleCheck('@remote-dom/compat', 'compat', '1500 B'),
+  bundleCheck('@remote-dom/core (remote)', 'core-remote', '14000 B'),
+  bundleCheck('@remote-dom/core (host)', 'core-host', '2500 B'),
+  bundleCheck('@remote-dom/polyfill', 'polyfill', '8000 B'),
+  bundleCheck('@remote-dom/preact (remote)', 'preact-remote', '1500 B'),
+  bundleCheck('@remote-dom/preact (host)', 'preact-host', '2500 B'),
+  bundleCheck('@remote-dom/react (remote)', 'react-remote', '2000 B'),
+  bundleCheck('@remote-dom/react (host)', 'react-host', '3000 B'),
+  bundleCheck('@remote-dom/signals', 'signals', '1500 B'),
 ];
