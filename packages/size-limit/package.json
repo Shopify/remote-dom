@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "size": "pnpm --workspace-root run build && size-limit",
-    "size:why": "pnpm --workspace-root run build && node -e \"require('node:fs').mkdirSync('reports', {recursive: true})\" && cd reports && size-limit --config ../.size-limit.js --why"
+    "size:why": "pnpm --workspace-root run build && node reset-reports.js && cd reports && size-limit --config ../.size-limit.js --why"
   },
   "devDependencies": {
     "@remote-dom/compat": "workspace:*",
