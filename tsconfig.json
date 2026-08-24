@@ -10,6 +10,7 @@
     {"path": "./packages/preact"},
     {"path": "./packages/react"},
     {"path": "./packages/signals"},
+    {"path": "./packages/size-limit"},
     {"path": "./packages/wpt-runner"}
   ]
 }
