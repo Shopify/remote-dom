@@ -1,5 +1,5 @@
 {
-  "extends": "@quilted/typescript/tsconfig.workspace.json",
+  "extends": "./tsconfig.shared.json",
   "files": [],
   "include": [],
   "references": [

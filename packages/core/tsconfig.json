@@ -1,4 +1,4 @@
 {
-  "extends": "@quilted/typescript/tsconfig.package.json",
+  "extends": "../../tsconfig.shared.json",
   "references": [{"path": "../polyfill"}]
 }

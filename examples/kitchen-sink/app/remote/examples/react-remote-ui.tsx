@@ -3,7 +3,7 @@
 import {retain} from '@quilted/threads';
 
 import {createRemoteReactComponent} from '@remote-ui/react';
-import {
+import type {
   ButtonProperties,
   ModalProperties,
   RenderAPI,
@@ -12,7 +12,7 @@ import {
 } from '../../types';
 import {useState} from 'react';
 import {createRoot, createRemoteRoot} from '@remote-ui/react';
-import {RemoteChannel} from '@remote-ui/core';
+import type {RemoteChannel} from '@remote-ui/core';
 
 const Button = createRemoteReactComponent<
   'Button',

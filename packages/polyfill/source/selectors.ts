@@ -5,6 +5,8 @@ import type {Node} from './Node.ts';
 import type {Element} from './Element.ts';
 import type {ParentNode} from './ParentNode.ts';
 
+// TODO: Replace this enum with an erasable constant object.
+// @ts-expect-error -- Legacy enum; keep this exception scoped to this declaration.
 const enum Combinator {
   Descendant,
   Child,
@@ -13,6 +15,8 @@ const enum Combinator {
   Inner,
 }
 
+// TODO: Replace this enum with an erasable constant object.
+// @ts-expect-error -- Legacy enum; keep this exception scoped to this declaration.
 const enum MatcherType {
   Unknown,
   Element,

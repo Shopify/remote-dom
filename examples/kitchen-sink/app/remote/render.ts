@@ -1,4 +1,4 @@
-import {RemoteChannel} from '@remote-ui/core';
+import type {RemoteChannel} from '@remote-ui/core';
 import type {RenderAPI} from '../types.ts';
 
 // Defines the custom elements available to render in the remote environment.

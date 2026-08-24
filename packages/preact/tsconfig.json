@@ -1,5 +1,5 @@
 {
-  "extends": "@quilted/typescript/tsconfig.package.json",
+  "extends": "../../tsconfig.shared.json",
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "preact"
