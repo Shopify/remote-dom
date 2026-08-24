@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
 
+permissions: {}
+
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
@@ -11,21 +13,22 @@ jobs:
     name: Changesets 🦋
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
           fetch-depth: 0
-          # This (plus the GITHUB_TOKEN on the changeset action) allow other workflows to run on the PR that changesets creates.
-          token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+          persist-credentials: false
 
       - uses: ./.github/workflows/actions/prepare
       # @see https://github.com/changesets/action
-      - uses: changesets/action@06245a4e0a36c064a573d4150030f5ec548e4fcc # v1.4.10
+      - uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
+          # The default GITHUB_TOKEN cannot trigger workflows from release-PR commits.
+          github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
           title: 'Publish packages 🚀'
           commit: 'Publish packages'
           version: pnpm version-bump
           publish: pnpm changeset tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}

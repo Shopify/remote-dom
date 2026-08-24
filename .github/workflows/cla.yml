@@ -6,9 +6,14 @@ on:
   issue_comment:
     types: [created]
 
+permissions: {}
+
 jobs:
   cla:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      pull-requests: write
     if: |
       (github.event.issue.pull_request 
         && !github.event.issue.pull_request.merged_at
@@ -16,7 +21,7 @@ jobs:
       ) 
       || (github.event.pull_request && !github.event.pull_request.merged)
     steps:
-      - uses: Shopify/shopify-cla-action@v1
+      - uses: Shopify/shopify-cla-action@9938f4b43524d1cfa7471ce9a803edf226697284 # v1.8.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cla-token: ${{ secrets.CLA_TOKEN }}

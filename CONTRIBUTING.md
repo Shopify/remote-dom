@@ -32,13 +32,17 @@ Run `pnpm lint`, which will run the entire codebase through [Prettier](https://p
 
 Run `pnpm test` to run all tests with [Vitest](https://vitest.dev/guide/). Vitest watches for changes in an interactive development terminal and runs once in CI or other non-interactive environments. Run `pnpm test --coverage` to generate an HTML coverage report in `coverage/` and enforce the package coverage thresholds used in CI.
 
-Tests are currently a little sparse, focused mostly on ensuring good end-to-end behavior when using all the libraries together. Additional tests can be added for public APIs in each package by including files with a `.test.ts` or `.test.tsx` extension. Make sure you adhere to the structure of the other tests in the repo, and it would be extra appreciated if you understand a little about [Shopify’s approach to front-end testing (sorry to external contributors, this is an internal Shopify link)](https://github.com/Shopify/web-foundations/blob/main/handbook/Best%20Practices/Testing.md).
+Tests are currently a little sparse, focused mostly on ensuring good end-to-end behavior when using all the libraries together. Additional tests can be added for public APIs in each package by including files with a `.test.ts` or `.test.tsx` extension. Follow the structure of the existing tests.
 
 #### Build
 
 To build all the package outputs for the repo, run `pnpm build`. This command uses [Rollup](https://rollupjs.org/), with a good set of configuration options provided by [Quilt](https://github.com/lemonmade/quilt/blob/main/documentation/projects/packages/builds.md). Some of these versions, like the `.esnext` version of the project you will see, preserve most of the original source code, so that build tools can be configured to parse, process, polyfill, and minify this code in the same way the rest of an application’s codebase. This helps to significantly reduce the bundle size of these packages.
 
 `pnpm build` runs in CI and before publication. Generated outputs are ignored by Git, but you should run the command locally before submitting changes that affect package output.
+
+### GitHub Actions
+
+Pin external actions to full 40-character commit SHAs with version comments. Adopt stable releases only after seven days and review their migration notes; Dependabot checks weekly with the same cooldown. Keep jobs on `ubuntu-latest`. Validate affected workflow paths without production credentials.
 
 ### Contributing a change
 

@@ -41,11 +41,18 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+    cooldown:
+      default-days: 7
     groups:
-      github-actions-minor-patch:
+      github-actions:
         applies-to: version-updates
         patterns:
           - '*'
         update-types:
+          - 'major'
           - 'minor'
           - 'patch'
+    ignore:
+      - dependency-name: 'changesets/action'
+        update-types:
+          - 'version-update:semver-major'

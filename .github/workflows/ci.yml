@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -10,4 +12,6 @@ concurrency:
 jobs:
   checks:
     name: Checks 📝
+    permissions:
+      contents: read
     uses: ./.github/workflows/checks.yml
