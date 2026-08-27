@@ -27,7 +27,7 @@
     "@playwright/test": "^1.62.1",
     "@quilted/rollup": "^0.6.1",
     "@quilted/typescript": "^0.4.2",
-    "@types/node": "~24.13.0",
+    "@types/node": "~26.2.0",
     "@vitest/coverage-v8": "^4.1.10",
     "jsdom": "^30.0.1",
     "prettier": "^3.3.3",
