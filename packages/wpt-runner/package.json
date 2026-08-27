@@ -6,6 +6,6 @@
     "wpt:prepare": "node scripts/prepare-wpt.ts"
   },
   "devDependencies": {
-    "tar": "7.5.10"
+    "tar": "7.5.21"
   }
 }
