@@ -1,10 +1,6 @@
 {
   "extends": "../../tsconfig.shared.json",
-  "compilerOptions": {
-    "isolatedDeclarations": true,
-    "rootDir": ".",
-    "types": ["node", "vite/client"]
-  },
-  "include": ["scripts", "src", "vite.config.ts"],
-  "references": [{"path": "../polyfill"}]
+  "files": [],
+  "include": [],
+  "references": [{"path": "./shared"}, {"path": "./src"}, {"path": "./scripts"}]
 }

@@ -1,0 +1,12 @@
+{
+  "extends": "../../../tsconfig.shared.json",
+  "compilerOptions": {
+    "isolatedDeclarations": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "outDir": "../build/typescript/browser",
+    "rootDir": ".",
+    "types": ["vite/client"]
+  },
+  "include": ["."],
+  "references": [{"path": "../../polyfill"}, {"path": "../shared"}]
+}

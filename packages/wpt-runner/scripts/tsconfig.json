@@ -1,0 +1,12 @@
+{
+  "extends": "../../../tsconfig.shared.json",
+  "compilerOptions": {
+    "isolatedDeclarations": true,
+    "lib": ["esnext"],
+    "outDir": "../build/typescript/node",
+    "rootDir": "..",
+    "types": ["node"]
+  },
+  "include": [".", "../vite.config.ts"],
+  "references": [{"path": "../shared"}]
+}

@@ -71,3 +71,23 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+  wpt:
+    name: Web Platform Tests 🌐
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      WPT_CACHE_DIR: ${{ github.workspace }}/.cache/wpt
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/workflows/actions/prepare
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: .cache/wpt
+          key: ${{ runner.os }}-wpt-${{ hashFiles('packages/wpt-runner/wpt.lock.json') }}
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run test:wpt
