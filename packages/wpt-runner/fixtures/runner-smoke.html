@@ -1,0 +1,64 @@
+<!doctype html>
+<title>Remote DOM WPT runner smoke test</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<section>Static HTML</section>
+<svg viewBox="0 0 10 10">
+  <rect width="10" height="10" fill="green"></rect>
+</svg>
+<script>
+  promise_test(async (test) => {
+    await promise_rejects_js(
+      test,
+      TypeError,
+      fetch('/__wpt-file?path=__runner__/runner-smoke.html'),
+    );
+  }, 'runner worker CSP blocks fetch');
+
+  promise_test(
+    () =>
+      new Promise((resolve, reject) => {
+        let nestedWorker;
+        try {
+          nestedWorker = new Worker(
+            'data:text/javascript,postMessage("loaded")',
+          );
+        } catch (error) {
+          assert_equals(error.name, 'SecurityError');
+          resolve();
+          return;
+        }
+
+        const timeout = setTimeout(() => {
+          nestedWorker.terminate();
+          reject(new Error('Timed out waiting for nested Worker rejection.'));
+        }, 1_000);
+        nestedWorker.onmessage = () => {
+          clearTimeout(timeout);
+          nestedWorker.terminate();
+          reject(new Error('Nested Worker unexpectedly loaded.'));
+        };
+        nestedWorker.onerror = () => {
+          clearTimeout(timeout);
+          nestedWorker.terminate();
+          resolve();
+        };
+      }),
+    'runner worker CSP blocks nested workers',
+  );
+
+  test(() => {
+    assert_equals(document.body.children[0].localName, 'section');
+    assert_equals(document.body.children[0].textContent, 'Static HTML');
+    assert_equals(
+      document.body.children[1].namespaceURI,
+      'http://www.w3.org/2000/svg',
+    );
+    assert_equals(
+      document.body.children[1].children[0].getAttribute('fill'),
+      'green',
+    );
+    assert_equals(location.pathname, '/__runner__/runner-smoke.html');
+    assert_equals(location.search, '?runner=smoke');
+  }, 'runner smoke');
+</script>
