@@ -34,12 +34,48 @@ This process will install polyfilled versions of the following globals:
 - [`location`](https://developer.mozilla.org/en-US/docs/Web/API/Window/location) and [`navigator`](https://developer.mozilla.org/en-US/docs/Web/API/Window/navigator), though these are just set to `globalThis.location` and `globalThis.navigator`.
 - The [`Event`](https://developer.mozilla.org/en-US/docs/Web/API/Event), [`EventTarget`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget), [`CustomEvent`](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent), [`Node`](https://developer.mozilla.org/en-US/docs/Web/API/Node), [`ParentNode`](https://developer.mozilla.org/en-US/docs/Web/API/ParentNode), [`ChildNode`](https://developer.mozilla.org/en-US/docs/Web/API/ChildNode), [`Document`](https://developer.mozilla.org/en-US/docs/Web/API/Document), [`DocumentFragment`](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment), [`CharacterData`](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData), [`Comment`](https://developer.mozilla.org/en-US/docs/Web/API/Comment), [`Text`](https://developer.mozilla.org/en-US/docs/Web/API/Text), [`Element`](https://developer.mozilla.org/en-US/docs/Web/API/Element), [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement), [`SVGElement`](https://developer.mozilla.org/en-US/docs/Web/API/SVGElement), [`HTMLTemplateElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTemplateElement), and [`MutationObserver`](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) constructors.
 
-This polyfill lets you hook into many of the operations that happen in the DOM, like creating elements, updating attributes, and adding event listeners. You define these hooks by overwriting any of the properties on the `hooks` export of this library.
+## Extensions
+
+Use `Window.with()` to create a reusable `Window` subclass with additional DOM
+APIs or behavior. Each extension installs itself on every new window and can
+return hooks that subscribe to DOM operations:
 
 ```ts
-import {hooks} from '@remote-dom/polyfill';
+import {Window, type WindowExtension} from '@remote-dom/polyfill';
 
-hooks.createElement = (element) => {
+class CustomMutationObserver {}
+
+const mutationObserverExtension: WindowExtension = {
+  name: 'mutation-observer',
+  install(window) {
+    window.MutationObserver = CustomMutationObserver;
+
+    return {
+      setAttribute(element, name, value) {
+        // Notify observers associated with this window.
+      },
+    };
+  },
+};
+
+const ExtendedWindow = Window.with(mutationObserverExtension);
+const window = new ExtendedWindow();
+```
+
+Extensions are installed in the order passed to `Window.with()`. Their hooks
+are called in the same order for each DOM operation.
+
+Extensions are installed after the base window and its initial document have
+been constructed, so their hooks do not observe the document’s bootstrap.
+
+For low-level integrations, hooks can also be assigned directly through the
+exported `HOOKS` symbol. Extension hooks run first, followed by the hook
+assigned through `window[HOOKS]`:
+
+```ts
+import {HOOKS} from '@remote-dom/polyfill';
+
+window[HOOKS].createElement = (element) => {
   console.log('Creating element:', element);
 };
 ```

@@ -1,4 +1,4 @@
-import {HOOKS, PATH, LISTENERS, OWNER_DOCUMENT} from './constants.ts';
+import {HOOKS_DISPATCH, PATH, LISTENERS, OWNER_DOCUMENT} from './constants.ts';
 import {
   EVENT_PHASE_BUBBLING,
   EVENT_PHASE_CAPTURING,
@@ -82,7 +82,7 @@ export class EventTarget {
     );
 
     list.add(normalizedListener);
-    this[OWNER_DOCUMENT]?.defaultView[HOOKS].addEventListener?.(
+    this[OWNER_DOCUMENT]?.defaultView[HOOKS_DISPATCH].addEventListener?.(
       this as any,
       type,
       listener,
@@ -153,7 +153,7 @@ function removeEventListener(
   if (list) {
     const deleted = list.delete(normalizedListener);
     if (deleted) {
-      this[OWNER_DOCUMENT]?.defaultView[HOOKS].removeEventListener?.(
+      this[OWNER_DOCUMENT]?.defaultView[HOOKS_DISPATCH].removeEventListener?.(
         this as any,
         type,
         listener,

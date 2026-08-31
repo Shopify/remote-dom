@@ -20,7 +20,8 @@ import {DocumentFragment} from './DocumentFragment.ts';
 import {HTMLTemplateElement} from './HTMLTemplateElement.ts';
 import {CustomElementRegistryImplementation} from './CustomElementRegistry.ts';
 import {MutationObserver} from './MutationObserver.ts';
-import {HOOKS} from './constants.ts';
+import {EXTENSIONS, HOOKS, HOOKS_DISPATCH} from './constants.ts';
+import type {WindowExtension} from './extensions.ts';
 import type {Hooks} from './hooks.ts';
 
 type OnErrorHandler =
@@ -33,8 +34,15 @@ type OnErrorHandler =
     ) => void)
   | null;
 
+interface InstalledWindowExtension {
+  readonly name: string;
+  readonly hooks: Partial<Hooks>;
+}
+
 export class Window extends EventTarget {
   [HOOKS]: Partial<Hooks> = {};
+  [EXTENSIONS]: InstalledWindowExtension[] = [];
+  [HOOKS_DISPATCH]: Hooks = createHooksDispatcher(this);
   name = '';
   window = this;
   parent = this;
@@ -70,6 +78,20 @@ export class Window extends EventTarget {
   #currentOriginalOnErrorHandler: OnErrorHandler = null;
   #currentOnUnhandledRejectionHandler: WindowEventHandlers['onunhandledrejection'] =
     null;
+
+  static with(...extensions: readonly WindowExtension[]): typeof Window {
+    const BaseWindow = this;
+
+    return class ExtendedWindow extends BaseWindow {
+      constructor() {
+        super();
+
+        for (const extension of extensions) {
+          installExtension(this, extension);
+        }
+      }
+    };
+  }
 
   get onerror() {
     return this.#currentOriginalOnErrorHandler;
@@ -167,4 +189,48 @@ export class Window extends EventTarget {
     Object.defineProperties(globalThis, properties);
     Object.defineProperties(globalThis, eventTargetPrototypeProperties);
   }
+}
+
+function installExtension(window: Window, extension: WindowExtension) {
+  if (window[EXTENSIONS].some(({name}) => name === extension.name)) {
+    throw new Error(
+      `An extension named ${JSON.stringify(extension.name)} is already installed on this window.`,
+    );
+  }
+
+  const hooks = extension.install(window) ?? {};
+  window[EXTENSIONS].push({name: extension.name, hooks});
+}
+
+function createHooksDispatcher(window: Window): Hooks {
+  return {
+    createElement: (...args) => dispatchHook(window, 'createElement', args),
+    setAttribute: (...args) => dispatchHook(window, 'setAttribute', args),
+    removeAttribute: (...args) => dispatchHook(window, 'removeAttribute', args),
+    createText: (...args) => dispatchHook(window, 'createText', args),
+    setText: (...args) => dispatchHook(window, 'setText', args),
+    insertChild: (...args) => dispatchHook(window, 'insertChild', args),
+    removeChild: (...args) => dispatchHook(window, 'removeChild', args),
+    addEventListener: (...args) =>
+      dispatchHook(window, 'addEventListener', args),
+    removeEventListener: (...args) =>
+      dispatchHook(window, 'removeEventListener', args),
+  };
+}
+
+function dispatchHook<Name extends keyof Hooks>(
+  window: Window,
+  name: Name,
+  args: Parameters<Hooks[Name]>,
+) {
+  for (const extension of window[EXTENSIONS]) {
+    const hook = extension.hooks[name] as
+      | ((...args: any[]) => void)
+      | undefined;
+    hook?.apply(extension.hooks, args);
+  }
+
+  const hooks = window[HOOKS];
+  const legacyHook = hooks[name] as ((...args: any[]) => void) | undefined;
+  legacyHook?.apply(hooks, args);
 }

@@ -16,6 +16,8 @@ export const PATH = Symbol('path');
 export const STOP_IMMEDIATE_PROPAGATION = Symbol('stop_immediate_propagation');
 export const CONTENT = Symbol('content');
 export const HOOKS = Symbol('hooks');
+export const EXTENSIONS = Symbol('extensions');
+export const HOOKS_DISPATCH = Symbol('hooks_dispatch');
 export const IS_CONNECTED = Symbol('is_connected');
 
 export const NODE_TYPE_NODE = 0;
