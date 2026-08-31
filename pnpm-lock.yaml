@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@playwright/test':
+      specifier: ^1.62.1
+      version: 1.62.1
     '@preact/signals':
       specifier: ^1.3.0
       version: 1.3.0
@@ -45,7 +48,7 @@ importers:
         specifier: ^2.27.0
         version: 2.27.7
       '@playwright/test':
-        specifier: ^1.62.1
+        specifier: 'catalog:'
         version: 1.62.1
       '@quilted/rollup':
         specifier: ^0.6.1
@@ -256,7 +259,7 @@ importers:
         version: link:../polyfill
     devDependencies:
       '@playwright/test':
-        specifier: ^1.49.0
+        specifier: 'catalog:'
         version: 1.62.1
       tar:
         specifier: 7.5.21

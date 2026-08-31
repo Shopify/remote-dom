@@ -1,13 +1,11 @@
 {
-  "extends": "@quilted/typescript/tsconfig.package.json",
+  "extends": "../../../tsconfig.shared.json",
   "compilerOptions": {
-    "erasableSyntaxOnly": true,
     "isolatedDeclarations": true,
     "lib": ["esnext"],
     "outDir": "../build/typescript/node",
     "rootDir": "..",
-    "types": ["node"],
-    "verbatimModuleSyntax": true
+    "types": ["node"]
   },
   "include": [".", "../vite.config.ts"],
   "references": [{"path": "../shared"}]
