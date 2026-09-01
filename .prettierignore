@@ -1,4 +1,5 @@
 build/
 node_modules/
+packages/size-limit/reports/
 pnpm-lock.yaml
 .cache/wpt/

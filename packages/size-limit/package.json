@@ -1,0 +1,22 @@
+{
+  "name": "@remote-dom/size-limit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "size": "pnpm --workspace-root run build && size-limit",
+    "size:why": "pnpm --workspace-root run build && node reset-reports.js && cd reports && size-limit --config ../.size-limit.js --why"
+  },
+  "devDependencies": {
+    "@remote-dom/compat": "workspace:*",
+    "@remote-dom/core": "workspace:*",
+    "@remote-dom/polyfill": "workspace:*",
+    "@remote-dom/preact": "workspace:*",
+    "@remote-dom/react": "workspace:*",
+    "@remote-dom/signals": "workspace:*",
+    "@size-limit/esbuild": "13.0.3",
+    "@size-limit/esbuild-why": "13.0.3",
+    "@size-limit/file": "13.0.3",
+    "size-limit": "13.0.3"
+  }
+}

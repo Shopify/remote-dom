@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.shared.json",
+  "compilerOptions": {
+    "rootDir": "."
+  },
+  "include": ["fixtures"],
+  "references": [
+    {"path": "../compat"},
+    {"path": "../core"},
+    {"path": "../polyfill"},
+    {"path": "../preact"},
+    {"path": "../react"},
+    {"path": "../signals"}
+  ]
+}

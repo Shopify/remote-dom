@@ -40,6 +40,16 @@ To build all the package outputs for the repo, run `pnpm build`. This command us
 
 `pnpm build` runs in CI and before publication. Generated outputs are ignored by Git, but you should run the command locally before submitting changes that affect package output.
 
+#### Check browser bundle size
+
+Run `pnpm size` to build the packages and check the Brotli size of their meaningful browser bundle boundaries. Core, Preact, and React have separate remote and host guardrails; single-role packages have one. The checks include regular dependencies and exclude the React, Preact, and Preact Signals peer dependencies a consuming application provides.
+
+Run `pnpm size:why` to build the packages and generate esbuild visualizations in `packages/size-limit/reports` when investigating growth. Measurements use a fixed ES2020 browser target so they remain comparable as the repository’s Browserslist query changes.
+
+When adding a public package subpath, add its import to the fixture matching its execution environment in [`packages/size-limit/fixtures`](./packages/size-limit/fixtures). Normal changes should consume the existing budget headroom. Increase a limit only when reviewed, intentional package growth exceeds it, and explain the reason in the pull request.
+
+These limits measure architecture-oriented package bundle guardrails. They do not represent npm tarball size or the exact bundle size of a specific application.
+
 ### GitHub Actions
 
 Pin external actions to full 40-character commit SHAs with version comments. Adopt stable releases only after seven days and review their migration notes; Dependabot checks weekly with the same cooldown. Keep jobs on `ubuntu-latest`. Validate affected workflow paths without production credentials.
@@ -55,6 +65,7 @@ If you are fixing a minor issue, feel free to send a pull request directly. If y
 1. Fork the repository and create your branch from `main`.
 1. Run `pnpm install` from the repository root.
 1. Run `pnpm lint`, `pnpm type-check`, `pnpm build`, and `pnpm test`. These commands also run in [GitHub Actions CI](./.github/workflows/ci.yml).
+1. When changing public package output, run `pnpm size`.
 1. When changing examples or browser behavior, run `pnpm exec playwright install chromium` once and then `pnpm exec playwright test`.
 1. Add a [changeset](#releasing-changes) for user-facing public-package changes. Configuration, documentation, examples, and tests generally do not require one.
 1. If you haven’t already, [sign a Contributor License Agreement](https://cla.shopify.com/).
