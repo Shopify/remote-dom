@@ -3,7 +3,7 @@ import {
   OWNER_ELEMENT,
   NS,
   NEXT,
-  NamespaceURI,
+  type NamespaceURI,
   HOOKS,
 } from './constants.ts';
 import type {Attr} from './Attr.ts';

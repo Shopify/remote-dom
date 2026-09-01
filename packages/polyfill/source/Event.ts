@@ -6,14 +6,12 @@ import {
 } from './constants.ts';
 import type {EventTarget} from './EventTarget.ts';
 
-// TODO: Replace this enum with one-way constants, matching the DOM and Web IDL.
-// @ts-expect-error -- Legacy enum; keep this exception scoped to this declaration.
-export const enum EventPhase {
-  NONE = 0,
-  CAPTURING_PHASE = 1,
-  AT_TARGET = 2,
-  BUBBLING_PHASE = 3,
-}
+export const EVENT_PHASE_NONE = 0;
+export const EVENT_PHASE_CAPTURING = 1;
+export const EVENT_PHASE_AT_TARGET = 2;
+export const EVENT_PHASE_BUBBLING = 3;
+
+export type EventPhase = number;
 
 export const CAPTURE_MARKER = '@';
 
@@ -29,16 +27,17 @@ const now =
     : performance.now.bind(performance);
 
 export class Event {
-  static NONE = EventPhase.NONE;
-  static CAPTURING_PHASE = EventPhase.CAPTURING_PHASE;
-  static AT_TARGET = EventPhase.AT_TARGET;
-  static BUBBLING_PHASE = EventPhase.BUBBLING_PHASE;
+  static NONE: EventPhase = EVENT_PHASE_NONE;
+  static CAPTURING_PHASE: EventPhase = EVENT_PHASE_CAPTURING;
+  static AT_TARGET: EventPhase = EVENT_PHASE_AT_TARGET;
+  static BUBBLING_PHASE: EventPhase = EVENT_PHASE_BUBBLING;
 
-  // NONE = EventPhase.NONE;
-  // CAPTURING_PHASE = EventPhase.CAPTURING_PHASE;
-  // AT_TARGET = EventPhase.AT_TARGET;
-  // BUBBLING_PHASE = EventPhase.BUBBLING_PHASE;
+  // NONE = EVENT_PHASE_NONE;
+  // CAPTURING_PHASE = EVENT_PHASE_CAPTURING;
+  // AT_TARGET = EVENT_PHASE_AT_TARGET;
+  // BUBBLING_PHASE = EVENT_PHASE_BUBBLING;
 
+  type: string;
   timeStamp = now();
   target: EventTarget | null = null;
   currentTarget: EventTarget | null = null;
@@ -48,18 +47,15 @@ export class Event {
   composed = false;
   defaultPrevented = false;
   cancelBubble = false;
-  eventPhase: EventPhase = 0;
+  eventPhase: EventPhase = EVENT_PHASE_NONE;
   // private inPassiveListener = false;
   data?: any;
   [PATH]: EventTarget[] = [];
   [IS_TRUSTED]!: boolean;
   [STOP_IMMEDIATE_PROPAGATION] = false;
 
-  constructor(
-    // @ts-expect-error -- Legacy parameter property; keep this exception scoped to this declaration.
-    public type: string,
-    options?: EventInit,
-  ) {
+  constructor(type: string, options?: EventInit) {
+    this.type = type;
     Object.defineProperty(this, IS_TRUSTED, {writable: true, value: false});
     if (options) {
       if (options.bubbles) this.bubbles = options.bubbles;
@@ -108,20 +104,18 @@ export class Event {
 export function fireEvent(
   event: Event,
   currentTarget: EventTarget,
-  phase: EventPhase.BUBBLING_PHASE | EventPhase.CAPTURING_PHASE,
+  phase: typeof EVENT_PHASE_BUBBLING | typeof EVENT_PHASE_CAPTURING,
 ): void {
   const listeners = currentTarget[LISTENERS];
   const list = listeners?.get(
-    `${event.type}${
-      phase === EventPhase.CAPTURING_PHASE ? CAPTURE_MARKER : ''
-    }`,
+    `${event.type}${phase === EVENT_PHASE_CAPTURING ? CAPTURE_MARKER : ''}`,
   );
 
   if (!list) return;
 
   for (const listener of list) {
     event.eventPhase =
-      event.target === currentTarget ? EventPhase.AT_TARGET : phase;
+      event.target === currentTarget ? EVENT_PHASE_AT_TARGET : phase;
     event.currentTarget = currentTarget;
 
     try {

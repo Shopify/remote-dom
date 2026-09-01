@@ -5,7 +5,9 @@ import {
   NAME,
   NEXT,
   VALUE,
-  NodeType,
+  NODE_TYPE_COMMENT,
+  NODE_TYPE_ELEMENT,
+  NODE_TYPE_TEXT,
 } from './constants.ts';
 import type {Node} from './Node.ts';
 import type {Text} from './Text.ts';
@@ -71,7 +73,7 @@ export function serializeChildren(parentNode: ParentNode) {
 
 export function serializeNode(node: Node) {
   switch (node.nodeType) {
-    case NodeType.ELEMENT_NODE: {
+    case NODE_TYPE_ELEMENT: {
       const el = node as Element;
       let out = `<${el[NAME]}`;
       let attr = el[ATTRIBUTES]?.[CHILD];
@@ -94,14 +96,14 @@ export function serializeNode(node: Node) {
       out += `</${el[NAME]}>`;
       return out;
     }
-    case NodeType.TEXT_NODE: {
+    case NODE_TYPE_TEXT: {
       const text = node as Text;
       return text[DATA].replace(/&/g, '&amp;')
         .replace(/"/g, '&quot;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
     }
-    case NodeType.COMMENT_NODE: {
+    case NODE_TYPE_COMMENT: {
       const text = node as Comment;
       return `<!--${text[DATA]}-->`;
     }

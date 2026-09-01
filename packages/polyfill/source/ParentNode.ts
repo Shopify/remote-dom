@@ -4,7 +4,8 @@ import {
   PREV,
   PARENT,
   OWNER_DOCUMENT,
-  NodeType,
+  NODE_TYPE_DOCUMENT_FRAGMENT,
+  NODE_TYPE_ELEMENT,
   HOOKS,
   IS_CONNECTED,
 } from './constants.ts';
@@ -81,7 +82,7 @@ export class ParentNode extends ChildNode {
       }
     }
 
-    if (this.nodeType === NodeType.ELEMENT_NODE) {
+    if (this.nodeType === NODE_TYPE_ELEMENT) {
       this[HOOKS].removeChild?.(this as any, child as any, childNodesIndex);
     }
   }
@@ -105,7 +106,7 @@ export class ParentNode extends ChildNode {
 
   private insertInto(child: Node, before: Node | null) {
     // append the children of a DocumentFragment:
-    if (child.nodeType === NodeType.DOCUMENT_FRAGMENT_NODE) {
+    if (child.nodeType === NODE_TYPE_DOCUMENT_FRAGMENT) {
       let node = child[CHILD];
       while (node) {
         const next = node[NEXT];
@@ -144,7 +145,7 @@ export class ParentNode extends ChildNode {
     }
 
     const ownerDocument = this[OWNER_DOCUMENT];
-    const isElement = child.nodeType === NodeType.ELEMENT_NODE;
+    const isElement = child.nodeType === NODE_TYPE_ELEMENT;
 
     child[PARENT] = this;
     child[OWNER_DOCUMENT] = ownerDocument;
@@ -179,7 +180,7 @@ export class ParentNode extends ChildNode {
       }
     }
 
-    if (this.nodeType === NodeType.ELEMENT_NODE) {
+    if (this.nodeType === NODE_TYPE_ELEMENT) {
       this[HOOKS].insertChild?.(this as any, child as any, insertIndex);
     }
   }

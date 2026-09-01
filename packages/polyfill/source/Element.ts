@@ -1,4 +1,11 @@
-import {NS, ATTRIBUTES, NamespaceURI, NodeType} from './constants.ts';
+import {
+  NS,
+  ATTRIBUTES,
+  HTML_NAMESPACE,
+  NODE_TYPE_ELEMENT,
+  type NamespaceURI,
+  type NodeType,
+} from './constants.ts';
 import {ParentNode} from './ParentNode.ts';
 import {NamedNodeMap} from './NamedNodeMap.ts';
 import {Attr} from './Attr.ts';
@@ -8,9 +15,9 @@ import {getElementsByTagName as findElementsByTagName} from './shared.ts';
 export class Element extends ParentNode {
   static readonly observedAttributes?: string[];
 
-  nodeType = NodeType.ELEMENT_NODE;
+  nodeType: NodeType = NODE_TYPE_ELEMENT;
 
-  [NS] = NamespaceURI.XHTML;
+  [NS]: NamespaceURI = HTML_NAMESPACE;
   get namespaceURI() {
     return this[NS];
   }

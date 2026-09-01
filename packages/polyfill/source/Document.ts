@@ -1,8 +1,10 @@
 import {
   NS,
   NAME,
-  NamespaceURI,
-  NodeType,
+  NODE_TYPE_DOCUMENT,
+  SVG_NAMESPACE,
+  type NamespaceURI,
+  type NodeType,
   OWNER_DOCUMENT,
   HOOKS,
   IS_CONNECTED,
@@ -28,7 +30,7 @@ import {HTMLHeadElement} from './HTMLHeadElement.ts';
 import {HTMLHtmlElement} from './HTMLHtmlElement.ts';
 
 export class Document extends ParentNode {
-  nodeType = NodeType.DOCUMENT_NODE;
+  nodeType: NodeType = NODE_TYPE_DOCUMENT;
   [NAME] = '#document';
   body: HTMLBodyElement;
   head: HTMLHeadElement;
@@ -115,7 +117,7 @@ export function createElement<T extends Element>(
   let element: T;
   const lowerName = String(name).toLowerCase();
 
-  if (namespace === NamespaceURI.SVG) {
+  if (namespace === SVG_NAMESPACE) {
     element = new SVGElement() as any;
   } else if (lowerName === 'template') {
     element = new HTMLTemplateElement() as any;

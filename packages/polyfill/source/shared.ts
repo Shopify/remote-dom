@@ -2,7 +2,10 @@ import {
   DATA,
   OWNER_DOCUMENT,
   ATTRIBUTES,
-  NodeType,
+  NODE_TYPE_COMMENT,
+  NODE_TYPE_DOCUMENT_FRAGMENT,
+  NODE_TYPE_ELEMENT,
+  NODE_TYPE_TEXT,
   CHILD,
   NEXT,
 } from './constants.ts';
@@ -14,26 +17,32 @@ import type {ParentNode} from './ParentNode.ts';
 import type {Element} from './Element.ts';
 import type {CharacterData} from './CharacterData.ts';
 import type {Text} from './Text.ts';
-import {querySelector, querySelectorAll, MatcherType} from './selectors.ts';
+import {
+  MATCHER_ELEMENT,
+  MATCHER_ID,
+  MATCHER_UNKNOWN,
+  querySelector,
+  querySelectorAll,
+} from './selectors.ts';
 
 export function isCharacterData(node: Node): node is CharacterData {
   return DATA in node;
 }
 
 export function isTextNode(node: Node): node is Text {
-  return node.nodeType === NodeType.TEXT_NODE;
+  return node.nodeType === NODE_TYPE_TEXT;
 }
 
 export function isCommentNode(node: Node): node is Comment {
-  return node.nodeType === NodeType.COMMENT_NODE;
+  return node.nodeType === NODE_TYPE_COMMENT;
 }
 
 export function isElementNode(node: Node): node is Element {
-  return node.nodeType === NodeType.ELEMENT_NODE;
+  return node.nodeType === NODE_TYPE_ELEMENT;
 }
 
 export function isDocumentFragmentNode(node: Node): node is DocumentFragment {
-  return node.nodeType === NodeType.DOCUMENT_FRAGMENT_NODE;
+  return node.nodeType === NODE_TYPE_DOCUMENT_FRAGMENT;
 }
 
 export function isParentNode(node: Node): node is ParentNode {
@@ -91,7 +100,7 @@ export function getElementById(within: ParentNode, elementId: string) {
   const id = String(elementId);
   if (id === '') return null;
 
-  return querySelector(within, [{type: MatcherType.Id, name: id}]);
+  return querySelector(within, [{type: MATCHER_ID, name: id}]);
 }
 
 export function getElementsByTagName(
@@ -101,7 +110,7 @@ export function getElementsByTagName(
   const name = String(qualifiedName);
 
   return querySelectorAll(within, [
-    {type: name === '*' ? MatcherType.Unknown : MatcherType.Element, name},
+    {type: name === '*' ? MATCHER_UNKNOWN : MATCHER_ELEMENT, name},
   ]);
 }
 
