@@ -1,6 +1,7 @@
 import {
   CHILD,
   OWNER_ELEMENT,
+  OWNER_DOCUMENT,
   NS,
   NEXT,
   type NamespaceURI,
@@ -14,15 +15,24 @@ import {
 } from './MutationObserver.ts';
 
 export class NamedNodeMap {
+  readonly [index: number]: Attr;
+
   [CHILD]: Attr | null = null;
   [OWNER_ELEMENT]: Element;
 
   constructor(ownerElement: Element) {
     this[OWNER_ELEMENT] = ownerElement;
+
+    return new Proxy(this, namedNodeMapProxyHandler);
   }
 
   getNamedItem(name: string) {
-    return this.getNamedItemNS(null, name);
+    let attr = this[CHILD];
+    while (attr) {
+      if (attr.name === name) return attr;
+      attr = attr[NEXT];
+    }
+    return null;
   }
 
   getNamedItemNS(namespaceURI: NamespaceURI | null, name: string) {
@@ -99,6 +109,7 @@ export class NamedNodeMap {
     let old = null;
     let child = this[CHILD];
     attr[OWNER_ELEMENT] = ownerElement;
+    attr[OWNER_DOCUMENT] = ownerElement.ownerDocument;
     if (child == null) {
       this[CHILD] = attr;
       // return null;
@@ -162,6 +173,35 @@ export class NamedNodeMap {
       attr = attr[NEXT];
     }
   }
+}
+
+const namedNodeMapProxyHandler: ProxyHandler<NamedNodeMap> = {
+  get(target, property, receiver) {
+    const index = toPropertyIndex(property);
+    const indexedAttribute = index == null ? null : target.item(index);
+
+    if (indexedAttribute) return indexedAttribute;
+
+    if (Reflect.has(target, property)) {
+      return Reflect.get(target, property, receiver);
+    }
+
+    if (typeof property === 'string') {
+      return target.getNamedItem(property) ?? undefined;
+    }
+
+    return undefined;
+  },
+};
+
+function toPropertyIndex(property: PropertyKey) {
+  if (typeof property !== 'string') return undefined;
+
+  const index = Number(property);
+
+  return Number.isSafeInteger(index) && index >= 0 && String(index) === property
+    ? index
+    : undefined;
 }
 
 function updateElementAttribute(
