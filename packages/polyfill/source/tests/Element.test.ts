@@ -196,6 +196,19 @@ describe('Element convenience APIs', () => {
       expect(Object.keys(element.dataset)).toStrictEqual(['userId']);
     });
 
+    it('routes defineProperty through the data attributes', () => {
+      Object.defineProperty(element.dataset, 'itemCount', {value: 2});
+
+      expect(element.getAttribute('data-item-count')).toBe('2');
+      expect(Object.keys(element.dataset)).toStrictEqual(['itemCount']);
+      expect({...element.dataset}).toStrictEqual({itemCount: '2'});
+
+      expect(() =>
+        Object.defineProperty(element.dataset, 'bad', {get: () => 'x'}),
+      ).toThrow(TypeError);
+      expect(Object.keys(element.dataset)).toStrictEqual(['itemCount']);
+    });
+
     it('hides data attributes whose names do not round-trip to a property', () => {
       element.setAttribute('data-fooBar', 'shadowed');
       element.setAttribute('data-foo-bar', 'visible');

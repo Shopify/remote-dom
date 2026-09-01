@@ -171,18 +171,28 @@ export class Element extends ParentNode {
         this.removeAttribute(toDataAttributeName(name));
         return true;
       },
+      defineProperty: (target, name, descriptor) => {
+        if (typeof name !== 'string') {
+          return Reflect.defineProperty(target, name, descriptor);
+        }
+        if ('get' in descriptor || 'set' in descriptor) return false;
+        this.setAttribute(toDataAttributeName(name), String(descriptor.value));
+        return true;
+      },
       has: (target, name) =>
         Reflect.has(target, name) ||
         (typeof name === 'string' &&
           this.hasAttribute(toDataAttributeName(name))),
-      ownKeys: () =>
-        this.getAttributeNames()
+      ownKeys: (target) => [
+        ...this.getAttributeNames()
           .filter(
             (name) =>
               name.startsWith('data-') &&
               toDataAttributeName(toDataPropertyName(name)) === name,
           )
           .map(toDataPropertyName),
+        ...Reflect.ownKeys(target).filter((key) => typeof key !== 'string'),
+      ],
       getOwnPropertyDescriptor: (target, name) => {
         if (typeof name !== 'string' || Reflect.has(target, name)) {
           return Reflect.getOwnPropertyDescriptor(target, name);
