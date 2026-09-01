@@ -180,5 +180,33 @@ describe('Element convenience APIs', () => {
       element.removeAttribute('data-user-id');
       expect(Object.keys(element.dataset)).toStrictEqual(['state']);
     });
+
+    it('keeps inherited object members visible', () => {
+      element.setAttribute('data-user-id', '123');
+
+      expect(typeof element.dataset.toString).toBe('function');
+      expect(`${element.dataset}`).toBe('[object Object]');
+      expect('toString' in element.dataset).toBe(true);
+      expect(
+        Object.prototype.hasOwnProperty.call(element.dataset, 'userId'),
+      ).toBe(true);
+      expect(
+        Object.prototype.hasOwnProperty.call(element.dataset, 'toString'),
+      ).toBe(false);
+      expect(Object.keys(element.dataset)).toStrictEqual(['userId']);
+    });
+
+    it('hides data attributes whose names do not round-trip to a property', () => {
+      element.setAttribute('data-fooBar', 'shadowed');
+      element.setAttribute('data-foo-bar', 'visible');
+
+      expect(Object.keys(element.dataset)).toStrictEqual(['fooBar']);
+      expect({...element.dataset}).toStrictEqual({fooBar: 'visible'});
+      expect(element.dataset.fooBar).toBe('visible');
+
+      element.removeAttribute('data-foo-bar');
+      expect(Object.keys(element.dataset)).toStrictEqual([]);
+      expect(element.dataset.fooBar).toBeUndefined();
+    });
   });
 });

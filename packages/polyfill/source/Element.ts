@@ -156,7 +156,7 @@ export class Element extends ParentNode {
   get dataset(): DOMStringMap {
     return (this[DATASET] ??= new Proxy({} as DOMStringMap, {
       get: (target, name) =>
-        typeof name !== 'string'
+        typeof name !== 'string' || Reflect.has(target, name)
           ? Reflect.get(target, name)
           : (this.getAttribute(toDataAttributeName(name)) ?? undefined),
       set: (target, name, value) => {
@@ -172,15 +172,19 @@ export class Element extends ParentNode {
         return true;
       },
       has: (target, name) =>
-        typeof name !== 'string'
-          ? Reflect.has(target, name)
-          : this.hasAttribute(toDataAttributeName(name)),
+        Reflect.has(target, name) ||
+        (typeof name === 'string' &&
+          this.hasAttribute(toDataAttributeName(name))),
       ownKeys: () =>
         this.getAttributeNames()
-          .filter((name) => name.startsWith('data-'))
+          .filter(
+            (name) =>
+              name.startsWith('data-') &&
+              toDataAttributeName(toDataPropertyName(name)) === name,
+          )
           .map(toDataPropertyName),
       getOwnPropertyDescriptor: (target, name) => {
-        if (typeof name !== 'string') {
+        if (typeof name !== 'string' || Reflect.has(target, name)) {
           return Reflect.getOwnPropertyDescriptor(target, name);
         }
         const value = this.getAttribute(toDataAttributeName(name));
