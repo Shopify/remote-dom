@@ -12,7 +12,7 @@ import {Node} from './Node.ts';
 import type {Element} from './Element.ts';
 
 export class Attr extends Node {
-  nodeType = NodeType.ATTRIBUTE_NODE;
+  nodeType: NodeType = NodeType.ATTRIBUTE_NODE;
   [NS]: NamespaceURI | null = null;
   [NEXT]: Attr | null = null;
   [VALUE]: string;

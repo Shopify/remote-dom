@@ -22,7 +22,7 @@ import {
 } from './shared.ts';
 
 export class Node extends EventTarget {
-  nodeType = NodeType.NODE;
+  nodeType: NodeType = NodeType.NODE;
 
   [OWNER_DOCUMENT]!: Document;
   [NAME] = '';
@@ -52,7 +52,9 @@ export class Node extends EventTarget {
     return this[IS_CONNECTED];
   }
 
-  isDefaultNamespace(namespace: string) {
+  isDefaultNamespace(
+    namespace: string,
+  ): namespace is typeof NamespaceURI.XHTML {
     return namespace === NamespaceURI.XHTML;
   }
 

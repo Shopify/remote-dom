@@ -2,7 +2,7 @@ import {NS, NamespaceURI} from './constants.ts';
 import {Element} from './Element.ts';
 
 export class SVGElement extends Element {
-  [NS] = NamespaceURI.SVG;
+  [NS]: NamespaceURI = NamespaceURI.SVG;
 
   get ownerSVGElement() {
     let root: SVGElement | null = null;

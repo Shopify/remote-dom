@@ -18,26 +18,26 @@ export const CONTENT = Symbol('content');
 export const HOOKS = Symbol('hooks');
 export const IS_CONNECTED = Symbol('is_connected');
 
-// TODO: Replace this enum with one-way constants, matching the DOM and Web IDL.
-// @ts-expect-error -- Legacy enum; keep this exception scoped to this declaration.
-export const enum NodeType {
-  NODE = 0,
-  ELEMENT_NODE = 1,
-  ATTRIBUTE_NODE = 2,
-  TEXT_NODE = 3,
-  CDATA_SECTION_NODE = 4,
-  ENTITY_REFERENCE_NODE = 5,
-  ENTITY_NODE = 6,
-  PROCESSING_INSTRUCTION_NODE = 7,
-  COMMENT_NODE = 8,
-  DOCUMENT_NODE = 9,
-  DOCUMENT_TYPE_NODE = 10,
-  DOCUMENT_FRAGMENT_NODE = 11,
-}
+export const NodeType = {
+  NODE: 0,
+  ELEMENT_NODE: 1,
+  ATTRIBUTE_NODE: 2,
+  TEXT_NODE: 3,
+  CDATA_SECTION_NODE: 4,
+  ENTITY_REFERENCE_NODE: 5,
+  ENTITY_NODE: 6,
+  PROCESSING_INSTRUCTION_NODE: 7,
+  COMMENT_NODE: 8,
+  DOCUMENT_NODE: 9,
+  DOCUMENT_TYPE_NODE: 10,
+  DOCUMENT_FRAGMENT_NODE: 11,
+} as const;
 
-// TODO: Replace this enum with namespace string constants, matching the DOM.
-// @ts-expect-error -- Legacy enum; keep this exception scoped to this declaration.
-export const enum NamespaceURI {
-  XHTML = 'http://www.w3.org/1999/xhtml',
-  SVG = 'http://www.w3.org/2000/svg',
-}
+export type NodeType = (typeof NodeType)[keyof typeof NodeType];
+
+export const NamespaceURI = {
+  XHTML: 'http://www.w3.org/1999/xhtml',
+  SVG: 'http://www.w3.org/2000/svg',
+} as const;
+
+export type NamespaceURI = (typeof NamespaceURI)[keyof typeof NamespaceURI];

@@ -6,14 +6,14 @@ import {
 } from './constants.ts';
 import type {EventTarget} from './EventTarget.ts';
 
-// TODO: Replace this enum with one-way constants, matching the DOM and Web IDL.
-// @ts-expect-error -- Legacy enum; keep this exception scoped to this declaration.
-export const enum EventPhase {
-  NONE = 0,
-  CAPTURING_PHASE = 1,
-  AT_TARGET = 2,
-  BUBBLING_PHASE = 3,
-}
+export const EventPhase = {
+  NONE: 0,
+  CAPTURING_PHASE: 1,
+  AT_TARGET: 2,
+  BUBBLING_PHASE: 3,
+} as const;
+
+export type EventPhase = (typeof EventPhase)[keyof typeof EventPhase];
 
 export const CAPTURE_MARKER = '@';
 
@@ -29,10 +29,10 @@ const now =
     : performance.now.bind(performance);
 
 export class Event {
-  static NONE = EventPhase.NONE;
-  static CAPTURING_PHASE = EventPhase.CAPTURING_PHASE;
-  static AT_TARGET = EventPhase.AT_TARGET;
-  static BUBBLING_PHASE = EventPhase.BUBBLING_PHASE;
+  static NONE: EventPhase = EventPhase.NONE;
+  static CAPTURING_PHASE: EventPhase = EventPhase.CAPTURING_PHASE;
+  static AT_TARGET: EventPhase = EventPhase.AT_TARGET;
+  static BUBBLING_PHASE: EventPhase = EventPhase.BUBBLING_PHASE;
 
   // NONE = EventPhase.NONE;
   // CAPTURING_PHASE = EventPhase.CAPTURING_PHASE;
@@ -106,7 +106,7 @@ export class Event {
 export function fireEvent(
   event: Event,
   currentTarget: EventTarget,
-  phase: EventPhase.BUBBLING_PHASE | EventPhase.CAPTURING_PHASE,
+  phase: typeof EventPhase.BUBBLING_PHASE | typeof EventPhase.CAPTURING_PHASE,
 ): void {
   const listeners = currentTarget[LISTENERS];
   const list = listeners?.get(

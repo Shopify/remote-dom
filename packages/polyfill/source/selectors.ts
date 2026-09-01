@@ -5,27 +5,27 @@ import type {Node} from './Node.ts';
 import type {Element} from './Element.ts';
 import type {ParentNode} from './ParentNode.ts';
 
-// TODO: Replace this enum with an erasable constant object.
-// @ts-expect-error -- Legacy enum; keep this exception scoped to this declaration.
-export const enum Combinator {
-  Descendant,
-  Child,
-  Sibling,
-  Adjacent,
-  Inner,
-}
+export const Combinator = {
+  Descendant: 0,
+  Child: 1,
+  Sibling: 2,
+  Adjacent: 3,
+  Inner: 4,
+} as const;
 
-// TODO: Replace this enum with an erasable constant object.
-// @ts-expect-error -- Legacy enum; keep this exception scoped to this declaration.
-export const enum MatcherType {
-  Unknown,
-  Element,
-  Id,
-  Class,
-  Attribute,
-  Pseudo,
-  Function,
-}
+export type Combinator = (typeof Combinator)[keyof typeof Combinator];
+
+export const MatcherType = {
+  Unknown: 0,
+  Element: 1,
+  Id: 2,
+  Class: 3,
+  Attribute: 4,
+  Pseudo: 5,
+  Function: 6,
+} as const;
+
+export type MatcherType = (typeof MatcherType)[keyof typeof MatcherType];
 
 export interface Part {
   combinator: Combinator;
@@ -104,7 +104,7 @@ export function parseSelector(selector: string) {
       parts.push(part);
     }
 
-    let type = MatcherType.Unknown;
+    let type: MatcherType = MatcherType.Unknown;
     if (token[2]) {
       type = MatcherType.Attribute;
     } else if (token[5]) {

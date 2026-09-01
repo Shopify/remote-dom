@@ -8,9 +8,9 @@ import {getElementsByTagName as findElementsByTagName} from './shared.ts';
 export class Element extends ParentNode {
   static readonly observedAttributes?: string[];
 
-  nodeType = NodeType.ELEMENT_NODE;
+  nodeType: NodeType = NodeType.ELEMENT_NODE;
 
-  [NS] = NamespaceURI.XHTML;
+  [NS]: NamespaceURI = NamespaceURI.XHTML;
   get namespaceURI() {
     return this[NS];
   }

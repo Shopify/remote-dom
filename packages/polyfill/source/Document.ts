@@ -28,7 +28,7 @@ import {HTMLHeadElement} from './HTMLHeadElement.ts';
 import {HTMLHtmlElement} from './HTMLHtmlElement.ts';
 
 export class Document extends ParentNode {
-  nodeType = NodeType.DOCUMENT_NODE;
+  nodeType: NodeType = NodeType.DOCUMENT_NODE;
   [NAME] = '#document';
   body: HTMLBodyElement;
   head: HTMLHeadElement;
