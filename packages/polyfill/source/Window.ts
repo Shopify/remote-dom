@@ -20,6 +20,7 @@ import {DocumentFragment} from './DocumentFragment.ts';
 import {HTMLTemplateElement} from './HTMLTemplateElement.ts';
 import {CustomElementRegistryImplementation} from './CustomElementRegistry.ts';
 import {MutationObserver} from './MutationObserver.ts';
+import {HTML_ELEMENT_GLOBALS} from './HTMLElements.ts';
 import {HOOKS} from './constants.ts';
 import type {Hooks} from './hooks.ts';
 
@@ -32,6 +33,10 @@ type OnErrorHandler =
       error?: any,
     ) => void)
   | null;
+
+type HTMLElementGlobals = typeof HTML_ELEMENT_GLOBALS;
+
+export interface Window extends HTMLElementGlobals {}
 
 export class Window extends EventTarget {
   [HOOKS]: Partial<Hooks> = {};
@@ -65,6 +70,11 @@ export class Window extends EventTarget {
   SVGElement = SVGElement;
   HTMLTemplateElement = HTMLTemplateElement;
   MutationObserver = MutationObserver;
+
+  constructor() {
+    super();
+    Object.assign(this, HTML_ELEMENT_GLOBALS);
+  }
 
   #currentOnErrorHandler: ((event: any) => void) | null = null;
   #currentOriginalOnErrorHandler: OnErrorHandler = null;
