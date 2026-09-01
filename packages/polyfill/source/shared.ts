@@ -14,6 +14,7 @@ import type {ParentNode} from './ParentNode.ts';
 import type {Element} from './Element.ts';
 import type {CharacterData} from './CharacterData.ts';
 import type {Text} from './Text.ts';
+import {querySelector, querySelectorAll, MatcherType} from './selectors.ts';
 
 export function isCharacterData(node: Node): node is CharacterData {
   return DATA in node;
@@ -84,6 +85,24 @@ export function cloneNode(
     cloned[OWNER_DOCUMENT] = document;
     return cloned;
   }
+}
+
+export function getElementById(within: ParentNode, elementId: string) {
+  const id = String(elementId);
+  if (id === '') return null;
+
+  return querySelector(within, [{type: MatcherType.Id, name: id}]);
+}
+
+export function getElementsByTagName(
+  within: ParentNode,
+  qualifiedName: string,
+) {
+  const name = String(qualifiedName);
+
+  return querySelectorAll(within, [
+    {type: name === '*' ? MatcherType.Unknown : MatcherType.Element, name},
+  ]);
 }
 
 export function descendants(node: Node) {

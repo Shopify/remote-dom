@@ -17,7 +17,12 @@ import {Text} from './Text.ts';
 import {Comment} from './Comment.ts';
 import {DocumentFragment} from './DocumentFragment.ts';
 import {HTMLTemplateElement} from './HTMLTemplateElement.ts';
-import {isParentNode, cloneNode} from './shared.ts';
+import {
+  isParentNode,
+  cloneNode,
+  getElementById as findElementById,
+  getElementsByTagName as findElementsByTagName,
+} from './shared.ts';
 import {HTMLBodyElement} from './HTMLBodyElement.ts';
 import {HTMLHeadElement} from './HTMLHeadElement.ts';
 import {HTMLHtmlElement} from './HTMLHtmlElement.ts';
@@ -68,6 +73,14 @@ export class Document extends ParentNode {
 
   createEvent() {
     return new Event('');
+  }
+
+  getElementById(elementId: string) {
+    return findElementById(this, elementId);
+  }
+
+  getElementsByTagName(qualifiedName: string) {
+    return findElementsByTagName(this, qualifiedName);
   }
 
   importNode(node: Node, deep?: boolean) {

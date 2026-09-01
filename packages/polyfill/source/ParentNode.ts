@@ -18,12 +18,14 @@ export class ParentNode extends ChildNode {
   readonly childNodes = new NodeList();
   readonly children = new NodeList();
 
-  appendChild(child: Node) {
+  appendChild<T extends Node>(child: T) {
     this.insertInto(child, null);
+    return child;
   }
 
-  insertBefore(child: Node, ref?: Node | null) {
+  insertBefore<T extends Node>(child: T, ref?: Node | null) {
     this.insertInto(child, ref || null);
+    return child;
   }
 
   append(...nodes: (Node | string)[]) {
@@ -121,9 +123,11 @@ export class ParentNode extends ChildNode {
       if (before.parentNode !== this) {
         throw Error('reference node is not a child of this parent');
       }
+      const previous = before[PREV];
       child[NEXT] = before;
-      child[PREV] = before[PREV];
-      if (before[PREV] === null) this[CHILD] = child;
+      child[PREV] = previous;
+      if (previous) previous[NEXT] = child;
+      else this[CHILD] = child;
       before[PREV] = child;
     } else {
       child[NEXT] = null;
