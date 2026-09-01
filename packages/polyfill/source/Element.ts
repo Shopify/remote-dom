@@ -1,8 +1,117 @@
-import {NS, ATTRIBUTES, NamespaceURI, NodeType} from './constants.ts';
+import {
+  NS,
+  ATTRIBUTES,
+  CLASS_LIST,
+  DATASET,
+  OWNER_ELEMENT,
+  VALUE,
+  NamespaceURI,
+  NodeType,
+} from './constants.ts';
 import {ParentNode} from './ParentNode.ts';
 import {NamedNodeMap} from './NamedNodeMap.ts';
 import {Attr} from './Attr.ts';
 import {serializeNode, serializeChildren, parseHtml} from './serialization.ts';
+import {matchesSelector} from './selectors.ts';
+
+function toDataAttributeName(name: string) {
+  return 'data-' + name.replace(/[A-Z]/g, '-$&').toLowerCase();
+}
+
+function isTokenIndex(name: PropertyKey) {
+  return typeof name === 'string' && name === String(+name);
+}
+
+class DOMTokenList {
+  readonly [index: number]: string;
+  [OWNER_ELEMENT]: Element;
+
+  constructor(element: Element) {
+    this[OWNER_ELEMENT] = element;
+  }
+
+  get [VALUE]() {
+    return this[OWNER_ELEMENT].className.trim().split(/\s+/).filter(Boolean);
+  }
+
+  get length() {
+    return this[VALUE].length;
+  }
+
+  get value() {
+    return this[OWNER_ELEMENT].className;
+  }
+
+  set value(value: string) {
+    this[OWNER_ELEMENT].className = String(value);
+  }
+
+  item(index: number) {
+    return this[VALUE][index] ?? null;
+  }
+
+  contains(token: string) {
+    return this[VALUE].includes(String(token));
+  }
+
+  add(...tokens: string[]) {
+    this.value = [...new Set([...this[VALUE], ...tokens.map(String)])].join(
+      ' ',
+    );
+  }
+
+  remove(...tokens: string[]) {
+    const removed = new Set(tokens.map(String));
+    this.value = this[VALUE].filter((token) => !removed.has(token)).join(' ');
+  }
+
+  toggle(token: string, force?: boolean) {
+    const present = this.contains(token);
+    const next = force === undefined ? !present : Boolean(force);
+
+    if (next !== present) {
+      if (next) this.add(token);
+      else this.remove(token);
+    }
+
+    return next;
+  }
+
+  replace(token: string, newToken: string) {
+    const tokens = this[VALUE];
+    const index = tokens.indexOf(String(token));
+    if (index < 0) return false;
+
+    tokens[index] = String(newToken);
+    this.value = [...new Set(tokens)].join(' ');
+    return true;
+  }
+
+  toString() {
+    return this.value;
+  }
+
+  [Symbol.iterator]() {
+    return this[VALUE][Symbol.iterator]();
+  }
+}
+
+Object.setPrototypeOf(
+  DOMTokenList.prototype,
+  new Proxy(
+    {},
+    {
+      get(target, name, receiver) {
+        return isTokenIndex(name)
+          ? (receiver as DOMTokenList)[VALUE][+(name as string)]
+          : Reflect.get(target, name, receiver);
+      },
+      set(target, name, value, receiver) {
+        return isTokenIndex(name) || Reflect.set(target, name, value, receiver);
+      },
+    },
+  ),
+);
 
 export class Element extends ParentNode {
   static readonly observedAttributes?: string[];
@@ -16,6 +125,43 @@ export class Element extends ParentNode {
 
   get tagName() {
     return this.nodeName;
+  }
+
+  get className() {
+    return this.getAttribute('class') ?? '';
+  }
+
+  set className(value: string) {
+    this.setAttribute('class', String(value));
+  }
+
+  [CLASS_LIST]?: DOMTokenList;
+
+  get classList() {
+    return (this[CLASS_LIST] ??= new DOMTokenList(this));
+  }
+
+  [DATASET]?: DOMStringMap;
+
+  get dataset(): DOMStringMap {
+    return (this[DATASET] ??= new Proxy({} as DOMStringMap, {
+      get: (target, name) =>
+        typeof name !== 'string'
+          ? Reflect.get(target, name)
+          : (this.getAttribute(toDataAttributeName(name)) ?? undefined),
+      set: (target, name, value) => {
+        if (typeof name !== 'string') return Reflect.set(target, name, value);
+        this.setAttribute(toDataAttributeName(name), String(value));
+        return true;
+      },
+      deleteProperty: (target, name) => {
+        if (typeof name !== 'string') {
+          return Reflect.deleteProperty(target, name);
+        }
+        this.removeAttribute(toDataAttributeName(name));
+        return true;
+      },
+    }));
   }
 
   [ATTRIBUTES]!: NamedNodeMap;
@@ -101,6 +247,21 @@ export class Element extends ParentNode {
 
   removeAttributeNS(namespace: NamespaceURI | null, name: string) {
     this.attributes.removeNamedItemNS(namespace, name);
+  }
+
+  matches(selector: string) {
+    return matchesSelector(this, selector);
+  }
+
+  closest(selector: string) {
+    let element: Element | null = this;
+
+    while (element) {
+      if (element.matches(selector)) return element;
+      element = element.parentElement as Element | null;
+    }
+
+    return null;
   }
 
   get outerHTML() {

@@ -115,7 +115,7 @@ export function parseSelector(selector: string) {
   return parts;
 }
 
-function matchesSelector(element: Element, selector: string) {
+export function matchesSelector(element: Element, selector: string) {
   const parsed = parseSelector(selector);
   let part: Part | undefined;
   while ((part = parsed.pop())) {
