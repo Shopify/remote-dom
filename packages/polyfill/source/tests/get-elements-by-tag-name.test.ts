@@ -1,4 +1,4 @@
-import {NamespaceURI} from '../constants.ts';
+import {SVG_NAMESPACE} from '../constants.ts';
 import {Window} from '../index.ts';
 
 import {beforeEach, describe, expect, it} from 'vitest';
@@ -26,11 +26,8 @@ describe('getElementsByTagName', () => {
   });
 
   it('matches non-HTML tag names case-sensitively', () => {
-    const svg = document.createElementNS(NamespaceURI.SVG, 'svg');
-    const gradient = document.createElementNS(
-      NamespaceURI.SVG,
-      'linearGradient',
-    );
+    const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
+    const gradient = document.createElementNS(SVG_NAMESPACE, 'linearGradient');
     svg.appendChild(gradient);
     document.body.appendChild(svg);
 

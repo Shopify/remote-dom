@@ -1,31 +1,39 @@
-import {CHILD, NEXT, PARENT, PREV, NamespaceURI} from './constants.ts';
+import {CHILD, NEXT, PARENT, PREV, HTML_NAMESPACE} from './constants.ts';
 import {isElementNode} from './shared.ts';
 
 import type {Node} from './Node.ts';
 import type {Element} from './Element.ts';
 import type {ParentNode} from './ParentNode.ts';
 
-export const Combinator = {
-  Descendant: 0,
-  Child: 1,
-  Sibling: 2,
-  Adjacent: 3,
-  Inner: 4,
-} as const;
+export const COMBINATOR_DESCENDANT = 0;
+export const COMBINATOR_CHILD = 1;
+export const COMBINATOR_SIBLING = 2;
+export const COMBINATOR_ADJACENT = 3;
+export const COMBINATOR_INNER = 4;
 
-export type Combinator = (typeof Combinator)[keyof typeof Combinator];
+export type Combinator =
+  | typeof COMBINATOR_DESCENDANT
+  | typeof COMBINATOR_CHILD
+  | typeof COMBINATOR_SIBLING
+  | typeof COMBINATOR_ADJACENT
+  | typeof COMBINATOR_INNER;
 
-export const MatcherType = {
-  Unknown: 0,
-  Element: 1,
-  Id: 2,
-  Class: 3,
-  Attribute: 4,
-  Pseudo: 5,
-  Function: 6,
-} as const;
+export const MATCHER_UNKNOWN = 0;
+export const MATCHER_ELEMENT = 1;
+export const MATCHER_ID = 2;
+export const MATCHER_CLASS = 3;
+export const MATCHER_ATTRIBUTE = 4;
+export const MATCHER_PSEUDO = 5;
+export const MATCHER_FUNCTION = 6;
 
-export type MatcherType = (typeof MatcherType)[keyof typeof MatcherType];
+export type MatcherType =
+  | typeof MATCHER_UNKNOWN
+  | typeof MATCHER_ELEMENT
+  | typeof MATCHER_ID
+  | typeof MATCHER_CLASS
+  | typeof MATCHER_ATTRIBUTE
+  | typeof MATCHER_PSEUDO
+  | typeof MATCHER_FUNCTION;
 
 export interface Part {
   combinator: Combinator;
@@ -44,10 +52,10 @@ export function querySelector(
   within: ParentNode,
   selector: string | Matcher[],
 ): Element | null {
-  const parts =
+  const parts: Part[] =
     typeof selector === 'string'
       ? parseSelector(selector)
-      : [{combinator: Combinator.Inner, matchers: selector}];
+      : [{combinator: COMBINATOR_INNER, matchers: selector}];
   let result: Element | null = null;
 
   const child = within[CHILD];
@@ -64,10 +72,10 @@ export function querySelectorAll(
   within: ParentNode,
   selector: string | Matcher[],
 ): Element[] {
-  const parts =
+  const parts: Part[] =
     typeof selector === 'string'
       ? parseSelector(selector)
-      : [{combinator: Combinator.Inner, matchers: selector}];
+      : [{combinator: COMBINATOR_INNER, matchers: selector}];
   const results: Element[] = [];
 
   const child = within[CHILD];
@@ -80,7 +88,7 @@ export function querySelectorAll(
 }
 
 export function parseSelector(selector: string) {
-  let part: Part = {combinator: Combinator.Inner, matchers: []};
+  let part: Part = {combinator: COMBINATOR_INNER, matchers: []};
   const parts = [part];
   const tokenizer =
     /\s*?([>\s+~]?)\s*?(?:(?:\[\s*([^\]=]+)(?:=(['"])(.*?)\3)?\s*\])|([#.]?)([^\s#.[>:+~]+)|:(\w+)(?:\((.*?)\))?)/gi;
@@ -95,27 +103,27 @@ export function parseSelector(selector: string) {
     // [8]: :function(argument) value
     if (token[1]) {
       // Update the combinator on the (now parent) Part:
-      if (token[1] === '>') part.combinator = Combinator.Child;
-      else if (token[1] === '+') part.combinator = Combinator.Adjacent;
-      else if (token[1] === '~') part.combinator = Combinator.Sibling;
-      else part.combinator = Combinator.Descendant;
+      if (token[1] === '>') part.combinator = COMBINATOR_CHILD;
+      else if (token[1] === '+') part.combinator = COMBINATOR_ADJACENT;
+      else if (token[1] === '~') part.combinator = COMBINATOR_SIBLING;
+      else part.combinator = COMBINATOR_DESCENDANT;
       // Add a new Part for the next selector parts:
-      part = {combinator: Combinator.Inner, matchers: []};
+      part = {combinator: COMBINATOR_INNER, matchers: []};
       parts.push(part);
     }
 
-    let type: MatcherType = MatcherType.Unknown;
+    let type: MatcherType = MATCHER_UNKNOWN;
     if (token[2]) {
-      type = MatcherType.Attribute;
+      type = MATCHER_ATTRIBUTE;
     } else if (token[5]) {
-      type = token[5] === '#' ? MatcherType.Id : MatcherType.Class;
+      type = token[5] === '#' ? MATCHER_ID : MATCHER_CLASS;
     } else if (token[7]) {
-      type = token[8] == null ? MatcherType.Pseudo : MatcherType.Function;
+      type = token[8] == null ? MATCHER_PSEUDO : MATCHER_FUNCTION;
     } else if (token[6]) {
       if (token[6] === '*') {
-        type = MatcherType.Unknown; // Universal selector matches all
+        type = MATCHER_UNKNOWN; // Universal selector matches all
       } else if (ELEMENT_SELECTOR_TEST.test(token[6])) {
-        type = MatcherType.Element;
+        type = MATCHER_ELEMENT;
       }
     }
     part.matchers.push({
@@ -159,21 +167,21 @@ function walkNodesForSelector(
 
 function matchesSelectorRecursive(element: Element, parts: Part[]): boolean {
   const {combinator, matchers} = parts[parts.length - 1]!;
-  if (combinator === Combinator.Inner) {
+  if (combinator === COMBINATOR_INNER) {
     if (!matchesSelectorMatcher(element, matchers)) return false;
     const pp = parts.slice(0, -1);
     return pp.length === 0 || matchesSelectorRecursive(element, pp);
   }
   const link =
-    combinator === Combinator.Child || combinator === Combinator.Descendant
+    combinator === COMBINATOR_CHILD || combinator === COMBINATOR_DESCENDANT
       ? PARENT
       : PREV;
   let ref = element[link];
   if (!ref) return false;
 
   if (
-    combinator === Combinator.Descendant ||
-    combinator === Combinator.Sibling
+    combinator === COMBINATOR_DESCENDANT ||
+    combinator === COMBINATOR_SIBLING
   ) {
     // For descendant/sibling combinators, search through all ancestors/siblings
     while (ref) {
@@ -188,7 +196,7 @@ function matchesSelectorRecursive(element: Element, parts: Part[]): boolean {
   } else {
     // For child/adjacent combinators, check only the immediate parent/sibling
     // For sibling combinators, skip non-element siblings
-    if (combinator === Combinator.Adjacent && !isElementNode(ref)) {
+    if (combinator === COMBINATOR_ADJACENT && !isElementNode(ref)) {
       // Skip to next element sibling
       while (ref && !isElementNode(ref)) {
         ref = ref[link];
@@ -205,18 +213,18 @@ function matchesSelectorRecursive(element: Element, parts: Part[]): boolean {
 }
 
 function matchesSelectorPart(element: Element, {combinator, matchers}: Part) {
-  if (combinator === Combinator.Inner) {
+  if (combinator === COMBINATOR_INNER) {
     return matchesSelectorMatcher(element, matchers);
   }
   const link =
-    combinator === Combinator.Child || combinator === Combinator.Descendant
+    combinator === COMBINATOR_CHILD || combinator === COMBINATOR_DESCENDANT
       ? PARENT
       : PREV;
   let ref = element[link];
   if (!ref) return false;
 
   // For sibling combinators, skip non-element siblings
-  if (combinator === Combinator.Adjacent && !isElementNode(ref)) {
+  if (combinator === COMBINATOR_ADJACENT && !isElementNode(ref)) {
     while (ref && !isElementNode(ref)) {
       ref = ref[link];
     }
@@ -228,8 +236,8 @@ function matchesSelectorPart(element: Element, {combinator, matchers}: Part) {
   }
 
   if (
-    combinator === Combinator.Descendant ||
-    combinator === Combinator.Sibling
+    combinator === COMBINATOR_DESCENDANT ||
+    combinator === COMBINATOR_SIBLING
   ) {
     while ((ref = ref[link])) {
       if (isElementNode(ref) && matchesSelectorMatcher(ref, matchers))
@@ -252,28 +260,28 @@ function matchesSelectorMatcher(
   }
   const {type, name, value} = matcher;
   switch (type) {
-    case MatcherType.Unknown:
+    case MATCHER_UNKNOWN:
       return name === '*'; // Universal selector
-    case MatcherType.Element:
-      return element.namespaceURI === NamespaceURI.XHTML
+    case MATCHER_ELEMENT:
+      return element.namespaceURI === HTML_NAMESPACE
         ? element.localName.toLowerCase() === name.toLowerCase()
         : element.localName === name;
-    case MatcherType.Id:
+    case MATCHER_ID:
       return element.getAttribute('id') === name;
-    case MatcherType.Class:
+    case MATCHER_CLASS:
       const classAttr = element.getAttribute('class');
       if (!classAttr) return false;
       return classAttr.split(/\s+/).includes(name);
-    case MatcherType.Attribute:
+    case MATCHER_ATTRIBUTE:
       return value == null
         ? element.hasAttribute(name)
         : element.getAttribute(name) === value;
-    case MatcherType.Pseudo:
+    case MATCHER_PSEUDO:
       switch (name) {
         default:
           throw Error(`Pseudo :${name} not implemented`);
       }
-    case MatcherType.Function:
+    case MATCHER_FUNCTION:
       switch (name) {
         case 'has':
           return matchesSelector(element, value || '');

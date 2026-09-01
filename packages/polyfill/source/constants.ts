@@ -18,26 +18,22 @@ export const CONTENT = Symbol('content');
 export const HOOKS = Symbol('hooks');
 export const IS_CONNECTED = Symbol('is_connected');
 
-export const NodeType = {
-  NODE: 0,
-  ELEMENT_NODE: 1,
-  ATTRIBUTE_NODE: 2,
-  TEXT_NODE: 3,
-  CDATA_SECTION_NODE: 4,
-  ENTITY_REFERENCE_NODE: 5,
-  ENTITY_NODE: 6,
-  PROCESSING_INSTRUCTION_NODE: 7,
-  COMMENT_NODE: 8,
-  DOCUMENT_NODE: 9,
-  DOCUMENT_TYPE_NODE: 10,
-  DOCUMENT_FRAGMENT_NODE: 11,
-} as const;
+export const NODE_TYPE_NODE = 0;
+export const NODE_TYPE_ELEMENT = 1;
+export const NODE_TYPE_ATTRIBUTE = 2;
+export const NODE_TYPE_TEXT = 3;
+export const NODE_TYPE_CDATA_SECTION = 4;
+export const NODE_TYPE_ENTITY_REFERENCE = 5;
+export const NODE_TYPE_ENTITY = 6;
+export const NODE_TYPE_PROCESSING_INSTRUCTION = 7;
+export const NODE_TYPE_COMMENT = 8;
+export const NODE_TYPE_DOCUMENT = 9;
+export const NODE_TYPE_DOCUMENT_TYPE = 10;
+export const NODE_TYPE_DOCUMENT_FRAGMENT = 11;
 
-export type NodeType = (typeof NodeType)[keyof typeof NodeType];
+export type NodeType = number;
 
-export const NamespaceURI = {
-  XHTML: 'http://www.w3.org/1999/xhtml',
-  SVG: 'http://www.w3.org/2000/svg',
-} as const;
+export const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
+export const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
-export type NamespaceURI = (typeof NamespaceURI)[keyof typeof NamespaceURI];
+export type NamespaceURI = typeof HTML_NAMESPACE | typeof SVG_NAMESPACE;

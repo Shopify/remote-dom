@@ -6,14 +6,12 @@ import {
 } from './constants.ts';
 import type {EventTarget} from './EventTarget.ts';
 
-export const EventPhase = {
-  NONE: 0,
-  CAPTURING_PHASE: 1,
-  AT_TARGET: 2,
-  BUBBLING_PHASE: 3,
-} as const;
+export const EVENT_PHASE_NONE = 0;
+export const EVENT_PHASE_CAPTURING = 1;
+export const EVENT_PHASE_AT_TARGET = 2;
+export const EVENT_PHASE_BUBBLING = 3;
 
-export type EventPhase = (typeof EventPhase)[keyof typeof EventPhase];
+export type EventPhase = number;
 
 export const CAPTURE_MARKER = '@';
 
@@ -29,15 +27,15 @@ const now =
     : performance.now.bind(performance);
 
 export class Event {
-  static NONE: EventPhase = EventPhase.NONE;
-  static CAPTURING_PHASE: EventPhase = EventPhase.CAPTURING_PHASE;
-  static AT_TARGET: EventPhase = EventPhase.AT_TARGET;
-  static BUBBLING_PHASE: EventPhase = EventPhase.BUBBLING_PHASE;
+  static NONE: EventPhase = EVENT_PHASE_NONE;
+  static CAPTURING_PHASE: EventPhase = EVENT_PHASE_CAPTURING;
+  static AT_TARGET: EventPhase = EVENT_PHASE_AT_TARGET;
+  static BUBBLING_PHASE: EventPhase = EVENT_PHASE_BUBBLING;
 
-  // NONE = EventPhase.NONE;
-  // CAPTURING_PHASE = EventPhase.CAPTURING_PHASE;
-  // AT_TARGET = EventPhase.AT_TARGET;
-  // BUBBLING_PHASE = EventPhase.BUBBLING_PHASE;
+  // NONE = EVENT_PHASE_NONE;
+  // CAPTURING_PHASE = EVENT_PHASE_CAPTURING;
+  // AT_TARGET = EVENT_PHASE_AT_TARGET;
+  // BUBBLING_PHASE = EVENT_PHASE_BUBBLING;
 
   type: string;
   timeStamp = now();
@@ -49,7 +47,7 @@ export class Event {
   composed = false;
   defaultPrevented = false;
   cancelBubble = false;
-  eventPhase: EventPhase = 0;
+  eventPhase: EventPhase = EVENT_PHASE_NONE;
   // private inPassiveListener = false;
   data?: any;
   [PATH]: EventTarget[] = [];
@@ -106,20 +104,18 @@ export class Event {
 export function fireEvent(
   event: Event,
   currentTarget: EventTarget,
-  phase: typeof EventPhase.BUBBLING_PHASE | typeof EventPhase.CAPTURING_PHASE,
+  phase: typeof EVENT_PHASE_BUBBLING | typeof EVENT_PHASE_CAPTURING,
 ): void {
   const listeners = currentTarget[LISTENERS];
   const list = listeners?.get(
-    `${event.type}${
-      phase === EventPhase.CAPTURING_PHASE ? CAPTURE_MARKER : ''
-    }`,
+    `${event.type}${phase === EVENT_PHASE_CAPTURING ? CAPTURE_MARKER : ''}`,
   );
 
   if (!list) return;
 
   for (const listener of list) {
     event.eventPhase =
-      event.target === currentTarget ? EventPhase.AT_TARGET : phase;
+      event.target === currentTarget ? EVENT_PHASE_AT_TARGET : phase;
     event.currentTarget = currentTarget;
 
     try {

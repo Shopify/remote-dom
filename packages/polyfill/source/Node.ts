@@ -5,8 +5,9 @@ import {
   CHILD,
   PREV,
   NEXT,
-  NamespaceURI,
-  NodeType,
+  HTML_NAMESPACE,
+  NODE_TYPE_NODE,
+  type NodeType,
   HOOKS,
   IS_CONNECTED,
 } from './constants.ts';
@@ -22,7 +23,7 @@ import {
 } from './shared.ts';
 
 export class Node extends EventTarget {
-  nodeType: NodeType = NodeType.NODE;
+  nodeType: NodeType = NODE_TYPE_NODE;
 
   [OWNER_DOCUMENT]!: Document;
   [NAME] = '';
@@ -52,10 +53,8 @@ export class Node extends EventTarget {
     return this[IS_CONNECTED];
   }
 
-  isDefaultNamespace(
-    namespace: string,
-  ): namespace is typeof NamespaceURI.XHTML {
-    return namespace === NamespaceURI.XHTML;
+  isDefaultNamespace(namespace: string): namespace is typeof HTML_NAMESPACE {
+    return namespace === HTML_NAMESPACE;
   }
 
   get parentNode() {

@@ -1,11 +1,21 @@
 import {Window} from '../index.ts';
 import {
+  MATCHER_CLASS,
+  MATCHER_ELEMENT,
+  MATCHER_ID,
+  MATCHER_UNKNOWN,
   parseSelector,
   querySelector,
   querySelectorAll,
-  MatcherType,
 } from '../selectors.ts';
 import type {ParentNode} from '../ParentNode.ts';
+
+const MatcherType = {
+  Unknown: MATCHER_UNKNOWN,
+  Element: MATCHER_ELEMENT,
+  Id: MATCHER_ID,
+  Class: MATCHER_CLASS,
+} as const;
 
 import {describe, it, expect, beforeEach} from 'vitest';
 

@@ -1,5 +1,9 @@
 import {HOOKS, PATH, LISTENERS, OWNER_DOCUMENT} from './constants.ts';
-import {fireEvent, EventPhase} from './Event.ts';
+import {
+  EVENT_PHASE_BUBBLING,
+  EVENT_PHASE_CAPTURING,
+  fireEvent,
+} from './Event.ts';
 import {CAPTURE_MARKER, type Event} from './Event.ts';
 import type {ChildNode} from './ChildNode.ts';
 import type {Document} from './Document.ts';
@@ -114,14 +118,14 @@ export class EventTarget {
     event[PATH] = path;
 
     for (let i = path.length; i--; ) {
-      fireEvent(event, path[i]!, EventPhase.CAPTURING_PHASE);
+      fireEvent(event, path[i]!, EVENT_PHASE_CAPTURING);
       if (event.cancelBubble) return event.defaultPrevented;
     }
 
     const bubblePath = event.bubbles ? path : path.slice(0, 1);
 
     for (let i = 0; i < bubblePath.length; i++) {
-      fireEvent(event, bubblePath[i]!, EventPhase.BUBBLING_PHASE);
+      fireEvent(event, bubblePath[i]!, EVENT_PHASE_BUBBLING);
       if (event.cancelBubble) return event.defaultPrevented;
     }
 

@@ -4,15 +4,16 @@ import {
   VALUE,
   OWNER_ELEMENT,
   NAME,
-  NamespaceURI,
-  NodeType,
+  NODE_TYPE_ATTRIBUTE,
+  type NamespaceURI,
+  type NodeType,
   HOOKS,
 } from './constants.ts';
 import {Node} from './Node.ts';
 import type {Element} from './Element.ts';
 
 export class Attr extends Node {
-  nodeType: NodeType = NodeType.ATTRIBUTE_NODE;
+  nodeType: NodeType = NODE_TYPE_ATTRIBUTE;
   [NS]: NamespaceURI | null = null;
   [NEXT]: Attr | null = null;
   [VALUE]: string;
