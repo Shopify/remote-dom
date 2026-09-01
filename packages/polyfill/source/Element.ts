@@ -1,6 +1,7 @@
 import {
   NS,
   ATTRIBUTES,
+  HOOKS,
   HTML_NAMESPACE,
   NODE_TYPE_ELEMENT,
   type NamespaceURI,
@@ -87,20 +88,12 @@ export class Element extends ParentNode {
     return sib;
   }
 
-  focus(options?: FocusOptions) {
-    if (options === undefined) {
-      this.callHostMethod('focus');
-    } else {
-      this.callHostMethod('focus', options);
-    }
+  focus(...args: [options?: FocusOptions]) {
+    this[HOOKS].callMethod?.(this as any, 'focus', ...args);
   }
 
-  scrollIntoView(arg?: boolean | ScrollIntoViewOptions) {
-    if (arg === undefined) {
-      this.callHostMethod('scrollIntoView');
-    } else {
-      this.callHostMethod('scrollIntoView', arg);
-    }
+  scrollIntoView(...args: [arg?: boolean | ScrollIntoViewOptions]) {
+    this[HOOKS].callMethod?.(this as any, 'scrollIntoView', ...args);
   }
 
   setAttribute(name: string, value: string) {

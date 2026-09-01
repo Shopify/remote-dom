@@ -37,10 +37,6 @@ export class Node extends EventTarget {
     return this[OWNER_DOCUMENT].defaultView[HOOKS];
   }
 
-  protected callHostMethod(method: string, ...args: unknown[]) {
-    this[HOOKS].callMethod?.(this as any, method, ...args);
-  }
-
   get localName() {
     return this[NAME];
   }
