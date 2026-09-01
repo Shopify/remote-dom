@@ -20,6 +20,7 @@ import {DocumentFragment} from './DocumentFragment.ts';
 import {HTMLTemplateElement} from './HTMLTemplateElement.ts';
 import {CustomElementRegistryImplementation} from './CustomElementRegistry.ts';
 import {MutationObserver} from './MutationObserver.ts';
+import {FormData} from './FormData.ts';
 import {HOOKS} from './constants.ts';
 import type {Hooks} from './hooks.ts';
 
@@ -65,6 +66,7 @@ export class Window extends EventTarget {
   SVGElement = SVGElement;
   HTMLTemplateElement = HTMLTemplateElement;
   MutationObserver = MutationObserver;
+  FormData = FormData;
 
   #currentOnErrorHandler: ((event: any) => void) | null = null;
   #currentOriginalOnErrorHandler: OnErrorHandler = null;
