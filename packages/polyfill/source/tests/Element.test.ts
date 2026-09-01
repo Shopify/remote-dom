@@ -209,6 +209,20 @@ describe('Element convenience APIs', () => {
       expect(Object.keys(element.dataset)).toStrictEqual(['itemCount']);
     });
 
+    it('refuses preventExtensions like a legacy platform object', () => {
+      element.setAttribute('data-state', 'ready');
+
+      expect(() => Object.preventExtensions(element.dataset)).toThrow(
+        TypeError,
+      );
+      expect(() => Object.freeze(element.dataset)).toThrow(TypeError);
+      expect(Object.isExtensible(element.dataset)).toBe(true);
+
+      element.dataset.after = 'still-works';
+      expect(element.getAttribute('data-after')).toBe('still-works');
+      expect(Object.keys(element.dataset)).toStrictEqual(['state', 'after']);
+    });
+
     it('hides data attributes whose names do not round-trip to a property', () => {
       element.setAttribute('data-fooBar', 'shadowed');
       element.setAttribute('data-foo-bar', 'visible');

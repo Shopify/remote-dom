@@ -179,6 +179,7 @@ export class Element extends ParentNode {
         this.setAttribute(toDataAttributeName(name), String(descriptor.value));
         return true;
       },
+      preventExtensions: () => false,
       has: (target, name) =>
         Reflect.has(target, name) ||
         (typeof name === 'string' &&
