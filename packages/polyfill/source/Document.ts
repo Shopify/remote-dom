@@ -11,6 +11,7 @@ import {
 } from './constants.ts';
 import type {Window} from './Window.ts';
 import type {Node} from './Node.ts';
+import {getElementsByClassName as findElementsByClassName} from './getElementsByClassName.ts';
 import {Event} from './Event.ts';
 import {ParentNode} from './ParentNode.ts';
 import {Element} from './Element.ts';
@@ -49,6 +50,10 @@ export class Document extends ParentNode {
     this.appendChild(this.documentElement);
     this.documentElement.appendChild(this.head);
     this.documentElement.appendChild(this.body);
+  }
+
+  getElementsByClassName(classNames: string) {
+    return findElementsByClassName(this, classNames);
   }
 
   createElement(localName: string) {
