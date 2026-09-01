@@ -14,7 +14,6 @@ import type {ParentNode} from './ParentNode.ts';
 import type {Element} from './Element.ts';
 import type {CharacterData} from './CharacterData.ts';
 import type {Text} from './Text.ts';
-import {NodeList} from './NodeList.ts';
 import {querySelector, querySelectorAll, MatcherType} from './selectors.ts';
 
 export function isCharacterData(node: Node): node is CharacterData {
@@ -101,13 +100,9 @@ export function getElementsByTagName(
 ) {
   const name = String(qualifiedName);
 
-  const results = querySelectorAll(within, [
+  return querySelectorAll(within, [
     {type: name === '*' ? MatcherType.Unknown : MatcherType.Element, name},
   ]);
-
-  const matches = new NodeList();
-  matches.push(...results);
-  return matches;
 }
 
 export function descendants(node: Node) {

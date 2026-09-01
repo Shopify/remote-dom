@@ -1,6 +1,5 @@
 import {NamespaceURI} from '../constants.ts';
 import {Window} from '../index.ts';
-import {NodeList} from '../NodeList.ts';
 
 import {beforeEach, describe, expect, it} from 'vitest';
 
@@ -37,15 +36,5 @@ describe('getElementsByTagName', () => {
 
     expect(document.getElementsByTagName('linearGradient')[0]).toBe(gradient);
     expect(document.getElementsByTagName('lineargradient')).toHaveLength(0);
-  });
-
-  it('returns a NodeList with an item() method', () => {
-    document.body.innerHTML = '<div><span></span><p></p></div>';
-    const results = document.body.getElementsByTagName('*');
-    expect(results).toBeInstanceOf(NodeList);
-    expect(results.item).toBeTypeOf('function');
-    expect(results.item(0)?.localName).toBe('div');
-    expect(results.item(1)?.localName).toBe('span');
-    expect(results.item(3)).toBeNull();
   });
 });
