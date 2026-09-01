@@ -22,6 +22,12 @@ function toDataAttributeName(name: string) {
   return 'data-' + name.replace(/[A-Z]/g, '-$&').toLowerCase();
 }
 
+function toDataPropertyName(name: string) {
+  return name
+    .slice('data-'.length)
+    .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
 function isTokenIndex(name: PropertyKey) {
   return typeof name === 'string' && name === String(+name);
 }
@@ -164,6 +170,22 @@ export class Element extends ParentNode {
         }
         this.removeAttribute(toDataAttributeName(name));
         return true;
+      },
+      has: (target, name) =>
+        typeof name !== 'string'
+          ? Reflect.has(target, name)
+          : this.hasAttribute(toDataAttributeName(name)),
+      ownKeys: () =>
+        this.getAttributeNames()
+          .filter((name) => name.startsWith('data-'))
+          .map(toDataPropertyName),
+      getOwnPropertyDescriptor: (target, name) => {
+        if (typeof name !== 'string') {
+          return Reflect.getOwnPropertyDescriptor(target, name);
+        }
+        const value = this.getAttribute(toDataAttributeName(name));
+        if (value == null) return undefined;
+        return {value, writable: true, enumerable: true, configurable: true};
       },
     }));
   }

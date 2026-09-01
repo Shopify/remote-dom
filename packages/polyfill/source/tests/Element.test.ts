@@ -154,5 +154,31 @@ describe('Element convenience APIs', () => {
       element.removeAttribute('data-status');
       expect(dataset.status).toBeUndefined();
     });
+
+    it('exposes data attributes as enumerable own properties', () => {
+      element.setAttribute('data-user-id', '123');
+      element.setAttribute('data-state', 'ready');
+      element.setAttribute('class', 'not-data');
+
+      expect(Object.keys(element.dataset)).toStrictEqual(['userId', 'state']);
+      expect({...element.dataset}).toStrictEqual({
+        userId: '123',
+        state: 'ready',
+      });
+      expect('userId' in element.dataset).toBe(true);
+      expect('missing' in element.dataset).toBe(false);
+
+      const entries: [string, string | undefined][] = [];
+      for (const key in element.dataset) {
+        entries.push([key, element.dataset[key]]);
+      }
+      expect(entries).toStrictEqual([
+        ['userId', '123'],
+        ['state', 'ready'],
+      ]);
+
+      element.removeAttribute('data-user-id');
+      expect(Object.keys(element.dataset)).toStrictEqual(['state']);
+    });
   });
 });

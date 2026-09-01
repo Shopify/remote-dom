@@ -388,4 +388,44 @@ describe('selector parsing and matching', () => {
       ).toHaveLength(0);
     });
   });
+
+  describe('matches and closest', () => {
+    let container: Element;
+    let highlight: Element;
+
+    beforeEach(() => {
+      container = document.createElement('div');
+      container.innerHTML = `
+        <article class="post">
+          <section class="content">
+            <p class="text"><span class="highlight">Text</span></p>
+          </section>
+        </article>
+      `;
+      highlight = container.querySelector('.highlight')!;
+    });
+
+    it('matches descendant combinators through distant ancestors', () => {
+      expect(highlight.matches('article span')).toBe(true);
+      expect(highlight.matches('article .content span')).toBe(true);
+      expect(highlight.matches('.post .text .highlight')).toBe(true);
+      expect(highlight.matches('footer span')).toBe(false);
+      expect(highlight.matches('.missing span')).toBe(false);
+    });
+
+    it('keeps child combinators strict in matches', () => {
+      expect(highlight.matches('p > span')).toBe(true);
+      expect(highlight.matches('.content > span')).toBe(false);
+    });
+
+    it('crosses intermediate ancestors in closest', () => {
+      expect(highlight.closest('article .text')).toBe(
+        container.querySelector('p.text'),
+      );
+      expect(highlight.closest('article section')).toBe(
+        container.querySelector('section'),
+      );
+      expect(highlight.closest('.missing')).toBeNull();
+    });
+  });
 });
