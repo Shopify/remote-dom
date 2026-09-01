@@ -39,6 +39,7 @@ export class Event {
   // AT_TARGET = EventPhase.AT_TARGET;
   // BUBBLING_PHASE = EventPhase.BUBBLING_PHASE;
 
+  type: string;
   timeStamp = now();
   target: EventTarget | null = null;
   currentTarget: EventTarget | null = null;
@@ -55,11 +56,8 @@ export class Event {
   [IS_TRUSTED]!: boolean;
   [STOP_IMMEDIATE_PROPAGATION] = false;
 
-  constructor(
-    // @ts-expect-error -- Legacy parameter property; keep this exception scoped to this declaration.
-    public type: string,
-    options?: EventInit,
-  ) {
+  constructor(type: string, options?: EventInit) {
+    this.type = type;
     Object.defineProperty(this, IS_TRUSTED, {writable: true, value: false});
     if (options) {
       if (options.bubbles) this.bubbles = options.bubbles;
