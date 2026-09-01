@@ -177,32 +177,22 @@ export class NamedNodeMap {
 
 const namedNodeMapProxyHandler: ProxyHandler<NamedNodeMap> = {
   get(target, property, receiver) {
-    const index = toPropertyIndex(property);
-    const indexedAttribute = index == null ? null : target.item(index);
-
-    if (indexedAttribute) return indexedAttribute;
-
-    if (Reflect.has(target, property)) {
-      return Reflect.get(target, property, receiver);
-    }
-
     if (typeof property === 'string') {
-      return target.getNamedItem(property) ?? undefined;
+      const index = Number(property);
+
+      if (index >= 0 && index % 1 === 0 && String(index) === property) {
+        const indexedAttribute = target.item(index);
+        if (indexedAttribute) return indexedAttribute;
+      }
+
+      if (!Reflect.has(target, property)) {
+        return target.getNamedItem(property) ?? undefined;
+      }
     }
 
-    return undefined;
+    return Reflect.get(target, property, receiver);
   },
 };
-
-function toPropertyIndex(property: PropertyKey) {
-  if (typeof property !== 'string') return undefined;
-
-  const index = Number(property);
-
-  return Number.isSafeInteger(index) && index >= 0 && String(index) === property
-    ? index
-    : undefined;
-}
 
 function updateElementAttribute(
   element: Element,
