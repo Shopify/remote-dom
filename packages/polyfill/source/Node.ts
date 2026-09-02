@@ -2,6 +2,7 @@ import {
   OWNER_DOCUMENT,
   NAME,
   PARENT,
+  HOST,
   CHILD,
   PREV,
   NEXT,
@@ -29,6 +30,7 @@ export class Node extends EventTarget {
   [OWNER_DOCUMENT]!: Document;
   [NAME] = '';
   [PARENT]: ParentNode | null = null;
+  [HOST]: Node | null = null;
   [CHILD]: Node | null = null;
   [PREV]: Node | null = null;
   [NEXT]: Node | null = null;

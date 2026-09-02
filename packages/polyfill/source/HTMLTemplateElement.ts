@@ -1,4 +1,4 @@
-import {CONTENT} from './constants.ts';
+import {CONTENT, HOST} from './constants.ts';
 import {DocumentFragment} from './DocumentFragment.ts';
 import {Element} from './Element.ts';
 import {parseHtml, serializeChildren} from './serialization.ts';
@@ -10,6 +10,7 @@ export class HTMLTemplateElement extends Element {
     let content = this[CONTENT];
     if (!content) {
       content = this.ownerDocument.createDocumentFragment();
+      content[HOST] = this;
       this[CONTENT] = content;
     }
     return content;
