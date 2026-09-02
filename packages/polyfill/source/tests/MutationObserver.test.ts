@@ -100,6 +100,109 @@ describe('MutationObserver', () => {
     );
   });
 
+  it('observes transactional document-fragment insertion', async () => {
+    const callback = vi.fn();
+    const observer = createObserver(callback);
+    const parent = window.document.createElement('div');
+    const fragment = window.document.createDocumentFragment();
+    const first = window.document.createElement('span');
+    const second = window.document.createElement('span');
+    fragment.append(first, second);
+
+    observer.observe(parent, {childList: true});
+    parent.appendChild(fragment);
+    await Promise.resolve();
+
+    expect(callback.mock.calls[0]![0]).toEqual([
+      expect.objectContaining({
+        type: 'childList',
+        target: parent,
+        addedNodes: [first],
+        removedNodes: [],
+      }),
+      expect.objectContaining({
+        type: 'childList',
+        target: parent,
+        addedNodes: [second],
+        removedNodes: [],
+        previousSibling: first,
+      }),
+    ]);
+  });
+
+  it('observes both sides of a transactional node move', async () => {
+    const callback = vi.fn();
+    const observer = createObserver(callback);
+    const source = window.document.createElement('div');
+    const destination = window.document.createElement('div');
+    const child = window.document.createElement('span');
+    source.appendChild(child);
+
+    observer.observe(source, {childList: true});
+    observer.observe(destination, {childList: true});
+    destination.appendChild(child);
+    await Promise.resolve();
+
+    expect(callback.mock.calls[0]![0]).toEqual([
+      expect.objectContaining({
+        type: 'childList',
+        target: source,
+        addedNodes: [],
+        removedNodes: [child],
+      }),
+      expect.objectContaining({
+        type: 'childList',
+        target: destination,
+        addedNodes: [child],
+        removedNodes: [],
+      }),
+    ]);
+  });
+
+  it('observes transactional node replacement', async () => {
+    const callback = vi.fn();
+    const observer = createObserver(callback);
+    const parent = window.document.createElement('div');
+    const oldChild = window.document.createElement('span');
+    const newChild = window.document.createElement('strong');
+    parent.appendChild(oldChild);
+
+    observer.observe(parent, {childList: true});
+    parent.replaceChild(newChild, oldChild);
+    await Promise.resolve();
+
+    expect(callback.mock.calls[0]![0]).toEqual([
+      expect.objectContaining({
+        type: 'childList',
+        target: parent,
+        addedNodes: [],
+        removedNodes: [oldChild],
+      }),
+      expect.objectContaining({
+        type: 'childList',
+        target: parent,
+        addedNodes: [newChild],
+        removedNodes: [],
+      }),
+    ]);
+  });
+
+  it('does not observe a rejected transactional insertion', async () => {
+    const callback = vi.fn();
+    const observer = createObserver(callback);
+    const parent = window.document.createElement('div');
+    const child = window.document.createElement('span');
+    parent.appendChild(child);
+    observer.observe(parent, {childList: true, subtree: true});
+
+    expect(() => child.appendChild(parent)).toThrow();
+    await Promise.resolve();
+
+    expect(callback).not.toHaveBeenCalled();
+    expect(parent.firstChild).toBe(child);
+    expect(child.parentNode).toBe(parent);
+  });
+
   it('observes filtered attributes in a subtree with old values', async () => {
     const callback = vi.fn();
     const observer = createObserver(callback);
