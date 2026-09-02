@@ -11,7 +11,6 @@ import {
 } from './constants.ts';
 import type {Window} from './Window.ts';
 import type {Node} from './Node.ts';
-import {getElementsByClassName as findElementsByClassName} from './getElementsByClassName.ts';
 import {Event} from './Event.ts';
 import {ParentNode} from './ParentNode.ts';
 import {Element} from './Element.ts';
@@ -24,6 +23,7 @@ import {
   isParentNode,
   cloneNode,
   getElementById as findElementById,
+  getElementsByClassName as findElementsByClassName,
   getElementsByTagName as findElementsByTagName,
 } from './shared.ts';
 import {HTMLBodyElement} from './HTMLBodyElement.ts';
