@@ -11,10 +11,11 @@ import {
   IS_CONNECTED,
 } from './constants.ts';
 import type {Node} from './Node.ts';
+import type {Element} from './Element.ts';
 import {ChildNode, toNode} from './ChildNode.ts';
 import {NodeList} from './NodeList.ts';
 import {querySelectorAll, querySelector} from './selectors.ts';
-import {selfAndDescendants} from './shared.ts';
+import {isElementNode, selfAndDescendants} from './shared.ts';
 import {
   childListObserversActive,
   mutationNodeList,
@@ -46,8 +47,8 @@ interface PreparedInsertionRoot {
 }
 
 export class ParentNode extends ChildNode {
-  readonly childNodes = new NodeList();
-  readonly children = new NodeList();
+  readonly childNodes = new NodeList<Node>();
+  readonly children = new NodeList<Element>();
 
   appendChild<T extends Node>(child: T) {
     return performWithCustomElementReactions(() => {
@@ -286,7 +287,7 @@ export class ParentNode extends ChildNode {
     const childNodesIndex = this.childNodes.indexOf(child);
     this.childNodes.splice(childNodesIndex, 1);
 
-    if (child.nodeType === NODE_TYPE_ELEMENT) {
+    if (isElementNode(child)) {
       this.children.splice(this.children.indexOf(child), 1);
     }
 
@@ -319,7 +320,7 @@ export class ParentNode extends ChildNode {
       }
     }
 
-    const isElement = child.nodeType === NODE_TYPE_ELEMENT;
+    const isElement = isElementNode(child);
     child[PARENT] = this;
     child[OWNER_DOCUMENT] = this[OWNER_DOCUMENT];
 
@@ -330,7 +331,7 @@ export class ParentNode extends ChildNode {
 
       if (isElement) {
         let reference: Node | null = before;
-        while (reference && reference.nodeType !== NODE_TYPE_ELEMENT) {
+        while (reference && !isElementNode(reference)) {
           reference = reference[NEXT];
         }
         if (reference) {
