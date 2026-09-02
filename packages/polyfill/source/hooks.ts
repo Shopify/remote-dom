@@ -23,4 +23,5 @@ export interface Hooks {
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | EventListenerOptions,
   ): void;
+  callMethod(element: Element, method: string, ...args: unknown[]): unknown;
 }
