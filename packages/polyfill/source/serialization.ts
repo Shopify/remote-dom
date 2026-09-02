@@ -2,14 +2,18 @@ import {
   ATTRIBUTES,
   CHILD,
   CONTENT,
+  CREATE_ELEMENT,
   DATA,
   HTML_NAMESPACE,
   NAME,
   NEXT,
+  NS,
+  SVG_NAMESPACE,
   VALUE,
   NODE_TYPE_COMMENT,
   NODE_TYPE_ELEMENT,
   NODE_TYPE_TEXT,
+  asciiLowercase,
 } from './constants.ts';
 import type {Node} from './Node.ts';
 import type {Text} from './Text.ts';
@@ -51,6 +55,9 @@ const ELEMENT_TOKENIZER =
   /(?:<([a-z][a-z0-9-:]*)((?:[\s]+[^<>'"=/\s]+(?:=(['"])[^]*?\3|=[^>'"\s]*|))*)[\s]*(\/?)\s*>|<\/([a-z][a-z0-9-:]*)>|<!--(.*?)-->|([^<>]+))/gi;
 const ATTRIBUTE_TOKENIZER =
   /\s([^<>'"=/\n\s]+)(?:=(["'])([\s\S]*?)\2|=([^>'"\n\s]*)|)/g;
+const SVG_HTML_BREAKOUTS =
+  '|b|big|blockquote|body|br|center|code|dd|div|dl|dt|em|embed|h1|h2|h3|h4|h5|h6|head|hr|i|img|li|listing|menu|meta|nobr|ol|p|pre|ruby|s|small|span|strong|strike|sub|sup|table|tt|u|ul|var|';
+const SVG_HTML_FONT_ATTRIBUTE = /^(?:color|face|size)$/i;
 
 function decodeCharacterReferences(value: string) {
   return value.replace(
@@ -79,16 +86,63 @@ function isVoidElement(element: Element) {
   );
 }
 
+function isHtmlIntegrationPoint(element: Element) {
+  const name = element.localName;
+  return (
+    element[NS] === SVG_NAMESPACE &&
+    (name === 'foreignObject' || name === 'desc' || name === 'title')
+  );
+}
+
+function isSvgHtmlBreakout(tag: string, attributes: string) {
+  if (SVG_HTML_BREAKOUTS.includes(`|${tag}|`)) return true;
+  if (tag !== 'font') return false;
+
+  for (const attribute of attributes.matchAll(ATTRIBUTE_TOKENIZER)) {
+    if (SVG_HTML_FONT_ATTRIBUTE.test(attribute[1]!)) return true;
+  }
+  return false;
+}
+
 export function parseHtml(html: string, contextNode: Node) {
   const document = contextNode.ownerDocument;
   const root = document.createDocumentFragment();
-  const stack: {element: Node; target: ParentNode}[] = [];
+  const stack: {element: Element; target: ParentNode}[] = [];
   let parent: ParentNode = root;
   for (const token of html.matchAll(ELEMENT_TOKENIZER)) {
     const tag = token[1];
     if (tag) {
-      const node = document.createElement(tag);
       const attrs = token[2]!;
+      const normalizedTag = asciiLowercase(tag);
+      const openElement =
+        stack[stack.length - 1]?.element ?? (contextNode as Element);
+      let namespace =
+        openElement[NS] === SVG_NAMESPACE ? SVG_NAMESPACE : HTML_NAMESPACE;
+
+      if (normalizedTag === 'svg') {
+        namespace = SVG_NAMESPACE;
+      } else if (namespace === SVG_NAMESPACE) {
+        if (isHtmlIntegrationPoint(openElement)) {
+          namespace = HTML_NAMESPACE;
+        } else if (isSvgHtmlBreakout(normalizedTag, attrs)) {
+          while (stack.length > 0) {
+            const frame = stack[stack.length - 1]!;
+            if (
+              frame.element[NS] !== SVG_NAMESPACE ||
+              isHtmlIntegrationPoint(frame.element)
+            ) {
+              break;
+            }
+
+            stack.pop();
+            parent = frame.target;
+          }
+          namespace = HTML_NAMESPACE;
+        }
+      }
+
+      const name = namespace === HTML_NAMESPACE ? normalizedTag : tag;
+      const node = document[CREATE_ELEMENT](name, namespace, null, name);
       for (const attribute of attrs.matchAll(ATTRIBUTE_TOKENIZER)) {
         node.setAttribute(
           attribute[1]!,
@@ -96,14 +150,28 @@ export function parseHtml(html: string, contextNode: Node) {
         );
       }
       parent.append(node);
-      if (isVoidElement(node)) continue;
+      if (isVoidElement(node) || (namespace !== HTML_NAMESPACE && token[4])) {
+        continue;
+      }
       stack.push({element: node, target: parent});
       parent =
-        tag.toLowerCase() === 'template'
+        namespace === HTML_NAMESPACE && normalizedTag === 'template'
           ? (node as HTMLTemplateElement).content
           : node;
     } else if (token[5]) {
-      parent = stack.pop()?.target ?? root;
+      const closingTag = asciiLowercase(token[5]);
+      for (let index = stack.length - 1; index >= 0; index--) {
+        const frame = stack[index]!;
+        const frameName = asciiLowercase(frame.element[NAME]);
+        if (frameName === closingTag) {
+          parent = frame.target;
+          stack.length = index;
+          break;
+        }
+        if (frame.element[NS] === HTML_NAMESPACE && frameName === 'template') {
+          break;
+        }
+      }
     } else if (token[6]) {
       parent.append(document.createComment(token[6]!));
     } else {
