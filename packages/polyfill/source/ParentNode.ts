@@ -13,7 +13,7 @@ import type {Node} from './Node.ts';
 import {ChildNode, toNode} from './ChildNode.ts';
 import {NodeList} from './NodeList.ts';
 import {querySelectorAll, querySelector} from './selectors.ts';
-import {selfAndDescendants} from './shared.ts';
+import {selfAndDescendants, setOwnerDocument} from './shared.ts';
 import {
   childListObserversActive,
   mutationNodeList,
@@ -163,7 +163,9 @@ export class ParentNode extends ChildNode {
     const isElement = child.nodeType === NODE_TYPE_ELEMENT;
 
     child[PARENT] = this;
-    child[OWNER_DOCUMENT] = ownerDocument;
+    if (child[OWNER_DOCUMENT] !== ownerDocument) {
+      setOwnerDocument(child, ownerDocument);
+    }
 
     const childNodes = this.childNodes;
     let insertIndex: number;

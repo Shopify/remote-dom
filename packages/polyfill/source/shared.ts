@@ -66,6 +66,19 @@ export function isParentNode(node: Node): node is ParentNode {
   return 'appendChild' in node;
 }
 
+export function setOwnerDocument(node: Node, document: Document) {
+  for (const current of selfAndDescendants(node)) {
+    current[OWNER_DOCUMENT] = document;
+
+    if (isElementNode(current)) {
+      const attributes = current[ATTRIBUTES];
+      if (attributes) {
+        for (const attr of attributes) attr[OWNER_DOCUMENT] = document;
+      }
+    }
+  }
+}
+
 export function cloneNode(
   node: Node,
   deep?: boolean,

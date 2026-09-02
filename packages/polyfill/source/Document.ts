@@ -21,8 +21,8 @@ import {Comment} from './Comment.ts';
 import {DocumentFragment} from './DocumentFragment.ts';
 import {HTMLTemplateElement} from './HTMLTemplateElement.ts';
 import {
-  isParentNode,
   cloneNode,
+  setOwnerDocument,
   getElementById as findElementById,
   getElementsByTagName as findElementsByTagName,
 } from './shared.ts';
@@ -98,7 +98,7 @@ export class Document extends ParentNode {
     if (node[OWNER_DOCUMENT] === this) return node;
 
     node.parentNode?.removeChild(node);
-    adoptNode(node, this);
+    setOwnerDocument(node, this);
 
     return node;
   }
@@ -151,14 +151,4 @@ export function setupElement<T extends Element>(
   ownerDocument[HOOKS].createElement?.(element as any, namespace);
 
   return element;
-}
-
-export function adoptNode(node: Node, document: Document) {
-  node[OWNER_DOCUMENT] = document;
-
-  if (isParentNode(node)) {
-    for (const child of node.childNodes) {
-      adoptNode(child, document);
-    }
-  }
 }

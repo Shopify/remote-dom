@@ -197,6 +197,48 @@ describe('NamedNodeMap property access', () => {
     expect(second.getAttribute('id')).toBeNull();
   });
 
+  it('updates attribute ownership when adopting an element', () => {
+    const firstWindow = new Window();
+    const secondWindow = new Window();
+    const element = firstWindow.document.createElement('div');
+    element.setAttribute('id', 'before');
+    firstWindow.document.body.appendChild(element);
+    const attr = element.attributes[0]!;
+    const firstSetAttribute = vi.fn();
+    const secondSetAttribute = vi.fn();
+    firstWindow[HOOKS].setAttribute = firstSetAttribute;
+    secondWindow[HOOKS].setAttribute = secondSetAttribute;
+
+    secondWindow.document.adoptNode(element);
+    attr.value = 'after';
+
+    expect(element.ownerDocument).toBe(secondWindow.document);
+    expect(attr.ownerDocument).toBe(secondWindow.document);
+    expect(firstSetAttribute).not.toHaveBeenCalled();
+    expect(secondSetAttribute).toHaveBeenCalledWith(
+      element,
+      'id',
+      'after',
+      null,
+    );
+  });
+
+  it('updates attribute ownership when inserting across documents', () => {
+    const firstWindow = new Window();
+    const secondWindow = new Window();
+    const element = firstWindow.document.createElement('section');
+    const child = firstWindow.document.createElement('div');
+    child.setAttribute('id', 'child');
+    element.appendChild(child);
+    const attr = child.attributes[0]!;
+
+    secondWindow.document.body.appendChild(element);
+
+    expect(element.ownerDocument).toBe(secondWindow.document);
+    expect(child.ownerDocument).toBe(secondWindow.document);
+    expect(attr.ownerDocument).toBe(secondWindow.document);
+  });
+
   it('supports changing an attribute through an indexed Attr', () => {
     const element = document.createElement('div');
     element.setAttribute('id', 'before');
