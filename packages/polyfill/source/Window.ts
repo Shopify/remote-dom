@@ -34,14 +34,9 @@ type OnErrorHandler =
     ) => void)
   | null;
 
-interface InstalledWindowExtension {
-  readonly name: string;
-  readonly hooks: Partial<Hooks>;
-}
-
 export class Window extends EventTarget {
   [HOOKS]: Partial<Hooks> = {};
-  [EXTENSIONS]: InstalledWindowExtension[] = [];
+  [EXTENSIONS]: Partial<Hooks>[] = [];
   [HOOKS_DISPATCH]: Hooks = createHooksDispatcher(this);
   name = '';
   window = this;
@@ -192,45 +187,30 @@ export class Window extends EventTarget {
 }
 
 function installExtension(window: Window, extension: WindowExtension) {
-  if (window[EXTENSIONS].some(({name}) => name === extension.name)) {
-    throw new Error(
-      `An extension named ${JSON.stringify(extension.name)} is already installed on this window.`,
-    );
-  }
-
-  const hooks = extension.install(window) ?? {};
-  window[EXTENSIONS].push({name: extension.name, hooks});
+  window[EXTENSIONS].push(extension(window) ?? {});
 }
 
 function createHooksDispatcher(window: Window): Hooks {
   return {
-    createElement: (...args) => dispatchHook(window, 'createElement', args),
-    setAttribute: (...args) => dispatchHook(window, 'setAttribute', args),
-    removeAttribute: (...args) => dispatchHook(window, 'removeAttribute', args),
-    createText: (...args) => dispatchHook(window, 'createText', args),
-    setText: (...args) => dispatchHook(window, 'setText', args),
-    insertChild: (...args) => dispatchHook(window, 'insertChild', args),
-    removeChild: (...args) => dispatchHook(window, 'removeChild', args),
-    addEventListener: (...args) =>
-      dispatchHook(window, 'addEventListener', args),
-    removeEventListener: (...args) =>
-      dispatchHook(window, 'removeEventListener', args),
+    createElement: dispatchHook.bind(null, window, 'createElement'),
+    setAttribute: dispatchHook.bind(null, window, 'setAttribute'),
+    removeAttribute: dispatchHook.bind(null, window, 'removeAttribute'),
+    createText: dispatchHook.bind(null, window, 'createText'),
+    setText: dispatchHook.bind(null, window, 'setText'),
+    insertChild: dispatchHook.bind(null, window, 'insertChild'),
+    removeChild: dispatchHook.bind(null, window, 'removeChild'),
+    addEventListener: dispatchHook.bind(null, window, 'addEventListener'),
+    removeEventListener: dispatchHook.bind(null, window, 'removeEventListener'),
   };
 }
 
-function dispatchHook<Name extends keyof Hooks>(
-  window: Window,
-  name: Name,
-  args: Parameters<Hooks[Name]>,
-) {
-  for (const extension of window[EXTENSIONS]) {
-    const hook = extension.hooks[name] as
-      | ((...args: any[]) => void)
-      | undefined;
-    hook?.apply(extension.hooks, args);
+function dispatchHook(window: Window, name: keyof Hooks, ...args: unknown[]) {
+  for (const hooks of window[EXTENSIONS]) {
+    const hook = hooks[name] as ((...args: unknown[]) => void) | undefined;
+    hook?.apply(hooks, args);
   }
 
   const hooks = window[HOOKS];
-  const legacyHook = hooks[name] as ((...args: any[]) => void) | undefined;
+  const legacyHook = hooks[name] as ((...args: unknown[]) => void) | undefined;
   legacyHook?.apply(hooks, args);
 }

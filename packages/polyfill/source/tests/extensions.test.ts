@@ -1,19 +1,18 @@
 import {describe, expect, it, vi} from 'vitest';
 
 import {HOOKS} from '../constants.ts';
-import type {WindowExtension} from '../extensions.ts';
 import type {Hooks} from '../hooks.ts';
 import {Window} from '../Window.ts';
 
 describe('Window extensions', () => {
   it('creates reusable Window subclasses', () => {
     const installs: string[] = [];
-    const first = extension('first', () => {
+    const first = () => {
       installs.push('first');
-    });
-    const second = extension('second', () => {
+    };
+    const second = () => {
       installs.push('second');
-    });
+    };
     const ExtendedWindow = Window.with(first, second);
 
     const firstWindow = new ExtendedWindow();
@@ -26,34 +25,16 @@ describe('Window extensions', () => {
 
   it('composes extensions across successive calls to with()', () => {
     const installs: string[] = [];
-    const FirstWindow = Window.with(
-      extension('first', () => {
-        installs.push('first');
-      }),
-    );
-    const ExtendedWindow = FirstWindow.with(
-      extension('second', () => {
-        installs.push('second');
-      }),
-    );
+    const FirstWindow = Window.with(() => {
+      installs.push('first');
+    });
+    const ExtendedWindow = FirstWindow.with(() => {
+      installs.push('second');
+    });
 
     new ExtendedWindow();
 
     expect(installs).toEqual(['first', 'second']);
-  });
-
-  it('rejects duplicate extension names', () => {
-    const first = extension('duplicate', () => {});
-    const duplicate = extension('duplicate', () => {});
-    const ExtendedWindow = Window.with(first, duplicate);
-    const ChainedWindow = Window.with(first).with(duplicate);
-
-    expect(() => new ExtendedWindow()).toThrow(
-      'An extension named "duplicate" is already installed on this window.',
-    );
-    expect(() => new ChainedWindow()).toThrow(
-      'An extension named "duplicate" is already installed on this window.',
-    );
   });
 
   it('dispatches DOM operations to installed hook subscriptions', () => {
@@ -68,7 +49,7 @@ describe('Window extensions', () => {
       addEventListener: vi.fn<Hooks['addEventListener']>(),
       removeEventListener: vi.fn<Hooks['removeEventListener']>(),
     } satisfies Hooks;
-    const ExtendedWindow = Window.with(extension('hooks', () => hooks));
+    const ExtendedWindow = Window.with(() => hooks);
     const window = new ExtendedWindow();
 
     const parent = window.document.createElement('parent');
@@ -98,12 +79,12 @@ describe('Window extensions', () => {
   it('dispatches extension hooks in installation order before legacy hooks', () => {
     const calls: string[] = [];
     const ExtendedWindow = Window.with(
-      extension('first', () => ({
+      () => ({
         createElement: () => calls.push('first'),
-      })),
-      extension('second', () => ({
+      }),
+      () => ({
         createElement: () => calls.push('second'),
-      })),
+      }),
     );
     const window = new ExtendedWindow();
 
@@ -116,9 +97,9 @@ describe('Window extensions', () => {
   it('resolves legacy hooks assigned after construction', () => {
     const extensionHook = vi.fn();
     const legacyHook = vi.fn();
-    const ExtendedWindow = Window.with(
-      extension('extension', () => ({insertChild: extensionHook})),
-    );
+    const ExtendedWindow = Window.with(() => ({
+      insertChild: extensionHook,
+    }));
     const window = new ExtendedWindow();
     const parent = window.document.createElement('parent');
     const child = window.document.createElement('child');
@@ -132,16 +113,14 @@ describe('Window extensions', () => {
 
   it('creates independent subscriptions for each Window instance', () => {
     const subscriptionCounts: Array<() => number> = [];
-    const ExtendedWindow = Window.with(
-      extension('stateful', () => {
-        let count = 0;
-        subscriptionCounts.push(() => count);
+    const ExtendedWindow = Window.with(() => {
+      let count = 0;
+      subscriptionCounts.push(() => count);
 
-        return {
-          setText: () => count++,
-        };
-      }),
-    );
+      return {
+        setText: () => count++,
+      };
+    });
     const firstWindow = new ExtendedWindow();
     new ExtendedWindow();
 
@@ -153,20 +132,11 @@ describe('Window extensions', () => {
   it('supports extensions that only install APIs', () => {
     class CustomMutationObserver {}
 
-    const ExtendedWindow = Window.with(
-      extension('mutation-observer', (window) => {
-        window.MutationObserver = CustomMutationObserver;
-      }),
-    );
+    const ExtendedWindow = Window.with((window) => {
+      window.MutationObserver = CustomMutationObserver;
+    });
     const window = new ExtendedWindow();
 
     expect(window.MutationObserver).toBe(CustomMutationObserver);
   });
 });
-
-function extension(
-  name: string,
-  install: WindowExtension['install'],
-): WindowExtension {
-  return {name, install};
-}

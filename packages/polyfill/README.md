@@ -45,17 +45,14 @@ import {Window, type WindowExtension} from '@remote-dom/polyfill';
 
 class CustomMutationObserver {}
 
-const mutationObserverExtension: WindowExtension = {
-  name: 'mutation-observer',
-  install(window) {
-    window.MutationObserver = CustomMutationObserver;
+const mutationObserverExtension: WindowExtension = (window) => {
+  window.MutationObserver = CustomMutationObserver;
 
-    return {
-      setAttribute(element, name, value) {
-        // Notify observers associated with this window.
-      },
-    };
-  },
+  return {
+    setAttribute(element, name, value) {
+      // Notify observers associated with this window.
+    },
+  };
 };
 
 const ExtendedWindow = Window.with(mutationObserverExtension);
@@ -68,9 +65,9 @@ are called in the same order for each DOM operation.
 Extensions are installed after the base window and its initial document have
 been constructed, so their hooks do not observe the document’s bootstrap.
 
-For low-level integrations, hooks can also be assigned directly through the
-exported `HOOKS` symbol. Extension hooks run first, followed by the hook
-assigned through `window[HOOKS]`:
+Assigning hooks directly through the exported `HOOKS` symbol is the legacy
+integration API. New integrations should use extensions instead. Extension
+hooks run first, followed by the legacy hook assigned through `window[HOOKS]`:
 
 ```ts
 import {HOOKS} from '@remote-dom/polyfill';
