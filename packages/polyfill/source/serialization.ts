@@ -4,13 +4,16 @@ import {
   CONTENT,
   DATA,
   HTML_NAMESPACE,
-  NS,
   NAME,
   NEXT,
+  NS,
+  SVG_NAMESPACE,
   VALUE,
   NODE_TYPE_COMMENT,
   NODE_TYPE_ELEMENT,
   NODE_TYPE_TEXT,
+  asciiLowercase,
+  type NamespaceURI,
 } from './constants.ts';
 import type {Node} from './Node.ts';
 import type {Text} from './Text.ts';
@@ -64,7 +67,7 @@ function decodeCharacterReferences(value: string) {
   );
 }
 
-function isVoidElement(name: string, namespace = HTML_NAMESPACE) {
+function isVoidElement(name: string, namespace: NamespaceURI = HTML_NAMESPACE) {
   return namespace === HTML_NAMESPACE && VOID_ELEMENTS.has(name.toLowerCase());
 }
 
@@ -73,13 +76,27 @@ export function parseHtml(html: string, contextNode: Node) {
     /(?:<([a-z][a-z0-9-:]*)((?:[\s]+[^<>'"=/\s]+(?:=(['"])[^]*?\3|=[^>'"\s]*|))*)[\s]*(\/?)\s*>|<\/([a-z][a-z0-9-:]*)>|<!--(.*?)-->|([^<>]+))/gi;
   const document = contextNode.ownerDocument;
   const root = document.createDocumentFragment();
-  const stack: {element: Node; target: ParentNode}[] = [];
+  const stack: {element: Element; target: ParentNode}[] = [];
   let parent: ParentNode = root;
   let token: RegExpExecArray | null;
   while ((token = elementTokenizer.exec(html))) {
     const tag = token[1];
     if (tag) {
-      const node = document.createElement(tag);
+      const openElement =
+        stack[stack.length - 1]?.element ?? (contextNode as Element);
+      const parentNamespace = openElement[NS];
+      const normalizedTag = asciiLowercase(tag);
+      const namespace =
+        normalizedTag === 'svg'
+          ? SVG_NAMESPACE
+          : parentNamespace === SVG_NAMESPACE &&
+              asciiLowercase(openElement[NAME]) === 'foreignobject'
+            ? HTML_NAMESPACE
+            : parentNamespace;
+      const node =
+        namespace === HTML_NAMESPACE
+          ? document.createElement(tag)
+          : document.createElementNS(namespace, tag);
       const attrs = token[2]!;
       const attributeTokenizer =
         /\s([^<>'"=/\n\s]+)(?:=(["'])([\s\S]*?)\2|=([^>'"\n\s]*)|)/g;
@@ -88,14 +105,27 @@ export function parseHtml(html: string, contextNode: Node) {
         node.setAttribute(t[1]!, decodeCharacterReferences(t[3] || t[4] || ''));
       }
       parent.append(node);
-      if (isVoidElement(tag)) continue;
+      if (
+        (namespace === HTML_NAMESPACE && isVoidElement(tag)) ||
+        (namespace !== HTML_NAMESPACE && token[4])
+      ) {
+        continue;
+      }
       stack.push({element: node, target: parent});
       parent =
-        tag.toLowerCase() === 'template'
+        namespace === HTML_NAMESPACE && normalizedTag === 'template'
           ? (node as HTMLTemplateElement).content
           : node;
     } else if (token[5]) {
-      parent = stack.pop()?.target ?? root;
+      const closingTag = asciiLowercase(token[5]);
+      for (let index = stack.length - 1; index >= 0; index--) {
+        const frame = stack[index]!;
+        if (asciiLowercase(frame.element[NAME]) !== closingTag) continue;
+
+        parent = frame.target;
+        stack.length = index;
+        break;
+      }
     } else if (token[6]) {
       parent.append(document.createComment(token[6]!));
     } else {
