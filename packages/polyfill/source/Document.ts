@@ -32,13 +32,13 @@ import {
   adoptNodes,
   cloneNode,
   collectAdoptionSnapshot,
-  createNotSupportedError,
   getElementById as findElementById,
   getElementsByTagName as findElementsByTagName,
 } from './shared.ts';
 import {HTMLBodyElement} from './HTMLBodyElement.ts';
 import {HTMLHeadElement} from './HTMLHeadElement.ts';
 import {HTMLHtmlElement} from './HTMLHtmlElement.ts';
+import {createDOMException} from './dom-exception.ts';
 
 export class Document extends ParentNode {
   nodeType: NodeType = NODE_TYPE_DOCUMENT;
@@ -130,7 +130,10 @@ export class Document extends ParentNode {
 
   importNode(node: Node, deep?: boolean) {
     if (node.nodeType === NODE_TYPE_DOCUMENT) {
-      throw createNotSupportedError('Cannot import a document node');
+      throw createDOMException(
+        'Cannot import a document node',
+        'NotSupportedError',
+      );
     }
 
     return cloneNode(node, deep, this);

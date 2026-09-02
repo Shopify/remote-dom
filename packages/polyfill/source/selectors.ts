@@ -8,6 +8,7 @@ import {
 } from './constants.ts';
 import {isElementNode} from './shared.ts';
 import {NodeList} from './NodeList.ts';
+import {createDOMException} from './dom-exception.ts';
 
 import type {Node} from './Node.ts';
 import type {Element} from './Element.ts';
@@ -56,12 +57,13 @@ export interface Matcher {
   value?: string;
 }
 
-const ELEMENT_SELECTOR_TEST = /[a-zA-Z]/;
+const SUPPORTED_IDENTIFIER_TEST =
+  /^(?:--|-?[A-Za-z_\u0080-\u{10FFFF}])[A-Za-z0-9_\u0080-\u{10FFFF}-]*$/u;
 
 function readFunctionArgument(
   selector: string,
   start: number,
-): [string, number] {
+): [string, number] | null {
   let depth = 1;
   let quote: string | null = null;
 
@@ -86,7 +88,14 @@ function readFunctionArgument(
     }
   }
 
-  return [selector.slice(start), selector.length];
+  return null;
+}
+
+function throwSelectorSyntaxError(selector: string): never {
+  throw createDOMException(
+    `Invalid or unsupported selector: "${selector}"`,
+    'SyntaxError',
+  );
 }
 
 export function querySelector(
@@ -128,14 +137,22 @@ export function querySelectorAll(
   return results;
 }
 
-export function parseSelector(selector: string) {
+export function parseSelector(
+  selector: string,
+  allowLeadingCombinator = false,
+) {
   let part: Part = {combinator: COMBINATOR_INNER, matchers: []};
   const parts = [part];
   const tokenizer =
     /\s*?([>\s+~]?)\s*?(?:(?:\[\s*([^\]=\s]+)\s*(?:=\s*(?:(['"])(.*?)\3|([^\]\s]+)))?\s*\])|([#.]?)([^\s#.[>:+~()]+)|:(\w+)(\()?)/gi;
   const normalizedSelector = selector.trim();
+  if (normalizedSelector === '') throwSelectorSyntaxError(selector);
+
+  let consumed = 0;
   let token;
   while ((token = tokenizer.exec(normalizedSelector))) {
+    if (token.index !== consumed) throwSelectorSyntaxError(selector);
+
     // [1]: ancestor/parent/sibling/adjacent
     // [2]: attribute name
     // [4]/[5]: quoted/unquoted attribute value
@@ -144,6 +161,13 @@ export function parseSelector(selector: string) {
     // [8]: :pseudo/:function() name
     // [9]: :function opening parenthesis
     if (token[1]) {
+      if (
+        part.matchers.length === 0 &&
+        !(allowLeadingCombinator && parts.length === 1)
+      ) {
+        throwSelectorSyntaxError(selector);
+      }
+
       // Update the combinator on the (now parent) Part:
       if (token[1] === '>') part.combinator = COMBINATOR_CHILD;
       else if (token[1] === '+') part.combinator = COMBINATOR_ADJACENT;
@@ -154,34 +178,54 @@ export function parseSelector(selector: string) {
       parts.push(part);
     }
 
-    let type: MatcherType = MATCHER_UNKNOWN;
+    let type: MatcherType;
+    const name = token[8] ? asciiLowercase(token[8]) : (token[2] || token[7])!;
     if (token[2]) {
+      if (!SUPPORTED_IDENTIFIER_TEST.test(name)) {
+        throwSelectorSyntaxError(selector);
+      }
+      if (token[5] != null && !SUPPORTED_IDENTIFIER_TEST.test(token[5])) {
+        throwSelectorSyntaxError(selector);
+      }
       type = MATCHER_ATTRIBUTE;
     } else if (token[6]) {
+      if (!SUPPORTED_IDENTIFIER_TEST.test(name)) {
+        throwSelectorSyntaxError(selector);
+      }
       type = token[6] === '#' ? MATCHER_ID : MATCHER_CLASS;
     } else if (token[8]) {
       type = token[9] == null ? MATCHER_PSEUDO : MATCHER_FUNCTION;
-    } else if (token[7]) {
-      if (token[7] === '*') {
-        type = MATCHER_UNKNOWN; // Universal selector matches all
-      } else if (ELEMENT_SELECTOR_TEST.test(token[7])) {
-        type = MATCHER_ELEMENT;
-      }
+    } else if (token[7] === '*') {
+      type = MATCHER_UNKNOWN;
+    } else if (token[7] && SUPPORTED_IDENTIFIER_TEST.test(token[7])) {
+      type = MATCHER_ELEMENT;
+    } else {
+      throwSelectorSyntaxError(selector);
     }
+
     let value = token[4] ?? token[5] ?? token[7];
     if (token[9]) {
-      [value, tokenizer.lastIndex] = readFunctionArgument(
+      const argument = readFunctionArgument(
         normalizedSelector,
         tokenizer.lastIndex,
       );
+      if (argument == null) throwSelectorSyntaxError(selector);
+      [value, tokenizer.lastIndex] = argument;
+
+      if (name !== 'has' && name !== 'not') throwSelectorSyntaxError(selector);
+      parseSelector(value, name === 'has');
+    } else if (type === MATCHER_PSEUDO) {
+      throwSelectorSyntaxError(selector);
     }
-    const name = token[8] ? asciiLowercase(token[8]) : (token[2] || token[7])!;
-    part.matchers.push({
-      type,
-      name,
-      value,
-    });
+
+    part.matchers.push({type, name, value});
+    consumed = tokenizer.lastIndex;
   }
+
+  if (consumed !== normalizedSelector.length || part.matchers.length === 0) {
+    throwSelectorSyntaxError(selector);
+  }
+
   return parts;
 }
 
@@ -193,7 +237,7 @@ function matchesSelector(element: Element, selector: string) {
 }
 
 function matchesRelativeSelector(scope: Element, selector: string) {
-  const parts = parseSelector(selector);
+  const parts = parseSelector(selector, true);
   const first = parts[0]!;
   if (parts.length === 1 && first.matchers.length === 0) return false;
 
@@ -349,7 +393,10 @@ function matchesSelectorMatcher(
     case MATCHER_PSEUDO:
       switch (name) {
         default:
-          throw Error(`Pseudo :${name} not implemented`);
+          throw createDOMException(
+            `Pseudo :${name} is not supported`,
+            'SyntaxError',
+          );
       }
     case MATCHER_FUNCTION:
       switch (name) {
@@ -358,7 +405,10 @@ function matchesSelectorMatcher(
         case 'not':
           return !matchesSelector(element, value || '');
         default:
-          throw Error(`Function :${name}(${value}) not implemented`);
+          throw createDOMException(
+            `Function :${name}(${value}) is not supported`,
+            'SyntaxError',
+          );
       }
   }
   return false;

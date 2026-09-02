@@ -6,6 +6,7 @@ import {
   OWNER_DOCUMENT,
   STOP_IMMEDIATE_PROPAGATION,
 } from './constants.ts';
+import {createDOMException} from './dom-exception.ts';
 import {
   EVENT_PHASE_NONE,
   EVENT_PHASE_BUBBLING,
@@ -165,8 +166,9 @@ export class EventTarget {
 
   dispatchEvent(event: Event) {
     if (event[DISPATCHING]) {
-      throw createInvalidStateError(
+      throw createDOMException(
         `Failed to execute 'dispatchEvent' on 'EventTarget': The event is already being dispatched.`,
+        'InvalidStateError',
       );
     }
 
@@ -281,15 +283,4 @@ function removeListenerRegistration(
     registration.listener,
     registration.capture,
   );
-}
-
-function createInvalidStateError(message: string) {
-  const DOMExceptionConstructor = globalThis.DOMException;
-  if (typeof DOMExceptionConstructor === 'function') {
-    return new DOMExceptionConstructor(message, 'InvalidStateError');
-  }
-
-  const error = new Error(message);
-  error.name = 'InvalidStateError';
-  return error;
 }

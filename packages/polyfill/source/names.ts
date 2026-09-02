@@ -3,6 +3,7 @@ import {
   XMLNS_NAMESPACE,
   type NamespaceURI,
 } from './constants.ts';
+import {createDOMException} from './dom-exception.ts';
 
 const VALID_ELEMENT_LOCAL_NAME =
   /^(?:[A-Za-z][^\0\t\n\f\r\u0020/>]*|[:_\u0080-\u{10FFFF}][A-Za-z0-9-.:_\u0080-\u{10FFFF}]*)$/u;
@@ -51,14 +52,14 @@ export function validateAndExtractQualifiedName(
   }
 
   if (prefix != null && namespace == null) {
-    throw new DOMException(
+    throw createDOMException(
       `A namespace is required for the prefix in "${qualifiedName}"`,
       'NamespaceError',
     );
   }
 
   if (prefix === 'xml' && namespace !== XML_NAMESPACE) {
-    throw new DOMException(
+    throw createDOMException(
       `The xml prefix requires the XML namespace`,
       'NamespaceError',
     );
@@ -68,7 +69,7 @@ export function validateAndExtractQualifiedName(
     (qualifiedName === 'xmlns' || prefix === 'xmlns') &&
     namespace !== XMLNS_NAMESPACE
   ) {
-    throw new DOMException(
+    throw createDOMException(
       `The xmlns name requires the XMLNS namespace`,
       'NamespaceError',
     );
@@ -79,7 +80,7 @@ export function validateAndExtractQualifiedName(
     qualifiedName !== 'xmlns' &&
     prefix !== 'xmlns'
   ) {
-    throw new DOMException(
+    throw createDOMException(
       `The XMLNS namespace requires the xmlns name or prefix`,
       'NamespaceError',
     );
@@ -89,5 +90,5 @@ export function validateAndExtractQualifiedName(
 }
 
 function throwInvalidCharacterError(name: string): never {
-  throw new DOMException(`Invalid name: "${name}"`, 'InvalidCharacterError');
+  throw createDOMException(`Invalid name: "${name}"`, 'InvalidCharacterError');
 }
