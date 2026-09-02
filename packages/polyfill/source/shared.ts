@@ -116,15 +116,22 @@ export function getElementsByTagName(
 
 export function descendants(node: Node) {
   const nodes: Node[] = [];
-  const walk = (node: Node) => {
-    nodes.push(node);
-    const child = node[CHILD];
-    if (child) walk(child);
-    const sibling = node[NEXT];
-    if (sibling) walk(sibling);
-  };
-  const child = node[CHILD];
-  if (child) walk(child);
+  const pendingSiblings: Node[] = [];
+  let current = node[CHILD];
+
+  while (current) {
+    nodes.push(current);
+
+    const child = current[CHILD];
+    const sibling = current[NEXT];
+    if (child) {
+      if (sibling) pendingSiblings.push(sibling);
+      current = child;
+    } else {
+      current = sibling ?? pendingSiblings.pop() ?? null;
+    }
+  }
+
   return nodes;
 }
 

@@ -149,19 +149,27 @@ function walkNodesForSelector(
   parts: Part[],
   callback: (node: Element) => boolean | void,
 ) {
-  if (isElementNode(node)) {
-    if (matchesSelectorRecursive(node, parts)) {
-      if (callback(node) === false) return false;
+  const pendingSiblings: Node[] = [];
+  let current: Node | null = node;
+
+  while (current) {
+    if (isElementNode(current)) {
+      if (matchesSelectorRecursive(current, parts)) {
+        if (callback(current) === false) return false;
+      }
+
+      const child: Node | null = current[CHILD];
+      if (child) {
+        const sibling = current[NEXT];
+        if (sibling) pendingSiblings.push(sibling);
+        current = child;
+        continue;
+      }
     }
-    const child = node[CHILD];
-    if (child && walkNodesForSelector(child, parts, callback) === false) {
-      return false;
-    }
+
+    current = current[NEXT] ?? pendingSiblings.pop() ?? null;
   }
-  const next = node[NEXT];
-  if (next && walkNodesForSelector(next, parts, callback) === false) {
-    return false;
-  }
+
   return true;
 }
 
