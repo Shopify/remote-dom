@@ -3,6 +3,7 @@ import {
   NEXT,
   PREV,
   PARENT,
+  HOST,
   OWNER_DOCUMENT,
   NODE_TYPE_DOCUMENT_FRAGMENT,
   NODE_TYPE_ELEMENT,
@@ -106,9 +107,12 @@ export class ParentNode extends ChildNode {
     if (oldChild.parentNode !== this) {
       throw Error('reference node is not a child of this parent');
     }
+    if (newChild === oldChild) return;
+
     const next = oldChild[NEXT];
+    this.validateInsertion(newChild, next);
     this.removeChild(oldChild);
-    this.insertInto(newChild, next);
+    this.insertIntoValidated(newChild, next);
   }
 
   querySelectorAll(selector: string) {
@@ -120,12 +124,35 @@ export class ParentNode extends ChildNode {
   }
 
   private insertInto(child: Node, before: Node | null) {
+    this.validateInsertion(child, before);
+    this.insertIntoValidated(child, before);
+  }
+
+  private validateInsertion(child: Node, before: Node | null) {
+    if (before && before.parentNode !== this) {
+      throw Error('reference node is not a child of this parent');
+    }
+
+    let ancestor: Node | null = this;
+    while (ancestor) {
+      if (ancestor === child) {
+        throw Error(
+          'cannot insert a node into itself or one of its descendants',
+        );
+      }
+      ancestor = ancestor[PARENT] ?? ancestor[HOST];
+    }
+  }
+
+  private insertIntoValidated(child: Node, before: Node | null) {
+    if (child === before) return;
+
     // append the children of a DocumentFragment:
     if (child.nodeType === NODE_TYPE_DOCUMENT_FRAGMENT) {
       let node = child[CHILD];
       while (node) {
         const next = node[NEXT];
-        this.insertInto(node, before);
+        this.insertIntoValidated(node, before);
         node = next;
       }
       return;
@@ -136,9 +163,6 @@ export class ParentNode extends ChildNode {
     }
 
     if (before) {
-      if (before.parentNode !== this) {
-        throw Error('reference node is not a child of this parent');
-      }
       const previous = before[PREV];
       child[NEXT] = before;
       child[PREV] = previous;
