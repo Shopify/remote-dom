@@ -1,4 +1,5 @@
 export const NAME = Symbol('name');
+export const PREFIX = Symbol('prefix');
 export const VALUE = Symbol('value');
 export const NS = Symbol('ns');
 export const OWNER_ELEMENT = Symbol('owner');
@@ -38,5 +39,19 @@ export type NodeType = number;
 
 export const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
 export const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+export const XML_NAMESPACE = 'http://www.w3.org/XML/1998/namespace';
+export const XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/';
 
-export type NamespaceURI = typeof HTML_NAMESPACE | typeof SVG_NAMESPACE;
+export type NamespaceURI = string | null;
+
+export function asciiLowercase(value: string) {
+  return value.replace(/[A-Z]/g, (character) =>
+    String.fromCharCode(character.charCodeAt(0) + 0x20),
+  );
+}
+
+export function asciiUppercase(value: string) {
+  return value.replace(/[a-z]/g, (character) =>
+    String.fromCharCode(character.charCodeAt(0) - 0x20),
+  );
+}

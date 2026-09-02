@@ -22,6 +22,7 @@ import {
   MUTATION_TYPE_INSERT_CHILD,
   UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
 } from '../constants.ts';
+import {Attr} from '../../../polyfill/source/Attr.ts';
 import {NAME, OWNER_DOCUMENT} from '../../../polyfill/source/constants.ts';
 
 describe('RemoteElement', () => {
@@ -921,6 +922,39 @@ describe('RemoteElement', () => {
         ],
       ]);
     });
+
+    it.each([
+      {initial: 'same', replacement: 'same'},
+      {initial: 'initial', replacement: 'replacement'},
+    ])(
+      'replaces a namespaced transport key when values are $initial/$replacement',
+      ({initial, replacement: replacementValue}) => {
+        const {root, receiver} = createAndConnectRemoteRootElement();
+        const element = document.createElement('div');
+        root.appendChild(element);
+        const remoteElement = receiver.root
+          .children[0] as RemoteReceiverElement;
+        const original = new Attr('first:state', initial, 'urn:state');
+        const replacement = new Attr(
+          'second:state',
+          replacementValue,
+          'urn:state',
+        );
+
+        element.attributes.setNamedItemNS(original as any);
+        element.attributes.setNamedItemNS(replacement as any);
+
+        expect(remoteElement.attributes).toEqual({
+          'second:state': replacementValue,
+        });
+
+        replacement.value = 'updated';
+        expect(remoteElement.attributes).toEqual({'second:state': 'updated'});
+
+        element.attributes.removeNamedItemNS('urn:state', 'state');
+        expect(remoteElement.attributes).toEqual({});
+      },
+    );
   });
 
   describe('event listeners', () => {

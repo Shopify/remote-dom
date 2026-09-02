@@ -1,11 +1,20 @@
 import {
   NS,
+  NAME,
+  PREFIX,
   ATTRIBUTES,
   HTML_NAMESPACE,
   NODE_TYPE_ELEMENT,
   type NamespaceURI,
   type NodeType,
+  asciiLowercase,
+  asciiUppercase,
 } from './constants.ts';
+import {
+  normalizeNamespace,
+  validateAndExtractQualifiedName,
+  validateAttributeLocalName,
+} from './names.ts';
 import {ParentNode} from './ParentNode.ts';
 import {getElementsByClassName as findElementsByClassName} from './getElementsByClassName.ts';
 import {NamedNodeMap} from './NamedNodeMap.ts';
@@ -19,8 +28,25 @@ export class Element extends ParentNode {
   nodeType: NodeType = NODE_TYPE_ELEMENT;
 
   [NS]: NamespaceURI = HTML_NAMESPACE;
+  [PREFIX]: string | null = null;
+
   get namespaceURI() {
     return this[NS];
+  }
+
+  get prefix() {
+    return this[PREFIX];
+  }
+
+  get localName() {
+    const prefix = this[PREFIX];
+    return prefix == null ? this[NAME] : this[NAME].slice(prefix.length + 1);
+  }
+
+  get nodeName() {
+    return this[NS] === HTML_NAMESPACE
+      ? asciiUppercase(this[NAME])
+      : this[NAME];
   }
 
   get tagName() {
@@ -32,7 +58,7 @@ export class Element extends ParentNode {
   [anyProperty: string]: any;
 
   get id() {
-    return this.getAttribute('id') ?? '';
+    return this.getAttributeNS(null, 'id') ?? '';
   }
 
   set id(id: string) {
@@ -40,13 +66,13 @@ export class Element extends ParentNode {
   }
 
   get slot() {
-    return this.getAttribute('slot') ?? '';
+    return this.getAttributeNS(null, 'slot') ?? '';
   }
 
   set slot(slot: string) {
     const finalSlot = String(slot);
 
-    if (this.getAttribute('slot') !== finalSlot) {
+    if (this.getAttributeNS(null, 'slot') !== finalSlot) {
       this.attributes.setNamedItem(new Attr('slot', finalSlot));
     }
   }
@@ -93,11 +119,68 @@ export class Element extends ParentNode {
   }
 
   setAttribute(name: string, value: string) {
-    this.attributes.setNamedItem(new Attr(name, String(value)));
+    const qualifiedName = String(name);
+    const normalizedValue = String(value);
+    validateAttributeLocalName(qualifiedName);
+    const normalizedName =
+      this[NS] === HTML_NAMESPACE
+        ? asciiLowercase(qualifiedName)
+        : qualifiedName;
+    const attribute = this.attributes.getNamedItemNS(null, normalizedName);
+
+    if (attribute) {
+      attribute.value = normalizedValue;
+    } else {
+      this.attributes.setNamedItem(new Attr(normalizedName, normalizedValue));
+    }
   }
 
-  setAttributeNS(namespace: NamespaceURI | null, name: string, value: string) {
-    this.attributes.setNamedItemNS(new Attr(name, String(value), namespace));
+  setAttributeNS(
+    namespace: NamespaceURI,
+    qualifiedName: string,
+    value: string,
+  ) {
+    const normalizedNamespace = normalizeNamespace(namespace);
+    const normalizedQualifiedName = String(qualifiedName);
+    const normalizedValue = String(value);
+    const name = validateAndExtractQualifiedName(
+      normalizedNamespace,
+      normalizedQualifiedName,
+      'attribute',
+    );
+    const attribute = this.attributes.getNamedItemNS(
+      name.namespace,
+      name.localName,
+    );
+
+    if (attribute) {
+      attribute.value = normalizedValue;
+    } else {
+      this.attributes.setNamedItemNS(
+        new Attr(name.qualifiedName, normalizedValue, name.namespace),
+      );
+    }
+  }
+
+  toggleAttribute(name: string, force?: boolean) {
+    const qualifiedName = String(name);
+    validateAttributeLocalName(qualifiedName);
+    const normalizedName =
+      this[NS] === HTML_NAMESPACE
+        ? asciiLowercase(qualifiedName)
+        : qualifiedName;
+    const attribute = this.attributes.getNamedItemNS(null, normalizedName);
+    const normalizedForce = force === undefined ? undefined : Boolean(force);
+
+    if (attribute == null) {
+      if (normalizedForce === false) return false;
+      this.attributes.setNamedItem(new Attr(normalizedName, ''));
+      return true;
+    }
+
+    if (normalizedForce === true) return true;
+    this.attributes.removeNamedItemNS(null, normalizedName);
+    return false;
   }
 
   getAttribute(name: string) {
@@ -105,7 +188,7 @@ export class Element extends ParentNode {
     return attr && attr.value;
   }
 
-  getAttributeNS(namespace: NamespaceURI | null, name: string) {
+  getAttributeNS(namespace: NamespaceURI, name: string) {
     const attr = this.attributes.getNamedItemNS(namespace, name);
     return attr && attr.value;
   }
@@ -115,16 +198,21 @@ export class Element extends ParentNode {
     return attr != null;
   }
 
-  hasAttributeNS(namespace: NamespaceURI | null, name: string) {
+  hasAttributeNS(namespace: NamespaceURI, name: string) {
     const attr = this.attributes.getNamedItemNS(namespace, name);
     return attr != null;
   }
 
   removeAttribute(name: string) {
-    this.attributes.removeNamedItem(name);
+    const qualifiedName = String(name);
+    const normalizedName =
+      this[NS] === HTML_NAMESPACE
+        ? asciiLowercase(qualifiedName)
+        : qualifiedName;
+    this.attributes.removeNamedItemNS(null, normalizedName);
   }
 
-  removeAttributeNS(namespace: NamespaceURI | null, name: string) {
+  removeAttributeNS(namespace: NamespaceURI, name: string) {
     this.attributes.removeNamedItemNS(namespace, name);
   }
 
