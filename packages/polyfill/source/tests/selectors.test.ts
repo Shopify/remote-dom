@@ -17,6 +17,14 @@ const MatcherType = {
   Class: MATCHER_CLASS,
 } as const;
 
+const ASCII_WHITESPACE = [
+  ['SPACE', ' '],
+  ['TAB', '\t'],
+  ['LINE FEED', '\n'],
+  ['FORM FEED', '\f'],
+  ['CARRIAGE RETURN', '\r'],
+] as const;
+
 import {describe, it, expect, beforeEach} from 'vitest';
 
 describe('selector parsing and matching', () => {
@@ -55,6 +63,19 @@ describe('selector parsing and matching', () => {
         name: 'myclass',
         value: 'myclass',
       });
+    });
+
+    it('keeps non-ASCII whitespace in class selector names', () => {
+      const parts = parseSelector('.left\u00a0right');
+
+      expect(parts).toHaveLength(1);
+      expect(parts[0]!.matchers).toEqual([
+        {
+          type: MatcherType.Class,
+          name: 'left\u00a0right',
+          value: 'left\u00a0right',
+        },
+      ]);
     });
 
     it('parses attribute selectors without values', () => {
@@ -125,13 +146,16 @@ describe('selector parsing and matching', () => {
       expect(parts[1]!.matchers[0]!.name).toBe('span');
     });
 
-    it('parses descendant combinator', () => {
-      const parts = parseSelector('div span');
-      expect(parts).toHaveLength(2);
-      expect(parts[0]!.combinator).toBe(0); // Combinator.Descendant
-      expect(parts[0]!.matchers[0]!.name).toBe('div');
-      expect(parts[1]!.matchers[0]!.name).toBe('span');
-    });
+    it.each(ASCII_WHITESPACE)(
+      'parses %s as a descendant combinator',
+      (_name, whitespace) => {
+        const parts = parseSelector(`div${whitespace}span`);
+        expect(parts).toHaveLength(2);
+        expect(parts[0]!.combinator).toBe(0); // Combinator.Descendant
+        expect(parts[0]!.matchers[0]!.name).toBe('div');
+        expect(parts[1]!.matchers[0]!.name).toBe('span');
+      },
+    );
 
     it('parses adjacent sibling combinator', () => {
       const parts = parseSelector('h1 + p');
@@ -213,6 +237,21 @@ describe('selector parsing and matching', () => {
 
       const hidden = container.querySelector('.hidden');
       expect(hidden?.textContent?.trim()).toBe('Hidden paragraph');
+    });
+
+    it('keeps non-ASCII whitespace in class names', () => {
+      const literal = document.createElement('div');
+      literal.setAttribute('class', 'left\u00a0right');
+
+      const separated = document.createElement('div');
+      separated.setAttribute('class', 'left right');
+
+      container.append(literal, separated);
+
+      const literalMatches = container.querySelectorAll('.left\u00a0right');
+      expect(literalMatches).toHaveLength(1);
+      expect(literalMatches[0]).toBe(literal);
+      expect(container.querySelector('.left')).toBe(separated);
     });
 
     it('selects by attribute', () => {
@@ -339,6 +378,80 @@ describe('selector parsing and matching', () => {
         {type: MatcherType.Id, name: 'a.b:c#d'},
       ]);
       expect(result).toBe(element);
+    });
+
+    it('matches classes with selector punctuation literally', () => {
+      const element = document.createElement('div');
+      element.setAttribute('class', 'has.dot has:colon has#hash');
+      container.appendChild(element);
+
+      for (const name of ['has.dot', 'has:colon', 'has#hash']) {
+        expect(
+          querySelector(asPolyfill(container), [
+            {type: MatcherType.Class, name},
+          ]),
+        ).toBe(element);
+      }
+    });
+
+    it.each(ASCII_WHITESPACE)(
+      'splits class attributes on %s',
+      (_name, whitespace) => {
+        const element = document.createElement('div');
+        element.setAttribute('class', `left${whitespace}right`);
+        container.appendChild(element);
+
+        expect(
+          querySelector(asPolyfill(container), [
+            {type: MatcherType.Class, name: 'right'},
+          ]),
+        ).toBe(element);
+      },
+    );
+
+    it('does not split class attributes on non-ASCII whitespace', () => {
+      const literal = document.createElement('div');
+      literal.setAttribute('class', 'left\u00a0right');
+
+      const separated = document.createElement('div');
+      separated.setAttribute('class', 'left right');
+
+      container.append(literal, separated);
+
+      expect(
+        querySelector(asPolyfill(container), [
+          {type: MatcherType.Class, name: 'left\u00a0right'},
+        ]),
+      ).toBe(literal);
+      expect(
+        querySelector(asPolyfill(container), [
+          {type: MatcherType.Class, name: 'left'},
+        ]),
+      ).toBe(separated);
+    });
+
+    it('requires every class matcher to match', () => {
+      const complete = document.createElement('div');
+      complete.setAttribute('class', 'one two three');
+
+      const partial = document.createElement('div');
+      partial.setAttribute('class', 'one two');
+
+      container.append(complete, partial);
+
+      const matches = querySelectorAll(asPolyfill(container), [
+        {type: MatcherType.Class, name: 'one'},
+        {type: MatcherType.Class, name: 'three'},
+      ]);
+      expect(matches).toHaveLength(1);
+      expect(matches[0]).toBe(complete);
+
+      expect(
+        querySelector(asPolyfill(container), [
+          {type: MatcherType.Class, name: 'one'},
+          {type: MatcherType.Class, name: 'missing'},
+        ]),
+      ).toBeNull();
     });
 
     it('matches HTML tag names case-insensitively via element matcher', () => {

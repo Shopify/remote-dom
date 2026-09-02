@@ -79,7 +79,7 @@ describe('getElementsByClassName', () => {
     expect(window.document.getElementsByClassName('   ')).toHaveLength(0);
   });
 
-  it.skip('does not treat non-breaking space as a class separator', () => {
+  it('does not treat non-breaking space as a class separator', () => {
     const literal = window.document.createElement('div');
     literal.setAttribute('class', 'left\u00a0right');
 

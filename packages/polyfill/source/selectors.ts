@@ -1,5 +1,5 @@
 import {CHILD, NEXT, PARENT, PREV, HTML_NAMESPACE} from './constants.ts';
-import {isElementNode} from './shared.ts';
+import {isElementNode, splitOnASCIIWhitespace} from './shared.ts';
 
 import type {Node} from './Node.ts';
 import type {Element} from './Element.ts';
@@ -91,7 +91,7 @@ export function parseSelector(selector: string) {
   let part: Part = {combinator: COMBINATOR_INNER, matchers: []};
   const parts = [part];
   const tokenizer =
-    /\s*?([>\s+~]?)\s*?(?:(?:\[\s*([^\]=]+)(?:=(['"])(.*?)\3)?\s*\])|([#.]?)([^\s#.[>:+~]+)|:(\w+)(?:\((.*?)\))?)/gi;
+    /[\t\n\f\r ]*?([>+~\t\n\f\r ]?)[\t\n\f\r ]*?(?:(?:\[[\t\n\f\r ]*([^\]=]+)(?:=(['"])(.*?)\3)?[\t\n\f\r ]*\])|([#.]?)([^\t\n\f\r #.[>:+~]+)|:(\w+)(?:\((.*?)\))?)/gi;
   let token;
   while ((token = tokenizer.exec(selector))) {
     // [1]: ancestor/parent/sibling/adjacent
@@ -271,7 +271,7 @@ function matchesSelectorMatcher(
     case MATCHER_CLASS:
       const classAttr = element.getAttribute('class');
       if (!classAttr) return false;
-      return classAttr.split(/\s+/).includes(name);
+      return splitOnASCIIWhitespace(classAttr).includes(name);
     case MATCHER_ATTRIBUTE:
       return value == null
         ? element.hasAttribute(name)
