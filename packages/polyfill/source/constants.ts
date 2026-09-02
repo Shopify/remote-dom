@@ -22,6 +22,7 @@ export const HOOKS = Symbol('hooks');
 export const EXTENSIONS = Symbol('extensions');
 export const HOOKS_DISPATCH = Symbol('hooks_dispatch');
 export const IS_CONNECTED = Symbol('is_connected');
+export const CREATE_ELEMENT = Symbol('create_element');
 
 export const NODE_TYPE_NODE = 0;
 export const NODE_TYPE_ELEMENT = 1;
