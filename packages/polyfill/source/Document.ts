@@ -10,6 +10,7 @@ import {
   OWNER_DOCUMENT,
   HOOKS,
   IS_CONNECTED,
+  CREATE_ELEMENT,
   asciiLowercase,
 } from './constants.ts';
 import {
@@ -88,6 +89,15 @@ export class Document extends ParentNode {
       name.prefix,
       name.localName,
     );
+  }
+
+  [CREATE_ELEMENT](
+    qualifiedName: string,
+    namespace: NamespaceURI,
+    prefix: string | null,
+    localName: string,
+  ) {
+    return createElement(this, qualifiedName, namespace, prefix, localName);
   }
 
   createTextNode(data: any) {
