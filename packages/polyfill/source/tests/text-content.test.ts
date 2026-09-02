@@ -180,8 +180,11 @@ describe('Node.textContent parent mutations', () => {
       }
     }
 
-    defineCustomElement('observing-first', ObservingElement);
-    defineCustomElement('observing-second', ObservingElement);
+    class FirstObservingElement extends ObservingElement {}
+    class SecondObservingElement extends ObservingElement {}
+
+    defineCustomElement('observing-first', FirstObservingElement);
+    defineCustomElement('observing-second', SecondObservingElement);
     const first = polyfillDocument.createElement('observing-first');
     const second = polyfillDocument.createElement('observing-second');
     parent.append(first, second);
@@ -240,8 +243,11 @@ describe('Node.textContent parent mutations', () => {
       }
     }
 
-    defineCustomElement('empty-observing-first', ObservingElement);
-    defineCustomElement('empty-observing-second', ObservingElement);
+    class FirstEmptyObservingElement extends ObservingElement {}
+    class SecondEmptyObservingElement extends ObservingElement {}
+
+    defineCustomElement('empty-observing-first', FirstEmptyObservingElement);
+    defineCustomElement('empty-observing-second', SecondEmptyObservingElement);
     const first = polyfillDocument.createElement('empty-observing-first');
     const second = polyfillDocument.createElement('empty-observing-second');
     parent.append(first, second);
