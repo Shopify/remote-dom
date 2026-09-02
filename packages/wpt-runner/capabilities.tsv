@@ -57,3 +57,38 @@ dom/nodes/Element-getElementsByTagName.html	deferred	Shouldn't be able to set un
 dom/nodes/Element-getElementsByTagName.html	deferred	getElementsByTagName('*')	Requires `Node.ELEMENT_NODE` constant support.
 dom/nodes/Element-getElementsByTagName.html	deferred	getElementsByTagName() should be a live collection	Requires a live `HTMLCollection`.
 dom/nodes/Element-getElementsByTagName.html	deferred	hasOwnProperty, getOwnPropertyDescriptor, getOwnPropertyNames	Requires `HTMLCollection` named property semantics.
+dom/nodes/getElementsByClassName-19.htm	supported	get elements in document
+dom/nodes/getElementsByClassName-23.htm	supported	multiple defined classes
+dom/nodes/getElementsByClassName-24.htm	supported	handle unicode chars
+dom/nodes/getElementsByClassName-29.htm	supported	get class from children of element
+dom/nodes/getElementsByClassName-empty-set.html	supported	Passing a space to getElementsByClassName should return an empty HTMLCollection
+dom/nodes/getElementsByClassName-empty-set.html	supported	Passing an empty string to getElementsByClassName should return an empty HTMLCollection
+dom/nodes/getElementsByClassName-empty-set.html	supported	Passing three spaces to getElementsByClassName should return an empty HTMLCollection
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a EM QUAD to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a EM SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a EN QUAD to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a EN SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a FIGURE SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a FOUR-PER-EM SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a HAIR SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a IDEOGRAPHIC SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a LINE SEPARATOR to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a LINE TABULATION to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a MEDIUM MATHEMATICAL SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a MONGOLIAN VOWEL SEPARATOR to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a NARROW NO-BREAK SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a NEXT LINE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a NO-BREAK SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a OGHAM SPACE MARK to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a PARAGRAPH SEPARATOR to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a PUNCTUATION SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a SIX-PER-EM SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a THIN SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a THREE-PER-EM SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a WORD JOINER to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a ZERO WIDTH JOINER to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a ZERO WIDTH NON-BREAKING SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a ZERO WIDTH NON-JOINER to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a ZERO WIDTH SPACE to getElementsByClassName still finds the span
+html/dom/documents/dom-tree-accessors/Document.getElementsByClassName-null-undef.html	supported	getElementsByClassName and null/undefined
+html/dom/documents/dom-tree-accessors/Element.getElementsByClassName-null-undef.html	supported	getElementsByClassName and null/undefined
