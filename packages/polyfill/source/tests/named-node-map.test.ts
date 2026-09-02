@@ -1,6 +1,7 @@
 import {SVG_NAMESPACE} from '../constants.ts';
 import {Window} from '../index.ts';
 import {NamedNodeMap} from '../NamedNodeMap.ts';
+import {toPropertyIndex} from '../shared.ts';
 
 import {beforeEach, describe, expect, it} from 'vitest';
 
@@ -31,7 +32,7 @@ describe('NamedNodeMap property access', () => {
     expect(element.attributes[2]).toBeUndefined();
   });
 
-  it('prioritizes indexed attributes over inherited numeric properties', () => {
+  it('prioritizes indexed attributes over Object prototype properties', () => {
     const element = document.createElement('div');
     element.setAttribute('id', 'target');
     const inheritedDescriptor = Object.getOwnPropertyDescriptor(
@@ -53,6 +54,25 @@ describe('NamedNodeMap property access', () => {
         delete (Object.prototype as any)[0];
       }
     }
+  });
+
+  it('only recognizes canonical ECMAScript array indices', () => {
+    expect(toPropertyIndex('0')).toBe(0);
+    expect(toPropertyIndex('4294967294')).toBe(4294967294);
+
+    for (const property of [
+      '',
+      '-1',
+      '1.5',
+      '01',
+      '1e0',
+      '4294967295',
+      'Infinity',
+      'NaN',
+    ]) {
+      expect(toPropertyIndex(property)).toBeUndefined();
+    }
+    expect(toPropertyIndex(Symbol.iterator)).toBeUndefined();
   });
 
   it('keeps indexed access live as attributes change', () => {
@@ -88,6 +108,20 @@ describe('NamedNodeMap property access', () => {
     expect(element.attributes.getNamedItem('toString')?.value).toBe(
       'attribute named toString',
     );
+  });
+
+  it('keeps named access and collection identity live', () => {
+    const element = document.createElement('div');
+    const attributes = element.attributes;
+
+    expect(element.attributes).toBe(attributes);
+    expect((attributes as any).status).toBeUndefined();
+
+    element.setAttribute('status', 'ready');
+    expect((attributes as any).status).toBe(attributes.getNamedItem('status'));
+
+    element.removeAttribute('status');
+    expect((attributes as any).status).toBeUndefined();
   });
 
   it('prioritizes inherited properties over named attributes', () => {

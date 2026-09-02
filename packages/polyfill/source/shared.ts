@@ -30,7 +30,14 @@ export function toPropertyIndex(property: PropertyKey) {
 
   const index = Number(property);
 
-  return index >= 0 && index % 1 === 0 && String(index) === property
+  // Web IDL indexed properties use canonical ECMAScript array-index names:
+  // whole numbers from 0 through 2^32 - 2, without aliases like "01" or "1e0".
+  // These inexpensive numeric guards short-circuit before string coercion and
+  // linked-list item lookup, both measurably slower for non-index properties.
+  return Number.isInteger(index) && // Reject NaN, infinities, and fractions.
+    index >= 0 && // Reject negative integers.
+    index < 2 ** 32 - 1 && // Reject integers outside the array-index range.
+    String(index) === property // Reject non-canonical aliases like "01" and "1e0".
     ? index
     : undefined;
 }

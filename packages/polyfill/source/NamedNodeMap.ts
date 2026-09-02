@@ -174,6 +174,10 @@ export class NamedNodeMap {
   }
 }
 
+// This provides ordinary indexed and named reads without proxying every map.
+// Properties placed directly on a map or earlier in its prototype chain retain
+// normal JavaScript precedence. Alternate Reflect receivers and full Web IDL
+// reflection cannot be modeled by a shared prototype fallback.
 const namedNodeMapPropertyFallback = new Proxy(
   {},
   {
