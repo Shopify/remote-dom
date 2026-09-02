@@ -10,11 +10,13 @@ beforeEach(() => {
 });
 
 describe('NamedNodeMap property access', () => {
-  it('returns a proxy that preserves the NamedNodeMap prototype', () => {
+  it('preserves the NamedNodeMap and Object prototype chains', () => {
     const attributes = document.createElement('div').attributes;
 
     expect(attributes).toBeInstanceOf(NamedNodeMap);
     expect(Object.getPrototypeOf(attributes)).toBe(NamedNodeMap.prototype);
+    expect(attributes).toBeInstanceOf(Object);
+    expect(Object.prototype.isPrototypeOf(attributes)).toBe(true);
   });
 
   it('exposes attributes by index', () => {
@@ -27,6 +29,30 @@ describe('NamedNodeMap property access', () => {
     expect(element.attributes[1]).toBe(element.attributes.item(1));
     expect(element.attributes[1]?.name).toBe('title');
     expect(element.attributes[2]).toBeUndefined();
+  });
+
+  it('prioritizes indexed attributes over inherited numeric properties', () => {
+    const element = document.createElement('div');
+    element.setAttribute('id', 'target');
+    const inheritedDescriptor = Object.getOwnPropertyDescriptor(
+      Object.prototype,
+      '0',
+    );
+
+    Object.defineProperty(Object.prototype, '0', {
+      configurable: true,
+      value: 'inherited',
+    });
+
+    try {
+      expect(element.attributes[0]).toBe(element.attributes.item(0));
+    } finally {
+      if (inheritedDescriptor) {
+        Object.defineProperty(Object.prototype, '0', inheritedDescriptor);
+      } else {
+        delete (Object.prototype as any)[0];
+      }
+    }
   });
 
   it('keeps indexed access live as attributes change', () => {
@@ -44,6 +70,7 @@ describe('NamedNodeMap property access', () => {
     const element = document.createElement('div');
     element.setAttribute('id', 'target');
     element.setAttribute('item', 'attribute named item');
+    element.setAttribute('toString', 'attribute named toString');
     element.setAttributeNS(SVG_NAMESPACE, 'namespaced', 'value');
 
     expect((element.attributes as any).id).toBe(
@@ -54,8 +81,33 @@ describe('NamedNodeMap property access', () => {
     );
     expect((element.attributes as any).missing).toBeUndefined();
     expect(element.attributes.item).toBe(NamedNodeMap.prototype.item);
+    expect(element.attributes.toString).toBe(Object.prototype.toString);
     expect(element.attributes.getNamedItem('item')?.value).toBe(
       'attribute named item',
+    );
+    expect(element.attributes.getNamedItem('toString')?.value).toBe(
+      'attribute named toString',
+    );
+  });
+
+  it('prioritizes inherited properties over named attributes', () => {
+    const element = document.createElement('div');
+    const property = 'namedNodeMapInheritedProperty';
+    element.setAttribute(property, 'attribute');
+
+    Object.defineProperty(Object.prototype, property, {
+      configurable: true,
+      value: undefined,
+    });
+
+    try {
+      expect((element.attributes as any)[property]).toBeUndefined();
+    } finally {
+      delete (Object.prototype as any)[property];
+    }
+
+    expect((element.attributes as any)[property]).toBe(
+      element.attributes.getNamedItem(property),
     );
   });
 

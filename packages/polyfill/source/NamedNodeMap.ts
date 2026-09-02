@@ -22,8 +22,6 @@ export class NamedNodeMap {
 
   constructor(ownerElement: Element) {
     this[OWNER_ELEMENT] = ownerElement;
-
-    return new Proxy(this, namedNodeMapProxyHandler);
   }
 
   getNamedItem(name: string) {
@@ -175,24 +173,30 @@ export class NamedNodeMap {
   }
 }
 
-const namedNodeMapProxyHandler: ProxyHandler<NamedNodeMap> = {
-  get(target, property, receiver) {
-    if (typeof property === 'string') {
-      const index = Number(property);
+const namedNodeMapPropertyFallback = new Proxy(
+  {},
+  {
+    get(target, property, receiver) {
+      if (typeof property === 'string') {
+        const namedNodeMap = receiver as NamedNodeMap;
+        const index = Number(property);
 
-      if (index >= 0 && index % 1 === 0 && String(index) === property) {
-        const indexedAttribute = target.item(index);
-        if (indexedAttribute) return indexedAttribute;
+        if (index >= 0 && index % 1 === 0 && String(index) === property) {
+          const indexedAttribute = namedNodeMap.item(index);
+          if (indexedAttribute) return indexedAttribute;
+        }
+
+        if (!(property in target)) {
+          return namedNodeMap.getNamedItem(property) ?? undefined;
+        }
       }
 
-      if (!Reflect.has(target, property)) {
-        return target.getNamedItem(property) ?? undefined;
-      }
-    }
-
-    return Reflect.get(target, property, receiver);
+      return Reflect.get(target, property, receiver);
+    },
   },
-};
+);
+
+Object.setPrototypeOf(NamedNodeMap.prototype, namedNodeMapPropertyFallback);
 
 function updateElementAttribute(
   element: Element,
