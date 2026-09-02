@@ -262,6 +262,13 @@ describe('selector parsing and matching', () => {
       expectTypeOf(matches.item(0)).toEqualTypeOf<PolyfillElement | null>();
     });
 
+    it('returns the polyfill collection with item() access', () => {
+      const matches = container.querySelectorAll('.text');
+
+      expect(matches).toBeInstanceOf(NodeList);
+      expect(matches.item(0)).toBe(matches[0]);
+    });
+
     it('selects HTML element names case-insensitively', () => {
       const articles = container.querySelectorAll('ARTICLE');
       expect(articles).toHaveLength(1);
