@@ -814,6 +814,66 @@ describe('RemoteElement', () => {
       ]);
     });
 
+    it.each([
+      {description: 'empty', slot: ''},
+      {description: 'non-empty', slot: 'aside'},
+    ])(
+      'removes an $description slot attribute locally and from the host',
+      ({slot}) => {
+        const ProductElement = createRemoteElement();
+        const {element, receiver} =
+          createAndConnectRemoteElement(ProductElement);
+
+        element.setAttribute('slot', slot);
+        element.removeAttribute('slot');
+
+        expect(element.hasAttribute('slot')).toBe(false);
+        expect(element.getAttribute('slot')).toBeNull();
+        expect(element.slot).toBe('');
+        expect(
+          receiver.get<RemoteReceiverElement>({id: remoteId(element)})
+            ?.attributes.slot,
+        ).toBeUndefined();
+      },
+    );
+
+    it('synchronizes property-driven slot updates without recreating a removed attribute', () => {
+      const ProductElement = createRemoteElement();
+      const {element, receiver} = createAndConnectRemoteElement(ProductElement);
+
+      element.slot = 'aside';
+      expect(
+        receiver.get<RemoteReceiverElement>({id: remoteId(element)})?.attributes
+          .slot,
+      ).toBe('aside');
+
+      element.slot = 'header';
+      expect(
+        receiver.get<RemoteReceiverElement>({id: remoteId(element)})?.attributes
+          .slot,
+      ).toBe('header');
+
+      const removedAttribute = element.attributes.getNamedItem('slot');
+      element.removeAttribute('slot');
+
+      expect(removedAttribute?.ownerElement).toBeNull();
+      expect(element.slot).toBe('');
+      expect(element.hasAttribute('slot')).toBe(false);
+      expect(
+        receiver.get<RemoteReceiverElement>({id: remoteId(element)})?.attributes
+          .slot,
+      ).toBeUndefined();
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'slot',
+          undefined,
+          UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+        ],
+      ]);
+    });
+
     it('reflects the value of a remote attribute automatically when the attribute is set', () => {
       const ProductElement = createRemoteElement({
         attributes: ['name'],
