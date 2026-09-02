@@ -20,45 +20,68 @@ import {
   mutationNodeList,
   queueMutationRecord,
 } from './MutationObserver.ts';
+import {
+  enqueueCustomElementReaction,
+  performWithCustomElementReactions,
+} from './custom-element-reactions.ts';
 
 export class ParentNode extends ChildNode {
   readonly childNodes = new NodeList();
   readonly children = new NodeList();
 
   appendChild<T extends Node>(child: T) {
-    this.insertInto(child, null);
-    return child;
+    return performWithCustomElementReactions(() => {
+      this.insertInto(child, null);
+      return child;
+    });
   }
 
   insertBefore<T extends Node>(child: T, ref?: Node | null) {
-    this.insertInto(child, ref || null);
-    return child;
+    return performWithCustomElementReactions(() => {
+      this.insertInto(child, ref || null);
+      return child;
+    });
   }
 
   append(...nodes: (Node | string)[]) {
-    for (const child of nodes) {
-      if (child == null) continue;
-      this.appendChild(toNode(this, child));
-    }
+    return performWithCustomElementReactions(() => {
+      for (const child of nodes) {
+        if (child == null) continue;
+        this.insertInto(toNode(this, child), null);
+      }
+    });
   }
 
   prepend(...nodes: (Node | string)[]) {
-    const before = this.firstChild;
-    for (const child of nodes) {
-      if (child == null) continue;
-      this.insertBefore(toNode(this, child), before);
-    }
+    return performWithCustomElementReactions(() => {
+      const before = this.firstChild;
+      for (const child of nodes) {
+        if (child == null) continue;
+        this.insertInto(toNode(this, child), before);
+      }
+    });
   }
 
   replaceChildren(...nodes: (Node | string)[]) {
-    let child;
-    while ((child = this.firstChild)) {
-      this.removeChild(child);
-    }
-    this.append(...nodes);
+    return performWithCustomElementReactions(() => {
+      let child;
+      while ((child = this.firstChild)) {
+        this.removeChildImmediately(child);
+      }
+      for (const child of nodes) {
+        if (child == null) continue;
+        this.insertInto(toNode(this, child), null);
+      }
+    });
   }
 
   removeChild(child: Node) {
+    return performWithCustomElementReactions(() => {
+      this.removeChildImmediately(child);
+    });
+  }
+
+  private removeChildImmediately(child: Node) {
     if (child.parentNode !== this) throw Error(`not a child of this node`);
     const prev = child[PREV];
     const next = child[NEXT];
@@ -67,9 +90,7 @@ export class ParentNode extends ChildNode {
     if (next) next[PREV] = prev;
 
     const childNodes = this.childNodes;
-
     const childNodesIndex = childNodes.indexOf(child);
-
     childNodes.splice(childNodesIndex, 1);
 
     if (child.nodeType === 1) {
@@ -81,11 +102,10 @@ export class ParentNode extends ChildNode {
     child[NEXT] = null;
     child[PREV] = null;
 
+    let disconnectedNodes: Node[] | undefined;
     if (this[IS_CONNECTED]) {
-      for (const node of selfAndDescendants(child)) {
-        node[IS_CONNECTED] = false;
-        (node as any).disconnectedCallback?.();
-      }
+      disconnectedNodes = selfAndDescendants(child);
+      for (const node of disconnectedNodes) node[IS_CONNECTED] = false;
     }
 
     if (childListObserversActive) {
@@ -101,16 +121,28 @@ export class ParentNode extends ChildNode {
     if (this.nodeType === NODE_TYPE_ELEMENT) {
       this[HOOKS].removeChild?.(this as any, child as any, childNodesIndex);
     }
+
+    if (disconnectedNodes) {
+      for (const node of disconnectedNodes) {
+        const callback = (node as any).disconnectedCallback;
+        if (typeof callback === 'function') {
+          enqueueCustomElementReaction(node, () => callback.call(node));
+        }
+      }
+    }
   }
 
   replaceChild(newChild: Node, oldChild: Node) {
-    if (oldChild.parentNode !== this) {
-      throw Error('reference node is not a child of this parent');
-    }
-    const next = oldChild[NEXT];
-    this.validateInsertion(newChild, next);
-    this.removeChild(oldChild);
-    this.insertIntoValidated(newChild, next);
+    return performWithCustomElementReactions(() => {
+      if (oldChild.parentNode !== this) {
+        throw Error('reference node is not a child of this parent');
+      }
+
+      const next = oldChild[NEXT];
+      this.validateInsertion(newChild, next);
+      this.removeChildImmediately(oldChild);
+      this.insertIntoValidated(newChild, next);
+    });
   }
 
   querySelectorAll(selector: string) {
@@ -145,19 +177,20 @@ export class ParentNode extends ChildNode {
   private insertIntoValidated(child: Node, before: Node | null) {
     if (child === before) before = child[NEXT];
 
-    // append the children of a DocumentFragment:
+    // Append a stable snapshot of the children of a DocumentFragment.
     if (child.nodeType === NODE_TYPE_DOCUMENT_FRAGMENT) {
+      const nodes: Node[] = [];
       let node = child[CHILD];
       while (node) {
-        const next = node[NEXT];
-        this.insertIntoValidated(node, before);
-        node = next;
+        nodes.push(node);
+        node = node[NEXT];
       }
+      for (const node of nodes) this.insertIntoValidated(node, before);
       return;
     }
 
     if (child.parentNode !== null) {
-      child.parentNode.removeChild(child);
+      child.parentNode.removeChildImmediately(child);
     }
 
     if (before) {
@@ -210,11 +243,10 @@ export class ParentNode extends ChildNode {
       if (isElement) this.children.push(child);
     }
 
+    let connectedNodes: Node[] | undefined;
     if (this[IS_CONNECTED]) {
-      for (const node of selfAndDescendants(child)) {
-        node[IS_CONNECTED] = true;
-        (node as any).connectedCallback?.();
-      }
+      connectedNodes = selfAndDescendants(child);
+      for (const node of connectedNodes) node[IS_CONNECTED] = true;
     }
 
     if (childListObserversActive) {
@@ -229,6 +261,15 @@ export class ParentNode extends ChildNode {
 
     if (this.nodeType === NODE_TYPE_ELEMENT) {
       this[HOOKS].insertChild?.(this as any, child as any, insertIndex);
+    }
+
+    if (connectedNodes) {
+      for (const node of connectedNodes) {
+        const callback = (node as any).connectedCallback;
+        if (typeof callback === 'function') {
+          enqueueCustomElementReaction(node, () => callback.call(node));
+        }
+      }
     }
   }
 }
