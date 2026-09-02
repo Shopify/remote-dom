@@ -5,6 +5,7 @@ import type {ParentNode} from './ParentNode.ts';
 import {Node} from './Node.ts';
 
 export const INSERT_NODE = Symbol('insertNode');
+export const PREFLIGHT_INSERTIONS = Symbol('preflightInsertions');
 export const REPLACE_NODE = Symbol('replaceNode');
 
 export class ChildNode extends Node {
@@ -127,6 +128,7 @@ function convertNodesIntoNode(
   if (convertedNodes.length === 1) return convertedNodes[0]!;
 
   const fragment = parent.ownerDocument.createDocumentFragment();
+  fragment[PREFLIGHT_INSERTIONS](convertedNodes);
   for (const node of convertedNodes) {
     fragment[INSERT_NODE](node, null, hookEffects);
   }
