@@ -170,11 +170,12 @@ export class Node extends EventTarget {
   contains(node: Node | null) {
     let currentNode: Node | null = node;
 
-    while (true) {
-      if (currentNode == null) return false;
+    while (currentNode != null) {
       if (currentNode === this) return true;
-      currentNode = node!.parentNode;
+      currentNode = currentNode.parentNode;
     }
+
+    return false;
   }
 }
 
