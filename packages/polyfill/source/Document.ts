@@ -20,7 +20,7 @@ import type {Window} from './Window.ts';
 import type {Node} from './Node.ts';
 import {getElementsByClassName as findElementsByClassName} from './getElementsByClassName.ts';
 import {Event} from './Event.ts';
-import {ParentNode} from './ParentNode.ts';
+import {ParentNode, removeChildForAdoption} from './ParentNode.ts';
 import {Element} from './Element.ts';
 import {SVGElement} from './SVGElement.ts';
 import {Text} from './Text.ts';
@@ -28,14 +28,16 @@ import {Comment} from './Comment.ts';
 import {DocumentFragment} from './DocumentFragment.ts';
 import {HTMLTemplateElement} from './HTMLTemplateElement.ts';
 import {
-  isParentNode,
+  adoptNodes,
   cloneNode,
+  collectAdoptionSnapshot,
   getElementById as findElementById,
   getElementsByTagName as findElementsByTagName,
 } from './shared.ts';
 import {HTMLBodyElement} from './HTMLBodyElement.ts';
 import {HTMLHeadElement} from './HTMLHeadElement.ts';
 import {HTMLHtmlElement} from './HTMLHtmlElement.ts';
+import {performWithCustomElementReactions} from './custom-element-reactions.ts';
 
 export class Document extends ParentNode {
   nodeType: NodeType = NODE_TYPE_DOCUMENT;
@@ -125,10 +127,13 @@ export class Document extends ParentNode {
   adoptNode(node: Node) {
     if (node[OWNER_DOCUMENT] === this) return node;
 
-    node.parentNode?.removeChild(node);
-    adoptNode(node, this);
-
-    return node;
+    const adoption = collectAdoptionSnapshot(node);
+    return performWithCustomElementReactions(() => {
+      const parent = node.parentNode;
+      if (parent) removeChildForAdoption(parent, node, adoption, this);
+      else adoptNodes(adoption.nodes, this);
+      return node;
+    });
   }
 }
 
@@ -184,14 +189,4 @@ export function setupElement<T extends Element>(
   ownerDocument[HOOKS].createElement?.(element as any, namespace);
 
   return element;
-}
-
-export function adoptNode(node: Node, document: Document) {
-  node[OWNER_DOCUMENT] = document;
-
-  if (isParentNode(node)) {
-    for (const child of node.childNodes) {
-      adoptNode(child, document);
-    }
-  }
 }
