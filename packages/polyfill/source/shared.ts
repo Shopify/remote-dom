@@ -34,16 +34,7 @@ import {
   querySelector,
   querySelectorAll,
 } from './selectors.ts';
-
-export function createNotSupportedError(message: string) {
-  if (typeof DOMException === 'function') {
-    return new DOMException(message, 'NotSupportedError');
-  }
-
-  const error = new Error(message);
-  error.name = 'NotSupportedError';
-  return error;
-}
+import {createDOMException} from './dom-exception.ts';
 
 export function isAttributeNode(node: Node): node is Attr {
   return node.nodeType === NODE_TYPE_ATTRIBUTE;
@@ -185,7 +176,10 @@ export function cloneNode(
   document: Document = node.ownerDocument,
 ): Node {
   if (node.nodeType === NODE_TYPE_DOCUMENT) {
-    throw createNotSupportedError('Cannot clone a document node');
+    throw createDOMException(
+      'Cannot clone a document node',
+      'NotSupportedError',
+    );
   }
 
   const cloned = cloneNodeShallow(node, document);

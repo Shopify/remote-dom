@@ -18,6 +18,7 @@ import {
 } from './MutationObserver.ts';
 import {performWithCustomElementReactions} from './custom-element-reactions.ts';
 import {enqueueAttributeReaction} from './attribute-reactions.ts';
+import {createDOMException} from './dom-exception.ts';
 
 export class NamedNodeMap {
   [CHILD]: Attr | null = null;
@@ -155,11 +156,10 @@ export class NamedNodeMap {
     const currentOwner = attr[OWNER_ELEMENT];
 
     if (currentOwner != null && currentOwner !== ownerElement) {
-      const error = new Error(
+      throw createDOMException(
         'The attribute is already in use by another element.',
+        'InUseAttributeError',
       );
-      error.name = 'InUseAttributeError';
-      throw error;
     }
 
     let old = null;

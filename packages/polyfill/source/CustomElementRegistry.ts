@@ -1,3 +1,5 @@
+import {createDOMException} from './dom-exception.ts';
+
 const VALID_CUSTOM_ELEMENT_NAME =
   /^[a-z][^A-Z\u0000\t\n\f\r />]*-[^A-Z\u0000\t\n\f\r />]*$/u;
 
@@ -20,7 +22,7 @@ function isValidCustomElementName(name: string) {
 }
 
 function createInvalidCustomElementNameError(name: string) {
-  return new DOMException(
+  return createDOMException(
     `Invalid custom element name: "${name}"`,
     'SyntaxError',
   );
@@ -45,14 +47,14 @@ export class CustomElementRegistryImplementation
     }
 
     if (this.registry.has(name)) {
-      throw new DOMException(
+      throw createDOMException(
         `A custom element named "${name}" has already been defined`,
         'NotSupportedError',
       );
     }
 
     if (this.getName(Constructor) != null) {
-      throw new DOMException(
+      throw createDOMException(
         'This constructor has already been registered in this custom element registry',
         'NotSupportedError',
       );

@@ -9,6 +9,7 @@ import {
 } from './constants.ts';
 import {isElementNode} from './shared.ts';
 import {NodeList} from './NodeList.ts';
+import {createDOMException} from './dom-exception.ts';
 
 import type {Node} from './Node.ts';
 import type {Element} from './Element.ts';
@@ -57,7 +58,8 @@ export interface Matcher {
   value?: string;
 }
 
-const ELEMENT_SELECTOR_TEST = /[a-zA-Z]/;
+const SUPPORTED_IDENTIFIER_TEST =
+  /^(?:--|-?[A-Za-z_\u0080-\u{10FFFF}])[A-Za-z0-9_\u0080-\u{10FFFF}-]*$/u;
 
 function readFunctionArgument(
   selector: string,
@@ -88,6 +90,13 @@ function readFunctionArgument(
   }
 
   return [selector.slice(start), selector.length];
+}
+
+function throwSelectorSyntaxError(selector: string): never {
+  throw createDOMException(
+    `Invalid or unsupported selector: "${selector}"`,
+    'SyntaxError',
+  );
 }
 
 export function querySelector(
@@ -129,69 +138,114 @@ export function querySelectorAll(
   return results;
 }
 
-export function parseSelector(selector: string, insideHas = false) {
+export function parseSelector(
+  selector: string,
+  insideHas = false,
+  allowLeadingCombinator = false,
+) {
   let part: Part = {combinator: COMBINATOR_INNER, matchers: []};
   const parts = [part];
   const tokenizer =
-    /[\t\n\f\r ]*?([>\t\n\f\r +~]?)[\t\n\f\r ]*?(?:(?:\[[\t\n\f\r ]*([^\]=\t\n\f\r ]+)[\t\n\f\r ]*(?:=[\t\n\f\r ]*(?:(['"])(.*?)\3|([^\]\t\n\f\r ]+)))?[\t\n\f\r ]*\])|([#.]?)([^\t\n\f\r #.[>:+~()]+)|:(\w+)(\()?)/gi;
+    /[\t\n\f\r ]*?([>\t\n\f\r +~]?)[\t\n\f\r ]*?(?:(?:\[[\t\n\f\r ]*([^\]=\t\n\f\r ]+)[\t\n\f\r ]*(?:=[\t\n\f\r ]*(?:(['"])(.*?)\3|([^\]\t\n\f\r ]+)))?[\t\n\f\r ]*(?:\]|$))|([#.]?)([^\t\n\f\r #.[>:+~()]+)|:(\w+)(\()?)/gi;
   const normalizedSelector = selector.replace(
     /^[\t\n\f\r ]+|[\t\n\f\r ]+$/g,
     '',
   );
+  if (normalizedSelector === '') throwSelectorSyntaxError(selector);
+
+  let consumed = 0;
   let token;
   while ((token = tokenizer.exec(normalizedSelector))) {
-    // [1]: ancestor/parent/sibling/adjacent
+    if (token.index !== consumed) throwSelectorSyntaxError(selector);
+
+    // [1]: ancestor/ parent/ sibling/ adjacent
     // [2]: attribute name
-    // [4]/[5]: quoted/unquoted attribute value
+    // [3]/[4]: quoted attribute value
+    // [5]: unquoted attribute value
     // [6]: id/class sigil
-    // [7]: id/class name
+    // [7]: id/class/type name
     // [8]: :pseudo/:function() name
     // [9]: :function opening parenthesis
     if (token[1]) {
-      // Update the combinator on the (now parent) Part:
+      if (
+        part.matchers.length === 0 &&
+        !(allowLeadingCombinator && parts.length === 1)
+      ) {
+        throwSelectorSyntaxError(selector);
+      }
+
       if (token[1] === '>') part.combinator = COMBINATOR_CHILD;
       else if (token[1] === '+') part.combinator = COMBINATOR_ADJACENT;
       else if (token[1] === '~') part.combinator = COMBINATOR_SIBLING;
       else part.combinator = COMBINATOR_DESCENDANT;
-      // Add a new Part for the next selector parts:
       part = {combinator: COMBINATOR_INNER, matchers: []};
       parts.push(part);
     }
 
-    let type: MatcherType = MATCHER_UNKNOWN;
+    const name = token[8] ? asciiLowercase(token[8]) : (token[2] || token[7])!;
+    const isTypeSelector = token[7] != null && !token[6];
+    if (isTypeSelector && part.matchers.length > 0) {
+      throwSelectorSyntaxError(selector);
+    }
+
+    let type: MatcherType;
+    let value = token[4] ?? token[5] ?? token[7];
     if (token[2]) {
+      if (!SUPPORTED_IDENTIFIER_TEST.test(name)) {
+        throwSelectorSyntaxError(selector);
+      }
+
+      const unquotedValue = token[5];
+      const openingQuote = unquotedValue?.[0];
+      if (token[3] == null && (openingQuote === '"' || openingQuote === "'")) {
+        const valueOffset = token[0].lastIndexOf(unquotedValue!);
+        value = normalizedSelector.slice(token.index + valueOffset + 1);
+        tokenizer.lastIndex = normalizedSelector.length;
+      } else if (
+        unquotedValue != null &&
+        !SUPPORTED_IDENTIFIER_TEST.test(unquotedValue)
+      ) {
+        throwSelectorSyntaxError(selector);
+      }
       type = MATCHER_ATTRIBUTE;
     } else if (token[6]) {
+      if (!SUPPORTED_IDENTIFIER_TEST.test(name)) {
+        throwSelectorSyntaxError(selector);
+      }
       type = token[6] === '#' ? MATCHER_ID : MATCHER_CLASS;
     } else if (token[8]) {
       type = token[9] == null ? MATCHER_PSEUDO : MATCHER_FUNCTION;
-    } else if (token[7]) {
-      if (token[7] === '*') {
-        type = MATCHER_UNKNOWN; // Universal selector matches all
-      } else if (ELEMENT_SELECTOR_TEST.test(token[7])) {
-        type = MATCHER_ELEMENT;
-      }
+    } else if (token[7] === '*') {
+      type = MATCHER_UNKNOWN;
+    } else if (token[7] && SUPPORTED_IDENTIFIER_TEST.test(token[7])) {
+      type = MATCHER_ELEMENT;
+    } else {
+      throwSelectorSyntaxError(selector);
     }
-    let value = token[4] ?? token[5] ?? token[7];
+
     if (token[9]) {
       [value, tokenizer.lastIndex] = readFunctionArgument(
         normalizedSelector,
         tokenizer.lastIndex,
       );
-    }
-    const name = token[8] ? asciiLowercase(token[8]) : (token[2] || token[7])!;
-    if (type === MATCHER_FUNCTION && (name === 'has' || name === 'not')) {
-      if (name === 'has' && insideHas) {
-        throw Error(':has() cannot be nested inside :has()');
+
+      if (name !== 'has' && name !== 'not') {
+        throwSelectorSyntaxError(selector);
       }
-      parseSelector(value!, insideHas || name === 'has');
+      if (name === 'has' && insideHas) throwSelectorSyntaxError(selector);
+      parseSelector(value, insideHas || name === 'has', name === 'has');
+    } else if (type === MATCHER_PSEUDO) {
+      throwSelectorSyntaxError(selector);
     }
-    part.matchers.push({
-      type,
-      name,
-      value,
-    });
+
+    part.matchers.push({type, name, value});
+    consumed = tokenizer.lastIndex;
   }
+
+  if (consumed !== normalizedSelector.length || part.matchers.length === 0) {
+    throwSelectorSyntaxError(selector);
+  }
+
   return parts;
 }
 
@@ -203,7 +257,7 @@ function matchesSelector(element: Element, selector: string) {
 }
 
 function matchesRelativeSelector(scope: Element, selector: string) {
-  const parts = parseSelector(selector);
+  const parts = parseSelector(selector, true, true);
   const first = parts[0]!;
   if (parts.length === 1 && first.matchers.length === 0) return false;
 
@@ -363,10 +417,7 @@ function matchesSelectorMatcher(
     case MATCHER_SCOPE:
       return element === scope;
     case MATCHER_PSEUDO:
-      switch (name) {
-        default:
-          throw Error(`Pseudo :${name} not implemented`);
-      }
+      throwSelectorSyntaxError(`:${name}`);
     case MATCHER_FUNCTION:
       switch (name) {
         case 'has':
@@ -374,7 +425,7 @@ function matchesSelectorMatcher(
         case 'not':
           return !matchesSelector(element, value || '');
         default:
-          throw Error(`Function :${name}(${value}) not implemented`);
+          throwSelectorSyntaxError(`:${name}(${value})`);
       }
   }
   return false;

@@ -100,14 +100,10 @@ describe('selector parsing and matching', () => {
       });
     });
 
-    it('parses pseudo-class selectors', () => {
-      const parts = parseSelector(':hover');
-      expect(parts).toHaveLength(1);
-      expect(parts[0]!.matchers[0]!).toMatchObject({
-        type: 5, // MatcherType.Pseudo
-        name: 'hover',
-        value: undefined,
-      });
+    it('rejects unsupported pseudo-class selectors', () => {
+      expect(() => parseSelector(':hover')).toThrowError(
+        expect.objectContaining({name: 'SyntaxError'}),
+      );
     });
 
     it('parses function selectors', () => {
@@ -149,7 +145,6 @@ describe('selector parsing and matching', () => {
     it.each([
       [':HAS(div)', 6, 'has', 'div'],
       [':Not(.Hidden)', 6, 'not', '.Hidden'],
-      [':HOVER', 5, 'hover', undefined],
     ])(
       'ASCII-lowercases only the pseudo-class name in %s',
       (selector, type, name, value) => {
@@ -369,6 +364,18 @@ describe('selector parsing and matching', () => {
       expect(container.querySelector('.left')).toBe(separated);
     });
 
+    it('selects Unicode and double-hyphen identifiers', () => {
+      const article = container.querySelector('article')!;
+      const unicode = document.createElement('span');
+      unicode.setAttribute('class', 'é');
+      unicode.id = '--foo';
+      article.appendChild(unicode);
+
+      expect(container.querySelector('.é')).toBe(unicode);
+      expect(container.querySelector('#--foo')).toBe(unicode);
+      expect(container.querySelector('article:has(> .é)')).toBe(article);
+    });
+
     it('selects by attribute', () => {
       const links = container.querySelectorAll('[href]');
       expect(links).toHaveLength(2);
@@ -504,8 +511,12 @@ describe('selector parsing and matching', () => {
       (selector) => {
         const empty = document.createElement('div');
         for (const root of [empty, container]) {
-          expect(() => root.querySelector(selector)).toThrow();
-          expect(() => root.querySelectorAll(selector)).toThrow();
+          expect(() => root.querySelector(selector)).toThrowError(
+            expect.objectContaining({name: 'SyntaxError'}),
+          );
+          expect(() => root.querySelectorAll(selector)).toThrowError(
+            expect.objectContaining({name: 'SyntaxError'}),
+          );
         }
       },
     );
@@ -593,9 +604,7 @@ describe('selector parsing and matching', () => {
       expect(container.querySelector(selector) != null).toBe(matches);
     });
 
-    it('handles edge cases', () => {
-      expect(container.querySelectorAll('')).toHaveLength(0);
-
+    it('selects all elements with the universal selector', () => {
       const allElements = container.querySelectorAll('*');
       expect(allElements.length).toBeGreaterThan(0);
     });
