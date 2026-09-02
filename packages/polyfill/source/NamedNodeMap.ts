@@ -6,13 +6,14 @@ import {
   NEXT,
   type NamespaceURI,
   HOOKS,
+  HTML_NAMESPACE,
+  asciiLowercase,
 } from './constants.ts';
+import {normalizeNamespace} from './names.ts';
 import type {Attr} from './Attr.ts';
 import type {Element} from './Element.ts';
-import {
-  enqueueCustomElementReaction,
-  performWithCustomElementReactions,
-} from './custom-element-reactions.ts';
+import {performWithCustomElementReactions} from './custom-element-reactions.ts';
+import {enqueueAttributeReaction} from './attribute-reactions.ts';
 
 export class NamedNodeMap {
   [CHILD]: Attr | null = null;
@@ -23,13 +24,27 @@ export class NamedNodeMap {
   }
 
   getNamedItem(name: string) {
-    return this.getNamedItemNS(null, name);
-  }
+    const qualifiedName = String(name);
+    const normalizedName =
+      this[OWNER_ELEMENT][NS] === HTML_NAMESPACE
+        ? asciiLowercase(qualifiedName)
+        : qualifiedName;
 
-  getNamedItemNS(namespaceURI: NamespaceURI | null, name: string) {
     let attr = this[CHILD];
     while (attr) {
-      if (attr.name === name && attr[NS] == namespaceURI) {
+      if (attr.name === normalizedName) return attr;
+      attr = attr[NEXT];
+    }
+    return null;
+  }
+
+  getNamedItemNS(namespaceURI: NamespaceURI, localName: string) {
+    const namespace = normalizeNamespace(namespaceURI);
+    const normalizedLocalName = String(localName);
+
+    let attr = this[CHILD];
+    while (attr) {
+      if (attr.localName === normalizedLocalName && attr[NS] === namespace) {
         return attr;
       }
       attr = attr[NEXT];
@@ -58,25 +73,36 @@ export class NamedNodeMap {
   }
 
   removeNamedItem(name: string) {
-    return this.removeNamedItemNS(null, name);
-  }
+    const qualifiedName = String(name);
+    const normalizedName =
+      this[OWNER_ELEMENT][NS] === HTML_NAMESPACE
+        ? asciiLowercase(qualifiedName)
+        : qualifiedName;
 
-  removeNamedItemNS(namespaceURI: NamespaceURI | null, name: string) {
     return performWithCustomElementReactions(() =>
-      this.removeNamedItemNSImmediately(namespaceURI, name),
+      this.removeNamedItemImmediately((attr) => attr.name === normalizedName),
     );
   }
 
-  private removeNamedItemNSImmediately(
-    namespaceURI: NamespaceURI | null,
-    name: string,
-  ) {
+  removeNamedItemNS(namespaceURI: NamespaceURI, localName: string) {
+    const namespace = normalizeNamespace(namespaceURI);
+    const normalizedLocalName = String(localName);
+
+    return performWithCustomElementReactions(() =>
+      this.removeNamedItemImmediately(
+        (attr) =>
+          attr.localName === normalizedLocalName && attr[NS] === namespace,
+      ),
+    );
+  }
+
+  private removeNamedItemImmediately(matches: (attr: Attr) => boolean) {
     const ownerElement = this[OWNER_ELEMENT];
     let attr = this[CHILD];
     let prev: typeof attr | null = null;
 
     while (attr != null) {
-      if (attr.name === name && attr[NS] == namespaceURI) {
+      if (matches(attr)) {
         if (prev) prev[NEXT] = attr[NEXT];
         if (this[CHILD] === attr) this[CHILD] = attr[NEXT];
 
@@ -86,10 +112,16 @@ export class NamedNodeMap {
 
         ownerElement[HOOKS].removeAttribute?.(
           ownerElement as any,
-          name,
-          namespaceURI,
+          attr.name,
+          attr[NS],
         );
-        updateElementAttribute(ownerElement, attr.name, oldValue, null);
+        enqueueAttributeReaction(
+          ownerElement,
+          attr.localName,
+          oldValue,
+          null,
+          attr[NS],
+        );
         return attr;
       }
 
@@ -123,7 +155,7 @@ export class NamedNodeMap {
     let prev: Attr | null = null;
 
     while (child) {
-      if (child.name === attr.name && child[NS] == attr[NS]) {
+      if (child.localName === attr.localName && child[NS] === attr[NS]) {
         if (child === attr) return child;
 
         if (prev) prev[NEXT] = attr;
@@ -156,11 +188,12 @@ export class NamedNodeMap {
         attr[NS],
       );
 
-      updateElementAttribute(
+      enqueueAttributeReaction(
         ownerElement,
-        attr.name,
+        attr.localName,
         old?.value ?? null,
         attr.value,
+        attr[NS],
       );
     }
 
@@ -178,26 +211,4 @@ export class NamedNodeMap {
       attr = attr[NEXT];
     }
   }
-}
-
-function updateElementAttribute(
-  element: Element,
-  name: string,
-  oldValue: string | null,
-  newValue: string | null,
-) {
-  const {observedAttributes} = element.constructor as typeof Element;
-  const {attributeChangedCallback} = element;
-
-  if (
-    attributeChangedCallback == null ||
-    observedAttributes == null ||
-    !observedAttributes.includes(name)
-  ) {
-    return;
-  }
-
-  enqueueCustomElementReaction(() =>
-    attributeChangedCallback.call(element, name, oldValue, newValue),
-  );
 }

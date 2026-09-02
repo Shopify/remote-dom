@@ -1,14 +1,21 @@
 import {
   NS,
   NAME,
+  PREFIX,
   NODE_TYPE_DOCUMENT,
+  HTML_NAMESPACE,
   SVG_NAMESPACE,
   type NamespaceURI,
   type NodeType,
   OWNER_DOCUMENT,
   HOOKS,
   IS_CONNECTED,
+  asciiLowercase,
 } from './constants.ts';
+import {
+  validateAndExtractQualifiedName,
+  validateElementLocalName,
+} from './names.ts';
 import type {Window} from './Window.ts';
 import type {Node} from './Node.ts';
 import {getElementsByClassName as findElementsByClassName} from './getElementsByClassName.ts';
@@ -63,11 +70,24 @@ export class Document extends ParentNode {
   }
 
   createElement(localName: string) {
-    return createElement(this, localName);
+    const name = String(localName);
+    validateElementLocalName(name);
+    return createElement(this, asciiLowercase(name));
   }
 
-  createElementNS(namespaceURI: NamespaceURI, localName: string) {
-    return createElement(this, localName, namespaceURI);
+  createElementNS(namespaceURI: NamespaceURI, qualifiedName: string) {
+    const name = validateAndExtractQualifiedName(
+      namespaceURI,
+      qualifiedName,
+      'element',
+    );
+    return createElement(
+      this,
+      name.qualifiedName,
+      name.namespace,
+      name.prefix,
+      name.localName,
+    );
   }
 
   createTextNode(data: any) {
@@ -122,37 +142,42 @@ export function createNode<T extends Node>(node: T, ownerDocument: Document) {
 
 export function createElement<T extends Element>(
   ownerDocument: Document,
-  name: string,
-  namespace?: NamespaceURI,
+  qualifiedName: string,
+  namespace: NamespaceURI = HTML_NAMESPACE,
+  prefix: string | null = null,
+  localName = qualifiedName,
 ) {
   let element: T;
-  const lowerName = String(name).toLowerCase();
 
   if (namespace === SVG_NAMESPACE) {
     element = new SVGElement() as any;
-  } else if (lowerName === 'template') {
+  } else if (namespace === HTML_NAMESPACE && localName === 'template') {
     element = new HTMLTemplateElement() as any;
-  } else {
-    const CustomElement = ownerDocument.defaultView.customElements.get(name);
+  } else if (namespace === HTML_NAMESPACE) {
+    const CustomElement =
+      ownerDocument.defaultView.customElements.get(localName);
     element = CustomElement ? (new CustomElement() as any) : new Element();
+  } else {
+    element = new Element() as any;
   }
 
-  return setupElement(element, ownerDocument, name, namespace);
+  return setupElement(element, ownerDocument, qualifiedName, namespace, prefix);
 }
 
 export function setupElement<T extends Element>(
   element: T,
   ownerDocument: Document,
-  name: string,
-  namespace?: NamespaceURI,
+  qualifiedName: string,
+  namespace: NamespaceURI = HTML_NAMESPACE,
+  prefix: string | null = null,
 ) {
   createNode(element, ownerDocument);
 
-  Object.defineProperty(element, NAME, {value: name});
-
-  if (namespace) {
-    Object.defineProperty(element, NS, {value: namespace});
-  }
+  Object.defineProperties(element, {
+    [NAME]: {value: qualifiedName},
+    [NS]: {value: namespace},
+    [PREFIX]: {value: prefix},
+  });
 
   ownerDocument[HOOKS].createElement?.(element as any, namespace);
 

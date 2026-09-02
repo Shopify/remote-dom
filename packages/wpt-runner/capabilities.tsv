@@ -21,15 +21,15 @@ dom/nodes/Document-getElementById.html	supported	update `id` attribute via eleme
 dom/nodes/Document-getElementById.html	supported	update `id` attribute via setAttribute/removeAttribute
 dom/nodes/Document-getElementById.html	supported	where insertion order and tree order don't match
 dom/nodes/Document-getElementsByTagName.html	supported	Caching is allowed
-dom/nodes/Document-getElementsByTagName.html	deferred	Element in HTML namespace, no prefix, non-ascii characters in name	Requires ASCII-only case folding for HTML qualified names.
-dom/nodes/Document-getElementsByTagName.html	deferred	Element in HTML namespace, prefix, non-ascii characters in name	Requires ASCII-only case folding for HTML qualified names.
+dom/nodes/Document-getElementsByTagName.html	supported	Element in HTML namespace, no prefix, non-ascii characters in name
+dom/nodes/Document-getElementsByTagName.html	supported	Element in HTML namespace, prefix, non-ascii characters in name
 dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, no prefix, lowercase name
 dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, no prefix, uppercase name
 dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, non-ascii characters in name
 dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, lowercase name
 dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, non-ascii characters in name
 dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, uppercase name
-dom/nodes/Document-getElementsByTagName.html	deferred	HTML element with uppercase tagName never matches in HTML Documents	Requires HTML-document qualified-name matching for uppercase-created XHTML elements.
+dom/nodes/Document-getElementsByTagName.html	supported	HTML element with uppercase tagName never matches in HTML Documents
 dom/nodes/Document-getElementsByTagName.html	deferred	Interfaces	Requires `HTMLCollection` and exposed collection constructors.
 dom/nodes/Document-getElementsByTagName.html	deferred	Should be able to set expando shadowing a proto prop (item)	Requires `HTMLCollection.prototype.item`.
 dom/nodes/Document-getElementsByTagName.html	deferred	Should be able to set expando shadowing a proto prop (namedItem)	Requires `HTMLCollection.prototype.namedItem`.
@@ -39,15 +39,15 @@ dom/nodes/Document-getElementsByTagName.html	deferred	getElementsByTagName('*')	
 dom/nodes/Document-getElementsByTagName.html	deferred	getElementsByTagName() should be a live collection	Requires a live `HTMLCollection`.
 dom/nodes/Document-getElementsByTagName.html	deferred	hasOwnProperty, getOwnPropertyDescriptor, getOwnPropertyNames	Requires `HTMLCollection` named property semantics.
 dom/nodes/Element-getElementsByTagName.html	supported	Caching is allowed
-dom/nodes/Element-getElementsByTagName.html	deferred	Element in HTML namespace, no prefix, non-ascii characters in name	Requires ASCII-only case folding for HTML qualified names.
-dom/nodes/Element-getElementsByTagName.html	deferred	Element in HTML namespace, prefix, non-ascii characters in name	Requires ASCII-only case folding for HTML qualified names.
+dom/nodes/Element-getElementsByTagName.html	supported	Element in HTML namespace, no prefix, non-ascii characters in name
+dom/nodes/Element-getElementsByTagName.html	supported	Element in HTML namespace, prefix, non-ascii characters in name
 dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, no prefix, lowercase name
 dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, no prefix, uppercase name
 dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, non-ascii characters in name
 dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, lowercase name
 dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, non-ascii characters in name
 dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, uppercase name
-dom/nodes/Element-getElementsByTagName.html	deferred	HTML element with uppercase tagName never matches in HTML Documents	Requires HTML-document qualified-name matching for uppercase-created XHTML elements.
+dom/nodes/Element-getElementsByTagName.html	supported	HTML element with uppercase tagName never matches in HTML Documents
 dom/nodes/Element-getElementsByTagName.html	deferred	Interfaces	Requires `HTMLCollection` and exposed collection constructors.
 dom/nodes/Element-getElementsByTagName.html	supported	Matching the context object
 dom/nodes/Element-getElementsByTagName.html	deferred	Should be able to set expando shadowing a proto prop (item)	Requires `HTMLCollection.prototype.item`.

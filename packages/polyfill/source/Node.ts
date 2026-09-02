@@ -45,7 +45,7 @@ export class Node extends EventTarget {
   }
 
   get nodeName() {
-    return this[NAME].toUpperCase();
+    return this[NAME];
   }
 
   get ownerDocument() {
