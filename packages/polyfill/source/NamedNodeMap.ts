@@ -13,6 +13,7 @@ import {
   attributeObserversActive,
   queueMutationRecord,
 } from './MutationObserver.ts';
+import {toPropertyIndex} from './shared.ts';
 
 export class NamedNodeMap {
   readonly [index: number]: Attr;
@@ -177,21 +178,21 @@ const namedNodeMapPropertyFallback = new Proxy(
   {},
   {
     get(target, property, receiver) {
-      if (typeof property === 'string') {
-        const namedNodeMap = receiver as NamedNodeMap;
-        const index = Number(property);
+      const namedNodeMap = receiver as NamedNodeMap;
+      const index = toPropertyIndex(property);
 
-        if (index >= 0 && index % 1 === 0 && String(index) === property) {
-          const indexedAttribute = namedNodeMap.item(index);
-          if (indexedAttribute) return indexedAttribute;
-        }
-
-        if (!(property in target)) {
-          return namedNodeMap.getNamedItem(property) ?? undefined;
-        }
+      if (index !== undefined) {
+        const indexedAttribute = namedNodeMap.item(index);
+        if (indexedAttribute) return indexedAttribute;
       }
 
-      return Reflect.get(target, property, receiver);
+      if (property in target) {
+        return Reflect.get(target, property, receiver);
+      }
+
+      return typeof property === 'string'
+        ? (namedNodeMap.getNamedItem(property) ?? undefined)
+        : undefined;
     },
   },
 );

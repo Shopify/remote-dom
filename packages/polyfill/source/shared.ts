@@ -25,6 +25,16 @@ import {
   querySelectorAll,
 } from './selectors.ts';
 
+export function toPropertyIndex(property: PropertyKey) {
+  if (typeof property !== 'string') return undefined;
+
+  const index = Number(property);
+
+  return index >= 0 && index % 1 === 0 && String(index) === property
+    ? index
+    : undefined;
+}
+
 export function isCharacterData(node: Node): node is CharacterData {
   return DATA in node;
 }
