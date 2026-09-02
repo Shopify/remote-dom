@@ -1267,6 +1267,68 @@ describe('RemoteElement', () => {
     });
   });
 
+  describe('polyfill hook publication', () => {
+    it('does not replay an insertion included in a pending subtree', () => {
+      const {root, receiver} = createAndConnectRemoteRootElement();
+      const fragment = document.createDocumentFragment();
+      const first = document.createElement('section');
+      const second = document.createElement('section');
+      const added = document.createElement('span');
+      fragment.append(first, second);
+      let mutatePendingSubtree = true;
+      receiver.subscribe(receiver.root, () => {
+        if (mutatePendingSubtree && receiver.root.children.length === 1) {
+          mutatePendingSubtree = false;
+          second.appendChild(added);
+        }
+      });
+
+      root.appendChild(fragment);
+
+      const remoteSecond = receiver.root.children[1] as RemoteReceiverElement;
+      expect(remoteSecond.children.map(({id}) => id)).toEqual([
+        remoteId(added),
+      ]);
+
+      const later = document.createElement('span');
+      second.appendChild(later);
+      expect(remoteSecond.children.map(({id}) => id)).toEqual([
+        remoteId(added),
+        remoteId(later),
+      ]);
+    });
+
+    it('does not replay a removal included in a pending subtree', () => {
+      const {root, receiver} = createAndConnectRemoteRootElement();
+      const fragment = document.createDocumentFragment();
+      const first = document.createElement('section');
+      const second = document.createElement('section');
+      const removed = document.createElement('span');
+      const kept = document.createElement('span');
+      second.append(removed, kept);
+      fragment.append(first, second);
+      let mutatePendingSubtree = true;
+      receiver.subscribe(receiver.root, () => {
+        if (mutatePendingSubtree && receiver.root.children.length === 1) {
+          mutatePendingSubtree = false;
+          second.removeChild(removed);
+        }
+      });
+
+      root.appendChild(fragment);
+
+      const remoteSecond = receiver.root.children[1] as RemoteReceiverElement;
+      expect(remoteSecond.children.map(({id}) => id)).toEqual([remoteId(kept)]);
+
+      const later = document.createElement('span');
+      second.appendChild(later);
+      expect(remoteSecond.children.map(({id}) => id)).toEqual([
+        remoteId(kept),
+        remoteId(later),
+      ]);
+    });
+  });
+
   describe('methods', () => {
     it('calls a method on the remote receiver', () => {
       class HelloElement extends RemoteElement<{}, {greet(): void}> {
