@@ -78,6 +78,7 @@ export class ParentNode extends ChildNode {
   removeChild(child: Node) {
     return performWithCustomElementReactions(() => {
       this.removeChildImmediately(child);
+      return child;
     });
   }
 
@@ -142,6 +143,8 @@ export class ParentNode extends ChildNode {
       this.validateInsertion(newChild, next);
       this.removeChildImmediately(oldChild);
       this.insertIntoValidated(newChild, next);
+
+      return oldChild;
     });
   }
 
