@@ -13,8 +13,6 @@ export const EVENT_PHASE_BUBBLING = 3;
 
 export type EventPhase = number;
 
-export const CAPTURE_MARKER = '@';
-
 export interface EventInit {
   bubbles?: boolean;
   cancelable?: boolean;
@@ -107,9 +105,9 @@ export function fireEvent(
   phase: typeof EVENT_PHASE_BUBBLING | typeof EVENT_PHASE_CAPTURING,
 ): void {
   const listeners = currentTarget[LISTENERS];
-  const list = listeners?.get(
-    `${event.type}${phase === EVENT_PHASE_CAPTURING ? CAPTURE_MARKER : ''}`,
-  );
+  const list = listeners?.get(event.type)?.[
+    phase === EVENT_PHASE_CAPTURING ? 'capture' : 'bubble'
+  ];
 
   if (!list) return;
 
