@@ -71,6 +71,8 @@ export class NamedNodeMap {
           name,
           namespaceURI,
         );
+        attr[NEXT] = null;
+        attr[OWNER_ELEMENT] = null;
         return attr;
       }
 
@@ -83,31 +85,42 @@ export class NamedNodeMap {
 
   setNamedItem(attr: Attr) {
     const ownerElement = this[OWNER_ELEMENT];
+    const currentOwner = attr[OWNER_ELEMENT];
+
+    if (currentOwner != null && currentOwner !== ownerElement) {
+      const error = new Error(
+        'The attribute is already in use by another element.',
+      );
+      error.name = 'InUseAttributeError';
+      throw error;
+    }
+
     let old = null;
     let child = this[CHILD];
-    attr[OWNER_ELEMENT] = ownerElement;
-    if (child == null) {
-      this[CHILD] = attr;
-      // return null;
-    } else {
-      let prev;
-      while (child) {
-        if (child.name === attr.name && child[NS] == attr[NS]) {
-          if (prev) prev[NEXT] = attr;
-          else this[CHILD] = attr;
-          attr[NEXT] = child[NEXT];
-          child[NEXT] = null;
-          old = child;
-          break;
-          // return child;
-        }
-        prev = child;
-        child = child[NEXT];
+    let prev: Attr | null = null;
+
+    while (child) {
+      if (child.name === attr.name && child[NS] == attr[NS]) {
+        if (child === attr) return child;
+
+        if (prev) prev[NEXT] = attr;
+        else this[CHILD] = attr;
+        attr[NEXT] = child[NEXT];
+        child[NEXT] = null;
+        old = child;
+        break;
       }
+
+      prev = child;
+      child = child[NEXT];
+    }
+
+    if (old == null) {
       if (prev) prev[NEXT] = attr;
       else this[CHILD] = attr;
-      // return null;
     }
+
+    attr[OWNER_ELEMENT] = ownerElement;
 
     // only invoke the protocol if the value changed
     if (!old || old.value !== attr.value) {
@@ -125,6 +138,8 @@ export class NamedNodeMap {
         attr[NS],
       );
     }
+
+    if (old) old[OWNER_ELEMENT] = null;
 
     return old;
   }
