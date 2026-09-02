@@ -1,4 +1,6 @@
 import {Window} from '../index.ts';
+import {NodeList} from '../NodeList.ts';
+import type {Element as PolyfillElement} from '../Element.ts';
 import {
   MATCHER_CLASS,
   MATCHER_ELEMENT,
@@ -17,7 +19,7 @@ const MatcherType = {
   Class: MATCHER_CLASS,
 } as const;
 
-import {describe, it, expect, beforeEach} from 'vitest';
+import {describe, it, expect, expectTypeOf, beforeEach} from 'vitest';
 
 describe('selector parsing and matching', () => {
   beforeEach(() => {
@@ -219,6 +221,16 @@ describe('selector parsing and matching', () => {
       container.querySelector('.highlight')!.setAttribute('data-label', 'a)b');
     });
 
+    it('types instance query results as elements', () => {
+      const matches = new Window().document
+        .createElement('div')
+        .querySelectorAll('p');
+
+      expectTypeOf(matches).toEqualTypeOf<NodeList<PolyfillElement>>();
+      expectTypeOf(matches[0]!).toEqualTypeOf<PolyfillElement>();
+      expectTypeOf(matches.item(0)).toEqualTypeOf<PolyfillElement | null>();
+    });
+
     it('selects HTML element names case-insensitively', () => {
       const articles = container.querySelectorAll('ARTICLE');
       expect(articles).toHaveLength(1);
@@ -226,6 +238,25 @@ describe('selector parsing and matching', () => {
 
       const paragraphs = container.querySelectorAll('p');
       expect(paragraphs).toHaveLength(3);
+    });
+
+    it('returns a static NodeList-compatible collection', () => {
+      const matches = container.querySelectorAll('.text');
+      const text = [...matches].map((element) => element.textContent?.trim());
+      const visited: string[] = [];
+
+      matches.forEach((element) => visited.push(element.textContent?.trim()!));
+      container.appendChild(document.createElement('p')).className = 'text';
+
+      expect(matches).toBeInstanceOf(NodeList);
+      expect(matches).toHaveLength(3);
+      expect(matches.item(0)).toBe(matches[0]);
+      expect(matches.item(-1)).toBeNull();
+      expect(matches.item(matches.length)).toBeNull();
+      expect(
+        [...matches].map((element) => element.textContent?.trim()),
+      ).toEqual(text);
+      expect(visited).toEqual(text);
     });
 
     it('does not fold stored createElementNS HTML names', () => {
@@ -497,6 +528,16 @@ describe('selector parsing and matching', () => {
         {type: MatcherType.Id, name: 'main-post'},
       ]);
       expect(main?.tagName.toLowerCase()).toBe('article');
+    });
+
+    it('types standalone query results as elements', () => {
+      const matches = querySelectorAll(asPolyfill(container), [
+        {type: MatcherType.Element, name: 'p'},
+      ]);
+
+      expectTypeOf(matches).toEqualTypeOf<NodeList<PolyfillElement>>();
+      expectTypeOf(matches[0]!).toEqualTypeOf<PolyfillElement>();
+      expectTypeOf(matches.item(0)).toEqualTypeOf<PolyfillElement | null>();
     });
 
     it('selects by element matcher without parsing', () => {
