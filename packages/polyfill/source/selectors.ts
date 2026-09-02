@@ -6,7 +6,7 @@ import {
   HTML_NAMESPACE,
   asciiLowercase,
 } from './constants.ts';
-import {isElementNode} from './shared.ts';
+import {isElementNode, splitOnASCIIWhitespace} from './shared.ts';
 import {NodeList} from './NodeList.ts';
 
 import type {Node} from './Node.ts';
@@ -355,7 +355,7 @@ function matchesSelectorMatcher(
     case MATCHER_CLASS:
       const classAttr = getSelectorAttribute(element, 'class');
       if (!classAttr) return false;
-      return classAttr.split(/[\t\n\f\r ]+/).includes(name);
+      return splitOnASCIIWhitespace(classAttr).includes(name);
     case MATCHER_ATTRIBUTE:
       const attribute = getSelectorAttribute(element, name);
       return value == null ? attribute != null : attribute === value;

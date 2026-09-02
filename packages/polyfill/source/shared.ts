@@ -27,6 +27,12 @@ import {
   querySelectorAll,
 } from './selectors.ts';
 
+const ASCII_WHITESPACE = /[\t\n\f\r ]+/;
+
+export function splitOnASCIIWhitespace(value: string) {
+  return value.split(ASCII_WHITESPACE).filter(Boolean);
+}
+
 export function isCharacterData(node: Node): node is CharacterData {
   return DATA in node;
 }
@@ -106,9 +112,7 @@ export function getElementById(within: ParentNode, elementId: string) {
 }
 
 export function getElementsByClassName(within: ParentNode, classNames: string) {
-  const names = [...new Set(String(classNames).split(/[\t\n\f\r ]+/))].filter(
-    Boolean,
-  );
+  const names = [...new Set(splitOnASCIIWhitespace(String(classNames)))];
 
   return querySelectorAll(
     within,
