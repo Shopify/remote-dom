@@ -11,6 +11,7 @@ import {
   NAME,
   HTML_NAMESPACE,
   asciiLowercase,
+  CONTENT,
 } from './constants.ts';
 import type {Document} from './Document.ts';
 import type {DocumentFragment} from './DocumentFragment.ts';
@@ -20,6 +21,7 @@ import type {ParentNode} from './ParentNode.ts';
 import type {Element} from './Element.ts';
 import type {CharacterData} from './CharacterData.ts';
 import type {Text} from './Text.ts';
+import type {HTMLTemplateElement} from './HTMLTemplateElement.ts';
 import {MATCHER_ID, querySelector} from './selectors.ts';
 
 export function isCharacterData(node: Node): node is CharacterData {
@@ -44,6 +46,53 @@ export function isDocumentFragmentNode(node: Node): node is DocumentFragment {
 
 export function isParentNode(node: Node): node is ParentNode {
   return 'appendChild' in node;
+}
+
+export function collectAdoptionSnapshot(root: Node) {
+  const nodes: Node[] = [];
+  const pendingRoots = [root];
+  const pending = new Set<Node>(pendingRoots);
+  const visited = new Set<Node>();
+  let treeNodes: Node[] | undefined;
+
+  while (pendingRoots.length > 0) {
+    const currentRoot = pendingRoots.pop()!;
+    pending.delete(currentRoot);
+    if (visited.has(currentRoot)) continue;
+
+    const currentTreeNodes: Node[] = [];
+    for (const node of selfAndDescendants(currentRoot)) {
+      if (visited.has(node)) continue;
+
+      visited.add(node);
+      nodes.push(node);
+      currentTreeNodes.push(node);
+      if (!isElementNode(node)) continue;
+
+      const attributes = node[ATTRIBUTES];
+      if (attributes) {
+        for (const attribute of attributes) {
+          if (visited.has(attribute)) continue;
+          visited.add(attribute);
+          nodes.push(attribute);
+        }
+      }
+
+      const content = (node as HTMLTemplateElement)[CONTENT];
+      if (content && !visited.has(content) && !pending.has(content)) {
+        pending.add(content);
+        pendingRoots.push(content);
+      }
+    }
+
+    treeNodes ??= currentTreeNodes;
+  }
+
+  return {nodes, treeNodes: treeNodes!};
+}
+
+export function adoptNodes(nodes: Node[], document: Document) {
+  for (const node of nodes) node[OWNER_DOCUMENT] = document;
 }
 
 export function cloneNode(
