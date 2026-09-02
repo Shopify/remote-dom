@@ -2,6 +2,7 @@ import {describe, expect, it, vi} from 'vitest';
 
 import {HOOKS} from '../constants.ts';
 import type {Hooks} from '../hooks.ts';
+import {MutationObserver as PolyfillMutationObserver} from '../MutationObserver.ts';
 import {Window} from '../Window.ts';
 
 describe('Window extensions', () => {
@@ -130,7 +131,7 @@ describe('Window extensions', () => {
   });
 
   it('supports extensions that only install APIs', () => {
-    class CustomMutationObserver {}
+    class CustomMutationObserver extends PolyfillMutationObserver {}
 
     const ExtendedWindow = Window.with((window) => {
       window.MutationObserver = CustomMutationObserver;
@@ -141,8 +142,8 @@ describe('Window extensions', () => {
   });
 
   it('lets later extensions override window APIs set by earlier ones', () => {
-    class FirstMutationObserver {}
-    class SecondMutationObserver {}
+    class FirstMutationObserver extends PolyfillMutationObserver {}
+    class SecondMutationObserver extends PolyfillMutationObserver {}
 
     const ExtendedWindow = Window.with(
       (window) => {
