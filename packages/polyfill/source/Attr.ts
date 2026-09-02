@@ -42,10 +42,16 @@ export class Attr extends Node {
 
   set value(value: string) {
     const str = String(value);
-    this[VALUE] = str;
     const ownerElement = this[OWNER_ELEMENT];
-    if (!ownerElement) return;
-    this[HOOKS].setAttribute?.(ownerElement as any, this[NAME], str, this[NS]);
+
+    if (!ownerElement) {
+      this[VALUE] = str;
+      return;
+    }
+
+    const hooks = this[HOOKS];
+    this[VALUE] = str;
+    hooks.setAttribute?.(ownerElement as any, this[NAME], str, this[NS]);
   }
 
   get nodeValue() {
