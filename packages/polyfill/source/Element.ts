@@ -16,11 +16,13 @@ import {
   validateAttributeLocalName,
 } from './names.ts';
 import {ParentNode} from './ParentNode.ts';
-import {getElementsByClassName as findElementsByClassName} from './getElementsByClassName.ts';
 import {NamedNodeMap} from './NamedNodeMap.ts';
 import {Attr} from './Attr.ts';
 import {serializeNode, serializeChildren, parseHtml} from './serialization.ts';
-import {getElementsByTagName as findElementsByTagName} from './shared.ts';
+import {
+  getElementsByClassName as findElementsByClassName,
+  getElementsByTagName as findElementsByTagName,
+} from './shared.ts';
 
 export class Element extends ParentNode {
   static readonly observedAttributes?: string[];
