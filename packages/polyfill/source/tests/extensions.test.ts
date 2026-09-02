@@ -139,4 +139,20 @@ describe('Window extensions', () => {
 
     expect(window.MutationObserver).toBe(CustomMutationObserver);
   });
+
+  it('lets later extensions override window APIs set by earlier ones', () => {
+    class FirstMutationObserver {}
+    class SecondMutationObserver {}
+
+    const ExtendedWindow = Window.with(
+      (window) => {
+        window.MutationObserver = FirstMutationObserver;
+      },
+      (window) => {
+        window.MutationObserver = SecondMutationObserver;
+      },
+    );
+
+    expect(new ExtendedWindow().MutationObserver).toBe(SecondMutationObserver);
+  });
 });

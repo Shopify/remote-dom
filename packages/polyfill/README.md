@@ -37,8 +37,15 @@ This process will install polyfilled versions of the following globals:
 ## Extensions
 
 Use `Window.with()` to create a reusable `Window` subclass with additional DOM
-APIs or behavior. Each extension installs itself on every new window and can
-return hooks that subscribe to DOM operations:
+APIs or behavior. An extension is a function with two distinct parts:
+
+- **The function body runs once per window, during construction.** It receives
+  the new `Window` instance and can install or replace APIs on it, like
+  `window.MutationObserver`. Use it for setup, not for reacting to DOM changes.
+- **The returned hooks run for the lifetime of the window.** They subscribe to
+  DOM operations on that window, such as creating elements, setting attributes,
+  and adding event listeners, and are called each time one of those operations
+  happens. Returning hooks is optional.
 
 ```ts
 import {Window, type WindowExtension} from '@remote-dom/polyfill';
@@ -46,8 +53,10 @@ import {Window, type WindowExtension} from '@remote-dom/polyfill';
 class CustomMutationObserver {}
 
 const mutationObserverExtension: WindowExtension = (window) => {
+  // Construction time: extend this window instance.
   window.MutationObserver = CustomMutationObserver;
 
+  // Runtime: subscribe to DOM operations on this window.
   return {
     setAttribute(element, name, value) {
       // Notify observers associated with this window.
@@ -59,8 +68,14 @@ const ExtendedWindow = Window.with(mutationObserverExtension);
 const window = new ExtendedWindow();
 ```
 
-Extensions are installed in the order passed to `Window.with()`. Their hooks
-are called in the same order for each DOM operation.
+Extensions are installed in the order passed to `Window.with()` and across
+chained `.with()` calls. The two parts compose differently:
+
+- **Window APIs override.** Assignments like `window.MutationObserver = …` are
+  plain property writes, so when multiple extensions set the same API, the last
+  extension installed wins.
+- **Hooks are additive.** Every installed extension’s hooks are called in
+  installation order for each DOM operation.
 
 Extensions are installed after the base window and its initial document have
 been constructed, so their hooks do not observe the document’s bootstrap.
