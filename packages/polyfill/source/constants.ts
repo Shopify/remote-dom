@@ -14,6 +14,7 @@ export const LISTENERS = Symbol('listeners');
 export const IS_TRUSTED = Symbol('isTrusted');
 export const PATH = Symbol('path');
 export const STOP_IMMEDIATE_PROPAGATION = Symbol('stop_immediate_propagation');
+export const DISPATCHING = Symbol('dispatching');
 export const CONTENT = Symbol('content');
 export const HOOKS = Symbol('hooks');
 export const EXTENSIONS = Symbol('extensions');
