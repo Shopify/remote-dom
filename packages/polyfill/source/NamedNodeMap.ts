@@ -211,10 +211,6 @@ function updateElementAttribute(
   const {observedAttributes} = element.constructor as typeof Element;
   const {attributeChangedCallback} = element;
 
-  if (name === 'slot') {
-    element.slot = newValue ?? '';
-  }
-
   if (
     attributeChangedCallback == null ||
     observedAttributes == null ||
