@@ -1,5 +1,6 @@
-import {NEXT, PREV} from './constants.ts';
+import {HOST, NEXT, PARENT, PREV} from './constants.ts';
 import {performWithCustomElementReactions} from './custom-element-reactions.ts';
+import {createDOMException} from './dom-exception.ts';
 import type {ParentNode} from './ParentNode.ts';
 import {Node} from './Node.ts';
 
@@ -15,12 +16,13 @@ export class ChildNode extends Node {
     if (!parent) return;
 
     return performWithCustomElementReactions(() => {
-      validateNodesForInsertion(parent, nodes);
+      const staged = stageNodes(nodes);
+      validateInsertionNodes(parent, staged);
 
       let next = this[NEXT];
-      while (next && nodes.includes(next)) next = next[NEXT];
+      while (next && staged.includes(next)) next = next[NEXT];
 
-      const replacement = convertNodesIntoNode(parent, nodes);
+      const replacement = convertNodesIntoNode(parent, staged);
       if (this.parentNode === parent) {
         parent.replaceChild(replacement, this);
       } else {
@@ -34,12 +36,13 @@ export class ChildNode extends Node {
     if (!parent) return;
 
     return performWithCustomElementReactions(() => {
-      validateNodesForInsertion(parent, nodes);
+      const staged = stageNodes(nodes);
+      validateInsertionNodes(parent, staged);
 
       let previous = this[PREV];
-      while (previous && nodes.includes(previous)) previous = previous[PREV];
+      while (previous && staged.includes(previous)) previous = previous[PREV];
 
-      const node = convertNodesIntoNode(parent, nodes);
+      const node = convertNodesIntoNode(parent, staged);
       parent.insertBefore(node, previous ? previous[NEXT] : parent.firstChild);
     });
   }
@@ -49,12 +52,13 @@ export class ChildNode extends Node {
     if (!parent) return;
 
     return performWithCustomElementReactions(() => {
-      validateNodesForInsertion(parent, nodes);
+      const staged = stageNodes(nodes);
+      validateInsertionNodes(parent, staged);
 
       let next = this[NEXT];
-      while (next && nodes.includes(next)) next = next[NEXT];
+      while (next && staged.includes(next)) next = next[NEXT];
 
-      const node = convertNodesIntoNode(parent, nodes);
+      const node = convertNodesIntoNode(parent, staged);
       parent.insertBefore(node, next);
     });
   }
@@ -66,7 +70,11 @@ export function toNode(parent: ParentNode, node: Node | any) {
   return ownerDocument.createTextNode(String(node));
 }
 
-function validateNodesForInsertion(
+export function stageNodes(nodes: (Node | string)[]) {
+  return nodes.map((node) => (node instanceof Node ? node : String(node)));
+}
+
+export function validateInsertionNodes(
   parent: ParentNode,
   nodes: (Node | string)[],
 ) {
@@ -76,11 +84,12 @@ function validateNodesForInsertion(
     let ancestor: Node | null = parent;
     while (ancestor) {
       if (ancestor === node) {
-        throw Error(
-          'cannot insert a node into itself or one of its descendants',
+        throw createDOMException(
+          'Cannot insert a node into itself or one of its descendants',
+          'HierarchyRequestError',
         );
       }
-      ancestor = ancestor.parentNode;
+      ancestor = ancestor[PARENT] ?? ancestor[HOST];
     }
   }
 }

@@ -3,7 +3,6 @@ import {
   NEXT,
   PREV,
   PARENT,
-  HOST,
   OWNER_DOCUMENT,
   NODE_TYPE_DOCUMENT_FRAGMENT,
   NODE_TYPE_ELEMENT,
@@ -12,7 +11,12 @@ import {
 } from './constants.ts';
 import type {Node} from './Node.ts';
 import type {Element} from './Element.ts';
-import {ChildNode, toNode} from './ChildNode.ts';
+import {
+  ChildNode,
+  stageNodes,
+  toNode,
+  validateInsertionNodes,
+} from './ChildNode.ts';
 import {NodeList} from './NodeList.ts';
 import {querySelectorAll, querySelector} from './selectors.ts';
 import {
@@ -26,6 +30,7 @@ import {
   performWithCustomElementReactions,
 } from './custom-element-reactions.ts';
 import {performHookEffects} from './hook-effects.ts';
+import {createDOMException} from './dom-exception.ts';
 
 interface PreparedInsertionRoot {
   node: Node;
@@ -56,36 +61,43 @@ export class ParentNode extends ChildNode {
 
   append(...nodes: (Node | string)[]) {
     return performWithCustomElementReactions(() => {
-      for (const child of nodes) {
-        if (child == null) continue;
-        this.appendChild(toNode(this, child));
-      }
+      const staged = stageNodes(nodes.filter((node) => node != null));
+      validateInsertionNodes(this, staged);
+      for (const child of staged) this.appendChild(toNode(this, child));
     });
   }
 
   prepend(...nodes: (Node | string)[]) {
     return performWithCustomElementReactions(() => {
+      const staged = stageNodes(nodes.filter((node) => node != null));
+      validateInsertionNodes(this, staged);
       const before = this.firstChild;
-      for (const child of nodes) {
-        if (child == null) continue;
+      for (const child of staged)
         this.insertBefore(toNode(this, child), before);
-      }
     });
   }
 
   replaceChildren(...nodes: (Node | string)[]) {
     return performWithCustomElementReactions(() => {
+      const staged = stageNodes(nodes.filter((node) => node != null));
+      validateInsertionNodes(this, staged);
+
       let child;
       while ((child = this.firstChild)) {
         this.removeChild(child);
       }
-      this.append(...nodes);
+      for (const node of staged) this.appendChild(toNode(this, node));
     });
   }
 
   removeChild(child: Node) {
     return performWithCustomElementReactions(() => {
-      if (child.parentNode !== this) throw Error(`not a child of this node`);
+      if (child.parentNode !== this) {
+        throw createDOMException(
+          'The node is not a child of this node',
+          'NotFoundError',
+        );
+      }
 
       const disconnectedNodes = this[IS_CONNECTED]
         ? selfAndDescendants(child)
@@ -109,13 +121,16 @@ export class ParentNode extends ChildNode {
 
   replaceChild(newChild: Node, oldChild: Node) {
     return performWithCustomElementReactions(() => {
+      validateInsertionNodes(this, [newChild]);
       if (oldChild.parentNode !== this) {
-        throw Error('reference node is not a child of this parent');
+        throw createDOMException(
+          'The reference node is not a child of this parent',
+          'NotFoundError',
+        );
       }
       if (newChild === oldChild) return oldChild;
 
       const next = oldChild[NEXT];
-      this.validateInsertion(newChild, next);
 
       const insertion = this.prepareInsertion(newChild);
       const removedNodes = this[IS_CONNECTED]
@@ -167,18 +182,13 @@ export class ParentNode extends ChildNode {
   }
 
   private validateInsertion(child: Node, before: Node | null) {
-    if (before && before.parentNode !== this) {
-      throw Error('reference node is not a child of this parent');
-    }
+    validateInsertionNodes(this, [child]);
 
-    let ancestor: Node | null = this;
-    while (ancestor) {
-      if (ancestor === child) {
-        throw Error(
-          'cannot insert a node into itself or one of its descendants',
-        );
-      }
-      ancestor = ancestor[PARENT] ?? ancestor[HOST];
+    if (before && before.parentNode !== this) {
+      throw createDOMException(
+        'The reference node is not a child of this parent',
+        'NotFoundError',
+      );
     }
   }
 
