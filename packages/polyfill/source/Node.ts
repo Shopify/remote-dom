@@ -9,6 +9,7 @@ import {
   NODE_TYPE_NODE,
   type NodeType,
   HOOKS,
+  HOOKS_DISPATCH,
   IS_CONNECTED,
 } from './constants.ts';
 import type {Document} from './Document.ts';
@@ -34,7 +35,7 @@ export class Node extends EventTarget {
   [IS_CONNECTED] = false;
 
   protected get [HOOKS]() {
-    return this[OWNER_DOCUMENT].defaultView[HOOKS];
+    return this[OWNER_DOCUMENT].defaultView[HOOKS_DISPATCH];
   }
 
   get localName() {

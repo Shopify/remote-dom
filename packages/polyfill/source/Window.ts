@@ -20,7 +20,8 @@ import {DocumentFragment} from './DocumentFragment.ts';
 import {HTMLTemplateElement} from './HTMLTemplateElement.ts';
 import {CustomElementRegistryImplementation} from './CustomElementRegistry.ts';
 import {MutationObserver} from './MutationObserver.ts';
-import {HOOKS} from './constants.ts';
+import {EXTENSIONS, HOOKS, HOOKS_DISPATCH} from './constants.ts';
+import type {WindowExtension} from './extensions.ts';
 import type {Hooks} from './hooks.ts';
 
 type OnErrorHandler =
@@ -35,6 +36,8 @@ type OnErrorHandler =
 
 export class Window extends EventTarget {
   [HOOKS]: Partial<Hooks> = {};
+  [EXTENSIONS]: Partial<Hooks>[] = [];
+  [HOOKS_DISPATCH]: Hooks = createHooksDispatcher(this);
   name = '';
   window = this;
   parent = this;
@@ -70,6 +73,20 @@ export class Window extends EventTarget {
   #currentOriginalOnErrorHandler: OnErrorHandler = null;
   #currentOnUnhandledRejectionHandler: WindowEventHandlers['onunhandledrejection'] =
     null;
+
+  static with(...extensions: readonly WindowExtension[]): typeof Window {
+    const BaseWindow = this;
+
+    return class ExtendedWindow extends BaseWindow {
+      constructor() {
+        super();
+
+        for (const extension of extensions) {
+          installExtension(this, extension);
+        }
+      }
+    };
+  }
 
   get onerror() {
     return this.#currentOriginalOnErrorHandler;
@@ -167,4 +184,33 @@ export class Window extends EventTarget {
     Object.defineProperties(globalThis, properties);
     Object.defineProperties(globalThis, eventTargetPrototypeProperties);
   }
+}
+
+function installExtension(window: Window, extension: WindowExtension) {
+  window[EXTENSIONS].push(extension(window) ?? {});
+}
+
+function createHooksDispatcher(window: Window): Hooks {
+  return {
+    createElement: dispatchHook.bind(null, window, 'createElement'),
+    setAttribute: dispatchHook.bind(null, window, 'setAttribute'),
+    removeAttribute: dispatchHook.bind(null, window, 'removeAttribute'),
+    createText: dispatchHook.bind(null, window, 'createText'),
+    setText: dispatchHook.bind(null, window, 'setText'),
+    insertChild: dispatchHook.bind(null, window, 'insertChild'),
+    removeChild: dispatchHook.bind(null, window, 'removeChild'),
+    addEventListener: dispatchHook.bind(null, window, 'addEventListener'),
+    removeEventListener: dispatchHook.bind(null, window, 'removeEventListener'),
+  };
+}
+
+function dispatchHook(window: Window, name: keyof Hooks, ...args: unknown[]) {
+  for (const hooks of window[EXTENSIONS]) {
+    const hook = hooks[name] as ((...args: unknown[]) => void) | undefined;
+    hook?.apply(hooks, args);
+  }
+
+  const hooks = window[HOOKS];
+  const legacyHook = hooks[name] as ((...args: unknown[]) => void) | undefined;
+  legacyHook?.apply(hooks, args);
 }
