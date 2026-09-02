@@ -15,7 +15,12 @@ import type {Element} from './Element.ts';
 import {ChildNode, toNode} from './ChildNode.ts';
 import {NodeList} from './NodeList.ts';
 import {querySelectorAll, querySelector} from './selectors.ts';
-import {isElementNode, selfAndDescendants} from './shared.ts';
+import {
+  adoptNodes,
+  collectAdoptionSnapshot,
+  isElementNode,
+  selfAndDescendants,
+} from './shared.ts';
 import {
   enqueueCustomElementReaction,
   performWithCustomElementReactions,
@@ -25,6 +30,7 @@ import {performHookEffects} from './hook-effects.ts';
 interface PreparedInsertionRoot {
   node: Node;
   nodes: Node[] | undefined;
+  adoption: Node[] | undefined;
   shouldDisconnect: boolean;
   source?: {parent: ParentNode; index: number};
   insertIndex?: number;
@@ -200,17 +206,23 @@ export class ParentNode extends ChildNode {
     }
 
     const destinationIsConnected = this[IS_CONNECTED];
+    const ownerDocument = this[OWNER_DOCUMENT];
     const insertion: PreparedInsertionRoot[] = [];
     for (const node of roots) {
       const wasConnected = node[IS_CONNECTED];
-      insertion.push({
-        node,
-        nodes:
-          wasConnected || destinationIsConnected
-            ? selfAndDescendants(node)
-            : undefined,
-        shouldDisconnect: wasConnected,
-      });
+      const shouldTraverse = wasConnected || destinationIsConnected;
+      let nodes: Node[] | undefined;
+      let adoption: Node[] | undefined;
+
+      if (node[OWNER_DOCUMENT] === ownerDocument) {
+        if (shouldTraverse) nodes = selfAndDescendants(node);
+      } else {
+        const snapshot = collectAdoptionSnapshot(node);
+        adoption = snapshot.nodes;
+        if (shouldTraverse) nodes = snapshot.treeNodes;
+      }
+
+      insertion.push({node, nodes, adoption, shouldDisconnect: wasConnected});
     }
 
     return insertion;
@@ -232,6 +244,11 @@ export class ParentNode extends ChildNode {
 
     for (const prepared of insertion) {
       prepared.insertIndex = this.attachChild(prepared.node, before);
+    }
+
+    const ownerDocument = this[OWNER_DOCUMENT];
+    for (const {adoption} of insertion) {
+      if (adoption) adoptNodes(adoption, ownerDocument);
     }
 
     const isConnected = this[IS_CONNECTED];
@@ -287,7 +304,6 @@ export class ParentNode extends ChildNode {
 
     const isElement = isElementNode(child);
     child[PARENT] = this;
-    child[OWNER_DOCUMENT] = this[OWNER_DOCUMENT];
 
     let insertIndex: number;
     if (before) {
