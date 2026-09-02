@@ -1,5 +1,6 @@
 import {CHILD, NEXT, PARENT, PREV, HTML_NAMESPACE} from './constants.ts';
 import {isElementNode, splitOnASCIIWhitespace} from './shared.ts';
+import {NodeList} from './NodeList.ts';
 
 import type {Node} from './Node.ts';
 import type {Element} from './Element.ts';
@@ -71,12 +72,12 @@ export function querySelector(
 export function querySelectorAll(
   within: ParentNode,
   selector: string | Matcher[],
-): Element[] {
+): NodeList<Element> {
   const parts: Part[] =
     typeof selector === 'string'
       ? parseSelector(selector)
       : [{combinator: COMBINATOR_INNER, matchers: selector}];
-  const results: Element[] = [];
+  const results = new NodeList<Element>();
 
   const child = within[CHILD];
   if (child && parts[0]!.matchers.length) {

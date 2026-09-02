@@ -1,4 +1,5 @@
 import {Window} from '../index.ts';
+import {NodeList} from '../NodeList.ts';
 import {
   MATCHER_CLASS,
   MATCHER_ELEMENT,
@@ -215,6 +216,13 @@ describe('selector parsing and matching', () => {
           </div>
         </footer>
       `;
+    });
+
+    it('returns the polyfill collection with item() access', () => {
+      const matches = container.querySelectorAll('.text');
+
+      expect(matches).toBeInstanceOf(NodeList);
+      expect(matches.item(0)).toBe(matches[0]);
     });
 
     it('selects HTML element names case-insensitively', () => {
