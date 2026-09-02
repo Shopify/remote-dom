@@ -1,12 +1,14 @@
-import {SVG_NAMESPACE} from '../constants.ts';
+import {HOOKS, SVG_NAMESPACE} from '../constants.ts';
 import {Window} from '../index.ts';
 import {NamedNodeMap} from '../NamedNodeMap.ts';
 import {toPropertyIndex} from '../shared.ts';
 
-import {beforeEach, describe, expect, it} from 'vitest';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+
+let window: Window;
 
 beforeEach(() => {
-  const window = new Window();
+  window = new Window();
   Window.setGlobalThis(window);
 });
 
@@ -145,12 +147,81 @@ describe('NamedNodeMap property access', () => {
     );
   });
 
+  it('removes namespaced attributes by qualified name and detaches them', () => {
+    const element = document.createElement('div');
+    element.setAttributeNS(SVG_NAMESPACE, 'mode', 'visible');
+    const attr = element.attributes[0]!;
+
+    expect(element.attributes.removeNamedItem('mode')).toBe(attr);
+    expect(attr.ownerElement).toBeNull();
+    expect(attr.nextSibling).toBeNull();
+    expect((element.attributes as any).mode).toBeUndefined();
+  });
+
+  it('detaches replaced attributes without disrupting the list', () => {
+    const element = document.createElement('div');
+    element.setAttribute('id', 'first');
+    element.setAttribute('title', 'title');
+    const attributes = element.attributes;
+    const old = attributes[0]!;
+
+    element.setAttribute('id', 'second');
+
+    expect(old.ownerElement).toBeNull();
+    expect(old.nextSibling).toBeNull();
+    expect(attributes[0]?.value).toBe('second');
+    expect(attributes[1]?.name).toBe('title');
+
+    const setAttribute = vi.fn();
+    window[HOOKS].setAttribute = setAttribute;
+    old.value = 'detached';
+    expect(setAttribute).not.toHaveBeenCalled();
+
+    const current = attributes[0]!;
+    expect(attributes.setNamedItem(current)).toBe(current);
+    expect(attributes.length).toBe(2);
+    expect(attributes[1]?.name).toBe('title');
+  });
+
+  it('rejects attributes owned by another element', () => {
+    const first = document.createElement('div');
+    const second = document.createElement('div');
+    first.setAttribute('id', 'first');
+    const attr = first.attributes[0]!;
+
+    expect(() => second.attributes.setNamedItem(attr)).toThrowError(
+      'The attribute is already in use by another element.',
+    );
+    expect(attr.ownerElement).toBe(first);
+    expect(first.getAttribute('id')).toBe('first');
+    expect(second.getAttribute('id')).toBeNull();
+  });
+
   it('supports changing an attribute through an indexed Attr', () => {
     const element = document.createElement('div');
     element.setAttribute('id', 'before');
+    const setAttribute = vi.fn();
+    window[HOOKS].setAttribute = setAttribute;
 
     element.attributes[0]!.value = 'after';
 
     expect(element.getAttribute('id')).toBe('after');
+    expect(setAttribute).toHaveBeenCalledWith(element, 'id', 'after', null);
+  });
+
+  it('does not update an element through a detached Attr', () => {
+    const element = document.createElement('div');
+    element.setAttribute('id', 'before');
+    const attr = element.attributes[0]!;
+    const setAttribute = vi.fn();
+    window[HOOKS].setAttribute = setAttribute;
+
+    element.removeAttribute('id');
+    attr.value = 'ghost';
+
+    expect(attr.ownerElement).toBeNull();
+    expect(attr.ownerDocument).toBe(document);
+    expect(element.getAttribute('id')).toBeNull();
+    expect(setAttribute).not.toHaveBeenCalled();
   });
 });
