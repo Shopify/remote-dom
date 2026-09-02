@@ -1,30 +1,13 @@
 import type {ParentNode} from './ParentNode.ts';
-import type {Element} from './Element.ts';
-import {NodeList} from './NodeList.ts';
-import {descendants, isElementNode} from './shared.ts';
+import {MATCHER_CLASS, querySelectorAll} from './selectors.ts';
 
-export function getElementsByClassName(
-  node: ParentNode,
-  classNames: string,
-): NodeList<Element> {
+export function getElementsByClassName(node: ParentNode, classNames: string) {
   const names = [...new Set(String(classNames).split(/[\t\n\f\r ]+/))].filter(
     Boolean,
   );
-  const matches = new NodeList<Element>();
 
-  if (names.length === 0) return matches;
-
-  for (const descendant of descendants(node)) {
-    if (!isElementNode(descendant)) continue;
-
-    const classes = descendant.getAttributeNS(null, 'class');
-    if (classes == null) continue;
-
-    const tokens = classes.split(/[\t\n\f\r ]+/);
-    if (names.every((name) => tokens.includes(name))) {
-      matches.push(descendant);
-    }
-  }
-
-  return matches;
+  return querySelectorAll(
+    node,
+    names.map((name) => ({type: MATCHER_CLASS, name})),
+  );
 }

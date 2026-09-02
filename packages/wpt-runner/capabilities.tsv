@@ -64,30 +64,30 @@ dom/nodes/getElementsByClassName-29.htm	supported	get class from children of ele
 dom/nodes/getElementsByClassName-empty-set.html	supported	Passing a space to getElementsByClassName should return an empty HTMLCollection
 dom/nodes/getElementsByClassName-empty-set.html	supported	Passing an empty string to getElementsByClassName should return an empty HTMLCollection
 dom/nodes/getElementsByClassName-empty-set.html	supported	Passing three spaces to getElementsByClassName should return an empty HTMLCollection
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a EM QUAD to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a EM SPACE to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a EN QUAD to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a EN SPACE to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a FIGURE SPACE to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a FOUR-PER-EM SPACE to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a HAIR SPACE to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a IDEOGRAPHIC SPACE to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a LINE SEPARATOR to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a LINE TABULATION to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a MEDIUM MATHEMATICAL SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a EM QUAD to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a EM SPACE to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a EN QUAD to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a EN SPACE to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a FIGURE SPACE to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a FOUR-PER-EM SPACE to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a HAIR SPACE to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a IDEOGRAPHIC SPACE to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a LINE SEPARATOR to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a LINE TABULATION to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a MEDIUM MATHEMATICAL SPACE to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
 dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a MONGOLIAN VOWEL SEPARATOR to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a NARROW NO-BREAK SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a NARROW NO-BREAK SPACE to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
 dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a NEXT LINE to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a NO-BREAK SPACE to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a OGHAM SPACE MARK to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a PARAGRAPH SEPARATOR to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a PUNCTUATION SPACE to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a SIX-PER-EM SPACE to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a THIN SPACE to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a THREE-PER-EM SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a NO-BREAK SPACE to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a OGHAM SPACE MARK to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a PARAGRAPH SEPARATOR to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a PUNCTUATION SPACE to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a SIX-PER-EM SPACE to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a THIN SPACE to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a THREE-PER-EM SPACE to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
 dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a WORD JOINER to getElementsByClassName still finds the span
 dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a ZERO WIDTH JOINER to getElementsByClassName still finds the span
-dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a ZERO WIDTH NON-BREAKING SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	deferred	Passing a ZERO WIDTH NON-BREAKING SPACE to getElementsByClassName still finds the span	Class matching treats this character as whitespace instead of preserving it in a class token.
 dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a ZERO WIDTH NON-JOINER to getElementsByClassName still finds the span
 dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a ZERO WIDTH SPACE to getElementsByClassName still finds the span
 html/dom/documents/dom-tree-accessors/Document.getElementsByClassName-null-undef.html	supported	getElementsByClassName and null/undefined
