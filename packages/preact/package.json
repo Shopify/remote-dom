@@ -75,7 +75,7 @@
   "devDependencies": {
     "@preact/signals": "catalog:",
     "@preact/signals-core": "catalog:",
-    "@quilted/preact-testing": "^0.1.7",
+    "@quilted/preact-testing": "^0.1.10",
     "preact": "catalog:"
   },
   "browserslist": [

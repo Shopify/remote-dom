@@ -34,12 +34,12 @@
     "@quilted/rollup": "^0.6.1",
     "@quilted/typescript": "^0.4.2",
     "@types/node": "~24.13.0",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.11",
     "jsdom": "^30.0.1",
     "prettier": "^3.3.3",
     "rollup": "^4.62.4",
     "typescript": "^7.0.2",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "packageManager": "pnpm@10.28.0+sha512.05df71d1421f21399e053fde567cea34d446fa02c76571441bfc1c7956e98e363088982d940465fd34480d4d90a0668bc12362f8aa88000a64e83d0b0e47be48",
   "prettier": {
