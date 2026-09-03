@@ -1,5 +1,31 @@
 # @remote-dom/polyfill
 
+## 1.6.0
+
+### Minor Changes
+
+- [#620](https://github.com/Shopify/remote-dom/pull/620) [`4be18ef`](https://github.com/Shopify/remote-dom/commit/4be18ef20017587835e7275e3901cd5fcdcdc50e) Thanks [@andrewiggins](https://github.com/andrewiggins)! - Add `getElementById()` to `Document` and `DocumentFragment`, with reflected `Element.id` properties. Add `getElementsByTagName()` to `Document` and `Element`, supporting HTML, non-HTML, and wildcard descendant searches. `querySelector` and `querySelectorAll` accept a pre-parsed `Matcher[]` in addition to string selectors, with `MatcherType`, `Combinator`, `Matcher`, and `Part` exported from `selectors.ts`; `getElementById` and `getElementsByTagName` delegate to this shared selector engine instead of independent tree-walk implementations.
+
+  Fixed `insertBefore()` leaving the previous sibling pointing at the reference node when inserting before a middle child, causing `NEXT` traversals (including `getElementById`) to skip the inserted subtree even though `childNodes` contained it, and return the inserted child as required by the DOM specification. Fixed `appendChild()` to return the appended child and `NodeList.item()` to return `null` for out-of-range indexes. Fixed case-insensitive HTML tag-name matching in the selector engine so `querySelector('DIV')` now matches `<div>` per the CSS spec. Fixed CSS-escaping issues so `getElementById` matches ids containing special characters (`.`, `:`, `#`, etc.) literally instead of treating them as selector syntax.
+
+- [#625](https://github.com/Shopify/remote-dom/pull/625) [`ab6c549`](https://github.com/Shopify/remote-dom/commit/ab6c5494908a5efb53fc8e5534b2b2967b9cbe41) Thanks [@airhorns](https://github.com/airhorns)! - Add `getElementsByClassName()` to polyfilled documents and elements.
+
+- [#624](https://github.com/Shopify/remote-dom/pull/624) [`e2a9eef`](https://github.com/Shopify/remote-dom/commit/e2a9eef700edd7f46a0cafb3e3a63d757ccfbc2e) Thanks [@airhorns](https://github.com/airhorns)! - Implement the standard `MutationObserver` methods for child, attribute, and character-data changes in the polyfilled DOM.
+
+- [#652](https://github.com/Shopify/remote-dom/pull/652) [`0789d12`](https://github.com/Shopify/remote-dom/commit/0789d12f61ae3a93bd659543b4607eb496efa090) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Add composable `Window` extensions for installing DOM APIs and subscribing to DOM operations.
+
+### Patch Changes
+
+- [#642](https://github.com/Shopify/remote-dom/pull/642) [`85cefcd`](https://github.com/Shopify/remote-dom/commit/85cefcd63efe62de20aadb2fa75d08485b4f1d96) Thanks [@andrewiggins](https://github.com/andrewiggins)! - Add the missing `CustomElementRegistry.initialize()` compatibility method so TypeScript 7 type checks cleanly.
+
+- [#653](https://github.com/Shopify/remote-dom/pull/653) [`a9aee3e`](https://github.com/Shopify/remote-dom/commit/a9aee3e3834b621e0c9a4fd432a9eb674447403a) Thanks [@andrewiggins](https://github.com/andrewiggins)! - Make the Polyfill source compatible with type stripping by replacing TypeScript enums and a parameter property with erasable syntax.
+
+- [#623](https://github.com/Shopify/remote-dom/pull/623) [`c3918c6`](https://github.com/Shopify/remote-dom/commit/c3918c61c3ee6b3aa6ec7fbf4d53aa76532ec29d) Thanks [@airhorns](https://github.com/airhorns)! - Fix `ChildNode.replaceWith()` throwing instead of replacing the node
+
+  `replaceWith()` passed its arguments to `replaceChild()` in the wrong order — `replaceChild(newChild, oldChild)` was called as `parent.replaceChild(this, node)`, naming the incoming node as the child to replace. Since that node is usually fresh and has no parent, the reference check rejected it and every call threw `reference node is not a child of this parent`. It also read the following sibling off the incoming node rather than off `this`, so the remaining arguments had no correct insertion point to anchor to.
+
+  The method now removes `this` and inserts the given nodes at its position, in argument order, anchored on the first following sibling that is not itself being moved. Strings become text nodes, calling it with no arguments removes the node (matching `remove()`), and a node with no parent is still left alone.
+
 ## 1.5.1
 
 ### Patch Changes
