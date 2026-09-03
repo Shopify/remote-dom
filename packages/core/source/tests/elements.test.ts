@@ -15,6 +15,7 @@ import {
   RemoteReceiver,
   type RemoteReceiverElement,
 } from '../receivers/RemoteReceiver.ts';
+import {THROW_DEFAULT} from '../receivers/shared.ts';
 import {
   MUTATION_TYPE_UPDATE_PROPERTY,
   UPDATE_PROPERTY_TYPE_PROPERTY,
@@ -1294,6 +1295,68 @@ describe('RemoteElement', () => {
       expect(result).toBe(`Hello ${name}!`);
       expect(spy).toHaveBeenCalledWith(name);
     });
+
+    it('throws when calling a method with no implementation', () => {
+      class HelloElement extends RemoteElement<{}, {greet(): void}> {
+        greet(name: string) {
+          return this.callRemoteMethod('greet', name);
+        }
+      }
+
+      const {root} = createAndConnectRemoteRootElement();
+
+      const element = new HelloElement();
+      root.append(element);
+
+      expect(() => {
+        element.greet('Winston');
+      }).toThrow('does not implement the greet() method');
+    });
+
+    it('calls onMissingImplementationError with context instead of throwing when provided', () => {
+      class HelloElement extends RemoteElement<{}, {greet(): void}> {
+        greet(name: string) {
+          return this.callRemoteMethod('greet', name);
+        }
+      }
+
+      const onMissingImplementationError = vi.fn(() => 'fallback');
+      const {root} = createAndConnectRemoteRootElement({
+        onMissingImplementationError,
+      });
+
+      const element = new HelloElement();
+      root.append(element);
+
+      const result = element.greet('Winston');
+
+      expect(onMissingImplementationError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          method: 'greet',
+          args: ['Winston'],
+        }),
+      );
+      expect(result).toBe('fallback');
+    });
+
+    it('falls through to default error when THROW_DEFAULT is returned', () => {
+      class HelloElement extends RemoteElement<{}, {greet(): void}> {
+        greet(name: string) {
+          return this.callRemoteMethod('greet', name);
+        }
+      }
+
+      const {root} = createAndConnectRemoteRootElement({
+        onMissingImplementationError: () => THROW_DEFAULT,
+      });
+
+      const element = new HelloElement();
+      root.append(element);
+
+      expect(() => {
+        element.greet('Winston');
+      }).toThrow('does not implement the greet() method');
+    });
   });
 });
 
@@ -1304,7 +1367,7 @@ class TestRemoteReceiver
       'root' | 'connection' | 'get' | 'implement' | 'subscribe'
     >
 {
-  readonly #receiver = new RemoteReceiver();
+  readonly #receiver: RemoteReceiver;
   readonly connection: RemoteReceiver['connection'] &
     MockedObject<RemoteReceiver['connection']>;
 
@@ -1312,17 +1375,21 @@ class TestRemoteReceiver
     return this.#receiver.root;
   }
 
-  constructor() {
+  get: RemoteReceiver['get'];
+  implement: RemoteReceiver['implement'];
+  subscribe: RemoteReceiver['subscribe'];
+
+  constructor(options?: ConstructorParameters<typeof RemoteReceiver>[0]) {
+    this.#receiver = new RemoteReceiver(options);
     const {connection} = this.#receiver;
     this.connection = {
       mutate: vi.fn(connection.mutate),
       call: vi.fn(connection.call),
     };
+    this.get = this.#receiver.get.bind(this.#receiver);
+    this.implement = this.#receiver.implement.bind(this.#receiver);
+    this.subscribe = this.#receiver.subscribe.bind(this.#receiver);
   }
-
-  get: RemoteReceiver['get'] = this.#receiver.get.bind(this.#receiver);
-  implement = this.#receiver.implement.bind(this.#receiver);
-  subscribe = this.#receiver.subscribe.bind(this.#receiver);
 }
 
 function createAndConnectRemoteElement<
@@ -1355,9 +1422,11 @@ function createElementFromConstructor<
   return element;
 }
 
-function createAndConnectRemoteRootElement() {
+function createAndConnectRemoteRootElement(
+  options?: ConstructorParameters<typeof RemoteReceiver>[0],
+) {
   const root = createRemoteRootElement();
-  const receiver = new TestRemoteReceiver();
+  const receiver = new TestRemoteReceiver(options);
   root.connect(receiver.connection);
   document.body.append(root);
   return {root, receiver};
