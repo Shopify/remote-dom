@@ -197,6 +197,55 @@ describe('NamedNodeMap property access', () => {
     expect(second.getAttribute('id')).toBeNull();
   });
 
+  it('detaches an Attr when adopting it in its current document', () => {
+    const element = document.createElement('div');
+    element.setAttribute('id', 'before');
+    const attr = element.attributes[0]!;
+    const removeAttribute = vi.fn();
+    window[HOOKS].removeAttribute = removeAttribute;
+
+    expect(document.adoptNode(attr)).toBe(attr);
+
+    expect(attr.ownerElement).toBeNull();
+    expect(attr.ownerDocument).toBe(document);
+    expect(attr.nextSibling).toBeNull();
+    expect(element.attributes.length).toBe(0);
+    expect(element.getAttribute('id')).toBeNull();
+    expect(removeAttribute).toHaveBeenCalledWith(element, 'id', null);
+  });
+
+  it('detaches and transfers an Attr adopted into another document', () => {
+    const firstWindow = new Window();
+    const secondWindow = new Window();
+    const element = firstWindow.document.createElement('div');
+    element.setAttributeNS(SVG_NAMESPACE, 'mode', 'before');
+    const attr = element.attributes[0]!;
+    const firstRemoveAttribute = vi.fn();
+    const secondRemoveAttribute = vi.fn();
+    firstWindow[HOOKS].removeAttribute = firstRemoveAttribute;
+    secondWindow[HOOKS].removeAttribute = secondRemoveAttribute;
+
+    expect(secondWindow.document.adoptNode(attr)).toBe(attr);
+
+    expect(attr.ownerElement).toBeNull();
+    expect(attr.ownerDocument).toBe(secondWindow.document);
+    expect(attr.nextSibling).toBeNull();
+    expect(element.attributes.length).toBe(0);
+    expect(element.getAttributeNS(SVG_NAMESPACE, 'mode')).toBeNull();
+    expect(firstRemoveAttribute).toHaveBeenCalledWith(
+      element,
+      'mode',
+      SVG_NAMESPACE,
+    );
+    expect(secondRemoveAttribute).not.toHaveBeenCalled();
+
+    const target = secondWindow.document.createElement('div');
+    expect(target.attributes.setNamedItemNS(attr)).toBeNull();
+    expect(attr.ownerElement).toBe(target);
+    expect(attr.ownerDocument).toBe(secondWindow.document);
+    expect(target.getAttributeNS(SVG_NAMESPACE, 'mode')).toBe('before');
+  });
+
   it('updates attribute ownership when adopting an element', () => {
     const firstWindow = new Window();
     const secondWindow = new Window();

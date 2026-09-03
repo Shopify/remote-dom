@@ -1,6 +1,7 @@
 import {
   NS,
   NAME,
+  NODE_TYPE_ATTRIBUTE,
   NODE_TYPE_DOCUMENT,
   SVG_NAMESPACE,
   type NamespaceURI,
@@ -11,6 +12,7 @@ import {
 } from './constants.ts';
 import type {Window} from './Window.ts';
 import type {Node} from './Node.ts';
+import type {Attr} from './Attr.ts';
 import {getElementsByClassName as findElementsByClassName} from './getElementsByClassName.ts';
 import {Event} from './Event.ts';
 import {ParentNode} from './ParentNode.ts';
@@ -95,10 +97,17 @@ export class Document extends ParentNode {
   }
 
   adoptNode(node: Node) {
-    if (node[OWNER_DOCUMENT] === this) return node;
+    if (node.nodeType === NODE_TYPE_ATTRIBUTE) {
+      const attr = node as Attr;
+      attr.ownerElement?.attributes.removeNamedItemNS(
+        attr.namespaceURI,
+        attr.name,
+      );
+    } else {
+      node.parentNode?.removeChild(node);
+    }
 
-    node.parentNode?.removeChild(node);
-    setOwnerDocument(node, this);
+    if (node[OWNER_DOCUMENT] !== this) setOwnerDocument(node, this);
 
     return node;
   }
