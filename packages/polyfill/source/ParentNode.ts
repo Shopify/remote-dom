@@ -14,6 +14,11 @@ import {ChildNode, toNode} from './ChildNode.ts';
 import {NodeList} from './NodeList.ts';
 import {querySelectorAll, querySelector} from './selectors.ts';
 import {selfAndDescendants} from './shared.ts';
+import {
+  childListObserversActive,
+  mutationNodeList,
+  queueMutationRecord,
+} from './MutationObserver.ts';
 
 export class ParentNode extends ChildNode {
   readonly childNodes = new NodeList();
@@ -80,6 +85,16 @@ export class ParentNode extends ChildNode {
         node[IS_CONNECTED] = false;
         (node as any).disconnectedCallback?.();
       }
+    }
+
+    if (childListObserversActive) {
+      queueMutationRecord({
+        type: 'childList',
+        target: this,
+        removedNodes: mutationNodeList(child),
+        previousSibling: prev,
+        nextSibling: next,
+      });
     }
 
     if (this.nodeType === NODE_TYPE_ELEMENT) {
@@ -178,6 +193,16 @@ export class ParentNode extends ChildNode {
         node[IS_CONNECTED] = true;
         (node as any).connectedCallback?.();
       }
+    }
+
+    if (childListObserversActive) {
+      queueMutationRecord({
+        type: 'childList',
+        target: this,
+        addedNodes: mutationNodeList(child),
+        previousSibling: child[PREV],
+        nextSibling: child[NEXT],
+      });
     }
 
     if (this.nodeType === NODE_TYPE_ELEMENT) {

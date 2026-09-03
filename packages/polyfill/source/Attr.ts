@@ -11,6 +11,10 @@ import {
 } from './constants.ts';
 import {Node} from './Node.ts';
 import type {Element} from './Element.ts';
+import {
+  attributeObserversActive,
+  queueMutationRecord,
+} from './MutationObserver.ts';
 
 export class Attr extends Node {
   nodeType: NodeType = NODE_TYPE_ATTRIBUTE;
@@ -42,9 +46,20 @@ export class Attr extends Node {
 
   set value(value: string) {
     const str = String(value);
+    const shouldQueueMutation = attributeObserversActive;
+    const oldValue = shouldQueueMutation ? this[VALUE] : null;
     this[VALUE] = str;
     const ownerElement = this[OWNER_ELEMENT];
     if (!ownerElement) return;
+    if (shouldQueueMutation && oldValue !== str) {
+      queueMutationRecord({
+        type: 'attributes',
+        target: ownerElement,
+        attributeName: this[NAME],
+        attributeNamespace: this[NS],
+        oldValue,
+      });
+    }
     this[HOOKS].setAttribute?.(ownerElement as any, this[NAME], str, this[NS]);
   }
 
