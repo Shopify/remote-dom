@@ -3,6 +3,7 @@ import {executeWorker} from './run-worker.ts';
 import type {WptHarnessResult, WptRunRecord} from './types.ts';
 import './style.css';
 
+declare const __WPT_CAPABILITY_PATHS__: readonly string[];
 declare const __WPT_ROOT__: string;
 
 declare global {
@@ -13,6 +14,7 @@ declare global {
 
 const elements = {
   controls: requireElement<HTMLFormElement>('controls'),
+  capabilityPaths: requireElement<HTMLDataListElement>('capability-paths'),
   path: requireElement<HTMLInputElement>('path'),
   status: requireElement<HTMLPreElement>('status'),
   result: requireElement<HTMLPreElement>('result'),
@@ -29,6 +31,13 @@ interface RunSession {
 
 let activeRun: RunSession | undefined;
 window.__WPT_RUN_TEST__ = runWptTest;
+if (typeof __WPT_CAPABILITY_PATHS__ !== 'undefined') {
+  for (const path of __WPT_CAPABILITY_PATHS__) {
+    const option = document.createElement('option');
+    option.value = path;
+    elements.capabilityPaths.append(option);
+  }
+}
 elements.status.textContent = `WPT root: ${__WPT_ROOT__}`;
 
 const parameters = new URLSearchParams(location.search);
