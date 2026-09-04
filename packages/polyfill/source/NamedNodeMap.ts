@@ -1,6 +1,7 @@
 import {
   CHILD,
   OWNER_ELEMENT,
+  OWNER_DOCUMENT,
   NS,
   NEXT,
   type NamespaceURI,
@@ -155,6 +156,7 @@ export class NamedNodeMap {
     }
 
     attr[OWNER_ELEMENT] = ownerElement;
+    attr[OWNER_DOCUMENT] = ownerElement[OWNER_DOCUMENT];
     if (old) old[OWNER_ELEMENT] = null;
 
     // only invoke the protocol if the value changed
