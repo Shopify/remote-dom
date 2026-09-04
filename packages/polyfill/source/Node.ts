@@ -6,16 +6,24 @@ import {
   CHILD,
   PREV,
   NEXT,
-  HTML_NAMESPACE,
+  NODE_TYPE_ATTRIBUTE,
+  NODE_TYPE_DOCUMENT,
+  NODE_TYPE_DOCUMENT_FRAGMENT,
+  NODE_TYPE_DOCUMENT_TYPE,
+  NODE_TYPE_ELEMENT,
   NODE_TYPE_NODE,
+  XMLNS_NAMESPACE,
   type NodeType,
   HOOKS,
   HOOKS_DISPATCH,
   IS_CONNECTED,
 } from './constants.ts';
+import type {Attr} from './Attr.ts';
 import type {Document} from './Document.ts';
+import type {Element} from './Element.ts';
 import type {ParentNode} from './ParentNode.ts';
 import {EventTarget} from './EventTarget.ts';
+import {normalizeNamespace} from './names.ts';
 import {
   isCharacterData,
   isParentNode,
@@ -56,8 +64,8 @@ export class Node extends EventTarget {
     return this[IS_CONNECTED];
   }
 
-  isDefaultNamespace(namespace: string): namespace is typeof HTML_NAMESPACE {
-    return namespace === HTML_NAMESPACE;
+  isDefaultNamespace(namespace: string | null): boolean {
+    return locateNamespace(this) === normalizeNamespace(namespace);
   }
 
   get parentNode() {
@@ -167,5 +175,39 @@ export class Node extends EventTarget {
       if (currentNode === this) return true;
       currentNode = node!.parentNode;
     }
+  }
+}
+
+function locateNamespace(node: Node | null): string | null {
+  if (node == null) return null;
+
+  switch (node.nodeType) {
+    case NODE_TYPE_ELEMENT: {
+      const element = node as Element;
+
+      if (element.prefix == null && element.namespaceURI != null) {
+        return element.namespaceURI;
+      }
+
+      const namespace = element.attributes.getNamedItemNS(
+        XMLNS_NAMESPACE,
+        'xmlns',
+      );
+
+      if (namespace != null && namespace.prefix == null) {
+        return normalizeNamespace(namespace.value);
+      }
+
+      return locateNamespace(element.parentElement);
+    }
+    case NODE_TYPE_DOCUMENT:
+      return locateNamespace((node as Document).documentElement);
+    case NODE_TYPE_DOCUMENT_TYPE:
+    case NODE_TYPE_DOCUMENT_FRAGMENT:
+      return null;
+    case NODE_TYPE_ATTRIBUTE:
+      return locateNamespace((node as Attr).ownerElement);
+    default:
+      return locateNamespace(node.parentElement);
   }
 }
