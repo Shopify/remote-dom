@@ -31,6 +31,7 @@ import {HTMLTemplateElement} from './HTMLTemplateElement.ts';
 import {
   isParentNode,
   cloneNode,
+  createNotSupportedError,
   getElementById as findElementById,
   getElementsByTagName as findElementsByTagName,
 } from './shared.ts';
@@ -127,6 +128,10 @@ export class Document extends ParentNode {
   }
 
   importNode(node: Node, deep?: boolean) {
+    if (node.nodeType === NODE_TYPE_DOCUMENT) {
+      throw createNotSupportedError('Cannot import a document node');
+    }
+
     return cloneNode(node, deep, this);
   }
 
