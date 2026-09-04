@@ -146,11 +146,12 @@ export class Node extends EventTarget {
     if (isCharacterData(this)) {
       this.data = data;
     } else if (isParentNode(this)) {
-      let child;
-      while ((child = this[CHILD])) {
-        this.removeChild(child);
+      const text = data == null ? '' : String(data);
+      if (text === '') {
+        this.replaceChildren();
+      } else {
+        this.replaceChildren(text);
       }
-      this.append(data);
     }
   }
 
