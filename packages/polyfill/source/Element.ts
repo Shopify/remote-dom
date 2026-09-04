@@ -93,7 +93,7 @@ export class Element extends ParentNode {
     return findElementsByTagName(this, qualifiedName);
   }
 
-  get firstElementChild() {
+  get firstElementChild(): Element | null {
     return this.children[0] ?? null;
   }
 
@@ -101,7 +101,7 @@ export class Element extends ParentNode {
     return findElementsByClassName(this, classNames);
   }
 
-  get lastElementChild() {
+  get lastElementChild(): Element | null {
     return this.children[this.children.length - 1] ?? null;
   }
 
