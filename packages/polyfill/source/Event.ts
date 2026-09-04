@@ -80,15 +80,15 @@ export class Event {
   }
 
   preventDefault() {
-    this.defaultPrevented = true;
+    if (this.cancelable) this.defaultPrevented = true;
   }
 
   set returnValue(value) {
-    this.defaultPrevented = value;
+    if (!value) this.preventDefault();
   }
 
   get returnValue() {
-    return this.defaultPrevented;
+    return !this.defaultPrevented;
   }
 
   /** @deprecated */
