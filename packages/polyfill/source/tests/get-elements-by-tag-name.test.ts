@@ -34,4 +34,46 @@ describe('getElementsByTagName', () => {
     expect(document.getElementsByTagName('linearGradient')[0]).toBe(gradient);
     expect(document.getElementsByTagName('lineargradient')).toHaveLength(0);
   });
+
+  it.each(['Document', 'Element'])(
+    'uses WPT-derived ASCII matching for %s.getElementsByTagName()',
+    (contextType) => {
+      const parent =
+        contextType === 'Document'
+          ? document.body
+          : document.createElement('section');
+      const context = contextType === 'Document' ? document : parent;
+      const uppercaseHtml = document.createElementNS(
+        'http://www.w3.org/1999/xhtml',
+        'I',
+      );
+      const nonAsciiHtml = document.createElement('aÇ');
+      const kelvinHtml = document.createElement('aK');
+      const prefixedHtml = document.createElementNS(
+        'http://www.w3.org/1999/xhtml',
+        'test:aÇ',
+      );
+      const prefixedForeign = document.createElementNS('test', 'te:ST');
+      parent.append(
+        uppercaseHtml,
+        nonAsciiHtml,
+        kelvinHtml,
+        prefixedHtml,
+        prefixedForeign,
+      );
+
+      expect(context.getElementsByTagName('I')).toHaveLength(0);
+      expect(context.getElementsByTagName('i')).toHaveLength(0);
+      expect(context.getElementsByTagName('AÇ')).toEqual([nonAsciiHtml]);
+      expect(context.getElementsByTagName('aÇ')).toEqual([nonAsciiHtml]);
+      expect(context.getElementsByTagName('aç')).toHaveLength(0);
+      expect(context.getElementsByTagName('AK')).toEqual([kelvinHtml]);
+      expect(context.getElementsByTagName('aK')).toEqual([kelvinHtml]);
+      expect(context.getElementsByTagName('ak')).toHaveLength(0);
+      expect(context.getElementsByTagName('TEST:AÇ')).toEqual([prefixedHtml]);
+      expect(context.getElementsByTagName('test:aç')).toHaveLength(0);
+      expect(context.getElementsByTagName('te:ST')).toEqual([prefixedForeign]);
+      expect(context.getElementsByTagName('te:st')).toHaveLength(0);
+    },
+  );
 });
