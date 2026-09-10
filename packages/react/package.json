@@ -81,7 +81,7 @@
     }
   },
   "devDependencies": {
-    "@quilted/react-testing": "^0.6.11",
+    "@quilted/react-testing": "^0.6.14",
     "@types/react-dom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

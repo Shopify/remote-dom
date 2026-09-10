@@ -37,7 +37,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "jsdom": "^30.0.1",
     "prettier": "^3.3.3",
-    "rollup": "^4.62.4",
+    "rollup": "^4.63.1",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   },
