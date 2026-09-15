@@ -122,6 +122,8 @@ export class ParentNode extends ChildNode {
           }
         }
       }
+
+      return child;
     });
   }
 
@@ -130,12 +132,14 @@ export class ParentNode extends ChildNode {
       if (oldChild.parentNode !== this) {
         throw Error('reference node is not a child of this parent');
       }
-      if (newChild === oldChild) return;
+      if (newChild === oldChild) return oldChild;
 
       const next = oldChild[NEXT];
       this.validateInsertion(newChild, next);
       this.removeChild(oldChild);
       this.insertIntoValidated(newChild, next);
+
+      return oldChild;
     });
   }
 
