@@ -21,6 +21,56 @@ function defineCustomElement(
   );
 }
 
+describe('Document.textContent', () => {
+  it('returns null for an initialized document', () => {
+    expect(polyfillDocument.documentElement.parentNode).toBe(polyfillDocument);
+    expect(polyfillDocument.head.parentNode).toBe(
+      polyfillDocument.documentElement,
+    );
+    expect(polyfillDocument.body.parentNode).toBe(
+      polyfillDocument.documentElement,
+    );
+    expect(polyfillDocument.textContent).toBeNull();
+  });
+
+  it.each(['replacement', '', null])(
+    'ignores assignment of %j',
+    (textContent) => {
+      const {documentElement, head, body} = polyfillDocument;
+      const hooks: string[] = [];
+
+      polyfillWindow[HOOKS].createText = () => hooks.push('create');
+      polyfillWindow[HOOKS].insertChild = () => hooks.push('insert');
+      polyfillWindow[HOOKS].removeChild = () => hooks.push('remove');
+
+      polyfillDocument.textContent = textContent;
+
+      expect(polyfillDocument.documentElement).toBe(documentElement);
+      expect(polyfillDocument.head).toBe(head);
+      expect(polyfillDocument.body).toBe(body);
+      expect([...polyfillDocument.childNodes]).toEqual([documentElement]);
+      expect([...documentElement.childNodes]).toEqual([head, body]);
+      expect(documentElement.parentNode).toBe(polyfillDocument);
+      expect(head.parentNode).toBe(documentElement);
+      expect(body.parentNode).toBe(documentElement);
+      expect(documentElement.isConnected).toBe(true);
+      expect(head.isConnected).toBe(true);
+      expect(body.isConnected).toBe(true);
+      expect(hooks).toEqual([]);
+    },
+  );
+
+  it('preserves text content mutations for other parent nodes', () => {
+    polyfillDocument.body.append('existing');
+
+    polyfillDocument.body.textContent = 'replacement';
+
+    expect(polyfillDocument.body.childNodes).toHaveLength(1);
+    expect(polyfillDocument.body.firstChild?.localName).toBe('#text');
+    expect(polyfillDocument.body.textContent).toBe('replacement');
+  });
+});
+
 describe('Node.textContent parent mutations', () => {
   it('leaves an empty parent empty when assigned empty text', () => {
     const parent = polyfillDocument.createElement('div');
