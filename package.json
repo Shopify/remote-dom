@@ -17,6 +17,7 @@
     "lint": "prettier --check --cache .",
     "test": "vitest",
     "test:wpt": "pnpm --filter @remote-dom/wpt-runner wpt",
+    "wpt": "pnpm --filter @remote-dom/wpt-runner wpt",
     "wpt:prepare": "pnpm --filter @remote-dom/wpt-runner wpt:prepare",
     "wpt:dev": "pnpm --filter @remote-dom/wpt-runner dev",
     "wpt:format": "pnpm --filter @remote-dom/wpt-runner format:capabilities",
