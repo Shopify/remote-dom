@@ -79,6 +79,19 @@ describe('NamedNodeMap invariants', () => {
     expect(attribute[NEXT]).toBeNull();
   });
 
+  it('replaces Attr nodes by expanded name through setNamedItemNS', () => {
+    const element = document.createElement('div');
+    const original = new Attr('first:state', 'initial', 'urn:state');
+    const replacement = new Attr('second:state', 'updated', 'urn:state');
+    element.attributes.setNamedItemNS(original);
+
+    expect(element.attributes.setNamedItemNS(replacement)).toBe(original);
+    expect(element.attributes.length).toBe(1);
+    expect(element.attributes.item(0)).toBe(replacement);
+    expect(replacement.name).toBe('second:state');
+    expect(original.ownerElement).toBeNull();
+  });
+
   it('rejects cross-element aliases but allows reuse after removal', () => {
     const firstElement = document.createElement('div');
     const secondElement = document.createElement('div');

@@ -8,6 +8,9 @@ import {
   NODE_TYPE_TEXT,
   CHILD,
   NEXT,
+  NAME,
+  HTML_NAMESPACE,
+  asciiLowercase,
 } from './constants.ts';
 import type {Document} from './Document.ts';
 import type {DocumentFragment} from './DocumentFragment.ts';
@@ -17,13 +20,7 @@ import type {ParentNode} from './ParentNode.ts';
 import type {Element} from './Element.ts';
 import type {CharacterData} from './CharacterData.ts';
 import type {Text} from './Text.ts';
-import {
-  MATCHER_ELEMENT,
-  MATCHER_ID,
-  MATCHER_UNKNOWN,
-  querySelector,
-  querySelectorAll,
-} from './selectors.ts';
+import {MATCHER_ID, querySelector} from './selectors.ts';
 
 export function isCharacterData(node: Node): node is CharacterData {
   return DATA in node;
@@ -108,10 +105,23 @@ export function getElementsByTagName(
   qualifiedName: string,
 ) {
   const name = String(qualifiedName);
+  const normalizedHtmlName = asciiLowercase(name);
+  const elements: Element[] = [];
 
-  return querySelectorAll(within, [
-    {type: name === '*' ? MATCHER_UNKNOWN : MATCHER_ELEMENT, name},
-  ]);
+  for (const node of descendants(within)) {
+    if (!isElementNode(node)) continue;
+
+    if (
+      name === '*' ||
+      (node.namespaceURI === HTML_NAMESPACE
+        ? node[NAME] === normalizedHtmlName
+        : node[NAME] === name)
+    ) {
+      elements.push(node);
+    }
+  }
+
+  return elements;
 }
 
 export function descendants(node: Node) {

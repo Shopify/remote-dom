@@ -1,4 +1,11 @@
-import {CHILD, NEXT, PARENT, PREV, HTML_NAMESPACE} from './constants.ts';
+import {
+  CHILD,
+  NEXT,
+  PARENT,
+  PREV,
+  HTML_NAMESPACE,
+  asciiLowercase,
+} from './constants.ts';
 import {isElementNode} from './shared.ts';
 
 import type {Node} from './Node.ts';
@@ -272,7 +279,7 @@ function matchesSelectorMatcher(
       return name === '*'; // Universal selector
     case MATCHER_ELEMENT:
       return element.namespaceURI === HTML_NAMESPACE
-        ? element.localName.toLowerCase() === name.toLowerCase()
+        ? element.localName === asciiLowercase(name)
         : element.localName === name;
     case MATCHER_ID:
       return element.getAttribute('id') === name;
