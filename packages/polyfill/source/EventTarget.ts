@@ -1,5 +1,13 @@
-import {HOOKS_DISPATCH, PATH, LISTENERS, OWNER_DOCUMENT} from './constants.ts';
 import {
+  DISPATCHING,
+  HOOKS_DISPATCH,
+  PATH,
+  LISTENERS,
+  OWNER_DOCUMENT,
+  STOP_IMMEDIATE_PROPAGATION,
+} from './constants.ts';
+import {
+  EVENT_PHASE_NONE,
   EVENT_PHASE_BUBBLING,
   EVENT_PHASE_CAPTURING,
   fireEvent,
@@ -13,8 +21,8 @@ const LISTENER_REGISTRATIONS = Symbol('listenerRegistrations');
 type ListenerPhase = 'bubble' | 'capture';
 
 interface EventListenersForType {
-  bubble?: Set<EventListenerOrEventListenerObject>;
-  capture?: Set<EventListenerOrEventListenerObject>;
+  bubble?: Set<ListenerRegistration>;
+  capture?: Set<ListenerRegistration>;
 }
 
 interface ListenerRegistrationsForType {
@@ -101,9 +109,9 @@ export class EventTarget {
         }
         if (registration.once) removeListenerRegistration(target, registration);
 
-        return typeof listener === 'object'
-          ? listener.handleEvent(...args)
-          : listener.call(this, ...args);
+        return typeof registration.listener === 'object'
+          ? registration.listener.handleEvent(...args)
+          : registration.listener.call(this, ...args);
       };
     }
 
@@ -126,7 +134,7 @@ export class EventTarget {
     }
 
     registrationsForPhase.set(listener, registration);
-    list.add(registration.normalizedListener);
+    list.add(registration);
 
     if (signal) {
       const abortListener = () => {
@@ -156,33 +164,52 @@ export class EventTarget {
   // }
 
   dispatchEvent(event: Event) {
-    const path: EventTarget[] = [];
-    // instanceof here is just to keep TypeScript happy
-    let target = this as unknown as ChildNode | null;
-    while (target != null) {
-      path.push(target);
-      target = target.parentNode;
-    }
-    // while (target instanceof Node && (target = target.parentNode)) {
-    //   path.push(target);
-    // }
-    event.target = this;
-    event.srcElement = this;
-    event[PATH] = path;
-
-    for (let i = path.length; i--; ) {
-      fireEvent(event, path[i]!, EVENT_PHASE_CAPTURING);
-      if (event.cancelBubble) return !event.defaultPrevented;
+    if (event[DISPATCHING]) {
+      throw createInvalidStateError(
+        `Failed to execute 'dispatchEvent' on 'EventTarget': The event is already being dispatched.`,
+      );
     }
 
-    const bubblePath = event.bubbles ? path : path.slice(0, 1);
+    event[DISPATCHING] = true;
+    event.cancelBubble = false;
+    event[STOP_IMMEDIATE_PROPAGATION] = false;
 
-    for (let i = 0; i < bubblePath.length; i++) {
-      fireEvent(event, bubblePath[i]!, EVENT_PHASE_BUBBLING);
-      if (event.cancelBubble) return !event.defaultPrevented;
+    try {
+      const path: EventTarget[] = [];
+      // instanceof here is just to keep TypeScript happy
+      let target = this as unknown as ChildNode | null;
+      while (target != null) {
+        path.push(target);
+        target = target.parentNode;
+      }
+      // while (target instanceof Node && (target = target.parentNode)) {
+      //   path.push(target);
+      // }
+      event.target = this;
+      event.srcElement = this;
+      event[PATH] = path;
+
+      for (let i = path.length; i--; ) {
+        fireEvent(event, path[i]!, EVENT_PHASE_CAPTURING);
+        if (event.cancelBubble) return !event.defaultPrevented;
+      }
+
+      const bubblePath = event.bubbles ? path : path.slice(0, 1);
+
+      for (let i = 0; i < bubblePath.length; i++) {
+        fireEvent(event, bubblePath[i]!, EVENT_PHASE_BUBBLING);
+        if (event.cancelBubble) return !event.defaultPrevented;
+      }
+
+      return !event.defaultPrevented;
+    } finally {
+      event[DISPATCHING] = false;
+      event.cancelBubble = false;
+      event[STOP_IMMEDIATE_PROPAGATION] = false;
+      event.eventPhase = EVENT_PHASE_NONE;
+      event.currentTarget = null;
+      event[PATH] = [];
     }
-
-    return !event.defaultPrevented;
   }
 }
 
@@ -242,7 +269,7 @@ function removeListenerRegistration(
   if (!listenersForType) return;
 
   const list = listenersForType[phase];
-  if (!list?.delete(registration.normalizedListener)) return;
+  if (!list?.delete(registration)) return;
   if (list.size === 0) delete listenersForType[phase];
   if (!listenersForType.bubble && !listenersForType.capture) {
     listeners?.delete(registration.type);
@@ -254,4 +281,15 @@ function removeListenerRegistration(
     registration.listener,
     registration.capture,
   );
+}
+
+function createInvalidStateError(message: string) {
+  const DOMExceptionConstructor = globalThis.DOMException;
+  if (typeof DOMExceptionConstructor === 'function') {
+    return new DOMExceptionConstructor(message, 'InvalidStateError');
+  }
+
+  const error = new Error(message);
+  error.name = 'InvalidStateError';
+  return error;
 }
