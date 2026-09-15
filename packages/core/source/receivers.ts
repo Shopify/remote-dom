@@ -8,4 +8,8 @@ export {
   type RemoteReceiverComment,
 } from './receivers/RemoteReceiver.ts';
 export {DOMRemoteReceiver} from './receivers/DOMRemoteReceiver.ts';
-export type {RemoteReceiverOptions} from './receivers/shared.ts';
+export {THROW_DEFAULT} from './receivers/shared.ts';
+export type {
+  RemoteReceiverOptions,
+  MissingImplementationContext,
+} from './receivers/shared.ts';
