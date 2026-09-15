@@ -12,7 +12,7 @@ dom/nodes/Document-getElementById.html	supported	Inserting an id by inserting it
 dom/nodes/Document-getElementById.html	supported	Modern browsers optimize this method with using internal id cache. This test checks that their optimization should effect only append to `Document`, not append to `Node`.
 dom/nodes/Document-getElementById.html	deferred	add id attribute via innerHTML	Requires concrete `HTMLDivElement` constructor support.
 dom/nodes/Document-getElementById.html	deferred	add id attribute via outerHTML	Requires an `outerHTML` setter.
-dom/nodes/Document-getElementById.html	deferred	changing attribute's value via `Attr` gotten from `Element.attribute`.	Requires indexed `NamedNodeMap` access.
+dom/nodes/Document-getElementById.html	supported	changing attribute's value via `Attr` gotten from `Element.attribute`.
 dom/nodes/Document-getElementById.html	supported	in tree order, within the context object's tree
 dom/nodes/Document-getElementById.html	deferred	on static page	Requires concrete `HTMLDivElement` constructor support.
 dom/nodes/Document-getElementById.html	supported	remove id attribute via innerHTML
@@ -57,3 +57,11 @@ dom/nodes/Element-getElementsByTagName.html	deferred	Shouldn't be able to set un
 dom/nodes/Element-getElementsByTagName.html	deferred	getElementsByTagName('*')	Requires `Node.ELEMENT_NODE` constant support.
 dom/nodes/Element-getElementsByTagName.html	deferred	getElementsByTagName() should be a live collection	Requires a live `HTMLCollection`.
 dom/nodes/Element-getElementsByTagName.html	deferred	hasOwnProperty, getOwnPropertyDescriptor, getOwnPropertyNames	Requires `HTMLCollection` named property semantics.
+dom/nodes/attributes-namednodemap.html	supported	an attribute set by setAttribute should be accessible as a field on the `attributes` field of an Element
+dom/nodes/attributes-namednodemap.html	supported	an attribute with a null namespace should be accessible as a field on the `attributes` field of an Element
+dom/nodes/attributes-namednodemap.html	supported	an attribute with a set namespace should be accessible as a field on the `attributes` field of an Element
+dom/nodes/attributes-namednodemap.html	deferred	setNamedItem and removeNamedItem on `attributes` should add and remove fields from `attributes`	Requires `Document.createAttribute()`.
+dom/nodes/attributes-namednodemap.html	deferred	setNamedItem and removeNamedItem on `attributes` should not interfere with existing method names	Requires `Document.createAttribute()` and an exposed `NamedNodeMap` constructor.
+dom/nodes/attributes-namednodemap.html	supported	setting an attribute should not overwrite the length property of an `NamedNodeMap` object
+dom/nodes/attributes-namednodemap.html	supported	setting an attribute should not overwrite the methods defined by prototype ancestors of an `NamedNodeMap` object
+dom/nodes/attributes-namednodemap.html	supported	setting an attribute should not overwrite the methods of an `NamedNodeMap` object

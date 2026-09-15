@@ -25,6 +25,23 @@ import {
   querySelectorAll,
 } from './selectors.ts';
 
+export function toPropertyIndex(property: PropertyKey) {
+  if (typeof property !== 'string') return undefined;
+
+  const index = Number(property);
+
+  // Web IDL indexed properties use canonical ECMAScript array-index names:
+  // whole numbers from 0 through 2^32 - 2, without aliases like "01" or "1e0".
+  // These inexpensive numeric guards short-circuit before string coercion and
+  // linked-list item lookup, both measurably slower for non-index properties.
+  return Number.isInteger(index) && // Reject NaN, infinities, and fractions.
+    index >= 0 && // Reject negative integers.
+    index < 2 ** 32 - 1 && // Reject integers outside the array-index range.
+    String(index) === property // Reject non-canonical aliases like "01" and "1e0".
+    ? index
+    : undefined;
+}
+
 export function isCharacterData(node: Node): node is CharacterData {
   return DATA in node;
 }
@@ -47,6 +64,19 @@ export function isDocumentFragmentNode(node: Node): node is DocumentFragment {
 
 export function isParentNode(node: Node): node is ParentNode {
   return 'appendChild' in node;
+}
+
+export function setOwnerDocument(node: Node, document: Document) {
+  for (const current of selfAndDescendants(node)) {
+    current[OWNER_DOCUMENT] = document;
+
+    if (isElementNode(current)) {
+      const attributes = current[ATTRIBUTES];
+      if (attributes) {
+        for (const attr of attributes) attr[OWNER_DOCUMENT] = document;
+      }
+    }
+  }
 }
 
 export function cloneNode(
