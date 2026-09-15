@@ -135,13 +135,8 @@ export function parseSelector(selector: string) {
   return parts;
 }
 
-function matchesSelector(element: Element, selector: string) {
-  const parsed = parseSelector(selector);
-  let part: Part | undefined;
-  while ((part = parsed.pop())) {
-    if (!matchesSelectorPart(element, part)) return false;
-  }
-  return true;
+export function matchesSelector(element: Element, selector: string) {
+  return matchesSelectorRecursive(element, parseSelector(selector));
 }
 
 function walkNodesForSelector(
@@ -210,41 +205,6 @@ function matchesSelectorRecursive(element: Element, parts: Part[]): boolean {
     const pp = parts.slice(0, -1);
     return pp.length === 0 || matchesSelectorRecursive(element, pp);
   }
-}
-
-function matchesSelectorPart(element: Element, {combinator, matchers}: Part) {
-  if (combinator === COMBINATOR_INNER) {
-    return matchesSelectorMatcher(element, matchers);
-  }
-  const link =
-    combinator === COMBINATOR_CHILD || combinator === COMBINATOR_DESCENDANT
-      ? PARENT
-      : PREV;
-  let ref = element[link];
-  if (!ref) return false;
-
-  // For sibling combinators, skip non-element siblings
-  if (combinator === COMBINATOR_ADJACENT && !isElementNode(ref)) {
-    while (ref && !isElementNode(ref)) {
-      ref = ref[link];
-    }
-    if (!ref) return false;
-  }
-
-  if (!isElementNode(ref) || !matchesSelectorMatcher(ref, matchers)) {
-    return false;
-  }
-
-  if (
-    combinator === COMBINATOR_DESCENDANT ||
-    combinator === COMBINATOR_SIBLING
-  ) {
-    while ((ref = ref[link])) {
-      if (isElementNode(ref) && matchesSelectorMatcher(ref, matchers))
-        return true;
-    }
-  }
-  return true;
 }
 
 function matchesSelectorMatcher(
