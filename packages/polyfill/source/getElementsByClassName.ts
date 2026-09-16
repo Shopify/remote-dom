@@ -1,12 +1,16 @@
 import type {ParentNode} from './ParentNode.ts';
+import type {Element} from './Element.ts';
 import {NodeList} from './NodeList.ts';
 import {descendants, isElementNode} from './shared.ts';
 
-export function getElementsByClassName(node: ParentNode, classNames: string) {
+export function getElementsByClassName(
+  node: ParentNode,
+  classNames: string,
+): NodeList<Element> {
   const names = [...new Set(String(classNames).split(/[\t\n\f\r ]+/))].filter(
     Boolean,
   );
-  const matches = new NodeList();
+  const matches = new NodeList<Element>();
 
   if (names.length === 0) return matches;
 
