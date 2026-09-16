@@ -4,6 +4,7 @@ import {afterEach, describe, expect, it, vi} from 'vitest';
 
 import {
   MUTATION_TYPE_INSERT_CHILD,
+  MUTATION_TYPE_UPDATE_PROPERTY,
   NODE_TYPE_ELEMENT,
   ROOT_ID,
 } from '../../constants.ts';
@@ -13,6 +14,12 @@ class ConfiguredReceiver extends RemoteReceiverElement {
   static elements = {'ui-button': {methods: ['focus']}};
 }
 
+class ExcludedReceiver extends RemoteReceiverElement {
+  static elements = ['ui-button'];
+  static blockedProperties = ['internalState'];
+}
+
+customElements.define('test-excluded-receiver', ExcludedReceiver);
 customElements.define('test-remote-receiver', RemoteReceiverElement);
 customElements.define('test-configured-receiver', ConfiguredReceiver);
 
@@ -30,10 +37,10 @@ function insert(receiver: RemoteReceiverElement, element = 'ui-button') {
 }
 
 describe('RemoteReceiverElement host policy', () => {
-  it('denies elements and root calls by default', () => {
+  it('accepts elements but denies root calls by default', () => {
     const receiver = new RemoteReceiverElement();
     document.body.append(receiver);
-    expect(() => insert(receiver)).toThrow(/not allowed/);
+    insert(receiver);
     expect(() =>
       receiver.connection.call(
         ROOT_ID,
@@ -42,7 +49,7 @@ describe('RemoteReceiverElement host policy', () => {
         '<img>',
       ),
     ).toThrow(/not allowed/);
-    expect(receiver.childNodes).toHaveLength(0);
+    expect(receiver.childNodes).toHaveLength(1);
   });
 
   it('uses the host subclass policy without restoring unrestricted dispatch', () => {
@@ -63,6 +70,19 @@ describe('RemoteReceiverElement host policy', () => {
       ),
     ).toThrow(/not allowed/);
     expect(button.childNodes).toHaveLength(0);
+  });
+
+  it('uses additional exclusions from the host subclass', () => {
+    const receiver = new ExcludedReceiver();
+    insert(receiver);
+    expect(() =>
+      receiver.connection.mutate([
+        [MUTATION_TYPE_UPDATE_PROPERTY, 'button', 'internalState', 'value'],
+      ]),
+    ).toThrow(/not allowed/);
+    receiver.connection.mutate([
+      [MUTATION_TYPE_UPDATE_PROPERTY, 'button', 'label', 'Hello'],
+    ]);
   });
 
   it('honors callbacks assigned after construction, and restores policy when removed', () => {

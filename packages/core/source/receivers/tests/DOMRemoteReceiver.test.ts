@@ -46,8 +46,8 @@ function connected(
 afterEach(() => document.body.replaceChildren());
 
 describe('DOMRemoteReceiver host policy', () => {
-  it('denies elements by default but accepts text', () => {
-    const receiver = connected();
+  it('denies elements with an empty list but accepts text', () => {
+    const receiver = connected({elements: []});
     expect(() => insert(receiver)).toThrow(/not allowed/);
     receiver.connection.mutate([
       [
@@ -120,7 +120,9 @@ describe('DOMRemoteReceiver host policy', () => {
   it.each(['onerror', 'onclick', 'srcdoc', 'href', 'is'])(
     'rejects initial and updated %s attributes',
     (attribute) => {
-      const receiver = connected({elements: ['ui-button']});
+      const receiver = connected({
+        elements: {'ui-button': {attributes: ['primary']}},
+      });
       expect(() =>
         insert(receiver, element({attributes: {[attribute]: payload}})),
       ).toThrow(/not allowed/);
@@ -170,7 +172,7 @@ describe('DOMRemoteReceiver host policy', () => {
           eventListeners: ['click'],
           methods: ['focus'],
         },
-        'ui-other': {},
+        'ui-other': {properties: []},
       },
     });
     insert(
@@ -330,7 +332,7 @@ describe('DOMRemoteReceiver host policy', () => {
 
   it('rejects undeclared events and unknown update channels', () => {
     const receiver = connected({
-      elements: {'ui-button': {properties: ['label']}},
+      elements: {'ui-button': {properties: ['label'], eventListeners: []}},
     });
     expect(() =>
       insert(receiver, element({eventListeners: {click: vi.fn()}})),

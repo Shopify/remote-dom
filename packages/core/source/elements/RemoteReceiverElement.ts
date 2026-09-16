@@ -22,11 +22,13 @@ type DOMRemoteReceiverOptions = NonNullable<
  */
 export class RemoteReceiverElement extends HTMLElement {
   /**
-   * Host-owned element and capability allowlist, copied when an instance is
-   * constructed. Override this in a host-side subclass before registering it.
-   * Text and comments are accepted without configuration; elements are denied.
+   * Optional host-owned element and capability allowlist, copied when an instance
+   * is constructed. Override this in a host-side subclass before registering it.
    */
-  static elements: DOMRemoteReceiverOptions['elements'] = [];
+  static elements: DOMRemoteReceiverOptions['elements'];
+
+  /** Additional property and attribute names excluded by the host. */
+  static blockedProperties: DOMRemoteReceiverOptions['blockedProperties'];
 
   /**
    * The `RemoteConnection` object that connects this element to a remote
@@ -84,6 +86,8 @@ export class RemoteReceiverElement extends HTMLElement {
     const receiver = new DOMRemoteReceiver({
       root: this,
       elements: (this.constructor as typeof RemoteReceiverElement).elements,
+      blockedProperties: (this.constructor as typeof RemoteReceiverElement)
+        .blockedProperties,
       // Resolve the optional callback at call time so hosts can set it after
       // construction. With no override, retain the receiver's default policy.
       get call() {
