@@ -1,6 +1,7 @@
 import {
   CHILD,
   OWNER_ELEMENT,
+  OWNER_DOCUMENT,
   NS,
   NEXT,
   type NamespaceURI,
@@ -12,6 +13,10 @@ import {
   attributeObserversActive,
   queueMutationRecord,
 } from './MutationObserver.ts';
+import {
+  enqueueCustomElementReaction,
+  performWithCustomElementReactions,
+} from './custom-element-reactions.ts';
 
 export class NamedNodeMap {
   [CHILD]: Attr | null = null;
@@ -61,6 +66,15 @@ export class NamedNodeMap {
   }
 
   removeNamedItemNS(namespaceURI: NamespaceURI | null, name: string) {
+    return performWithCustomElementReactions(() =>
+      this.removeNamedItemNSImmediately(namespaceURI, name),
+    );
+  }
+
+  private removeNamedItemNSImmediately(
+    namespaceURI: NamespaceURI | null,
+    name: string,
+  ) {
     const ownerElement = this[OWNER_ELEMENT];
     let attr = this[CHILD];
     let prev: typeof attr | null = null;
@@ -69,23 +83,25 @@ export class NamedNodeMap {
       if (attr.name === name && attr[NS] == namespaceURI) {
         if (prev) prev[NEXT] = attr[NEXT];
         if (this[CHILD] === attr) this[CHILD] = attr[NEXT];
+        const oldValue = attr.value;
+        attr[NEXT] = null;
+        attr[OWNER_ELEMENT] = null;
+
         if (attributeObserversActive) {
           queueMutationRecord({
             type: 'attributes',
             target: ownerElement,
             attributeName: attr.name,
             attributeNamespace: attr[NS],
-            oldValue: attr.value,
+            oldValue,
           });
         }
-        updateElementAttribute(ownerElement, attr.name, attr.value, null);
         ownerElement[HOOKS].removeAttribute?.(
           ownerElement as any,
           name,
           namespaceURI,
         );
-        attr[NEXT] = null;
-        attr[OWNER_ELEMENT] = null;
+        updateElementAttribute(ownerElement, attr.name, oldValue, null);
         return attr;
       }
 
@@ -97,6 +113,12 @@ export class NamedNodeMap {
   }
 
   setNamedItem(attr: Attr) {
+    return performWithCustomElementReactions(() =>
+      this.setNamedItemImmediately(attr),
+    );
+  }
+
+  private setNamedItemImmediately(attr: Attr) {
     const ownerElement = this[OWNER_ELEMENT];
     const currentOwner = attr[OWNER_ELEMENT];
 
@@ -134,6 +156,8 @@ export class NamedNodeMap {
     }
 
     attr[OWNER_ELEMENT] = ownerElement;
+    attr[OWNER_DOCUMENT] = ownerElement[OWNER_DOCUMENT];
+    if (old) old[OWNER_ELEMENT] = null;
 
     // only invoke the protocol if the value changed
     if (!old || old.value !== attr.value) {
@@ -146,12 +170,6 @@ export class NamedNodeMap {
           oldValue: old?.value ?? null,
         });
       }
-      updateElementAttribute(
-        ownerElement,
-        attr.name,
-        old?.value ?? null,
-        attr.value,
-      );
 
       ownerElement[HOOKS].setAttribute?.(
         ownerElement as any,
@@ -159,9 +177,14 @@ export class NamedNodeMap {
         attr.value,
         attr[NS],
       );
-    }
 
-    if (old) old[OWNER_ELEMENT] = null;
+      updateElementAttribute(
+        ownerElement,
+        attr.name,
+        old?.value ?? null,
+        attr.value,
+      );
+    }
 
     return old;
   }
@@ -188,10 +211,6 @@ function updateElementAttribute(
   const {observedAttributes} = element.constructor as typeof Element;
   const {attributeChangedCallback} = element;
 
-  if (name === 'slot') {
-    element.slot = newValue ?? '';
-  }
-
   if (
     attributeChangedCallback == null ||
     observedAttributes == null ||
@@ -200,5 +219,7 @@ function updateElementAttribute(
     return;
   }
 
-  return attributeChangedCallback.call(element, name, oldValue, newValue);
+  enqueueCustomElementReaction(element, () =>
+    attributeChangedCallback.call(element, name, oldValue, newValue),
+  );
 }

@@ -52,6 +52,14 @@ export class Document extends ParentNode {
     this.documentElement.appendChild(this.body);
   }
 
+  get textContent(): string | null {
+    return null;
+  }
+
+  set textContent(data: any) {
+    if (data != null) void `${data}`;
+  }
+
   getElementsByClassName(classNames: string) {
     return findElementsByClassName(this, classNames);
   }

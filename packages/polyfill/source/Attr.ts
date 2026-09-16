@@ -46,11 +46,18 @@ export class Attr extends Node {
 
   set value(value: string) {
     const str = String(value);
+    const ownerElement = this[OWNER_ELEMENT];
+
+    if (!ownerElement) {
+      this[VALUE] = str;
+      return;
+    }
+
     const shouldQueueMutation = attributeObserversActive;
     const oldValue = shouldQueueMutation ? this[VALUE] : null;
+    const hooks = this[HOOKS];
     this[VALUE] = str;
-    const ownerElement = this[OWNER_ELEMENT];
-    if (!ownerElement) return;
+
     if (shouldQueueMutation && oldValue !== str) {
       queueMutationRecord({
         type: 'attributes',
@@ -60,7 +67,8 @@ export class Attr extends Node {
         oldValue,
       });
     }
-    this[HOOKS].setAttribute?.(ownerElement as any, this[NAME], str, this[NS]);
+
+    hooks.setAttribute?.(ownerElement as any, this[NAME], str, this[NS]);
   }
 
   get nodeValue() {

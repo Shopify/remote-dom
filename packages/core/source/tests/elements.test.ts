@@ -814,6 +814,66 @@ describe('RemoteElement', () => {
       ]);
     });
 
+    it.each([
+      {description: 'empty', slot: ''},
+      {description: 'non-empty', slot: 'aside'},
+    ])(
+      'removes an $description slot attribute locally and from the host',
+      ({slot}) => {
+        const ProductElement = createRemoteElement();
+        const {element, receiver} =
+          createAndConnectRemoteElement(ProductElement);
+
+        element.setAttribute('slot', slot);
+        element.removeAttribute('slot');
+
+        expect(element.hasAttribute('slot')).toBe(false);
+        expect(element.getAttribute('slot')).toBeNull();
+        expect(element.slot).toBe('');
+        expect(
+          receiver.get<RemoteReceiverElement>({id: remoteId(element)})
+            ?.attributes.slot,
+        ).toBeUndefined();
+      },
+    );
+
+    it('synchronizes property-driven slot updates without recreating a removed attribute', () => {
+      const ProductElement = createRemoteElement();
+      const {element, receiver} = createAndConnectRemoteElement(ProductElement);
+
+      element.slot = 'aside';
+      expect(
+        receiver.get<RemoteReceiverElement>({id: remoteId(element)})?.attributes
+          .slot,
+      ).toBe('aside');
+
+      element.slot = 'header';
+      expect(
+        receiver.get<RemoteReceiverElement>({id: remoteId(element)})?.attributes
+          .slot,
+      ).toBe('header');
+
+      const removedAttribute = element.attributes.getNamedItem('slot');
+      element.removeAttribute('slot');
+
+      expect(removedAttribute?.ownerElement).toBeNull();
+      expect(element.slot).toBe('');
+      expect(element.hasAttribute('slot')).toBe(false);
+      expect(
+        receiver.get<RemoteReceiverElement>({id: remoteId(element)})?.attributes
+          .slot,
+      ).toBeUndefined();
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'slot',
+          undefined,
+          UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+        ],
+      ]);
+    });
+
     it('reflects the value of a remote attribute automatically when the attribute is set', () => {
       const ProductElement = createRemoteElement({
         attributes: ['name'],
@@ -1264,6 +1324,68 @@ describe('RemoteElement', () => {
 
       expect(firstListener).not.toHaveBeenCalled();
       expect(secondListener).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('polyfill hook publication', () => {
+    it('does not replay an insertion included in a pending subtree', () => {
+      const {root, receiver} = createAndConnectRemoteRootElement();
+      const fragment = document.createDocumentFragment();
+      const first = document.createElement('section');
+      const second = document.createElement('section');
+      const added = document.createElement('span');
+      fragment.append(first, second);
+      let mutatePendingSubtree = true;
+      receiver.subscribe(receiver.root, () => {
+        if (mutatePendingSubtree && receiver.root.children.length === 1) {
+          mutatePendingSubtree = false;
+          second.appendChild(added);
+        }
+      });
+
+      root.appendChild(fragment);
+
+      const remoteSecond = receiver.root.children[1] as RemoteReceiverElement;
+      expect(remoteSecond.children.map(({id}) => id)).toEqual([
+        remoteId(added),
+      ]);
+
+      const later = document.createElement('span');
+      second.appendChild(later);
+      expect(remoteSecond.children.map(({id}) => id)).toEqual([
+        remoteId(added),
+        remoteId(later),
+      ]);
+    });
+
+    it('does not replay a removal included in a pending subtree', () => {
+      const {root, receiver} = createAndConnectRemoteRootElement();
+      const fragment = document.createDocumentFragment();
+      const first = document.createElement('section');
+      const second = document.createElement('section');
+      const removed = document.createElement('span');
+      const kept = document.createElement('span');
+      second.append(removed, kept);
+      fragment.append(first, second);
+      let mutatePendingSubtree = true;
+      receiver.subscribe(receiver.root, () => {
+        if (mutatePendingSubtree && receiver.root.children.length === 1) {
+          mutatePendingSubtree = false;
+          second.removeChild(removed);
+        }
+      });
+
+      root.appendChild(fragment);
+
+      const remoteSecond = receiver.root.children[1] as RemoteReceiverElement;
+      expect(remoteSecond.children.map(({id}) => id)).toEqual([remoteId(kept)]);
+
+      const later = document.createElement('span');
+      second.appendChild(later);
+      expect(remoteSecond.children.map(({id}) => id)).toEqual([
+        remoteId(kept),
+        remoteId(later),
+      ]);
     });
   });
 
