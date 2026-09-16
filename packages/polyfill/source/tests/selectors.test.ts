@@ -202,6 +202,23 @@ describe('selector parsing and matching', () => {
       expect(paragraphs).toHaveLength(3);
     });
 
+    it('does not fold stored createElementNS HTML names', () => {
+      const uppercase = document.createElementNS(
+        'http://www.w3.org/1999/xhtml',
+        'I',
+      );
+      container.appendChild(uppercase);
+
+      expect(container.querySelectorAll('i')).toHaveLength(0);
+      expect(container.querySelectorAll('I')).toHaveLength(0);
+
+      const normalized = document.createElement('I');
+      container.appendChild(normalized);
+
+      expect(container.querySelectorAll('i')).toEqual([normalized]);
+      expect(container.querySelectorAll('I')).toEqual([normalized]);
+    });
+
     it('selects by ID', () => {
       const main = container.querySelector('#main-post');
       expect(main?.tagName.toLowerCase()).toBe('article');

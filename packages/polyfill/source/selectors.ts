@@ -1,4 +1,11 @@
-import {CHILD, NEXT, PARENT, PREV, HTML_NAMESPACE} from './constants.ts';
+import {
+  CHILD,
+  NEXT,
+  PARENT,
+  PREV,
+  HTML_NAMESPACE,
+  asciiLowercase,
+} from './constants.ts';
 import {isElementNode} from './shared.ts';
 
 import type {Node} from './Node.ts';
@@ -255,6 +262,13 @@ function matchesSelectorPart(element: Element, {combinator, matchers}: Part) {
   return true;
 }
 
+function getSelectorAttribute(element: Element, name: string) {
+  return element.getAttributeNS(
+    null,
+    element.namespaceURI === HTML_NAMESPACE ? asciiLowercase(name) : name,
+  );
+}
+
 function matchesSelectorMatcher(
   element: Element | null,
   matcher: Matcher | Matcher[],
@@ -272,18 +286,17 @@ function matchesSelectorMatcher(
       return name === '*'; // Universal selector
     case MATCHER_ELEMENT:
       return element.namespaceURI === HTML_NAMESPACE
-        ? element.localName.toLowerCase() === name.toLowerCase()
+        ? element.localName === asciiLowercase(name)
         : element.localName === name;
     case MATCHER_ID:
-      return element.getAttribute('id') === name;
+      return getSelectorAttribute(element, 'id') === name;
     case MATCHER_CLASS:
-      const classAttr = element.getAttribute('class');
+      const classAttr = getSelectorAttribute(element, 'class');
       if (!classAttr) return false;
       return classAttr.split(/\s+/).includes(name);
     case MATCHER_ATTRIBUTE:
-      return value == null
-        ? element.hasAttribute(name)
-        : element.getAttribute(name) === value;
+      const attribute = getSelectorAttribute(element, name);
+      return value == null ? attribute != null : attribute === value;
     case MATCHER_PSEUDO:
       switch (name) {
         default:

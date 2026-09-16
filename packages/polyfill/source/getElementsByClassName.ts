@@ -13,7 +13,7 @@ export function getElementsByClassName(node: ParentNode, classNames: string) {
   for (const descendant of descendants(node)) {
     if (!isElementNode(descendant)) continue;
 
-    const classes = descendant.getAttribute('class');
+    const classes = descendant.getAttributeNS(null, 'class');
     if (classes == null) continue;
 
     const tokens = classes.split(/[\t\n\f\r ]+/);
