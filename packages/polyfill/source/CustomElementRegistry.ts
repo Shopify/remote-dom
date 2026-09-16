@@ -1,3 +1,31 @@
+const VALID_CUSTOM_ELEMENT_NAME =
+  /^[a-z][^A-Z\u0000\t\n\f\r />]*-[^A-Z\u0000\t\n\f\r />]*$/u;
+
+const RESERVED_CUSTOM_ELEMENT_NAMES = new Set([
+  'annotation-xml',
+  'color-profile',
+  'font-face',
+  'font-face-src',
+  'font-face-uri',
+  'font-face-format',
+  'font-face-name',
+  'missing-glyph',
+]);
+
+function isValidCustomElementName(name: string) {
+  return (
+    VALID_CUSTOM_ELEMENT_NAME.test(name) &&
+    !RESERVED_CUSTOM_ELEMENT_NAMES.has(name)
+  );
+}
+
+function createInvalidCustomElementNameError(name: string) {
+  return new DOMException(
+    `Invalid custom element name: "${name}"`,
+    'SyntaxError',
+  );
+}
+
 export class CustomElementRegistryImplementation
   implements CustomElementRegistry
 {
@@ -12,6 +40,24 @@ export class CustomElementRegistryImplementation
     Constructor: CustomElementConstructor,
     _options?: ElementDefinitionOptions,
   ) {
+    if (!isValidCustomElementName(name)) {
+      throw createInvalidCustomElementNameError(name);
+    }
+
+    if (this.registry.has(name)) {
+      throw new DOMException(
+        `A custom element named "${name}" has already been defined`,
+        'NotSupportedError',
+      );
+    }
+
+    if (this.getName(Constructor) != null) {
+      throw new DOMException(
+        'This constructor has already been registered in this custom element registry',
+        'NotSupportedError',
+      );
+    }
+
     this.registry.set(name, Constructor);
 
     const listeners = this.listenersByName.get(name);
@@ -38,6 +84,10 @@ export class CustomElementRegistryImplementation
   }
 
   whenDefined(name: string) {
+    if (!isValidCustomElementName(name)) {
+      return Promise.reject(createInvalidCustomElementNameError(name));
+    }
+
     const Constructor = this.registry.get(name);
 
     if (Constructor != null) return Promise.resolve(Constructor);
