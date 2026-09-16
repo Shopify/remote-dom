@@ -34,6 +34,100 @@ type OnErrorHandler =
     ) => void)
   | null;
 
+const EVENT_HANDLER_PROPERTIES = ['onerror', 'onunhandledrejection'] as const;
+const POLYFILL_GLOBAL_PROPERTY = Symbol.for(
+  '@remote-dom/polyfill/global-property',
+);
+
+type PropertyDescriptors = Record<PropertyKey, PropertyDescriptor>;
+
+function windowPropertyDescriptors(window: Window): PropertyDescriptors {
+  return Object.getOwnPropertyDescriptors(window);
+}
+
+function eventTargetPropertyDescriptors(window: Window): PropertyDescriptors {
+  const properties: PropertyDescriptors = {};
+
+  for (const [property, descriptor] of Object.entries(
+    Object.getOwnPropertyDescriptors(EventTarget.prototype),
+  )) {
+    if (property !== 'constructor' && typeof descriptor.value === 'function') {
+      descriptor.value = markPolyfillGlobalProperty(
+        descriptor.value.bind(window),
+      );
+      properties[property] = descriptor;
+    }
+  }
+
+  return properties;
+}
+
+function eventHandlerPropertyDescriptors(window: Window): PropertyDescriptors {
+  const properties: PropertyDescriptors = {};
+
+  for (const property of EVENT_HANDLER_PROPERTIES) {
+    properties[property] = {
+      configurable: true,
+      enumerable: true,
+      get: markPolyfillGlobalProperty(() => window[property]),
+      set: markPolyfillGlobalProperty((handler) => {
+        window[property] = handler as any;
+      }),
+    };
+  }
+
+  return properties;
+}
+
+function globalPropertyDescriptors(window: Window): PropertyDescriptors {
+  return Object.assign(
+    windowPropertyDescriptors(window),
+    eventTargetPropertyDescriptors(window),
+    eventHandlerPropertyDescriptors(window),
+  );
+}
+
+function markPolyfillGlobalProperty<
+  FunctionType extends (...args: any[]) => any,
+>(value: FunctionType) {
+  Object.defineProperty(value, POLYFILL_GLOBAL_PROPERTY, {value: true});
+  return value;
+}
+
+function installMissingGlobalProperties(
+  target: object,
+  properties: PropertyDescriptors,
+) {
+  for (const property of Reflect.ownKeys(properties)) {
+    const currentDescriptor = findPropertyDescriptor(target, property);
+    if (
+      currentDescriptor == null ||
+      isPolyfillGlobalProperty(currentDescriptor)
+    ) {
+      Object.defineProperty(target, property, properties[property]!);
+    }
+  }
+}
+
+function findPropertyDescriptor(target: object, property: PropertyKey) {
+  let currentTarget: object | null = target;
+
+  while (currentTarget) {
+    const descriptor = Object.getOwnPropertyDescriptor(currentTarget, property);
+    if (descriptor) return descriptor;
+    currentTarget = Object.getPrototypeOf(currentTarget);
+  }
+
+  return undefined;
+}
+
+function isPolyfillGlobalProperty(descriptor: PropertyDescriptor) {
+  return [descriptor.value, descriptor.get, descriptor.set].some(
+    (value) =>
+      typeof value === 'function' && value[POLYFILL_GLOBAL_PROPERTY] === true,
+  );
+}
+
 export class Window extends EventTarget {
   [HOOKS]: Partial<Hooks> = {};
   [EXTENSIONS]: Partial<Hooks>[] = [];
@@ -142,24 +236,35 @@ export class Window extends EventTarget {
   }
 
   static setGlobal(window: Window) {
-    const properties = Object.getOwnPropertyDescriptors(window);
+    const currentSelf = globalThis.self;
+    const currentWindow = globalThis.window;
+    const properties = windowPropertyDescriptors(window);
+    const missingProperties = Object.assign(
+      eventTargetPropertyDescriptors(window),
+      eventHandlerPropertyDescriptors(window),
+    );
 
-    delete (properties as any).self;
+    delete properties.self;
 
     Object.defineProperties(globalThis, properties);
+    installMissingGlobalProperties(globalThis, missingProperties);
 
-    if (typeof globalThis.self === 'undefined') {
+    if (
+      typeof currentSelf === 'undefined' ||
+      (currentSelf === currentWindow && currentSelf !== globalThis)
+    ) {
       Object.defineProperty(globalThis, 'self', {
         value: window,
         configurable: true,
         writable: true,
         enumerable: true,
       });
-    } else {
+    } else if (currentSelf !== globalThis) {
       // There can already be a `self`, like when polyfilling the DOM
       // in a Web Worker. In those cases, just mirror all the `Window`
       // properties onto `self`, rather than wholly redefining it.
-      Object.defineProperties(self, properties);
+      Object.defineProperties(currentSelf, properties);
+      installMissingGlobalProperties(currentSelf, missingProperties);
     }
   }
 
@@ -170,19 +275,7 @@ export class Window extends EventTarget {
       }
     }
 
-    const properties = Object.getOwnPropertyDescriptors(window);
-    const eventTargetPrototypeProperties = Object.getOwnPropertyDescriptors(
-      EventTarget.prototype,
-    );
-
-    for (const descriptor of Object.values(eventTargetPrototypeProperties)) {
-      if (typeof descriptor.value === 'function') {
-        descriptor.value = descriptor.value.bind(window);
-      }
-    }
-
-    Object.defineProperties(globalThis, properties);
-    Object.defineProperties(globalThis, eventTargetPrototypeProperties);
+    Object.defineProperties(globalThis, globalPropertyDescriptors(window));
   }
 }
 
