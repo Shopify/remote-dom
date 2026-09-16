@@ -2,8 +2,8 @@
 '@remote-dom/core': major
 ---
 
-Require host-owned element and capability allowlists in `DOMRemoteReceiver`.
+Add explicit element configuration to `DOMRemoteReceiver`.
 
-The receiver now accepts only text and comments by default. Configure `elements` with an array of allowed names (creation only), or a map declaring each element's allowed `properties`, `attributes`, `eventListeners`, and `methods`. Validation covers nested insertions and subsequent updates. Default method calls require an explicit method permission, and calls on the root are denied. A custom `call` callback remains an explicit host-controlled override.
+Configure `elements` with an array of element names, or a map specifying each element's `properties`, `attributes`, `eventListeners`, and `methods`. An array configures element creation only. Without an `elements` configuration, the receiver accepts text and comments. Root method calls require a custom `call` callback.
 
-`RemoteReceiverElement` uses the same restrictions; configure its static `elements` policy in a host-side subclass. Existing DOM receiver users must migrate to explicit policies. Remote-side element declarations are not sufficient. Data-only receivers are unchanged.
+For `RemoteReceiverElement`, configure the static `elements` property in a host-side subclass. DOM receiver consumers must migrate to this configuration when upgrading. Data-only receivers are unchanged.

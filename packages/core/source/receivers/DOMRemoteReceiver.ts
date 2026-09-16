@@ -67,9 +67,8 @@ export class DOMRemoteReceiver {
        * allows only element creation; use a map to also expose specific properties,
        * attributes, events, and methods. Omitted capabilities are denied.
        *
-       * Only expose elements and capabilities that are safe for untrusted input.
-       * Values and method arguments are not sanitized by the receiver. This policy
-       * is copied at construction and must not come from the remote environment.
+       * Values and method arguments are passed through unchanged. This
+       * configuration is supplied by the host and copied at construction.
        */
       elements?:
         | readonly string[]
@@ -201,8 +200,7 @@ export class DOMRemoteReceiver {
       },
       updateText: (id, newText) => {
         const text = attached.get(id);
-        // A forged text update must not reach an element's `data` setter and
-        // bypass the property policy (for example, a custom element or <object>).
+        // Text updates apply only to character data nodes.
         if (
           !text ||
           (text.nodeType !== NODE_TYPE_TEXT &&
