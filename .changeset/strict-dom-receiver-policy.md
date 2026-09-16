@@ -1,9 +1,9 @@
 ---
-'@remote-dom/core': major
+'@remote-dom/core': minor
 ---
 
-Add explicit element configuration to `DOMRemoteReceiver`.
+Add optional per-element member configuration and `blockedProperties` to `DOMRemoteReceiver`.
 
-Configure `elements` with an array of element names, or a map specifying each element's `properties`, `attributes`, `eventListeners`, and `methods`. An array configures element creation only. Without an `elements` configuration, the receiver accepts text and comments. Root method calls require a custom `call` callback.
+Use `elements` with an array of element names, or a map specifying each element's `properties`, `attributes`, `eventListeners`, and `methods`. Existing name arrays retain ordinary member handling; omitted member lists use the defaults. `blockedProperties` adds host-specific property and attribute exclusions.
 
-For `RemoteReceiverElement`, configure the static `elements` property in a host-side subclass. DOM receiver consumers must migrate to this configuration when upgrading. Data-only receivers are unchanged.
+`RemoteReceiverElement` supports the same configuration through static properties on a host-side subclass. The existing `call` callback remains available for custom method dispatch. Data-only receivers are unchanged.

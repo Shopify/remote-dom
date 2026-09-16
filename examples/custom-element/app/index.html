@@ -14,9 +14,8 @@
 
     <script type="module">
       class UIButton extends HTMLElement {
-        // The host policy below allows the remote to update `primary` as an
-        // attribute. Property, attribute, and event permissions are separate;
-        // remote properties are not automatically converted to attributes.
+        // The remote sends `primary` through the attribute channel. Remote
+        // properties are not automatically converted to attributes.
         static get observedAttributes() {
           return ['primary'];
         }
@@ -65,7 +64,7 @@
           }
         }
 
-        // The host policy below explicitly allows remote calls to focus().
+        // Custom-element methods can use the receiver's default dispatch.
         focus() {
           this.shadowRoot.querySelector('button').focus();
         }
@@ -81,16 +80,10 @@
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');
 
-      // Earlier examples render only text. Allow only this component and the
-      // specific attributes, events, and methods the remote needs.
+      // Select our component with an element-name list. Its ordinary members
+      // use default handling; a member map is optional for further configuration.
       const receiver = new DOMRemoteReceiver({
-        elements: {
-          'ui-button': {
-            attributes: ['primary'],
-            eventListeners: ['click'],
-            methods: ['focus'],
-          },
-        },
+        elements: ['ui-button'],
       });
       receiver.connect(root);
 

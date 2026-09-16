@@ -18,10 +18,10 @@
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');
 
-      // Without an elements policy, DOMRemoteReceiver accepts only text and
-      // comments. This example renders text, so no element permissions are needed.
+      // This example renders only text. An empty elements list keeps the
+      // receiver configured for text and comments.
       // Connect it to the root where that text should appear.
-      const receiver = new DOMRemoteReceiver();
+      const receiver = new DOMRemoteReceiver({elements: []});
       receiver.connect(root);
 
       window.addEventListener('message', ({source, data}) => {

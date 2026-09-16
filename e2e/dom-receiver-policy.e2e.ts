@@ -13,6 +13,12 @@ for (const attack of [
   'text-update',
   'method',
   'root-method',
+  'initial-url-property',
+  'initial-url-attribute',
+  'url-property',
+  'url-attribute',
+  'custom-property',
+  'custom-method',
 ]) {
   test(`DOM receiver rejects ${attack} injection in a browser`, async ({
     page,
@@ -41,16 +47,28 @@ for (const attack of [
         customElements.define(
           'ui-button',
           class extends HTMLElement {
-            // This is a host-only setter, deliberately not exposed in the policy.
             set data(value: string) {
+              this.innerHTML = value;
+            }
+            set content(value: string) {
+              this.innerHTML = value;
+            }
+            renderMarkup(value: string) {
               this.innerHTML = value;
             }
           },
         );
         const root = document.createElement('div');
         document.body.append(root);
-        const receiver = new DOMRemoteReceiver({root, elements: ['ui-button']});
-        const marker = 'document.body.dataset.remoteEscaped = "true"';
+        const receiver = new DOMRemoteReceiver({
+          root,
+          elements:
+            attack === 'custom-method'
+              ? {'ui-button': {methods: ['focus']}}
+              : ['ui-button', 'a'],
+          blockedProperties: ['content'],
+        });
+        const marker = 'document.body.dataset.remoteEscaped = "true"; void 0';
         const payload = `<img src="data:image/png,invalid" onerror='${marker}'>`;
         const button = {
           id: 'button',
@@ -58,6 +76,7 @@ for (const attack of [
           element: 'ui-button',
           children: [],
         };
+        const link = {...button, element: 'a'};
         const script = {
           id: 'script',
           type: NODE_TYPE_ELEMENT,
@@ -80,9 +99,34 @@ for (const attack of [
             case 'initial-property':
               insert({...button, properties: {innerHTML: payload}});
               break;
+            case 'initial-url-property':
+              insert({...link, properties: {href: `java\nscript:${marker}`}});
+              break;
+            case 'initial-url-attribute':
+              insert({...link, attributes: {href: `javascript:${marker}`}});
+              break;
             default:
-              insert(button);
-              if (attack === 'property-update') {
+              insert(attack.startsWith('url-') ? link : button);
+              if (attack.startsWith('url-')) {
+                receiver.connection.mutate([
+                  [
+                    MUTATION_TYPE_UPDATE_PROPERTY,
+                    'button',
+                    'href',
+                    `javascript:${marker}`,
+                    attack === 'url-attribute'
+                      ? UPDATE_PROPERTY_TYPE_ATTRIBUTE
+                      : undefined,
+                  ],
+                ]);
+                (root.firstChild as HTMLElement).click();
+              } else if (attack === 'custom-property') {
+                receiver.connection.mutate([
+                  [MUTATION_TYPE_UPDATE_PROPERTY, 'button', 'content', payload],
+                ]);
+              } else if (attack === 'custom-method') {
+                receiver.connection.call('button', 'renderMarkup', payload);
+              } else if (attack === 'property-update') {
                 receiver.connection.mutate([
                   [
                     MUTATION_TYPE_UPDATE_PROPERTY,

@@ -29,7 +29,7 @@ Next, on the “host” HTML page, you will need to create a “receiver”. Thi
 
 `@remote-dom/core` provides a few different types of receivers, but for now we will use the [`DOMRemoteReceiver`](/packages/core/README.md#domremotereceiver), which directly mirrors the DOM elements created remotely in the host HTML page. That is, if the remote environment renders a `ui-button` custom element, a matching `ui-button` custom element will be created on the host page.
 
-Create a `DOMRemoteReceiver` and call its `connect()` method on the element that should contain any children rendered by the remote environment. By default it accepts only text and comments. To render elements, the host must explicitly allow their names and capabilities through the [`elements` option](/packages/core/README.md#host-owned-element-policy):
+Create a `DOMRemoteReceiver` and call its `connect()` method on the element that should contain any children rendered by the remote environment. The examples below start with text only. Use the [`elements` option](/packages/core/README.md#host-owned-element-policy) to restrict element names and optionally their members; omitting it leaves element names unrestricted.
 
 ```html
 <!doctype html>
@@ -42,7 +42,7 @@ Create a `DOMRemoteReceiver` and call its `connect()` method on the element that
 
       const root = document.querySelector('#root');
 
-      const receiver = new DOMRemoteReceiver();
+      const receiver = new DOMRemoteReceiver({elements: []});
       receiver.connect(root);
     </script>
   </body>
@@ -65,7 +65,7 @@ Our host is ready to receive elements to render, but we don’t have a remote en
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');
 
-      const receiver = new DOMRemoteReceiver();
+      const receiver = new DOMRemoteReceiver({elements: []});
       receiver.connect(root);
 
       // We will send this message in the next step.

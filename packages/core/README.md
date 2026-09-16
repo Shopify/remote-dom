@@ -656,7 +656,7 @@ import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
 
 const receiver = new DOMRemoteReceiver();
 
-// With no elements policy, only text and comments are accepted.
+// With no elements option, element names are unrestricted.
 // Accepted nodes will be attached to the body element.
 receiver.connect(document.body);
 ```
@@ -676,13 +676,15 @@ const receiver = new DOMRemoteReceiver({retain, release});
 
 ##### Host-owned element policy
 
-`DOMRemoteReceiver` denies element creation, property and attribute writes, event subscriptions, and method calls unless the host explicitly allows them. Text and comment nodes do not need an allowlist. Configure `elements` in the **host environment**, never from remote-controlled data:
+The optional `elements` configuration controls which element names the receiver creates. An array such as `elements: ['ui-button', 'ui-stack']` restricts names while retaining default member handling. An empty array accepts only text and comments. Omitting `elements` preserves unrestricted element names; it is not an isolation policy for untrusted code.
+
+For more control, provide a map with per-element member lists. Configure these lists in the **host environment**, not from remote-controlled data:
 
 ```ts
 const receiver = new DOMRemoteReceiver({
   elements: {
     'ui-button': {
-      properties: ['disabled'],
+      properties: ['disabled', 'label'],
       attributes: ['primary', 'slot'],
       eventListeners: ['click'],
       methods: ['focus'],
@@ -692,11 +694,26 @@ const receiver = new DOMRemoteReceiver({
 });
 ```
 
-The map keys are exact element names. Each entry allows creation of that element and only the listed capabilities; omitted lists are empty. For elements with no capabilities, `elements: ['ui-button', 'ui-stack']` is shorthand. Policies are copied at construction, so later changes to the configuration do not change an existing receiver.
+Map keys are exact element names. A supplied member list allows only the listed names; an omitted member list retains default handling. An empty member list allows none. Property, attribute, and event-listener lists are independent. Configuration is copied at construction, so later changes to it do not change an existing receiver.
 
-The receiver validates every element in an inserted subtree, including nested children, before creating any host DOM nodes. Invalid names or capabilities throw. Later updates and method calls are checked against the policy assigned to the actual host node. Property, attribute, and event-listener permissions are separate: allowing a `click` event does not allow an `onclick` attribute or property. Earlier records in a mutation batch are not rolled back when a later record is rejected.
+The receiver validates an entire inserted subtree before creating any host DOM nodes, and applies the same checks to subsequent updates. Invalid names or values throw. Earlier records in a mutation batch are not rolled back when a later record is rejected.
 
-**The host still owns the safety of its exposed interface.** The receiver does not sanitize property values, attribute values, method arguments, or event details. Do not expose active elements, HTML parsing properties or methods, inline event-handler attributes, or unsafe URL setters to untrusted code. Custom-element constructors, setters, and methods must safely handle remote input. Declarations such as `RemoteElement.remoteProperties` on the remote side describe serialization; they are not a host security boundary.
+Default member handling supports ordinary properties, attributes, events, and custom-element methods. It excludes HTML-content and prototype-related property names, `on*` property/attribute names (case-insensitively), and assignment to base DOM methods. Use the event-listener channel for event callbacks. Native methods other than `focus` and `blur` require a custom `call` callback; a `methods` list can further restrict default dispatch.
+
+URL-valued members such as `href`, `src`, `action`, and `formAction` accept relative URLs and ordinary schemes. Script schemes and non-raster-image `data:` URLs are rejected, including case and control-character variations. Supported raster-image media types are AVIF, BMP, GIF, JPEG, PNG, and WebP. Native URL properties and URL attributes require strings or nullish values; objects are not coerced into URLs. A custom element's object-valued properties remain the host component's responsibility.
+
+Use `blockedProperties` to add host-specific property and attribute exclusions:
+
+```ts
+const receiver = new DOMRemoteReceiver({
+  elements: ['ui-button'],
+  blockedProperties: ['internalState', 'content'],
+});
+```
+
+This list is copied at construction, applies case-insensitively to every element, and adds to the defaults rather than replacing them. Explicit member lists do not override these checks.
+
+**The host still owns its component interface.** Default checks are not a complete policy for arbitrary custom setters, methods, URLs, or event details. Hosts receiving untrusted input should supply explicit element and member lists and validate their component implementations. `blockedProperties` can exclude additional custom setters, while `methods` can limit custom methods. Remote-side declarations such as `RemoteElement.remoteProperties` describe serialization; they do not configure the host receiver.
 
 By default, calls on the root are denied. An explicit `call(element, method, ...args)` callback overrides method policy, including for the root. It must enforce its own allowlist and validate arguments; do not forward arbitrary method names to the DOM.
 
@@ -718,7 +735,7 @@ class UIReceiver extends RemoteReceiverElement {
 customElements.define('ui-receiver', UIReceiver);
 ```
 
-**Migration:** Previous versions mirrored all element names, properties, and attributes, and defaulted to unrestricted DOM method calls. They also did not enforce the documented `elements` array. Existing hosts must now declare every element and capability they intentionally expose, including attributes such as `slot`. An element-name array alone does not authorize any properties, attributes, events, or methods. There is no unrestricted fallback. Data-only `RemoteReceiver` and `SignalRemoteReceiver` behavior is unchanged.
+Existing element-name arrays remain valid and retain ordinary property, attribute, and event handling. The member-map and `blockedProperties` options are optional additions. Hosts needing custom method dispatch can continue using `call`. Data-only `RemoteReceiver` and `SignalRemoteReceiver` behavior is unchanged.
 
 ##### Caching DOM nodes
 

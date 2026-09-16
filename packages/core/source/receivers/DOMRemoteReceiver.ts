@@ -26,7 +26,7 @@ export interface DOMRemoteElementPolicy {
 
 type ElementPolicy = {
   [Key in keyof DOMRemoteElementPolicy]: ReadonlySet<string>;
-};
+} & {element: string};
 
 const BLOCKED_PROPERTIES = new Set([
   'innerhtml',
@@ -38,8 +38,10 @@ const BLOCKED_PROPERTIES = new Set([
   'is',
 ]);
 
-// These native methods are useful without changing the receiver's tree.
-const DEFAULT_NATIVE_METHODS = new Set(['focus', 'blur']);
+const URL_PROPERTIES =
+  /^(href|xlink:href|src|action|formaction|codebase|background|poster)$/;
+const SCRIPT_URL =
+  /^(javascript|vbscript):|^data:(?!image\/(avif|bmp|gif|jpeg|png|webp)[;,])/i;
 
 /**
  * Takes care of mapping remote elements to matching HTML elements
@@ -80,8 +82,8 @@ export class DOMRemoteReceiver {
        * A map can additionally limit each element's properties, attributes, events,
        * and methods. Omitted member lists retain the defaults; empty lists allow none.
        *
-       * Values and method arguments are passed through unchanged. This
-       * configuration is supplied by the host and copied at construction.
+       * This configuration is supplied by the host and copied at construction.
+       * Default member and URL-value checks apply in addition to these lists.
        */
       elements?:
         | readonly string[]
@@ -95,9 +97,9 @@ export class DOMRemoteReceiver {
 
       /**
        * Customizes how [remote methods](https://github.com/Shopify/remote-dom/blob/main/packages/core#remotemethods)
-       * are called. Default dispatch excludes base DOM member names except focus
-       * and blur, and can be further limited by `elements`. This callback overrides
-       * that selection, including for the root.
+       * are called. Default dispatch supports custom-element methods and native
+       * focus/blur, and can be narrowed by `elements`. Other native methods and
+       * root calls require this callback, which controls its own method selection.
        *
        * @param element The HTML element representing the remote element the method is being called on.
        * @param method The name of the method being called.
@@ -140,30 +142,13 @@ export class DOMRemoteReceiver {
     const blockedProperties = new Set(
       options.blockedProperties?.map((name) => name.toLowerCase()),
     );
-    const nativeMembers = new Set<string>();
-    const nativeMethods = new Set<string>();
-    for (
-      let prototype = HTMLElement.prototype;
-      prototype;
-      prototype = Object.getPrototypeOf(prototype)
-    ) {
-      for (const name of Object.getOwnPropertyNames(prototype)) {
-        nativeMembers.add(name);
-        if (
-          typeof Object.getOwnPropertyDescriptor(prototype, name)?.value ===
-          'function'
-        ) {
-          nativeMethods.add(name);
-        }
-      }
-    }
-
     const entries: [string, DOMRemoteElementPolicy][] = Array.isArray(elements)
       ? elements.map((name) => [name, {}])
       : Object.entries(elements ?? {});
 
     for (const [name, policy] of entries) {
       policies.set(name, {
+        element: name.toLowerCase(),
         properties: policy.properties && new Set(policy.properties),
         attributes: policy.attributes && new Set(policy.attributes),
         eventListeners: policy.eventListeners && new Set(policy.eventListeners),
@@ -174,7 +159,7 @@ export class DOMRemoteReceiver {
     function policyFor(name: string) {
       let policy = policies.get(name);
       if (!policy && elements === undefined) {
-        policy = {};
+        policy = {element: name.toLowerCase()};
         policies.set(name, policy);
       }
       return policy;
@@ -198,7 +183,9 @@ export class DOMRemoteReceiver {
         if (
           !policy ||
           (policy.methods && !policy.methods.has(method)) ||
-          (nativeMembers.has(method) && !DEFAULT_NATIVE_METHODS.has(method))
+          ((!policy.element.includes('-') || method in HTMLElement.prototype) &&
+            method !== 'focus' &&
+            method !== 'blur')
         ) {
           throw new Error(`Method is not allowed: ${method}`);
         }
@@ -240,7 +227,7 @@ export class DOMRemoteReceiver {
         type = UPDATE_PROPERTY_TYPE_PROPERTY,
       ) => {
         const element = attached.get(id)!;
-        assertPropertyAllowed(nodePolicies.get(element), property, type);
+        assertPropertyAllowed(nodePolicies.get(element), property, value, type);
 
         retain?.(value);
 
@@ -269,6 +256,7 @@ export class DOMRemoteReceiver {
     function assertPropertyAllowed(
       policy: ElementPolicy | undefined,
       property: string,
+      value: unknown,
       type: number,
     ) {
       const allowed =
@@ -293,7 +281,14 @@ export class DOMRemoteReceiver {
             normalized.startsWith('on') ||
             blockedProperties.has(normalized) ||
             (type === UPDATE_PROPERTY_TYPE_PROPERTY &&
-              nativeMethods.has(property))))
+              isNativeMethod(property)) ||
+            ((URL_PROPERTIES.test(normalized) ||
+              (normalized === 'data' && policy.element === 'object')) &&
+              value != null &&
+              (typeof value === 'string'
+                ? SCRIPT_URL.test(value.replace(/[\u0000-\u0020]/g, ''))
+                : type === UPDATE_PROPERTY_TYPE_ATTRIBUTE ||
+                  !policy.element.includes('-')))))
       ) {
         throw new Error(
           `Remote property is not allowed: ${property} (type ${type})`,
@@ -331,6 +326,7 @@ export class DOMRemoteReceiver {
               assertPropertyAllowed(
                 policy,
                 property,
+                current.properties![property],
                 UPDATE_PROPERTY_TYPE_PROPERTY,
               );
             }
@@ -338,6 +334,7 @@ export class DOMRemoteReceiver {
               assertPropertyAllowed(
                 policy,
                 attribute,
+                current.attributes![attribute],
                 UPDATE_PROPERTY_TYPE_ATTRIBUTE,
               );
             }
@@ -345,6 +342,7 @@ export class DOMRemoteReceiver {
               assertPropertyAllowed(
                 policy,
                 event,
+                current.eventListeners![event],
                 UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
               );
             }
@@ -494,6 +492,21 @@ export class DOMRemoteReceiver {
 
     return fragment;
   }
+}
+
+function isNativeMethod(name: string) {
+  for (
+    let prototype = HTMLElement.prototype;
+    prototype;
+    prototype = Object.getPrototypeOf(prototype)
+  ) {
+    if (
+      typeof Object.getOwnPropertyDescriptor(prototype, name)?.value ===
+      'function'
+    )
+      return true;
+  }
+  return false;
 }
 
 function updateRemoteProperty(

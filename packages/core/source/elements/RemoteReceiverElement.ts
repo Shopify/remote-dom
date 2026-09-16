@@ -56,7 +56,7 @@ export class RemoteReceiverElement extends HTMLElement {
 
   /**
    * Customizes how [remote methods](https://github.com/Shopify/remote-dom/blob/main/packages/core#remotemethods)
-   * are called. By default, only methods allowed by the static `elements` policy
+   * are called. By default, custom-element methods and native focus/blur
    * can be called. This callback overrides that policy, including for the root,
    * and must enforce its own host-owned allowlist.
    *

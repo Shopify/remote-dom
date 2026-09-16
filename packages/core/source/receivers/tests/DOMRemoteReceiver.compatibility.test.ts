@@ -39,6 +39,12 @@ class CompatibilityButton extends HTMLElement {
   activate(value: string) {
     return value;
   }
+  set content(value: string) {
+    this.innerHTML = value;
+  }
+  renderMarkup(value: string) {
+    this.innerHTML = value;
+  }
 }
 customElements.define('compatibility-button', CompatibilityButton);
 
@@ -182,6 +188,41 @@ describe('DOMRemoteReceiver compatibility defaults', () => {
         /not allowed/,
       );
     }
+  });
+
+  it('applies host restrictions to custom setters and methods', () => {
+    const receiver = new DOMRemoteReceiver({
+      elements: {'compatibility-button': {methods: ['activate']}},
+      blockedProperties: ['content'],
+    });
+    expect(() =>
+      insert(receiver, {content: '<b>content</b>'}, {}, 'compatibility-button'),
+    ).toThrow(/not allowed/);
+    insert(receiver, {}, {}, 'compatibility-button');
+    expect(() =>
+      receiver.connection.mutate([
+        [MUTATION_TYPE_UPDATE_PROPERTY, 'button', 'content', '<b>content</b>'],
+      ]),
+    ).toThrow(/not allowed/);
+    expect(() =>
+      receiver.connection.call('button', 'renderMarkup', '<b>content</b>'),
+    ).toThrow(/not allowed/);
+    expect(receiver.root.firstChild?.childNodes).toHaveLength(0);
+    expect(receiver.connection.call('button', 'activate', 'result')).toBe(
+      'result',
+    );
+  });
+
+  it.each([
+    ['form', 'requestSubmit'],
+    ['select', 'add'],
+    ['input', 'showPicker'],
+  ])('rejects native %s.%s without invoking it', (element, method) => {
+    const receiver = new DOMRemoteReceiver({elements: [element]});
+    insert(receiver, {}, {}, element);
+    expect(() => receiver.connection.call('button', method)).toThrow(
+      /not allowed/,
+    );
   });
 
   it('does not allow member lists to opt back into built-in excluded methods', () => {
