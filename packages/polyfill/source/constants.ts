@@ -8,6 +8,7 @@ export const PREV = Symbol('prev');
 export const NEXT = Symbol('next');
 export const CHILD = Symbol('child');
 export const PARENT = Symbol('parent');
+export const HOST = Symbol('host');
 export const DATA = Symbol('data');
 export const USER_PROPERTIES = Symbol('user_properties');
 export const LISTENERS = Symbol('listeners');
