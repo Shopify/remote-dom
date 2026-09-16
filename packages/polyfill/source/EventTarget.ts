@@ -172,17 +172,17 @@ export class EventTarget {
 
     for (let i = path.length; i--; ) {
       fireEvent(event, path[i]!, EVENT_PHASE_CAPTURING);
-      if (event.cancelBubble) return event.defaultPrevented;
+      if (event.cancelBubble) return !event.defaultPrevented;
     }
 
     const bubblePath = event.bubbles ? path : path.slice(0, 1);
 
     for (let i = 0; i < bubblePath.length; i++) {
       fireEvent(event, bubblePath[i]!, EVENT_PHASE_BUBBLING);
-      if (event.cancelBubble) return event.defaultPrevented;
+      if (event.cancelBubble) return !event.defaultPrevented;
     }
 
-    return event.defaultPrevented;
+    return !event.defaultPrevented;
   }
 }
 
