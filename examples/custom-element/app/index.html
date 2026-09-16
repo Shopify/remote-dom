@@ -14,12 +14,9 @@
 
     <script type="module">
       class UIButton extends HTMLElement {
-        // By default, `DOMRemoteReceiver` will assign remote properties as properties,
-        // but only if the element has a matching property defined. Otherwise, the remote
-        // properties will be set as attributes. We’ll observe the `primary` attribute
-        // in order to update our rendered content when that attribute changes. We’ll
-        // define a `onClick` method, though, which will be set to the value of the `onClick`
-        // remote property.
+        // The host policy below allows the remote to update `primary` as an
+        // attribute. Property, attribute, and event permissions are separate;
+        // remote properties are not automatically converted to attributes.
         static get observedAttributes() {
           return ['primary'];
         }
@@ -68,8 +65,7 @@
           }
         }
 
-        // Remote DOM will automatically call methods on a custom element to satisfy
-        // remote method calls.
+        // The host policy below explicitly allows remote calls to focus().
         focus() {
           this.shadowRoot.querySelector('button').focus();
         }
@@ -85,12 +81,16 @@
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');
 
-      // In earlier examples, we did not pass any arguments, which allows the DOM
-      // receiver to mirror any element it receives. By passing the `elements` option,
-      // we are restricting the allowed elements to only the ones we list, which in this
-      // case means only our `ui-button` element can be rendered.
+      // Earlier examples render only text. Allow only this component and the
+      // specific attributes, events, and methods the remote needs.
       const receiver = new DOMRemoteReceiver({
-        elements: ['ui-button'],
+        elements: {
+          'ui-button': {
+            attributes: ['primary'],
+            eventListeners: ['click'],
+            methods: ['focus'],
+          },
+        },
       });
       receiver.connect(root);
 

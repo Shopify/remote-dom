@@ -16,6 +16,18 @@ const REMOTE_IDS = new WeakMap<Node, string>();
 const REMOTE_PROPERTIES = new WeakMap<Node, Record<string, any>>();
 const REMOTE_EVENT_LISTENERS = new WeakMap<Node, Record<string, any>>();
 
+/** Host-owned capabilities exposed to the remote for one element name. */
+export interface DOMRemoteElementPolicy {
+  readonly properties?: readonly string[];
+  readonly attributes?: readonly string[];
+  readonly eventListeners?: readonly string[];
+  readonly methods?: readonly string[];
+}
+
+type ElementPolicy = {
+  [Key in keyof Required<DOMRemoteElementPolicy>]: ReadonlySet<string>;
+};
+
 /**
  * Takes care of mapping remote elements to matching HTML elements
  * on the host page. If you implement your UI with [custom elements](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements),
@@ -41,59 +53,84 @@ export class DOMRemoteReceiver {
 
   private readonly attached = new Map<string, Node>();
 
-  constructor({
-    root,
-    retain,
-    release,
-    call,
-    cache,
-  }: RemoteReceiverOptions & {
-    /**
-     * The root element for this receiver. This acts as a shortcut for calling
-     * `connect()` after creating the receiver.
-     */
-    root?: Element;
-
-    /**
-     * Customizes how [remote methods](https://github.com/Shopify/remote-dom/blob/main/packages/core#remotemethods)
-     * are called. By default, the receiver will call a matching method found on
-     * the HTML element that represents the remote element. However, you may want to
-     * customize this behavior in order to avoid exposing methods on your HTML
-     * elements that should not be callable by the remote environment.
-     *
-     * @param element The HTML element representing the remote element the method is being called on.
-     * @param method The name of the method being called.
-     * @param args Arguments passed to the method from the remote environment.
-     *
-     * @example
-     * const receiver = new DOMRemoteReceiver({
-     *   call(element, method, ...args) {
-     *     // Prevent calling any methods that start with an underscore
-     *     if (method.startsWith('_')) {
-     *       throw new Error(`Cannot call method ${method}`);
-     *     }
-     *
-     *     return element[method](...args);
-     *   },
-     * });
-     */
-    call?(element: Element, method: string, ...args: any[]): any;
-
-    /**
-     * Controls how DOM elements created in based on remote elements are retained
-     * once they are disconnected from the remote environment.
-     */
-    cache?: {
+  constructor(
+    options: RemoteReceiverOptions & {
       /**
-       * A timeout in milliseconds after which a detached element will be released.
+       * The root element for this receiver. This acts as a shortcut for calling
+       * `connect()` after creating the receiver.
        */
-      maxAge?: number;
-    };
-  } = {}) {
+      root?: Element;
+
+      /**
+       * Host-owned allowlist of element names and their remote capabilities.
+       * Defaults to no elements (text and comments are still accepted). An array
+       * allows only element creation; use a map to also expose specific properties,
+       * attributes, events, and methods. Omitted capabilities are denied.
+       *
+       * Only expose elements and capabilities that are safe for untrusted input.
+       * Values and method arguments are not sanitized by the receiver. This policy
+       * is copied at construction and must not come from the remote environment.
+       */
+      elements?:
+        | readonly string[]
+        | Readonly<Record<string, DOMRemoteElementPolicy>>;
+
+      /**
+       * Customizes how [remote methods](https://github.com/Shopify/remote-dom/blob/main/packages/core#remotemethods)
+       * are called. By default, only methods allowed by `elements` can be called,
+       * and calls on the root are denied. This callback overrides that policy,
+       * including for the root, and must enforce its own host-owned allowlist.
+       *
+       * @param element The HTML element representing the remote element the method is being called on.
+       * @param method The name of the method being called.
+       * @param args Arguments passed to the method from the remote environment.
+       *
+       * @example
+       * const receiver = new DOMRemoteReceiver({
+       *   elements: ['ui-button'],
+       *   call(element, method) {
+       *     // Only expose the button's focus method.
+       *     if (element.localName !== 'ui-button' || method !== 'focus') {
+       *       throw new Error(`Cannot call method ${method}`);
+       *     }
+       *
+       *     return (element as HTMLElement).focus();
+       *   },
+       * });
+       */
+      call?(element: Element, method: string, ...args: any[]): any;
+
+      /**
+       * Controls how DOM elements created in based on remote elements are retained
+       * once they are disconnected from the remote environment.
+       */
+      cache?: {
+        /**
+         * A timeout in milliseconds after which a detached element will be released.
+         */
+        maxAge?: number;
+      };
+    } = {},
+  ) {
+    const {root, elements = [], retain, release, cache} = options;
     this.root = root ?? document.createDocumentFragment();
 
     const {attached} = this;
     const destroyTimeouts = new Map<string, number>();
+    const policies = new Map<string, ElementPolicy>();
+    const nodePolicies = new WeakMap<Node, ElementPolicy>();
+    const entries: [string, DOMRemoteElementPolicy][] = Array.isArray(elements)
+      ? elements.map((name) => [name, {}])
+      : Object.entries(elements);
+
+    for (const [name, policy] of entries) {
+      policies.set(name, {
+        properties: new Set(policy.properties),
+        attributes: new Set(policy.attributes),
+        eventListeners: new Set(policy.eventListeners),
+        methods: new Set(policy.methods),
+      });
+    }
 
     this.connection = createRemoteConnection({
       call: (id, method, ...args) => {
@@ -102,9 +139,18 @@ export class DOMRemoteReceiver {
             ? this.root
             : attached.get(id)!;
 
-        return call
-          ? call(element as any, method, ...args)
-          : (element as any)[method](...args);
+        if (!element || element.nodeType !== NODE_TYPE_ELEMENT) {
+          throw new Error(`Method target is not allowed: ${id}`);
+        }
+
+        const call = options.call;
+        if (call) return call(element as Element, method, ...args);
+
+        if (!nodePolicies.get(element)?.methods.has(method)) {
+          throw new Error(`Method is not allowed: ${method}`);
+        }
+
+        return (element as any)[method](...args);
       },
       insertChild: (id, child, index) => {
         const parent = id === ROOT_ID ? this.root : attached.get(id)!;
@@ -112,6 +158,9 @@ export class DOMRemoteReceiver {
         const existingTimeout = destroyTimeouts.get(id);
         if (existingTimeout) clearTimeout(existingTimeout);
 
+        // Validate the entire subtree before constructing any host elements or
+        // invoking property setters, custom-element constructors, or retain hooks.
+        validate(child);
         parent.insertBefore(attach(child), parent.childNodes[index] || null);
       },
       removeChild: (id, index) => {
@@ -138,6 +187,7 @@ export class DOMRemoteReceiver {
         type = UPDATE_PROPERTY_TYPE_PROPERTY,
       ) => {
         const element = attached.get(id)!;
+        assertPropertyAllowed(nodePolicies.get(element), property, type);
 
         retain?.(value);
 
@@ -150,10 +200,99 @@ export class DOMRemoteReceiver {
         release?.(oldValue);
       },
       updateText: (id, newText) => {
-        const text = attached.get(id) as Text;
-        text.data = newText;
+        const text = attached.get(id);
+        // A forged text update must not reach an element's `data` setter and
+        // bypass the property policy (for example, a custom element or <object>).
+        if (
+          !text ||
+          (text.nodeType !== NODE_TYPE_TEXT &&
+            text.nodeType !== NODE_TYPE_COMMENT)
+        ) {
+          throw new Error(`Text update target is not allowed: ${id}`);
+        }
+        (text as Text | Comment).data = newText;
       },
     });
+
+    function assertPropertyAllowed(
+      policy: ElementPolicy | undefined,
+      property: string,
+      type: number,
+    ) {
+      const allowed =
+        type === UPDATE_PROPERTY_TYPE_PROPERTY
+          ? policy?.properties
+          : type === UPDATE_PROPERTY_TYPE_ATTRIBUTE
+            ? policy?.attributes
+            : type === UPDATE_PROPERTY_TYPE_EVENT_LISTENER
+              ? policy?.eventListeners
+              : undefined;
+
+      if (!allowed?.has(property)) {
+        throw new Error(
+          `Remote property is not allowed: ${property} (type ${type})`,
+        );
+      }
+    }
+
+    function validate(node: RemoteNodeSerialization) {
+      const pending = [node];
+      const ids = new Set<string>();
+
+      while (pending.length > 0) {
+        const current = pending.pop()!;
+        if (current.id === ROOT_ID || ids.has(current.id)) {
+          throw new Error(`Node ID is not allowed: ${current.id}`);
+        }
+        ids.add(current.id);
+
+        const existing = attached.get(current.id);
+        if (existing && existing.nodeType !== current.type) {
+          throw new Error(`Node type is not allowed to change: ${current.id}`);
+        }
+
+        switch (current.type) {
+          case NODE_TYPE_ELEMENT: {
+            const policy = policies.get(current.element);
+            if (
+              !policy ||
+              (existing && nodePolicies.get(existing) !== policy)
+            ) {
+              throw new Error(`Element is not allowed: ${current.element}`);
+            }
+
+            for (const property of Object.keys(current.properties ?? {})) {
+              assertPropertyAllowed(
+                policy,
+                property,
+                UPDATE_PROPERTY_TYPE_PROPERTY,
+              );
+            }
+            for (const attribute of Object.keys(current.attributes ?? {})) {
+              assertPropertyAllowed(
+                policy,
+                attribute,
+                UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+              );
+            }
+            for (const event of Object.keys(current.eventListeners ?? {})) {
+              assertPropertyAllowed(
+                policy,
+                event,
+                UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+              );
+            }
+            for (const child of current.children) pending.push(child);
+            break;
+          }
+          case NODE_TYPE_TEXT:
+          case NODE_TYPE_COMMENT:
+            break;
+          default:
+            throw new Error(`Unknown node type: ${JSON.stringify(current)}`);
+        }
+      }
+    }
 
     function attach(node: RemoteNodeSerialization) {
       const existingNode = attached.get(node.id);
@@ -164,9 +303,13 @@ export class DOMRemoteReceiver {
       switch (node.type) {
         case NODE_TYPE_ELEMENT: {
           normalizedChild = document.createElement(node.element);
+          nodePolicies.set(normalizedChild, policies.get(node.element)!);
 
           if (node.properties) {
-            REMOTE_PROPERTIES.set(normalizedChild, node.properties);
+            REMOTE_PROPERTIES.set(
+              normalizedChild,
+              Object.assign(Object.create(null), node.properties),
+            );
 
             for (const property of Object.keys(node.properties)) {
               const value = node.properties[property];
@@ -179,7 +322,7 @@ export class DOMRemoteReceiver {
               );
             }
           } else {
-            REMOTE_PROPERTIES.set(normalizedChild, {});
+            REMOTE_PROPERTIES.set(normalizedChild, Object.create(null));
           }
 
           if (node.attributes) {
@@ -195,7 +338,7 @@ export class DOMRemoteReceiver {
             }
           }
 
-          REMOTE_EVENT_LISTENERS.set(normalizedChild, {});
+          REMOTE_EVENT_LISTENERS.set(normalizedChild, Object.create(null));
 
           if (node.eventListeners) {
             for (const event of Object.keys(node.eventListeners)) {

@@ -656,8 +656,8 @@ import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
 
 const receiver = new DOMRemoteReceiver();
 
-// Any custom elements created in the remote environment will
-// be attached to the `body` element.
+// With no elements policy, only text and comments are accepted.
+// Accepted nodes will be attached to the body element.
 receiver.connect(document.body);
 ```
 
@@ -673,6 +673,52 @@ import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
 
 const receiver = new DOMRemoteReceiver({retain, release});
 ```
+
+##### Host-owned element policy
+
+`DOMRemoteReceiver` denies element creation, property and attribute writes, event subscriptions, and method calls unless the host explicitly allows them. Text and comment nodes do not need an allowlist. Configure `elements` in the **host environment**, never from remote-controlled data:
+
+```ts
+const receiver = new DOMRemoteReceiver({
+  elements: {
+    'ui-button': {
+      properties: ['disabled'],
+      attributes: ['primary', 'slot'],
+      eventListeners: ['click'],
+      methods: ['focus'],
+    },
+    'ui-stack': {},
+  },
+});
+```
+
+The map keys are exact element names. Each entry allows creation of that element and only the listed capabilities; omitted lists are empty. For elements with no capabilities, `elements: ['ui-button', 'ui-stack']` is shorthand. Policies are copied at construction, so later changes to the configuration do not change an existing receiver.
+
+The receiver validates every element in an inserted subtree, including nested children, before creating any host DOM nodes. Invalid names or capabilities throw. Later updates and method calls are checked against the policy assigned to the actual host node. Property, attribute, and event-listener permissions are separate: allowing a `click` event does not allow an `onclick` attribute or property. Earlier records in a mutation batch are not rolled back when a later record is rejected.
+
+**The host still owns the safety of its exposed interface.** The receiver does not sanitize property values, attribute values, method arguments, or event details. Do not expose active elements, HTML parsing properties or methods, inline event-handler attributes, or unsafe URL setters to untrusted code. Custom-element constructors, setters, and methods must safely handle remote input. Declarations such as `RemoteElement.remoteProperties` on the remote side describe serialization; they are not a host security boundary.
+
+By default, calls on the root are denied. An explicit `call(element, method, ...args)` callback overrides method policy, including for the root. It must enforce its own allowlist and validate arguments; do not forward arbitrary method names to the DOM.
+
+For the `<remote-receiver>` custom element, configure a host-side subclass before registering it:
+
+```ts
+import {RemoteReceiverElement} from '@remote-dom/core/elements';
+
+class UIReceiver extends RemoteReceiverElement {
+  static elements = {
+    'ui-button': {
+      attributes: ['primary'],
+      eventListeners: ['click'],
+      methods: ['focus'],
+    },
+  };
+}
+
+customElements.define('ui-receiver', UIReceiver);
+```
+
+**Migration:** Previous versions mirrored all element names, properties, and attributes, and defaulted to unrestricted DOM method calls. They also did not enforce the documented `elements` array. Existing hosts must now declare every element and capability they intentionally expose, including attributes such as `slot`. An element-name array alone does not authorize any properties, attributes, events, or methods. There is no unrestricted fallback. Data-only `RemoteReceiver` and `SignalRemoteReceiver` behavior is unchanged.
 
 ##### Caching DOM nodes
 

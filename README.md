@@ -29,7 +29,7 @@ Next, on the “host” HTML page, you will need to create a “receiver”. Thi
 
 `@remote-dom/core` provides a few different types of receivers, but for now we will use the [`DOMRemoteReceiver`](/packages/core/README.md#domremotereceiver), which directly mirrors the DOM elements created remotely in the host HTML page. That is, if the remote environment renders a `ui-button` custom element, a matching `ui-button` custom element will be created on the host page.
 
-Create a `DOMRemoteReceiver` and call its `connect()` method on the element that should contain any children rendered by the remote environment:
+Create a `DOMRemoteReceiver` and call its `connect()` method on the element that should contain any children rendered by the remote environment. By default it accepts only text and comments. To render elements, the host must explicitly allow their names and capabilities through the [`elements` option](/packages/core/README.md#host-owned-element-policy):
 
 ```html
 <!doctype html>
@@ -235,12 +235,9 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
 
     <script type="module">
       class UIButton extends HTMLElement {
-        // By default, `DOMRemoteReceiver` will assign remote properties as properties,
-        // but only if the element has a matching property defined. Otherwise, the remote
-        // properties will be set as attributes. We’ll observe the `primary` attribute
-        // in order to update our rendered content when that attribute changes. We’ll
-        // define an `onClick` method, though, which will be set to the value of the `onClick`
-        // remote property.
+        // The host policy below allows the remote to update `primary` as an
+        // attribute. Property, attribute, and event permissions are separate;
+        // remote properties are not automatically converted to attributes.
         static get observedAttributes() {
           return ['primary'];
         }
@@ -283,14 +280,15 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');
 
-      // In earlier examples, we did not pass any arguments, which allows the DOM
-      // receiver to mirror any element it receives. By passing the `elements` option,
-      // we are restricting the allowed elements to only the ones we list, which in this
-      // case means only our `ui-button` element can be rendered.
+      // Earlier examples render only text. Now the host explicitly allows
+      // ui-button, its primary attribute, and its click event listener.
       const receiver = new DOMRemoteReceiver({
-        retain,
-        release,
-        elements: ['ui-button'],
+        elements: {
+          'ui-button': {
+            attributes: ['primary'],
+            eventListeners: ['click'],
+          },
+        },
       });
       receiver.connect(root);
 
