@@ -72,9 +72,14 @@ describe('DOMRemoteReceiver compatibility defaults', () => {
     },
   );
 
-  it('supports the proposed per-element property list independently of other channels', () => {
+  it('supports per-element property definitions and additional attributes', () => {
     const receiver = new DOMRemoteReceiver({
-      elements: {'ui-button': {properties: ['disabled', 'label']}},
+      elements: {
+        'ui-button': {
+          properties: {disabled: {type: 'boolean'}, label: {type: 'string'}},
+          attributes: ['primary'],
+        },
+      },
     });
     insert(receiver, {disabled: false, label: 'Hello'}, {primary: ''});
     expect(() =>
@@ -142,7 +147,9 @@ describe('DOMRemoteReceiver compatibility defaults', () => {
       blockedProperties,
       retain,
       elements: {
-        'ui-button': {properties: ['label', 'internalState', 'innerHTML']},
+        'ui-button': {
+          properties: {label: {}, internalState: {}, innerHTML: {}},
+        },
       },
     });
     blockedProperties.length = 0;

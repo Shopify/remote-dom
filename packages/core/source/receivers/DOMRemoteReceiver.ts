@@ -16,17 +16,37 @@ const REMOTE_IDS = new WeakMap<Node, string>();
 const REMOTE_PROPERTIES = new WeakMap<Node, Record<string, any>>();
 const REMOTE_EVENT_LISTENERS = new WeakMap<Node, Record<string, any>>();
 
+/** Host-owned configuration for a property and its corresponding attribute. */
+export interface DOMRemotePropertyPolicy {
+  /** Checks non-nullish property values without coercion. */
+  readonly type?:
+    | 'string'
+    | 'number'
+    | 'boolean'
+    | 'object'
+    | 'array'
+    | 'function';
+  /** Authorizes an attribute name; defaults to the kebab-case property name. */
+  readonly attribute?: string | boolean;
+}
+
 /** Host-owned capabilities exposed to the remote for one element name. */
 export interface DOMRemoteElementPolicy {
-  readonly properties?: readonly string[];
+  readonly properties?: Readonly<Record<string, DOMRemotePropertyPolicy>>;
+  /** Additional attribute-only names, independent of property definitions. */
   readonly attributes?: readonly string[];
-  readonly eventListeners?: readonly string[];
+  /** DOM event names, such as `click`, with empty definitions. */
+  readonly events?: Readonly<Record<string, Readonly<Record<string, never>>>>;
   readonly methods?: readonly string[];
 }
 
 type ElementPolicy = {
-  [Key in keyof DOMRemoteElementPolicy]: ReadonlySet<string>;
-} & {element: string};
+  element: string;
+  properties?: ReadonlyMap<string, DOMRemotePropertyPolicy['type']>;
+  attributes?: ReadonlySet<string>;
+  events?: ReadonlySet<string>;
+  methods?: ReadonlySet<string>;
+};
 
 const BLOCKED_PROPERTIES = new Set([
   'innerhtml',
@@ -79,8 +99,10 @@ export class DOMRemoteReceiver {
       /**
        * Optional host-owned element allowlist. When omitted, element names are
        * unrestricted. An array limits names while retaining default member handling.
-       * A map can additionally limit each element's properties, attributes, events,
-       * and methods. Omitted member lists retain the defaults; empty lists allow none.
+       * A map can additionally configure typed properties, attribute names, events,
+       * and methods. Omitted members retain the defaults; empty maps/lists allow none.
+       * A property map also selects its corresponding attributes; `attributes`
+       * can add attribute-only names. Attribute values are not parsed or reflected.
        *
        * This configuration is supplied by the host and copied at construction.
        * Default member and URL-value checks apply in addition to these lists.
@@ -147,11 +169,29 @@ export class DOMRemoteReceiver {
       : Object.entries(elements ?? {});
 
     for (const [name, policy] of entries) {
+      const properties =
+        policy.properties && new Map<string, DOMRemotePropertyPolicy['type']>();
+      let attributes = policy.attributes && new Set(policy.attributes);
+      if (properties) {
+        attributes ??= new Set();
+        for (const [property, {type, attribute = true}] of Object.entries(
+          policy.properties!,
+        )) {
+          properties.set(property, type);
+          if (attribute !== false) {
+            attributes.add(
+              typeof attribute === 'string'
+                ? attribute
+                : property.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase(),
+            );
+          }
+        }
+      }
       policies.set(name, {
         element: name.toLowerCase(),
-        properties: policy.properties && new Set(policy.properties),
-        attributes: policy.attributes && new Set(policy.attributes),
-        eventListeners: policy.eventListeners && new Set(policy.eventListeners),
+        properties,
+        attributes,
+        events: policy.events && new Set(Object.keys(policy.events)),
         methods: policy.methods && new Set(policy.methods),
       });
     }
@@ -265,17 +305,27 @@ export class DOMRemoteReceiver {
           : type === UPDATE_PROPERTY_TYPE_ATTRIBUTE
             ? policy?.attributes
             : type === UPDATE_PROPERTY_TYPE_EVENT_LISTENER
-              ? policy?.eventListeners
+              ? policy?.events
               : undefined;
 
       const isValue =
         type === UPDATE_PROPERTY_TYPE_PROPERTY ||
         type === UPDATE_PROPERTY_TYPE_ATTRIBUTE;
       const normalized = property.toLowerCase();
+      const valueType = policy?.properties?.get(property);
       if (
         !policy ||
         (!isValue && type !== UPDATE_PROPERTY_TYPE_EVENT_LISTENER) ||
         (allowed && !allowed.has(property)) ||
+        (value != null &&
+          ((type === UPDATE_PROPERTY_TYPE_ATTRIBUTE &&
+            typeof value !== 'string') ||
+            (type === UPDATE_PROPERTY_TYPE_PROPERTY &&
+              valueType &&
+              (valueType === 'array'
+                ? !Array.isArray(value)
+                : typeof value !== valueType ||
+                  (valueType === 'object' && Array.isArray(value)))))) ||
         (isValue &&
           (BLOCKED_PROPERTIES.has(normalized) ||
             normalized.startsWith('on') ||

@@ -15,7 +15,10 @@ import {
   UPDATE_PROPERTY_TYPE_PROPERTY,
 } from '../../constants.ts';
 import type {RemoteElementSerialization} from '../../types.ts';
-import {DOMRemoteReceiver} from '../DOMRemoteReceiver.ts';
+import {
+  DOMRemoteReceiver,
+  type DOMRemotePropertyPolicy,
+} from '../DOMRemoteReceiver.ts';
 
 const payload = '<img src="invalid" onerror="window.remoteEscaped = true">';
 
@@ -79,7 +82,7 @@ describe('DOMRemoteReceiver host policy', () => {
   it('validates the whole subtree before creating elements or retaining values', () => {
     const retain = vi.fn();
     const receiver = connected({
-      elements: {'ui-button': {properties: ['label']}},
+      elements: {'ui-button': {properties: {label: {}}}},
       retain,
     });
     const create = vi.spyOn(document, 'createElement');
@@ -167,12 +170,12 @@ describe('DOMRemoteReceiver host policy', () => {
     const receiver = connected({
       elements: {
         'ui-button': {
-          properties: ['label'],
+          properties: {label: {attribute: false}},
           attributes: ['primary'],
-          eventListeners: ['click'],
+          events: {click: {}},
           methods: ['focus'],
         },
-        'ui-other': {properties: []},
+        'ui-other': {properties: {}},
       },
     });
     insert(
@@ -279,13 +282,13 @@ describe('DOMRemoteReceiver host policy', () => {
 
   it('snapshots policies instead of accepting later allowlist changes', () => {
     const policy = {
-      properties: ['label'],
+      properties: {label: {}} as Record<string, DOMRemotePropertyPolicy>,
       attributes: [] as string[],
       methods: [] as string[],
     };
     const elements = {'ui-button': policy};
     const receiver = connected({elements});
-    policy.properties.push('innerHTML');
+    policy.properties.innerHTML = {};
     policy.attributes.push('onclick');
     policy.methods.push('insertAdjacentHTML');
     Object.assign(elements, {script: {}});
@@ -332,7 +335,7 @@ describe('DOMRemoteReceiver host policy', () => {
 
   it('rejects undeclared events and unknown update channels', () => {
     const receiver = connected({
-      elements: {'ui-button': {properties: ['label'], eventListeners: []}},
+      elements: {'ui-button': {properties: {label: {}}, events: {}}},
     });
     expect(() =>
       insert(receiver, element({eventListeners: {click: vi.fn()}})),
@@ -358,7 +361,7 @@ describe('DOMRemoteReceiver host policy', () => {
 
   it('rejects reserved IDs, duplicate IDs, and attempts to change an existing node policy', () => {
     const receiver = connected({
-      elements: {'ui-button': {}, 'ui-other': {properties: ['innerHTML']}},
+      elements: {'ui-button': {}, 'ui-other': {properties: {innerHTML: {}}}},
     });
     expect(() => insert(receiver, element({id: ROOT_ID}))).toThrow(
       /not allowed/,
@@ -379,7 +382,7 @@ describe('DOMRemoteReceiver host policy', () => {
 
   it('does not use mutable host properties to select a policy', () => {
     const receiver = connected({
-      elements: {'ui-button': {}, 'ui-other': {properties: ['innerHTML']}},
+      elements: {'ui-button': {}, 'ui-other': {properties: {innerHTML: {}}}},
     });
     insert(receiver);
     Object.defineProperty(receiver.root.firstChild, 'localName', {
@@ -395,7 +398,7 @@ describe('DOMRemoteReceiver host policy', () => {
   it('allows prototype-named event types without reading inherited listener entries', () => {
     const listener = vi.fn();
     const receiver = connected({
-      elements: {'ui-button': {eventListeners: ['__proto__', 'constructor']}},
+      elements: {'ui-button': {events: {['__proto__']: {}, constructor: {}}}},
     });
     insert(
       receiver,

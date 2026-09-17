@@ -81,7 +81,8 @@
       const iframe = document.querySelector('#remote-iframe');
 
       // Select our component with an element-name list. Its ordinary members
-      // use default handling; a member map is optional for further configuration.
+      // use default handling. A member map is optional; for example:
+      // elements: {'ui-button': {attributes: ['primary'], events: {click: {}}, methods: ['focus']}}
       const receiver = new DOMRemoteReceiver({
         elements: ['ui-button'],
       });

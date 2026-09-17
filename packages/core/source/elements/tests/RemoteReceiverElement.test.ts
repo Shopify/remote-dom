@@ -7,12 +7,24 @@ import {
   MUTATION_TYPE_UPDATE_PROPERTY,
   NODE_TYPE_ELEMENT,
   ROOT_ID,
+  UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+  UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
 } from '../../constants.ts';
 import {RemoteReceiverElement} from '../RemoteReceiverElement.ts';
 
 class ConfiguredReceiver extends RemoteReceiverElement {
   static elements = {'ui-button': {methods: ['focus']}};
 }
+
+class TypedReceiver extends RemoteReceiverElement {
+  static elements: typeof RemoteReceiverElement.elements = {
+    'ui-button': {
+      properties: {label: {type: 'string', attribute: 'accessible-label'}},
+      events: {click: {}},
+    },
+  };
+}
+customElements.define('test-typed-receiver', TypedReceiver);
 
 class ExcludedReceiver extends RemoteReceiverElement {
   static elements = ['ui-button'];
@@ -70,6 +82,40 @@ describe('RemoteReceiverElement host policy', () => {
       ),
     ).toThrow(/not allowed/);
     expect(button.childNodes).toHaveLength(0);
+  });
+
+  it('uses property types, attribute aliases, and events from the host subclass', () => {
+    const receiver = new TypedReceiver();
+    insert(receiver);
+    const click = vi.fn();
+    receiver.connection.mutate([
+      [MUTATION_TYPE_UPDATE_PROPERTY, 'button', 'label', 'Property label'],
+      [
+        MUTATION_TYPE_UPDATE_PROPERTY,
+        'button',
+        'accessible-label',
+        'Attribute label',
+        UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+      ],
+      [
+        MUTATION_TYPE_UPDATE_PROPERTY,
+        'button',
+        'click',
+        click,
+        UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+      ],
+    ]);
+    const button = receiver.firstChild as HTMLElement & {label: string};
+    expect(button.label).toBe('Property label');
+    expect(button.getAttribute('accessible-label')).toBe('Attribute label');
+    button.dispatchEvent(new CustomEvent('click', {detail: 'Clicked'}));
+    expect(click).toHaveBeenCalledWith('Clicked');
+    expect(() =>
+      receiver.connection.mutate([
+        [MUTATION_TYPE_UPDATE_PROPERTY, 'button', 'label', 1],
+      ]),
+    ).toThrow(/not allowed/);
+    expect(button.label).toBe('Property label');
   });
 
   it('uses additional exclusions from the host subclass', () => {

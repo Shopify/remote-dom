@@ -10,5 +10,6 @@ export {
 export {
   DOMRemoteReceiver,
   type DOMRemoteElementPolicy,
+  type DOMRemotePropertyPolicy,
 } from './receivers/DOMRemoteReceiver.ts';
 export type {RemoteReceiverOptions} from './receivers/shared.ts';

@@ -93,7 +93,7 @@ describe('DOMRemoteReceiver URL values', () => {
     'data:application/xhtml+xml,<html></html>',
   ])('rejects %j even with an explicit member list', (value) => {
     const receiver = new DOMRemoteReceiver({
-      elements: {a: {properties: ['href'], attributes: ['href']}},
+      elements: {a: {properties: {href: {type: 'string', attribute: true}}}},
       blockedProperties: [],
     });
     for (const type of channels) {

@@ -281,12 +281,13 @@ Finally, we need to provide a “real” implementation of our `ui-button` eleme
       const iframe = document.querySelector('#remote-iframe');
 
       // Earlier examples render only text. Now the host explicitly allows
-      // ui-button, its primary attribute, and its click event listener.
+      // ui-button and configures which members the remote can access.
       const receiver = new DOMRemoteReceiver({
         elements: {
           'ui-button': {
             attributes: ['primary'],
-            eventListeners: ['click'],
+            events: {click: {}},
+            methods: ['focus'],
           },
         },
       });

@@ -678,15 +678,19 @@ const receiver = new DOMRemoteReceiver({retain, release});
 
 The optional `elements` configuration controls which element names the receiver creates. An array such as `elements: ['ui-button', 'ui-stack']` restricts names while retaining default member handling. An empty array accepts only text and comments. Omitting `elements` preserves unrestricted element names; it is not an isolation policy for untrusted code.
 
-For more control, provide a map with per-element member lists. Configure these lists in the **host environment**, not from remote-controlled data:
+For more control, provide a map with per-element member configuration. Configure these in the **host environment**, not from remote-controlled data:
 
 ```ts
 const receiver = new DOMRemoteReceiver({
   elements: {
     'ui-button': {
-      properties: ['disabled', 'label'],
-      attributes: ['primary', 'slot'],
-      eventListeners: ['click'],
+      properties: {
+        disabled: {type: 'boolean'},
+        label: {type: 'string', attribute: 'accessible-label'},
+        href: {type: 'string', attribute: true},
+      },
+      attributes: ['slot'],
+      events: {click: {}},
       methods: ['focus'],
     },
     'ui-stack': {},
@@ -694,11 +698,26 @@ const receiver = new DOMRemoteReceiver({
 });
 ```
 
-Map keys are exact element names. A supplied member list allows only the listed names; an omitted member list retains default handling. An empty member list allows none. Property, attribute, and event-listener lists are independent. Configuration is copied at construction, so later changes to it do not change an existing receiver.
+Map keys are exact element names. Configuration is copied at construction, including property types and attribute aliases, so later changes to it do not change an existing receiver.
+
+**Properties**: Each property key maps to a configuration object:
+
+- `type` (optional): One of `'string'`, `'number'`, `'boolean'`, `'object'`, `'array'`, or `'function'`. When provided, validates non-nullish values received through the property channel. Values `null` and `undefined` are accepted and assigned unchanged. No coercion or defaulting is performed. For non-nullish values, `'object'` accepts non-array objects; `'array'` requires an array. These checks do not validate nested contents.
+- `attribute` (optional): Defaults to `true`, authorizing a corresponding kebab-case attribute. Set to a string to authorize a named attribute alias, or `false` to add no attribute authorization. This is authorization metadata; the receiver does not automatically reflect, convert, or reroute property updates to attributes.
+
+When a property map is supplied, permitted attributes are the derived aliases from the property map plus any names in the explicit `attributes` array. When no property map is supplied, an omitted `attributes` list retains defaults; an explicit `attributes` list restricts the attribute channel. Supplying `properties: {}` permits no properties or derived attributes; `attributes: ['slot']` may additionally permit slot.
+
+**Attributes**: An explicit list of additional attribute names permitted beyond those derived from the property map. Attribute values remain strings (or nullish for removal), not parsed according to property types. A boolean attribute with the string value `'false'` is not converted to boolean `false`.
+
+**Events**: A map of raw DOM event names (e.g., `click`, not `onClick`) to empty configuration objects. Each key authorizes that event listener channel.
+
+**Methods**: An array that narrows default dispatch to the listed method names. Default dispatch supports custom-element methods and native `focus`/`blur`; an explicit list does not override the built-in exclusions.
+
+Omitting `properties`, `events`, or `methods` retains default handling for that channel. Supplying an empty map or array denies that channel entirely. The `elements: ['ui-button']` array form remains unchanged and retains ordinary member handling.
 
 The receiver validates an entire inserted subtree before creating any host DOM nodes, and applies the same checks to subsequent updates. Invalid names or values throw. Earlier records in a mutation batch are not rolled back when a later record is rejected.
 
-Default member handling supports ordinary properties, attributes, events, and custom-element methods. It excludes HTML-content and prototype-related property names, `on*` property/attribute names (case-insensitively), and assignment to base DOM methods. Use the event-listener channel for event callbacks. Native methods other than `focus` and `blur` require a custom `call` callback; a `methods` list can further restrict default dispatch.
+Default member handling supports ordinary properties, attributes, events, and custom-element methods. It excludes HTML-content and prototype-related property names, `on*` property/attribute names (case-insensitively), and assignment to base DOM methods. Use the event channel for event callbacks. Native methods other than `focus` and `blur` require a custom `call` callback; a `methods` list can further restrict default dispatch.
 
 URL-valued members such as `href`, `src`, `action`, and `formAction` accept relative URLs and ordinary schemes. Script schemes and non-raster-image `data:` URLs are rejected, including case and control-character variations. Supported raster-image media types are AVIF, BMP, GIF, JPEG, PNG, and WebP. Native URL properties and URL attributes require strings or nullish values; objects are not coerced into URLs. A custom element's object-valued properties remain the host component's responsibility.
 
@@ -713,7 +732,7 @@ const receiver = new DOMRemoteReceiver({
 
 This list is copied at construction, applies case-insensitively to every element, and adds to the defaults rather than replacing them. Explicit member lists do not override these checks.
 
-**The host still owns its component interface.** Default checks are not a complete policy for arbitrary custom setters, methods, URLs, or event details. Hosts receiving untrusted input should supply explicit element and member lists and validate their component implementations. `blockedProperties` can exclude additional custom setters, while `methods` can limit custom methods. Remote-side declarations such as `RemoteElement.remoteProperties` describe serialization; they do not configure the host receiver.
+**The host still owns its component interface.** Default checks are not a complete configuration for arbitrary custom setters, methods, URLs, or event details. Hosts should supply explicit element and member lists and validate their component implementations. `blockedProperties` can exclude additional custom setters, while `methods` can limit custom methods. Remote-side declarations such as `RemoteElement.remoteProperties` describe serialization; they do not configure the host receiver.
 
 By default, calls on the root are denied. An explicit `call(element, method, ...args)` callback overrides method policy, including for the root. It must enforce its own allowlist and validate arguments; do not forward arbitrary method names to the DOM.
 
@@ -723,10 +742,13 @@ For the `<remote-receiver>` custom element, configure a host-side subclass befor
 import {RemoteReceiverElement} from '@remote-dom/core/elements';
 
 class UIReceiver extends RemoteReceiverElement {
-  static elements = {
+  static elements: typeof RemoteReceiverElement.elements = {
     'ui-button': {
+      properties: {
+        disabled: {type: 'boolean'},
+      },
       attributes: ['primary'],
-      eventListeners: ['click'],
+      events: {click: {}},
       methods: ['focus'],
     },
   };
@@ -735,7 +757,7 @@ class UIReceiver extends RemoteReceiverElement {
 customElements.define('ui-receiver', UIReceiver);
 ```
 
-Existing element-name arrays remain valid and retain ordinary property, attribute, and event handling. The member-map and `blockedProperties` options are optional additions. Hosts needing custom method dispatch can continue using `call`. Data-only `RemoteReceiver` and `SignalRemoteReceiver` behavior is unchanged.
+Existing element-name arrays remain valid and retain ordinary property, attribute, and event handling. The property-map, `attributes`, `events`, `methods`, and `blockedProperties` options are optional additions. Hosts needing custom method dispatch can continue using `call`. Data-only `RemoteReceiver` and `SignalRemoteReceiver` behavior is unchanged.
 
 ##### Caching DOM nodes
 
