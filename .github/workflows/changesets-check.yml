@@ -1,0 +1,89 @@
+name: Changeset Check
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - converted_to_draft
+      - labeled
+      - unlabeled
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Changeset Check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Determine whether to bypass the check
+        id: bypass
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          IS_DRAFT: ${{ github.event.pull_request.draft }}
+          SKIP_CHANGESET: ${{ contains(github.event.pull_request.labels.*.name, '🤖 Skip Changeset') }}
+        run: |
+          if [[ "$IS_DRAFT" == "true" ]]; then
+            echo "Draft pull requests do not require a changeset check."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$HEAD_REF" == changeset-release/* ]]; then
+            echo "Changesets release pull requests do not require a changeset check."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$SKIP_CHANGESET" == "true" ]]; then
+            echo "The 🤖 Skip Changeset label bypasses this check."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout pull request
+        if: steps.bypass.outputs.skip != 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Find changes that require a changeset
+        if: steps.bypass.outputs.skip != 'true'
+        id: relevance
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          relevant_files="$(node .github/scripts/changeset-relevant-files.mjs "$BASE_SHA" "$HEAD_SHA")"
+
+          if [[ -z "$relevant_files" ]]; then
+            echo "No public package changes require a changeset."
+            echo "required=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "The following public package changes require a changeset:"
+            while IFS= read -r file; do
+              echo "- $file"
+            done <<< "$relevant_files"
+            echo "required=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Prepare repo
+        if: steps.relevance.outputs.required == 'true'
+        uses: ./.github/workflows/actions/prepare
+
+      - name: Check for a changeset
+        if: steps.relevance.outputs.required == 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if pnpm exec changeset status --since="$BASE_SHA"; then
+            echo "Changeset found."
+          else
+            echo "::error title=Changeset required::This pull request changes public package code but does not include a changeset. Run 'pnpm changeset' and commit the generated '.changeset/*.md' file. If no release is needed, add the '🤖 Skip Changeset' label or ask a maintainer to add it."
+            exit 1
+          fi
