@@ -5,8 +5,9 @@ import {
   PREV,
   HTML_NAMESPACE,
   asciiLowercase,
+  splitOnASCIIWhitespace,
 } from './constants.ts';
-import {isElementNode, splitOnASCIIWhitespace} from './shared.ts';
+import {isElementNode} from './shared.ts';
 import {NodeList} from './NodeList.ts';
 
 import type {Node} from './Node.ts';

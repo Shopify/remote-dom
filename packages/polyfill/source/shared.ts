@@ -11,6 +11,7 @@ import {
   NAME,
   HTML_NAMESPACE,
   asciiLowercase,
+  splitOnASCIIWhitespace,
 } from './constants.ts';
 import type {Document} from './Document.ts';
 import type {DocumentFragment} from './DocumentFragment.ts';
@@ -26,12 +27,6 @@ import {
   querySelector,
   querySelectorAll,
 } from './selectors.ts';
-
-const ASCII_WHITESPACE = /[\t\n\f\r ]+/;
-
-export function splitOnASCIIWhitespace(value: string) {
-  return value.split(ASCII_WHITESPACE).filter(Boolean);
-}
 
 export function isCharacterData(node: Node): node is CharacterData {
   return DATA in node;
