@@ -40,6 +40,71 @@ export interface DOMRemoteElementPolicy {
   readonly methods?: readonly string[];
 }
 
+export interface DOMRemoteReceiverOptions extends RemoteReceiverOptions {
+  /**
+   * The root element for this receiver. This acts as a shortcut for calling
+   * `connect()` after creating the receiver.
+   */
+  root?: Element;
+
+  /**
+   * Optional host-owned element allowlist. When omitted, element names are
+   * unrestricted. An array limits names while retaining default member handling.
+   * A map can additionally configure typed properties, attribute names, events,
+   * and methods. Omitted members retain the defaults; empty maps/lists allow none.
+   * A property map also selects its corresponding attributes; `attributes`
+   * can add attribute-only names. Attribute values are not parsed or reflected.
+   *
+   * This configuration is supplied by the host and copied at construction.
+   * Default member and URL-value checks apply in addition to these lists.
+   */
+  elements?:
+    | readonly string[]
+    | Readonly<Record<string, DOMRemoteElementPolicy>>;
+
+  /**
+   * Additional property and attribute names to block, on every element.
+   * This list adds to the built-in defaults and is copied at construction.
+   */
+  blockedProperties?: readonly string[];
+
+  /**
+   * Customizes how [remote methods](https://github.com/Shopify/remote-dom/blob/main/packages/core#remotemethods)
+   * are called. Default dispatch supports custom-element methods and native
+   * focus/blur, and can be narrowed by `elements`. Other native methods and
+   * root calls require this callback, which controls its own method selection.
+   *
+   * @param element The HTML element representing the remote element the method is being called on.
+   * @param method The name of the method being called.
+   * @param args Arguments passed to the method from the remote environment.
+   *
+   * @example
+   * const receiver = new DOMRemoteReceiver({
+   *   elements: ['ui-button'],
+   *   call(element, method) {
+   *     // Only expose the button's focus method.
+   *     if (element.localName !== 'ui-button' || method !== 'focus') {
+   *       throw new Error(`Cannot call method ${method}`);
+   *     }
+   *
+   *     return (element as HTMLElement).focus();
+   *   },
+   * });
+   */
+  call?(element: Element, method: string, ...args: any[]): any;
+
+  /**
+   * Controls how DOM elements created from remote elements are retained
+   * once they are disconnected from the remote environment.
+   */
+  cache?: {
+    /**
+     * A timeout in milliseconds after which a detached element will be released.
+     */
+    maxAge?: number;
+  };
+}
+
 type ElementPolicy = {
   element: string;
   properties?: ReadonlyMap<string, DOMRemotePropertyPolicy['type']>;
@@ -88,72 +153,7 @@ export class DOMRemoteReceiver {
 
   private readonly attached = new Map<string, Node>();
 
-  constructor(
-    options: RemoteReceiverOptions & {
-      /**
-       * The root element for this receiver. This acts as a shortcut for calling
-       * `connect()` after creating the receiver.
-       */
-      root?: Element;
-
-      /**
-       * Optional host-owned element allowlist. When omitted, element names are
-       * unrestricted. An array limits names while retaining default member handling.
-       * A map can additionally configure typed properties, attribute names, events,
-       * and methods. Omitted members retain the defaults; empty maps/lists allow none.
-       * A property map also selects its corresponding attributes; `attributes`
-       * can add attribute-only names. Attribute values are not parsed or reflected.
-       *
-       * This configuration is supplied by the host and copied at construction.
-       * Default member and URL-value checks apply in addition to these lists.
-       */
-      elements?:
-        | readonly string[]
-        | Readonly<Record<string, DOMRemoteElementPolicy>>;
-
-      /**
-       * Additional property and attribute names to block, on every element.
-       * This list adds to the built-in defaults and is copied at construction.
-       */
-      blockedProperties?: readonly string[];
-
-      /**
-       * Customizes how [remote methods](https://github.com/Shopify/remote-dom/blob/main/packages/core#remotemethods)
-       * are called. Default dispatch supports custom-element methods and native
-       * focus/blur, and can be narrowed by `elements`. Other native methods and
-       * root calls require this callback, which controls its own method selection.
-       *
-       * @param element The HTML element representing the remote element the method is being called on.
-       * @param method The name of the method being called.
-       * @param args Arguments passed to the method from the remote environment.
-       *
-       * @example
-       * const receiver = new DOMRemoteReceiver({
-       *   elements: ['ui-button'],
-       *   call(element, method) {
-       *     // Only expose the button's focus method.
-       *     if (element.localName !== 'ui-button' || method !== 'focus') {
-       *       throw new Error(`Cannot call method ${method}`);
-       *     }
-       *
-       *     return (element as HTMLElement).focus();
-       *   },
-       * });
-       */
-      call?(element: Element, method: string, ...args: any[]): any;
-
-      /**
-       * Controls how DOM elements created in based on remote elements are retained
-       * once they are disconnected from the remote environment.
-       */
-      cache?: {
-        /**
-         * A timeout in milliseconds after which a detached element will be released.
-         */
-        maxAge?: number;
-      };
-    } = {},
-  ) {
+  constructor(options: DOMRemoteReceiverOptions = {}) {
     const {root, elements, retain, release, cache} = options;
     this.root = root ?? document.createDocumentFragment();
 
@@ -213,20 +213,16 @@ export class DOMRemoteReceiver {
             : attached.get(id)!;
 
         if (!element || element.nodeType !== NODE_TYPE_ELEMENT) {
-          throw new Error(`Method target is not allowed: ${id}`);
+          throw new Error(
+            `Method target is missing or is not an element: ${id}`,
+          );
         }
 
         const call = options.call;
         if (call) return call(element as Element, method, ...args);
 
         const policy = nodePolicies.get(element);
-        if (
-          !policy ||
-          (policy.methods && !policy.methods.has(method)) ||
-          ((!policy.element.includes('-') || method in HTMLElement.prototype) &&
-            method !== 'focus' &&
-            method !== 'blur')
-        ) {
+        if (!policy || !isMethodAllowed(policy, method)) {
           throw new Error(`Method is not allowed: ${method}`);
         }
 
@@ -299,51 +295,38 @@ export class DOMRemoteReceiver {
       value: unknown,
       type: number,
     ) {
-      const allowed =
-        type === UPDATE_PROPERTY_TYPE_PROPERTY
-          ? policy?.properties
-          : type === UPDATE_PROPERTY_TYPE_ATTRIBUTE
-            ? policy?.attributes
-            : type === UPDATE_PROPERTY_TYPE_EVENT_LISTENER
-              ? policy?.events
-              : undefined;
+      if (typeof property !== 'string')
+        throw new Error('Member name is not allowed');
+      if (!policy) rejectProperty(property, type);
+      const allowed = allowedMembersFor(policy, type);
+      if (allowed && !allowed.has(property)) rejectProperty(property, type);
+      if (type === UPDATE_PROPERTY_TYPE_EVENT_LISTENER) return;
 
-      const isValue =
-        type === UPDATE_PROPERTY_TYPE_PROPERTY ||
-        type === UPDATE_PROPERTY_TYPE_ATTRIBUTE;
       const normalized = property.toLowerCase();
-      const valueType = policy?.properties?.get(property);
       if (
-        !policy ||
-        (!isValue && type !== UPDATE_PROPERTY_TYPE_EVENT_LISTENER) ||
-        (allowed && !allowed.has(property)) ||
-        (value != null &&
-          ((type === UPDATE_PROPERTY_TYPE_ATTRIBUTE &&
-            typeof value !== 'string') ||
-            (type === UPDATE_PROPERTY_TYPE_PROPERTY &&
-              valueType &&
-              (valueType === 'array'
-                ? !Array.isArray(value)
-                : typeof value !== valueType ||
-                  (valueType === 'object' && Array.isArray(value)))))) ||
-        (isValue &&
-          (BLOCKED_PROPERTIES.has(normalized) ||
-            normalized.startsWith('on') ||
-            blockedProperties.has(normalized) ||
-            (type === UPDATE_PROPERTY_TYPE_PROPERTY &&
-              isNativeMethod(property)) ||
-            ((URL_PROPERTIES.test(normalized) ||
-              (normalized === 'data' && policy.element === 'object')) &&
-              value != null &&
-              (typeof value === 'string'
-                ? SCRIPT_URL.test(value.replace(/[\u0000-\u0020]/g, ''))
-                : type === UPDATE_PROPERTY_TYPE_ATTRIBUTE ||
-                  !policy.element.includes('-')))))
+        isBlockedProperty(policy, property, normalized, type) ||
+        !isValueAllowed(policy, property, value, type) ||
+        isUnsafeUrlValue(policy, normalized, value, type)
       ) {
-        throw new Error(
-          `Remote property is not allowed: ${property} (type ${type})`,
-        );
+        rejectProperty(property, type);
       }
+    }
+
+    function isBlockedProperty(
+      policy: ElementPolicy,
+      property: string,
+      normalized: string,
+      type: number,
+    ) {
+      return (
+        BLOCKED_PROPERTIES.has(normalized) ||
+        normalized.startsWith('on') ||
+        blockedProperties.has(normalized) ||
+        (type === UPDATE_PROPERTY_TYPE_PROPERTY &&
+          ((property === 'protocol' &&
+            (policy.element === 'a' || policy.element === 'area')) ||
+            isNativeMethod(property)))
+      );
     }
 
     function validate(node: RemoteNodeSerialization) {
@@ -542,6 +525,68 @@ export class DOMRemoteReceiver {
 
     return fragment;
   }
+}
+
+function isMethodAllowed(policy: ElementPolicy, method: string) {
+  if (policy.methods && !policy.methods.has(method)) return false;
+  return (
+    method === 'focus' ||
+    method === 'blur' ||
+    (policy.element.includes('-') && !(method in HTMLElement.prototype))
+  );
+}
+
+function allowedMembersFor(policy: ElementPolicy, type: number) {
+  switch (type) {
+    case UPDATE_PROPERTY_TYPE_PROPERTY:
+      return policy.properties;
+    case UPDATE_PROPERTY_TYPE_ATTRIBUTE:
+      return policy.attributes;
+    case UPDATE_PROPERTY_TYPE_EVENT_LISTENER:
+      return policy.events;
+    default:
+      throw new Error(`Update type is not allowed: ${type}`);
+  }
+}
+
+function rejectProperty(property: string, type: number): never {
+  throw new Error(`Remote property is not allowed: ${property} (type ${type})`);
+}
+
+function isValueAllowed(
+  policy: ElementPolicy,
+  property: string,
+  value: unknown,
+  type: number,
+) {
+  if (value == null) return true;
+  if (type === UPDATE_PROPERTY_TYPE_ATTRIBUTE) return typeof value === 'string';
+  const valueType = policy.properties?.get(property);
+  if (!valueType) return true;
+  if (valueType === 'array') return Array.isArray(value);
+  return (
+    typeof value === valueType &&
+    (valueType !== 'object' || !Array.isArray(value))
+  );
+}
+
+function isUnsafeUrlValue(
+  policy: ElementPolicy,
+  normalized: string,
+  value: unknown,
+  type: number,
+) {
+  if (
+    value == null ||
+    !(
+      URL_PROPERTIES.test(normalized) ||
+      (normalized === 'data' && policy.element === 'object')
+    )
+  )
+    return false;
+  return typeof value === 'string'
+    ? SCRIPT_URL.test(value.replace(/[\u0000-\u0020]/g, ''))
+    : type === UPDATE_PROPERTY_TYPE_ATTRIBUTE || !policy.element.includes('-');
 }
 
 function isNativeMethod(name: string) {

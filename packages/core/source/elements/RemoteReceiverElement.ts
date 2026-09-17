@@ -1,8 +1,7 @@
-import {DOMRemoteReceiver} from '../receivers/DOMRemoteReceiver.ts';
-
-type DOMRemoteReceiverOptions = NonNullable<
-  ConstructorParameters<typeof DOMRemoteReceiver>[0]
->;
+import {
+  DOMRemoteReceiver,
+  type DOMRemoteReceiverOptions,
+} from '../receivers/DOMRemoteReceiver.ts';
 
 /**
  * A custom element that can be used to simplify receiving updates to a

@@ -4,6 +4,7 @@ import {afterEach, describe, expect, it, vi} from 'vitest';
 
 import {
   MUTATION_TYPE_INSERT_CHILD,
+  MUTATION_TYPE_REMOVE_CHILD,
   MUTATION_TYPE_UPDATE_PROPERTY,
   MUTATION_TYPE_UPDATE_TEXT,
   NODE_TYPE_COMMENT,
@@ -18,7 +19,8 @@ import type {RemoteElementSerialization} from '../../types.ts';
 import {
   DOMRemoteReceiver,
   type DOMRemotePropertyPolicy,
-} from '../DOMRemoteReceiver.ts';
+  type DOMRemoteReceiverOptions,
+} from '../../receivers.ts';
 
 const payload = '<img src="invalid" onerror="window.remoteEscaped = true">';
 
@@ -38,9 +40,7 @@ function insert(receiver: DOMRemoteReceiver, node = element()) {
   receiver.connection.mutate([[MUTATION_TYPE_INSERT_CHILD, ROOT_ID, node, 0]]);
 }
 
-function connected(
-  options: ConstructorParameters<typeof DOMRemoteReceiver>[0] = {},
-) {
+function connected(options: DOMRemoteReceiverOptions = {}) {
   const root = document.createElement('div');
   document.body.append(root);
   return new DOMRemoteReceiver({root, ...options});
@@ -421,6 +421,71 @@ describe('DOMRemoteReceiver host policy', () => {
     ]);
     button.dispatchEvent(new CustomEvent('__proto__'));
     expect(listener).toHaveBeenCalledTimes(2);
+  });
+
+  it('rejects non-string member names in every channel without coercion', () => {
+    const receiver = connected({elements: ['ui-button']});
+    insert(receiver);
+    const toString = vi.fn(() => 'click');
+    for (const type of [
+      UPDATE_PROPERTY_TYPE_PROPERTY,
+      UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+      UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+    ] as const) {
+      for (const name of [1, ['click'], {toString}]) {
+        expect(() =>
+          receiver.connection.mutate([
+            [MUTATION_TYPE_UPDATE_PROPERTY, 'button', name as any, null, type],
+          ]),
+        ).toThrow('Member name is not allowed');
+      }
+    }
+    expect(toString).not.toHaveBeenCalled();
+  });
+
+  it('identifies missing and non-element method targets before custom dispatch', () => {
+    const call = vi.fn();
+    const receiver = new DOMRemoteReceiver({call});
+    receiver.connection.mutate([
+      [
+        MUTATION_TYPE_INSERT_CHILD,
+        ROOT_ID,
+        {id: 'text', type: NODE_TYPE_TEXT, data: ''},
+        0,
+      ],
+      [
+        MUTATION_TYPE_INSERT_CHILD,
+        ROOT_ID,
+        {id: 'comment', type: NODE_TYPE_COMMENT, data: ''},
+        1,
+      ],
+    ]);
+    for (const id of ['missing', 'text', 'comment', ROOT_ID]) {
+      expect(() => receiver.connection.call(id, 'focus')).toThrow(
+        `Method target is missing or is not an element: ${id}`,
+      );
+    }
+    expect(call).not.toHaveBeenCalled();
+  });
+
+  it('allows cached element calls while disconnected from the DOM', () => {
+    vi.useFakeTimers();
+    try {
+      const receiver = connected({
+        elements: ['ui-button'],
+        cache: {maxAge: 10},
+      });
+      insert(receiver);
+      const button = receiver.root.firstChild as HTMLElement;
+      const focus = vi.spyOn(button, 'focus');
+      receiver.connection.mutate([[MUTATION_TYPE_REMOVE_CHILD, ROOT_ID, 0]]);
+      expect(button.isConnected).toBe(false);
+      receiver.connection.call('button', 'focus');
+      expect(focus).toHaveBeenCalledOnce();
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    }
   });
 
   it('keeps explicit call callbacks authoritative', () => {

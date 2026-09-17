@@ -674,6 +674,8 @@ import {DOMRemoteReceiver} from '@remote-dom/core/receivers';
 const receiver = new DOMRemoteReceiver({retain, release});
 ```
 
+The constructor's configuration type is exported as `DOMRemoteReceiverOptions` from `@remote-dom/core/receivers`.
+
 ##### Host-owned element policy
 
 The optional `elements` configuration controls which element names the receiver creates. An array such as `elements: ['ui-button', 'ui-stack']` restricts names while retaining default member handling. An empty array accepts only text and comments. Omitting `elements` preserves unrestricted element names; it is not an isolation policy for untrusted code.
@@ -719,7 +721,7 @@ The receiver validates an entire inserted subtree before creating any host DOM n
 
 Default member handling supports ordinary properties, attributes, events, and custom-element methods. It excludes HTML-content and prototype-related property names, `on*` property/attribute names (case-insensitively), and assignment to base DOM methods. Use the event channel for event callbacks. Native methods other than `focus` and `blur` require a custom `call` callback; a `methods` list can further restrict default dispatch.
 
-URL-valued members such as `href`, `src`, `action`, and `formAction` accept relative URLs and ordinary schemes. Script schemes and non-raster-image `data:` URLs are rejected, including case and control-character variations. Supported raster-image media types are AVIF, BMP, GIF, JPEG, PNG, and WebP. Native URL properties and URL attributes require strings or nullish values; objects are not coerced into URLs. A custom element's object-valued properties remain the host component's responsibility.
+URL-valued members such as `href`, `src`, `action`, and `formAction` accept relative URLs and ordinary schemes. Script schemes and non-raster-image `data:` URLs are rejected, including case and control-character variations. Supported raster-image media types are AVIF, BMP, GIF, JPEG, PNG, and WebP. Native URL properties and URL attributes require strings or nullish values; objects are not coerced into URLs. A custom element's object-valued properties remain the host component's responsibility. Update native `<a>` and `<area>` URLs through `href`; writes to their `protocol` property are not accepted.
 
 Use `blockedProperties` to add host-specific property and attribute exclusions:
 

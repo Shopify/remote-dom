@@ -9,6 +9,7 @@ export {
 } from './receivers/RemoteReceiver.ts';
 export {
   DOMRemoteReceiver,
+  type DOMRemoteReceiverOptions,
   type DOMRemoteElementPolicy,
   type DOMRemotePropertyPolicy,
 } from './receivers/DOMRemoteReceiver.ts';
