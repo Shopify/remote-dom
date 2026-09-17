@@ -412,9 +412,9 @@ function matchesSelectorMatcher(
         (element.namespaceURI === HTML_NAMESPACE ? value : name)
       );
     case MATCHER_ID:
-      return getSelectorAttribute(element, 'id') === name;
+      return element.getAttributeNS(null, 'id') === name;
     case MATCHER_CLASS:
-      const classAttr = getSelectorAttribute(element, 'class');
+      const classAttr = element.getAttributeNS(null, 'class');
       if (!classAttr) return false;
       return splitOnASCIIWhitespace(classAttr).includes(name);
     case MATCHER_ATTRIBUTE:
