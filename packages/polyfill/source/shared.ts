@@ -20,7 +20,12 @@ import type {ParentNode} from './ParentNode.ts';
 import type {Element} from './Element.ts';
 import type {CharacterData} from './CharacterData.ts';
 import type {Text} from './Text.ts';
-import {MATCHER_ID, querySelector} from './selectors.ts';
+import {
+  MATCHER_CLASS,
+  MATCHER_ID,
+  querySelector,
+  querySelectorAll,
+} from './selectors.ts';
 
 export function isCharacterData(node: Node): node is CharacterData {
   return DATA in node;
@@ -98,6 +103,17 @@ export function getElementById(within: ParentNode, elementId: string) {
   if (id === '') return null;
 
   return querySelector(within, [{type: MATCHER_ID, name: id}]);
+}
+
+export function getElementsByClassName(within: ParentNode, classNames: string) {
+  const names = [...new Set(String(classNames).split(/[\t\n\f\r ]+/))].filter(
+    Boolean,
+  );
+
+  return querySelectorAll(
+    within,
+    names.map((name) => ({type: MATCHER_CLASS, name})),
+  );
 }
 
 export function getElementsByTagName(
