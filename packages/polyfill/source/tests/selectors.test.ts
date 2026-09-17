@@ -2,6 +2,7 @@ import {Window} from '../index.ts';
 import {NodeList} from '../NodeList.ts';
 import type {Element as PolyfillElement} from '../Element.ts';
 import {
+  MATCHER_ATTRIBUTE,
   MATCHER_CLASS,
   MATCHER_ELEMENT,
   MATCHER_ID,
@@ -17,6 +18,7 @@ const MatcherType = {
   Element: MATCHER_ELEMENT,
   Id: MATCHER_ID,
   Class: MATCHER_CLASS,
+  Attribute: MATCHER_ATTRIBUTE,
 } as const;
 
 const ASCII_WHITESPACE = [
@@ -43,23 +45,50 @@ describe('selector parsing and matching', () => {
       expect(parts[0]!.matchers[0]!).toEqual({
         type: 1, // MatcherType.Element
         name: 'DiV',
-        value: 'div',
+        htmlName: 'div',
+        value: 'DiV',
       });
     });
 
-    it('ASCII-lowercases only element comparison names', () => {
+    it('ASCII-lowercases only HTML element and attribute names', () => {
       expect(parseSelector('ÄDiV')[0]!.matchers[0]).toEqual({
         type: MatcherType.Element,
         name: 'ÄDiV',
-        value: 'Ädiv',
+        htmlName: 'Ädiv',
+        value: 'ÄDiV',
+      });
+      expect(parseSelector('[ÄDATA-Key]')[0]!.matchers[0]).toMatchObject({
+        type: MatcherType.Attribute,
+        name: 'ÄDATA-Key',
+        htmlName: 'Ädata-key',
       });
       expect(
         parseSelector('DiV#MyID.Mixed[DATA-Key="VaLue"]')[0]!.matchers,
       ).toEqual([
-        {type: MatcherType.Element, name: 'DiV', value: 'div'},
-        {type: MatcherType.Id, name: 'MyID', value: 'MyID'},
-        {type: MatcherType.Class, name: 'Mixed', value: 'Mixed'},
-        {type: 4, name: 'DATA-Key', value: 'VaLue'},
+        {
+          type: MatcherType.Element,
+          name: 'DiV',
+          htmlName: 'div',
+          value: 'DiV',
+        },
+        {
+          type: MatcherType.Id,
+          name: 'MyID',
+          htmlName: undefined,
+          value: 'MyID',
+        },
+        {
+          type: MatcherType.Class,
+          name: 'Mixed',
+          htmlName: undefined,
+          value: 'Mixed',
+        },
+        {
+          type: MatcherType.Attribute,
+          name: 'DATA-Key',
+          htmlName: 'data-key',
+          value: 'VaLue',
+        },
       ]);
     });
 
@@ -91,6 +120,7 @@ describe('selector parsing and matching', () => {
         {
           type: MatcherType.Class,
           name: 'left\u00a0right',
+          htmlName: undefined,
           value: 'left\u00a0right',
         },
       ]);
@@ -102,6 +132,7 @@ describe('selector parsing and matching', () => {
       expect(parts[0]!.matchers[0]!).toMatchObject({
         type: 4, // MatcherType.Attribute
         name: 'disabled',
+        htmlName: 'disabled',
         value: undefined,
       });
     });
@@ -112,6 +143,7 @@ describe('selector parsing and matching', () => {
       expect(parts[0]!.matchers[0]!).toMatchObject({
         type: 4, // MatcherType.Attribute
         name: 'type',
+        htmlName: 'type',
         value: 'button',
       });
     });
@@ -432,6 +464,17 @@ describe('selector parsing and matching', () => {
       expect(container.querySelector(selector) != null).toBe(matches);
     });
 
+    it('preserves foreign attribute name case', () => {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttributeNS(null, 'viewBox', '0 0 10 10');
+      container.appendChild(svg);
+
+      expect(container.querySelector('[viewBox]')).toBe(svg);
+      expect(container.querySelector('[viewBox="0 0 10 10"]')).toBe(svg);
+      expect(container.querySelector('[VIEWBOX]')).toBeNull();
+      expect(container.querySelector('[viewbox]')).toBeNull();
+    });
+
     it('selects by compound selectors', () => {
       const activeLink = container.querySelector('a.link.active');
       expect(activeLink?.textContent?.trim()).toBe('Active Link');
@@ -663,14 +706,18 @@ describe('selector parsing and matching', () => {
 
     it('selects by ID matcher without parsing', () => {
       const main = querySelector(asPolyfill(container), [
-        {type: MatcherType.Id, name: 'main-post'},
+        {
+          type: MatcherType.Id,
+          name: 'main-post',
+          htmlName: 'ignored-for-id',
+        },
       ]);
       expect(main?.tagName.toLowerCase()).toBe('article');
     });
 
     it('types standalone query results as elements', () => {
       const matches = querySelectorAll(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'p', value: 'p'},
+        {type: MatcherType.Element, name: 'p', htmlName: 'p', value: 'p'},
       ]);
 
       expectTypeOf(matches).toEqualTypeOf<NodeList<PolyfillElement>>();
@@ -680,7 +727,7 @@ describe('selector parsing and matching', () => {
 
     it('selects by element matcher without parsing', () => {
       const paragraphs = querySelectorAll(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'p', value: 'p'},
+        {type: MatcherType.Element, name: 'p', htmlName: 'p', value: 'p'},
       ]);
       expect(paragraphs).toHaveLength(2);
     });
@@ -770,21 +817,77 @@ describe('selector parsing and matching', () => {
       ).toBeNull();
     });
 
-    it('matches HTML tag names via the precomputed element matcher value', () => {
+    it('matches HTML tag names via the precomputed htmlName', () => {
       const upper = querySelectorAll(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'ARTICLE', value: 'article'},
+        {
+          type: MatcherType.Element,
+          name: 'ARTICLE',
+          htmlName: 'article',
+          value: 'ARTICLE',
+        },
       ]);
       expect(upper).toHaveLength(1);
 
       const mixed = querySelector(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'SpAn', value: 'span'},
+        {
+          type: MatcherType.Element,
+          name: 'SpAn',
+          htmlName: 'span',
+          value: 'SpAn',
+        },
       ]);
       expect(mixed?.getAttribute('class')).toBe('highlight');
 
       const mismatched = querySelector(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'ARTICLE', value: 'not-article'},
+        {
+          type: MatcherType.Element,
+          name: 'ARTICLE',
+          htmlName: 'not-article',
+          value: 'ARTICLE',
+        },
       ]);
       expect(mismatched).toBeNull();
+    });
+
+    it('uses supplied HTML names for structured attribute comparisons', () => {
+      const article = container.querySelector('article')!;
+      article.setAttribute('data-state', 'Ready');
+
+      const presence = {
+        type: MatcherType.Attribute,
+        name: 'DATA-STATE',
+        htmlName: 'data-state',
+      } as const;
+      const exact = {...presence, value: 'Ready'};
+
+      expect(querySelector(asPolyfill(container), [presence])).toBe(article);
+      expect(querySelector(asPolyfill(container), [exact])).toBe(article);
+      expect(
+        querySelector(asPolyfill(container), [{...exact, value: 'ready'}]),
+      ).toBeNull();
+      expect(
+        querySelector(asPolyfill(container), [
+          {...presence, htmlName: 'not-data-state'},
+        ]),
+      ).toBeNull();
+    });
+
+    it('uses original attribute names for foreign structured matchers', () => {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttributeNS(null, 'viewBox', '0 0 10 10');
+      container.appendChild(svg);
+
+      const matcher = {
+        type: MatcherType.Attribute,
+        name: 'viewBox',
+        htmlName: 'viewbox',
+        value: '0 0 10 10',
+      } as const;
+
+      expect(querySelector(asPolyfill(container), [matcher])).toBe(svg);
+      expect(
+        querySelector(asPolyfill(container), [{...matcher, name: 'viewbox'}]),
+      ).toBeNull();
     });
 
     it('uses original names for foreign structured matcher comparisons', () => {
@@ -797,7 +900,8 @@ describe('selector parsing and matching', () => {
       const matcher = {
         type: MatcherType.Element,
         name: 'linearGradient',
-        value: 'lineargradient',
+        htmlName: 'lineargradient',
+        value: 'linearGradient',
       } as const;
 
       expect(querySelector(asPolyfill(container), [matcher])).toBe(html);
@@ -810,7 +914,7 @@ describe('selector parsing and matching', () => {
     it('returns same results as string selectors for compound queries', () => {
       const byString = container.querySelectorAll('p.text.hidden');
       const byObject = querySelectorAll(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'p', value: 'p'},
+        {type: MatcherType.Element, name: 'p', htmlName: 'p', value: 'p'},
         {type: MatcherType.Class, name: 'text'},
         {type: MatcherType.Class, name: 'hidden'},
       ]);
@@ -836,7 +940,12 @@ describe('selector parsing and matching', () => {
       ).toBeNull();
       expect(
         querySelectorAll(asPolyfill(container), [
-          {type: MatcherType.Element, name: 'table', value: 'table'},
+          {
+            type: MatcherType.Element,
+            name: 'table',
+            htmlName: 'table',
+            value: 'table',
+          },
         ]),
       ).toHaveLength(0);
     });
