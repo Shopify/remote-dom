@@ -1,6 +1,7 @@
 import {SVG_NAMESPACE} from '../constants.ts';
 import {Window} from '../index.ts';
 import {NodeList} from '../NodeList.ts';
+import {MATCHER_QUALIFIED_NAME, querySelectorAll} from '../selectors.ts';
 
 import {beforeEach, describe, expect, it} from 'vitest';
 
@@ -60,6 +61,37 @@ describe('getElementsByTagName', () => {
     expect(document.getElementsByTagName('te:ST')).toEqual([prefixedForeign]);
     expect(document.getElementsByTagName('ST')).toHaveLength(0);
     expect(document.querySelectorAll('ST')).toEqual([prefixedForeign]);
+  });
+
+  it('uses structured qualified matcher names for each namespace', () => {
+    const root = new Window().document;
+    const prefixedHtml = root.createElementNS(
+      'http://www.w3.org/1999/xhtml',
+      'test:aÇ',
+    );
+    const prefixedForeign = root.createElementNS('test', 'te:ST');
+    root.body.append(prefixedHtml, prefixedForeign);
+
+    expect(
+      querySelectorAll(root, [
+        {
+          type: MATCHER_QUALIFIED_NAME,
+          name: 'unused-for-html',
+          htmlName: 'test:aÇ',
+          value: 'not-the-html-name',
+        },
+      ]),
+    ).toEqual([prefixedHtml]);
+    expect(
+      querySelectorAll(root, [
+        {
+          type: MATCHER_QUALIFIED_NAME,
+          name: 'te:ST',
+          htmlName: 'unused-for-foreign',
+          value: 'not-the-foreign-name',
+        },
+      ]),
+    ).toEqual([prefixedForeign]);
   });
 
   it('matches non-HTML tag names case-sensitively', () => {

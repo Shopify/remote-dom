@@ -37,7 +37,7 @@ export const MATCHER_PSEUDO = 5;
 export const MATCHER_FUNCTION = 6;
 export const MATCHER_SCOPE = 7;
 // Internal matcher for qualified-name queries. CSS type selectors use localName
-// instead, while both kinds precompute their HTML comparison value.
+// instead, while both kinds precompute their HTML comparison name.
 export const MATCHER_QUALIFIED_NAME = 8;
 
 /** Common fields available on every selector matcher. */
