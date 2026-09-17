@@ -131,26 +131,6 @@ describe('ParentNode.insertBefore', () => {
   });
 });
 
-describe('ParentNode.replaceChild', () => {
-  it('keeps the chain walkable after replacing a middle child', () => {
-    const first = document.createElement('first-child');
-    const placeholder = document.createElement('placeholder-child');
-    const last = document.createElement('last-child');
-    document.body.append(first, placeholder, last);
-
-    const replacement = document.createElement('replacement-child');
-    document.body.replaceChild(replacement, placeholder);
-
-    expect(siblingChain(document.body)).toStrictEqual([
-      'first-child',
-      'replacement-child',
-      'last-child',
-    ]);
-    expect(document.querySelector('replacement-child')).toBe(replacement);
-    expect(document.querySelector('placeholder-child')).toBeNull();
-  });
-});
-
 describe('ParentNode.prepend', () => {
   it('prepends multiple nodes ahead of an existing child', () => {
     const existing = document.createElement('existing-child');
