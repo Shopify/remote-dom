@@ -3,6 +3,7 @@ import {
   NAME,
   PREFIX,
   NODE_TYPE_DOCUMENT,
+  NODE_TYPE_ATTRIBUTE,
   HTML_NAMESPACE,
   SVG_NAMESPACE,
   type NamespaceURI,
@@ -18,6 +19,7 @@ import {
 } from './names.ts';
 import type {Window} from './Window.ts';
 import type {Node} from './Node.ts';
+import type {Attr} from './Attr.ts';
 import {getElementsByClassName as findElementsByClassName} from './getElementsByClassName.ts';
 import {Event} from './Event.ts';
 import {ParentNode, removeChildForAdoption} from './ParentNode.ts';
@@ -38,6 +40,7 @@ import {HTMLBodyElement} from './HTMLBodyElement.ts';
 import {HTMLHeadElement} from './HTMLHeadElement.ts';
 import {HTMLHtmlElement} from './HTMLHtmlElement.ts';
 import {performWithCustomElementReactions} from './custom-element-reactions.ts';
+import {removeAttributeForAdoption} from './NamedNodeMap.ts';
 
 export class Document extends ParentNode {
   nodeType: NodeType = NODE_TYPE_DOCUMENT;
@@ -125,6 +128,22 @@ export class Document extends ParentNode {
   }
 
   adoptNode(node: Node) {
+    if (node.nodeType === NODE_TYPE_ATTRIBUTE) {
+      const attribute = node as Attr;
+      const ownerElement = attribute.ownerElement;
+
+      if (ownerElement) {
+        return performWithCustomElementReactions(() => {
+          removeAttributeForAdoption(ownerElement.attributes, attribute, this);
+          return attribute;
+        });
+      }
+
+      if (attribute[OWNER_DOCUMENT] === this) return attribute;
+      adoptNodes([attribute], this);
+      return attribute;
+    }
+
     if (node[OWNER_DOCUMENT] === this) return node;
 
     const adoption = collectAdoptionSnapshot(node);
