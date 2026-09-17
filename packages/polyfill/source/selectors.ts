@@ -37,25 +37,70 @@ export const MATCHER_PSEUDO = 5;
 export const MATCHER_FUNCTION = 6;
 export const MATCHER_SCOPE = 7;
 
-export type MatcherType =
-  | typeof MATCHER_UNKNOWN
-  | typeof MATCHER_ELEMENT
-  | typeof MATCHER_ID
-  | typeof MATCHER_CLASS
-  | typeof MATCHER_ATTRIBUTE
-  | typeof MATCHER_PSEUDO
-  | typeof MATCHER_FUNCTION
-  | typeof MATCHER_SCOPE;
+/** Matchers whose comparison value is carried entirely by `name`. */
+export interface NameMatcher {
+  type:
+    | typeof MATCHER_UNKNOWN
+    | typeof MATCHER_ELEMENT
+    | typeof MATCHER_ID
+    | typeof MATCHER_CLASS;
+  /**
+   * The CSS local-name query, literal ID (without `#`), or class token (without
+   * `.`). Spelling is preserved. For unknown tokens, only `*` matches.
+   */
+  name: string;
+  /** Unused by matching; the parser echoes `name` here. */
+  value?: string;
+}
+
+/** An attribute selector, optionally requiring an exact value. */
+export interface AttributeMatcher {
+  type: typeof MATCHER_ATTRIBUTE;
+  /** The attribute name as supplied in the selector. */
+  name: string;
+  /** Exact comparison text; `undefined` requests a presence check. */
+  value?: string;
+}
+
+/** A pseudo-class selector without an argument. */
+export interface PseudoMatcher {
+  type: typeof MATCHER_PSEUDO;
+  /** The ASCII-lowercased pseudo name, without its leading `:`. */
+  name: string;
+  /** Absent: arguments belong to a FunctionMatcher. */
+  value?: undefined;
+}
+
+/** A functional pseudo-class selector. */
+export interface FunctionMatcher {
+  type: typeof MATCHER_FUNCTION;
+  /** The ASCII-lowercased function name, without punctuation. */
+  name: string;
+  /** Raw argument text; an omitted value is matched as an empty argument. */
+  value?: string;
+}
+
+/** The internal scope marker used while matching relative selectors. */
+export interface ScopeMatcher {
+  type: typeof MATCHER_SCOPE;
+  /** A marker label; the scope element is supplied separately. */
+  name: ':scope';
+  /** Unused by scope matching. */
+  value?: undefined;
+}
+
+export type Matcher =
+  | NameMatcher
+  | AttributeMatcher
+  | PseudoMatcher
+  | FunctionMatcher
+  | ScopeMatcher;
+
+export type MatcherType = Matcher['type'];
 
 export interface Part {
   combinator: Combinator;
   matchers: Matcher[];
-}
-
-export interface Matcher {
-  type: MatcherType;
-  name: string;
-  value?: string;
 }
 
 const SUPPORTED_IDENTIFIER_TEST =
@@ -188,8 +233,8 @@ export function parseSelector(
       throwSelectorSyntaxError(selector);
     }
 
-    let type: MatcherType;
     let value = token[4] ?? token[5] ?? token[7];
+    let matcher: Matcher;
     if (token[2]) {
       if (!SUPPORTED_IDENTIFIER_TEST.test(name)) {
         throwSelectorSyntaxError(selector);
@@ -207,38 +252,40 @@ export function parseSelector(
       ) {
         throwSelectorSyntaxError(selector);
       }
-      type = MATCHER_ATTRIBUTE;
+      matcher = {type: MATCHER_ATTRIBUTE, name, value};
     } else if (token[6]) {
       if (!SUPPORTED_IDENTIFIER_TEST.test(name)) {
         throwSelectorSyntaxError(selector);
       }
-      type = token[6] === '#' ? MATCHER_ID : MATCHER_CLASS;
+      const type: NameMatcher['type'] =
+        token[6] === '#' ? MATCHER_ID : MATCHER_CLASS;
+      matcher = {type, name, value};
     } else if (token[8]) {
-      type = token[9] == null ? MATCHER_PSEUDO : MATCHER_FUNCTION;
-    } else if (token[7] === '*') {
-      type = MATCHER_UNKNOWN;
-    } else if (token[7] && SUPPORTED_IDENTIFIER_TEST.test(token[7])) {
-      type = MATCHER_ELEMENT;
-    } else {
-      throwSelectorSyntaxError(selector);
-    }
+      if (!token[9]) throwSelectorSyntaxError(selector);
 
-    if (token[9]) {
       [value, tokenizer.lastIndex] = readFunctionArgument(
         normalizedSelector,
         tokenizer.lastIndex,
       );
-
       if (name !== 'has' && name !== 'not') {
         throwSelectorSyntaxError(selector);
       }
       if (name === 'has' && insideHas) throwSelectorSyntaxError(selector);
       parseSelector(value, insideHas || name === 'has', name === 'has');
-    } else if (type === MATCHER_PSEUDO) {
-      throwSelectorSyntaxError(selector);
+      matcher = {type: MATCHER_FUNCTION, name, value};
+    } else {
+      let type: NameMatcher['type'];
+      if (token[7] === '*') {
+        type = MATCHER_UNKNOWN;
+      } else if (token[7] && SUPPORTED_IDENTIFIER_TEST.test(token[7])) {
+        type = MATCHER_ELEMENT;
+      } else {
+        throwSelectorSyntaxError(selector);
+      }
+      matcher = {type, name, value};
     }
 
-    part.matchers.push({type, name, value});
+    part.matchers.push(matcher);
     consumed = tokenizer.lastIndex;
   }
 
