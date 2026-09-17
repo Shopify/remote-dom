@@ -105,7 +105,9 @@ describe('Matcher types', () => {
 
     expectTypeOf(missingElementHTMLName).toEqualTypeOf<NormalizedNameMatcher>();
     expectTypeOf(missingAttributeHTMLName).toEqualTypeOf<AttributeMatcher>();
-    expectTypeOf(missingQualifiedHTMLName).toEqualTypeOf<NormalizedNameMatcher>();
+    expectTypeOf(
+      missingQualifiedHTMLName,
+    ).toEqualTypeOf<NormalizedNameMatcher>();
     expectTypeOf(pseudoWithValue).toEqualTypeOf<PseudoMatcher>();
   });
 });
