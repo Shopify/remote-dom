@@ -3,6 +3,7 @@ import {
   NEXT,
   PARENT,
   PREV,
+  NAME,
   HTML_NAMESPACE,
   asciiLowercase,
   splitOnASCIIWhitespace,
@@ -36,6 +37,9 @@ export const MATCHER_ATTRIBUTE = 4;
 export const MATCHER_PSEUDO = 5;
 export const MATCHER_FUNCTION = 6;
 export const MATCHER_SCOPE = 7;
+// Internal matcher for qualified-name queries. CSS type selectors use localName
+// instead, while both kinds precompute their HTML comparison value.
+export const MATCHER_QUALIFIED_NAME = 8;
 
 /** Common fields available on every selector matcher. */
 export interface MatcherBase {
@@ -96,11 +100,14 @@ export interface ScopeMatcher extends MatcherBase {
   value?: undefined;
 }
 
-/** A local-name matcher with a precomputed HTML comparison name. */
+/** A local- or qualified-name matcher with a precomputed HTML comparison name. */
 export interface NormalizedNameMatcher extends MatcherBase {
-  /** Selects local-name matching for CSS. */
-  type: typeof MATCHER_ELEMENT;
-  /** The original local-name query, preserving case for non-HTML elements. */
+  /** Selects local-name matching for CSS or qualified-name matching for DOM APIs. */
+  type: typeof MATCHER_ELEMENT | typeof MATCHER_QUALIFIED_NAME;
+  /**
+   * The original local-name query for MATCHER_ELEMENT or qualified-name query
+   * for MATCHER_QUALIFIED_NAME, preserving case for non-HTML elements.
+   */
   name: string;
   /** The precomputed ASCII-lowercased name used for HTML elements. */
   htmlName: string;
@@ -473,6 +480,11 @@ function matchesSelectorMatcher(
     case MATCHER_ELEMENT:
       return (
         element.localName ===
+        (element.namespaceURI === HTML_NAMESPACE ? htmlName : name)
+      );
+    case MATCHER_QUALIFIED_NAME:
+      return (
+        element[NAME] ===
         (element.namespaceURI === HTML_NAMESPACE ? htmlName : name)
       );
     case MATCHER_ID:
