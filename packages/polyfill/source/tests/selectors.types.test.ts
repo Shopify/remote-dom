@@ -7,6 +7,7 @@ import {
   MATCHER_FUNCTION,
   MATCHER_ID,
   MATCHER_PSEUDO,
+  MATCHER_QUALIFIED_NAME,
   MATCHER_SCOPE,
   MATCHER_UNKNOWN,
 } from '../selectors.ts';
@@ -43,6 +44,9 @@ function assertDiscriminantNarrowing(matcher: Matcher) {
     case MATCHER_SCOPE:
       expectTypeOf(matcher).toEqualTypeOf<ScopeMatcher>();
       break;
+    case MATCHER_QUALIFIED_NAME:
+      expectTypeOf(matcher).toEqualTypeOf<NormalizedNameMatcher>();
+      break;
     default:
       expectTypeOf(matcher).toEqualTypeOf<never>();
   }
@@ -60,6 +64,7 @@ describe('Matcher types', () => {
       {type: MATCHER_FUNCTION, name: 'not', value: '.hidden'},
       {type: MATCHER_SCOPE, name: ':scope'},
       {type: MATCHER_ID, name: 'target', htmlName: 'ignored'},
+      {type: MATCHER_QUALIFIED_NAME, name: 'DIV', htmlName: 'div'},
     ];
 
     for (const matcher of matchers) assertDiscriminantNarrowing(matcher);
@@ -86,6 +91,11 @@ describe('Matcher types', () => {
       type: MATCHER_ATTRIBUTE,
       name: 'DATA-STATE',
     };
+    // @ts-expect-error Qualified-name matching requires the normalized HTML name.
+    const missingQualifiedHTMLName: NormalizedNameMatcher = {
+      type: MATCHER_QUALIFIED_NAME,
+      name: 'DIV',
+    };
     const pseudoWithValue: PseudoMatcher = {
       type: MATCHER_PSEUDO,
       name: 'hover',
@@ -95,6 +105,7 @@ describe('Matcher types', () => {
 
     expectTypeOf(missingElementHTMLName).toEqualTypeOf<NormalizedNameMatcher>();
     expectTypeOf(missingAttributeHTMLName).toEqualTypeOf<AttributeMatcher>();
+    expectTypeOf(missingQualifiedHTMLName).toEqualTypeOf<NormalizedNameMatcher>();
     expectTypeOf(pseudoWithValue).toEqualTypeOf<PseudoMatcher>();
   });
 });

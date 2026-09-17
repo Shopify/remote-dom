@@ -31,6 +31,8 @@ import type {Text} from './Text.ts';
 import {
   MATCHER_CLASS,
   MATCHER_ID,
+  MATCHER_QUALIFIED_NAME,
+  MATCHER_UNKNOWN,
   querySelector,
   querySelectorAll,
 } from './selectors.ts';
@@ -295,23 +297,14 @@ export function getElementsByTagName(
   qualifiedName: string,
 ) {
   const name = String(qualifiedName);
-  const normalizedHtmlName = asciiLowercase(name);
-  const elements: Element[] = [];
 
-  for (const node of descendants(within)) {
-    if (!isElementNode(node)) continue;
-
-    if (
-      name === '*' ||
-      (node.namespaceURI === HTML_NAMESPACE
-        ? node[NAME] === normalizedHtmlName
-        : node[NAME] === name)
-    ) {
-      elements.push(node);
-    }
-  }
-
-  return elements;
+  return querySelectorAll(within, [
+    {
+      type: name === '*' ? MATCHER_UNKNOWN : MATCHER_QUALIFIED_NAME,
+      name,
+      htmlName: asciiLowercase(name),
+    },
+  ]);
 }
 
 export function descendants(node: Node) {
