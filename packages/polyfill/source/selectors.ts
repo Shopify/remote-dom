@@ -240,8 +240,8 @@ export function parseSelector(
       throwSelectorSyntaxError(selector);
     }
 
+    let type: MatcherType = MATCHER_UNKNOWN;
     let value = token[4] ?? token[5] ?? token[7];
-    let matcher: Matcher;
     if (token[2]) {
       if (!SUPPORTED_IDENTIFIER_TEST.test(name)) {
         throwSelectorSyntaxError(selector);
@@ -259,14 +259,12 @@ export function parseSelector(
       ) {
         throwSelectorSyntaxError(selector);
       }
-      matcher = {type: MATCHER_ATTRIBUTE, name, value};
+      type = MATCHER_ATTRIBUTE;
     } else if (token[6]) {
       if (!SUPPORTED_IDENTIFIER_TEST.test(name)) {
         throwSelectorSyntaxError(selector);
       }
-      const type: NameMatcher['type'] =
-        token[6] === '#' ? MATCHER_ID : MATCHER_CLASS;
-      matcher = {type, name, value};
+      type = token[6] === '#' ? MATCHER_ID : MATCHER_CLASS;
     } else if (token[8]) {
       if (!token[9]) throwSelectorSyntaxError(selector);
 
@@ -279,16 +277,20 @@ export function parseSelector(
       }
       if (name === 'has' && insideHas) throwSelectorSyntaxError(selector);
       parseSelector(value, insideHas || name === 'has', name === 'has');
-      matcher = {type: MATCHER_FUNCTION, name, value};
+      type = MATCHER_FUNCTION;
     } else if (token[7] === '*') {
-      matcher = {type: MATCHER_UNKNOWN, name, value};
+      type = MATCHER_UNKNOWN;
     } else if (token[7] && SUPPORTED_IDENTIFIER_TEST.test(token[7])) {
-      matcher = {type: MATCHER_ELEMENT, name, value: asciiLowercase(name)};
+      type = MATCHER_ELEMENT;
     } else {
       throwSelectorSyntaxError(selector);
     }
 
-    part.matchers.push(matcher);
+    part.matchers.push({
+      type,
+      name,
+      value: type === MATCHER_ELEMENT ? asciiLowercase(name) : value,
+    } as Matcher);
     consumed = tokenizer.lastIndex;
   }
 
