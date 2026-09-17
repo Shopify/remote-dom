@@ -39,17 +39,13 @@ export const MATCHER_SCOPE = 7;
 
 /** Matchers whose comparison value is carried entirely by `name`. */
 export interface NameMatcher {
-  type:
-    | typeof MATCHER_UNKNOWN
-    | typeof MATCHER_ELEMENT
-    | typeof MATCHER_ID
-    | typeof MATCHER_CLASS;
+  type: typeof MATCHER_UNKNOWN | typeof MATCHER_ID | typeof MATCHER_CLASS;
   /**
-   * The CSS local-name query, literal ID (without `#`), or class token (without
-   * `.`). Spelling is preserved. For unknown tokens, only `*` matches.
+   * The literal ID (without `#`) or class token (without `.`). Spelling is
+   * preserved. For unknown tokens, only `*` matches.
    */
   name: string;
-  /** Unused by matching; the parser echoes `name` here. */
+  /** Unused by matching; the parser may echo `name` here. */
   value?: string;
 }
 
@@ -89,12 +85,23 @@ export interface ScopeMatcher {
   value?: undefined;
 }
 
+/** A local-name matcher with a precomputed HTML comparison name. */
+export interface NormalizedNameMatcher {
+  /** Selects local-name matching for CSS. */
+  type: typeof MATCHER_ELEMENT;
+  /** The original local-name query, preserving case for non-HTML elements. */
+  name: string;
+  /** The precomputed ASCII-lowercased name used for HTML element comparisons. */
+  value: string;
+}
+
 export type Matcher =
   | NameMatcher
   | AttributeMatcher
   | PseudoMatcher
   | FunctionMatcher
-  | ScopeMatcher;
+  | ScopeMatcher
+  | NormalizedNameMatcher;
 
 export type MatcherType = Matcher['type'];
 
@@ -273,16 +280,12 @@ export function parseSelector(
       if (name === 'has' && insideHas) throwSelectorSyntaxError(selector);
       parseSelector(value, insideHas || name === 'has', name === 'has');
       matcher = {type: MATCHER_FUNCTION, name, value};
+    } else if (token[7] === '*') {
+      matcher = {type: MATCHER_UNKNOWN, name, value};
+    } else if (token[7] && SUPPORTED_IDENTIFIER_TEST.test(token[7])) {
+      matcher = {type: MATCHER_ELEMENT, name, value: asciiLowercase(name)};
     } else {
-      let type: NameMatcher['type'];
-      if (token[7] === '*') {
-        type = MATCHER_UNKNOWN;
-      } else if (token[7] && SUPPORTED_IDENTIFIER_TEST.test(token[7])) {
-        type = MATCHER_ELEMENT;
-      } else {
-        throwSelectorSyntaxError(selector);
-      }
-      matcher = {type, name, value};
+      throwSelectorSyntaxError(selector);
     }
 
     part.matchers.push(matcher);
@@ -456,9 +459,10 @@ function matchesSelectorMatcher(
     case MATCHER_UNKNOWN:
       return name === '*'; // Universal selector
     case MATCHER_ELEMENT:
-      return element.namespaceURI === HTML_NAMESPACE
-        ? element.localName === asciiLowercase(name)
-        : element.localName === name;
+      return (
+        element.localName ===
+        (element.namespaceURI === HTML_NAMESPACE ? value : name)
+      );
     case MATCHER_ID:
       return getSelectorAttribute(element, 'id') === name;
     case MATCHER_CLASS:
