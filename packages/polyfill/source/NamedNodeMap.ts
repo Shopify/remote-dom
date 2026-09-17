@@ -12,12 +12,14 @@ import {
 import {normalizeNamespace} from './names.ts';
 import type {Attr} from './Attr.ts';
 import type {Element} from './Element.ts';
+import type {Document} from './Document.ts';
 import {
   attributeObserversActive,
   queueMutationRecord,
 } from './MutationObserver.ts';
 import {performWithCustomElementReactions} from './custom-element-reactions.ts';
 import {enqueueAttributeReaction} from './attribute-reactions.ts';
+import {adoptNodes} from './shared.ts';
 
 export class NamedNodeMap {
   [CHILD]: Attr | null = null;
@@ -84,7 +86,7 @@ export class NamedNodeMap {
         : qualifiedName;
 
     return performWithCustomElementReactions(() =>
-      this.removeNamedItemImmediately((attr) => attr.name === normalizedName),
+      removeNamedItemImmediately(this, (attr) => attr.name === normalizedName),
     );
   }
 
@@ -93,55 +95,12 @@ export class NamedNodeMap {
     const normalizedLocalName = String(localName);
 
     return performWithCustomElementReactions(() =>
-      this.removeNamedItemImmediately(
+      removeNamedItemImmediately(
+        this,
         (attr) =>
           attr.localName === normalizedLocalName && attr[NS] === namespace,
       ),
     );
-  }
-
-  private removeNamedItemImmediately(matches: (attr: Attr) => boolean) {
-    const ownerElement = this[OWNER_ELEMENT];
-    let attr = this[CHILD];
-    let prev: typeof attr | null = null;
-
-    while (attr != null) {
-      if (matches(attr)) {
-        if (prev) prev[NEXT] = attr[NEXT];
-        if (this[CHILD] === attr) this[CHILD] = attr[NEXT];
-        const oldValue = attr.value;
-        attr[NEXT] = null;
-        attr[OWNER_ELEMENT] = null;
-
-        if (attributeObserversActive) {
-          queueMutationRecord({
-            type: 'attributes',
-            target: ownerElement,
-            attributeName: attr.name,
-            attributeNamespace: attr[NS],
-            oldValue,
-          });
-        }
-        ownerElement[HOOKS].removeAttribute?.(
-          ownerElement as any,
-          attr.name,
-          attr[NS],
-        );
-        enqueueAttributeReaction(
-          ownerElement,
-          attr.localName,
-          oldValue,
-          null,
-          attr[NS],
-        );
-        return attr;
-      }
-
-      prev = attr;
-      attr = attr[NEXT];
-    }
-
-    return null;
   }
 
   setNamedItem(attr: Attr) {
@@ -245,4 +204,78 @@ export class NamedNodeMap {
       attr = attr[NEXT];
     }
   }
+}
+
+function removeNamedItemImmediately(
+  attributes: NamedNodeMap,
+  matches: (attr: Attr) => boolean,
+  destination?: Document,
+) {
+  const ownerElement = attributes[OWNER_ELEMENT];
+  let attr = attributes[CHILD];
+  let prev: typeof attr | null = null;
+
+  while (attr != null) {
+    if (matches(attr)) {
+      const qualifiedName = attr.name;
+      const localName = attr.localName;
+      const namespace = attr[NS];
+      const oldValue = attr.value;
+
+      if (prev) prev[NEXT] = attr[NEXT];
+      if (attributes[CHILD] === attr) attributes[CHILD] = attr[NEXT];
+      attr[NEXT] = null;
+      attr[OWNER_ELEMENT] = null;
+      if (destination) adoptNodes([attr], destination);
+
+      if (attributeObserversActive) {
+        queueMutationRecord({
+          type: 'attributes',
+          target: ownerElement,
+          attributeName: qualifiedName,
+          attributeNamespace: namespace,
+          oldValue,
+        });
+      }
+      ownerElement[HOOKS].removeAttribute?.(
+        ownerElement as any,
+        qualifiedName,
+        namespace,
+      );
+      enqueueAttributeReaction(
+        ownerElement,
+        localName,
+        oldValue,
+        null,
+        namespace,
+      );
+      return attr;
+    }
+
+    prev = attr;
+    attr = attr[NEXT];
+  }
+
+  return null;
+}
+
+/** @internal */
+export function removeAttributeForAdoption(
+  attributes: NamedNodeMap,
+  attribute: Attr,
+  destination: Document,
+) {
+  const removed = removeNamedItemImmediately(
+    attributes,
+    (candidate) => candidate === attribute,
+    destination,
+  );
+
+  if (removed == null) {
+    throw new Error(
+      'The owner element does not contain the adopted attribute.',
+    );
+  }
+
+  return removed;
 }
