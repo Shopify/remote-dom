@@ -36,6 +36,23 @@ import {
 } from './selectors.ts';
 import {createDOMException} from './dom-exception.ts';
 
+export function toPropertyIndex(property: PropertyKey) {
+  if (typeof property !== 'string') return undefined;
+
+  const index = Number(property);
+
+  // Web IDL indexed properties use canonical ECMAScript array-index names:
+  // whole numbers from 0 through 2^32 - 2, without aliases like "01" or "1e0".
+  // These inexpensive numeric guards short-circuit before string coercion and
+  // linked-list item lookup, both measurably slower for non-index properties.
+  return Number.isInteger(index) &&
+    index >= 0 &&
+    index < 2 ** 32 - 1 &&
+    String(index) === property
+    ? index
+    : undefined;
+}
+
 export function isAttributeNode(node: Node): node is Attr {
   return node.nodeType === NODE_TYPE_ATTRIBUTE;
 }
