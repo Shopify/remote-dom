@@ -279,8 +279,10 @@ function matchesSelectorRecursive(
   const {combinator, matchers} = parts[parts.length - 1]!;
   if (combinator === COMBINATOR_INNER) {
     if (!matchesSelectorMatcher(element, matchers, scope)) return false;
-    const pp = parts.slice(0, -1);
-    return pp.length === 0 || matchesSelectorRecursive(element, pp, scope);
+    return (
+      parts.length === 1 ||
+      matchesSelectorRecursive(element, parts.slice(0, -1), scope)
+    );
   }
   const link =
     combinator === COMBINATOR_CHILD || combinator === COMBINATOR_DESCENDANT
@@ -296,9 +298,12 @@ function matchesSelectorRecursive(
     // For descendant/sibling combinators, search through all ancestors/siblings
     while (ref) {
       if (isElementNode(ref) && matchesSelectorMatcher(ref, matchers, scope)) {
-        const pp = parts.slice(0, -1);
-        if (pp.length === 0) return true;
-        if (matchesSelectorRecursive(ref, pp, scope)) return true;
+        if (
+          parts.length === 1 ||
+          matchesSelectorRecursive(ref, parts.slice(0, -1), scope)
+        ) {
+          return true;
+        }
       }
       ref = ref[link];
     }
@@ -317,8 +322,10 @@ function matchesSelectorRecursive(
     if (!isElementNode(ref) || !matchesSelectorMatcher(ref, matchers, scope)) {
       return false;
     }
-    const pp = parts.slice(0, -1);
-    return pp.length === 0 || matchesSelectorRecursive(ref, pp, scope);
+    return (
+      parts.length === 1 ||
+      matchesSelectorRecursive(ref, parts.slice(0, -1), scope)
+    );
   }
 }
 
