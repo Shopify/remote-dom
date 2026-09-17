@@ -9,7 +9,7 @@ catalog:
   '@quilted/threads': ^3.0.0
   '@types/react-dom': ^18.3.0
   htm: ^3.1.1
-  preact: ^10.23.0
+  preact: ^10.29.8
   react: ^18.3.0
   react-dom: ^18.3.0
   # The kitchen-sink example intentionally stays on Vite 5. See its README.
