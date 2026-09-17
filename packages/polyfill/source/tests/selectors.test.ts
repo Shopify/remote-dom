@@ -36,15 +36,31 @@ describe('selector parsing and matching', () => {
   });
 
   describe('parseSelector', () => {
-    it('parses element selectors', () => {
-      const parts = parseSelector('div');
+    it('parses element selectors with a precomputed HTML name', () => {
+      const parts = parseSelector('DiV');
       expect(parts).toHaveLength(1);
       expect(parts[0]!.matchers).toHaveLength(1);
-      expect(parts[0]!.matchers[0]!).toMatchObject({
+      expect(parts[0]!.matchers[0]!).toEqual({
         type: 1, // MatcherType.Element
-        name: 'div',
+        name: 'DiV',
         value: 'div',
       });
+    });
+
+    it('ASCII-lowercases only element comparison names', () => {
+      expect(parseSelector('ÄDiV')[0]!.matchers[0]).toEqual({
+        type: MatcherType.Element,
+        name: 'ÄDiV',
+        value: 'Ädiv',
+      });
+      expect(
+        parseSelector('DiV#MyID.Mixed[DATA-Key="VaLue"]')[0]!.matchers,
+      ).toEqual([
+        {type: MatcherType.Element, name: 'DiV', value: 'div'},
+        {type: MatcherType.Id, name: 'MyID', value: 'MyID'},
+        {type: MatcherType.Class, name: 'Mixed', value: 'Mixed'},
+        {type: 4, name: 'DATA-Key', value: 'VaLue'},
+      ]);
     });
 
     it('parses ID selectors', () => {
@@ -276,6 +292,28 @@ describe('selector parsing and matching', () => {
 
       const paragraphs = container.querySelectorAll('p');
       expect(paragraphs).toHaveLength(3);
+    });
+
+    it('only ASCII-lowercases HTML element selector names', () => {
+      const element = document.createElement('ÄDiV');
+      container.appendChild(element);
+
+      expect(container.querySelector('ÄDIV')).toBe(element);
+      expect(container.querySelectorAll('Ädiv')).toEqual([element]);
+      expect(container.querySelector('äDIV')).toBeNull();
+    });
+
+    it('preserves the original local name for foreign elements', () => {
+      const html = document.createElement('linearGradient');
+      const svg = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'linearGradient',
+      );
+      container.append(html, svg);
+
+      expect(container.querySelector('linearGradient')).toBe(html);
+      expect(container.querySelectorAll('linearGradient')).toEqual([html, svg]);
+      expect(container.querySelectorAll('LINEARGRADIENT')).toEqual([html]);
     });
 
     it('returns a static NodeList-compatible collection', () => {
@@ -632,7 +670,7 @@ describe('selector parsing and matching', () => {
 
     it('types standalone query results as elements', () => {
       const matches = querySelectorAll(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'p'},
+        {type: MatcherType.Element, name: 'p', value: 'p'},
       ]);
 
       expectTypeOf(matches).toEqualTypeOf<NodeList<PolyfillElement>>();
@@ -642,7 +680,7 @@ describe('selector parsing and matching', () => {
 
     it('selects by element matcher without parsing', () => {
       const paragraphs = querySelectorAll(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'p'},
+        {type: MatcherType.Element, name: 'p', value: 'p'},
       ]);
       expect(paragraphs).toHaveLength(2);
     });
@@ -732,23 +770,47 @@ describe('selector parsing and matching', () => {
       ).toBeNull();
     });
 
-    it('matches HTML tag names case-insensitively via element matcher', () => {
+    it('matches HTML tag names via the precomputed element matcher value', () => {
       const upper = querySelectorAll(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'ARTICLE'},
+        {type: MatcherType.Element, name: 'ARTICLE', value: 'article'},
       ]);
       expect(upper).toHaveLength(1);
 
-      const mixed = querySelectorAll(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'SpAn'},
+      const mixed = querySelector(asPolyfill(container), [
+        {type: MatcherType.Element, name: 'SpAn', value: 'span'},
       ]);
-      expect(mixed).toHaveLength(1);
-      expect(mixed[0]!.getAttribute('class')).toBe('highlight');
+      expect(mixed?.getAttribute('class')).toBe('highlight');
+
+      const mismatched = querySelector(asPolyfill(container), [
+        {type: MatcherType.Element, name: 'ARTICLE', value: 'not-article'},
+      ]);
+      expect(mismatched).toBeNull();
+    });
+
+    it('uses original names for foreign structured matcher comparisons', () => {
+      const html = document.createElement('linearGradient');
+      const svg = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'linearGradient',
+      );
+      container.append(html, svg);
+      const matcher = {
+        type: MatcherType.Element,
+        name: 'linearGradient',
+        value: 'lineargradient',
+      } as const;
+
+      expect(querySelector(asPolyfill(container), [matcher])).toBe(html);
+      expect(querySelectorAll(asPolyfill(container), [matcher])).toEqual([
+        html,
+        svg,
+      ]);
     });
 
     it('returns same results as string selectors for compound queries', () => {
       const byString = container.querySelectorAll('p.text.hidden');
       const byObject = querySelectorAll(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'p'},
+        {type: MatcherType.Element, name: 'p', value: 'p'},
         {type: MatcherType.Class, name: 'text'},
         {type: MatcherType.Class, name: 'hidden'},
       ]);
@@ -774,7 +836,7 @@ describe('selector parsing and matching', () => {
       ).toBeNull();
       expect(
         querySelectorAll(asPolyfill(container), [
-          {type: MatcherType.Element, name: 'table'},
+          {type: MatcherType.Element, name: 'table', value: 'table'},
         ]),
       ).toHaveLength(0);
     });
