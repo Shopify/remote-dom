@@ -36,25 +36,70 @@ export const MATCHER_PSEUDO = 5;
 export const MATCHER_FUNCTION = 6;
 export const MATCHER_SCOPE = 7;
 
-export type MatcherType =
-  | typeof MATCHER_UNKNOWN
-  | typeof MATCHER_ELEMENT
-  | typeof MATCHER_ID
-  | typeof MATCHER_CLASS
-  | typeof MATCHER_ATTRIBUTE
-  | typeof MATCHER_PSEUDO
-  | typeof MATCHER_FUNCTION
-  | typeof MATCHER_SCOPE;
+/** Matchers whose comparison value is carried entirely by `name`. */
+export interface NameMatcher {
+  type:
+    | typeof MATCHER_UNKNOWN
+    | typeof MATCHER_ELEMENT
+    | typeof MATCHER_ID
+    | typeof MATCHER_CLASS;
+  /**
+   * The CSS local-name query, literal ID (without `#`), or class token (without
+   * `.`). Spelling is preserved. For unknown tokens, only `*` matches.
+   */
+  name: string;
+  /** Unused by matching; the parser echoes `name` here. */
+  value?: string;
+}
+
+/** An attribute selector, optionally requiring an exact value. */
+export interface AttributeMatcher {
+  type: typeof MATCHER_ATTRIBUTE;
+  /** The attribute name as supplied in the selector. */
+  name: string;
+  /** Exact comparison text; `undefined` requests a presence check. */
+  value?: string;
+}
+
+/** A pseudo-class selector without an argument. */
+export interface PseudoMatcher {
+  type: typeof MATCHER_PSEUDO;
+  /** The ASCII-lowercased pseudo name, without its leading `:`. */
+  name: string;
+  /** Absent: arguments belong to a FunctionMatcher. */
+  value?: undefined;
+}
+
+/** A functional pseudo-class selector. */
+export interface FunctionMatcher {
+  type: typeof MATCHER_FUNCTION;
+  /** The ASCII-lowercased function name, without punctuation. */
+  name: string;
+  /** Raw argument text; an omitted value is matched as an empty argument. */
+  value?: string;
+}
+
+/** The internal scope marker used while matching relative selectors. */
+export interface ScopeMatcher {
+  type: typeof MATCHER_SCOPE;
+  /** A marker label; the scope element is supplied separately. */
+  name: ':scope';
+  /** Unused by scope matching. */
+  value?: undefined;
+}
+
+export type Matcher =
+  | NameMatcher
+  | AttributeMatcher
+  | PseudoMatcher
+  | FunctionMatcher
+  | ScopeMatcher;
+
+export type MatcherType = Matcher['type'];
 
 export interface Part {
   combinator: Combinator;
   matchers: Matcher[];
-}
-
-export interface Matcher {
-  type: MatcherType;
-  name: string;
-  value?: string;
 }
 
 const ELEMENT_SELECTOR_TEST = /[a-zA-Z]/;
@@ -158,20 +203,6 @@ export function parseSelector(selector: string, insideHas = false) {
       parts.push(part);
     }
 
-    let type: MatcherType = MATCHER_UNKNOWN;
-    if (token[2]) {
-      type = MATCHER_ATTRIBUTE;
-    } else if (token[6]) {
-      type = token[6] === '#' ? MATCHER_ID : MATCHER_CLASS;
-    } else if (token[8]) {
-      type = token[9] == null ? MATCHER_PSEUDO : MATCHER_FUNCTION;
-    } else if (token[7]) {
-      if (token[7] === '*') {
-        type = MATCHER_UNKNOWN; // Universal selector matches all
-      } else if (ELEMENT_SELECTOR_TEST.test(token[7])) {
-        type = MATCHER_ELEMENT;
-      }
-    }
     let value = token[4] ?? token[5] ?? token[7];
     if (token[9]) {
       [value, tokenizer.lastIndex] = readFunctionArgument(
@@ -180,17 +211,29 @@ export function parseSelector(selector: string, insideHas = false) {
       );
     }
     const name = token[8] ? asciiLowercase(token[8]) : (token[2] || token[7])!;
-    if (type === MATCHER_FUNCTION && (name === 'has' || name === 'not')) {
-      if (name === 'has' && insideHas) {
-        throw Error(':has() cannot be nested inside :has()');
+    let matcher: Matcher;
+    if (token[2]) {
+      matcher = {type: MATCHER_ATTRIBUTE, name, value};
+    } else if (token[8] && token[9] == null) {
+      matcher = {type: MATCHER_PSEUDO, name, value: undefined};
+    } else if (token[8]) {
+      matcher = {type: MATCHER_FUNCTION, name, value};
+      if (name === 'has' || name === 'not') {
+        if (name === 'has' && insideHas) {
+          throw Error(':has() cannot be nested inside :has()');
+        }
+        parseSelector(value!, insideHas || name === 'has');
       }
-      parseSelector(value!, insideHas || name === 'has');
+    } else {
+      let type: NameMatcher['type'] = MATCHER_UNKNOWN;
+      if (token[6]) {
+        type = token[6] === '#' ? MATCHER_ID : MATCHER_CLASS;
+      } else if (ELEMENT_SELECTOR_TEST.test(name)) {
+        type = MATCHER_ELEMENT;
+      }
+      matcher = {type, name, value};
     }
-    part.matchers.push({
-      type,
-      name,
-      value,
-    });
+    part.matchers.push(matcher);
   }
   return parts;
 }
