@@ -37,8 +37,17 @@ export const MATCHER_PSEUDO = 5;
 export const MATCHER_FUNCTION = 6;
 export const MATCHER_SCOPE = 7;
 
+/** Common fields available on every selector matcher. */
+export interface MatcherBase {
+  /**
+   * A precomputed name for matching HTML elements and attributes. Matcher
+   * kinds that do not perform namespace-sensitive name matching ignore it.
+   */
+  htmlName?: string;
+}
+
 /** Matchers whose comparison value is carried entirely by `name`. */
-export interface NameMatcher {
+export interface NameMatcher extends MatcherBase {
   type: typeof MATCHER_UNKNOWN | typeof MATCHER_ID | typeof MATCHER_CLASS;
   /**
    * The literal ID (without `#`) or class token (without `.`). Spelling is
@@ -50,16 +59,18 @@ export interface NameMatcher {
 }
 
 /** An attribute selector, optionally requiring an exact value. */
-export interface AttributeMatcher {
+export interface AttributeMatcher extends MatcherBase {
   type: typeof MATCHER_ATTRIBUTE;
   /** The attribute name as supplied in the selector. */
   name: string;
+  /** The precomputed ASCII-lowercased name used for HTML attributes. */
+  htmlName: string;
   /** Exact comparison text; `undefined` requests a presence check. */
   value?: string;
 }
 
 /** A pseudo-class selector without an argument. */
-export interface PseudoMatcher {
+export interface PseudoMatcher extends MatcherBase {
   type: typeof MATCHER_PSEUDO;
   /** The ASCII-lowercased pseudo name, without its leading `:`. */
   name: string;
@@ -68,7 +79,7 @@ export interface PseudoMatcher {
 }
 
 /** A functional pseudo-class selector. */
-export interface FunctionMatcher {
+export interface FunctionMatcher extends MatcherBase {
   type: typeof MATCHER_FUNCTION;
   /** The ASCII-lowercased function name, without punctuation. */
   name: string;
@@ -77,7 +88,7 @@ export interface FunctionMatcher {
 }
 
 /** The internal scope marker used while matching relative selectors. */
-export interface ScopeMatcher {
+export interface ScopeMatcher extends MatcherBase {
   type: typeof MATCHER_SCOPE;
   /** A marker label; the scope element is supplied separately. */
   name: ':scope';
@@ -86,13 +97,15 @@ export interface ScopeMatcher {
 }
 
 /** A local-name matcher with a precomputed HTML comparison name. */
-export interface NormalizedNameMatcher {
+export interface NormalizedNameMatcher extends MatcherBase {
   /** Selects local-name matching for CSS. */
   type: typeof MATCHER_ELEMENT;
   /** The original local-name query, preserving case for non-HTML elements. */
   name: string;
-  /** The precomputed ASCII-lowercased name used for HTML element comparisons. */
-  value: string;
+  /** The precomputed ASCII-lowercased name used for HTML elements. */
+  htmlName: string;
+  /** Unused by matching; the parser may echo `name` here. */
+  value?: string;
 }
 
 export type Matcher =
@@ -289,7 +302,11 @@ export function parseSelector(
     part.matchers.push({
       type,
       name,
-      value: type === MATCHER_ELEMENT ? asciiLowercase(name) : value,
+      htmlName:
+        type === MATCHER_ELEMENT || type === MATCHER_ATTRIBUTE
+          ? asciiLowercase(name)
+          : undefined,
+      value,
     } as Matcher);
     consumed = tokenizer.lastIndex;
   }
@@ -449,14 +466,14 @@ function matchesSelectorMatcher(
     }
     return true;
   }
-  const {type, name, value} = matcher;
+  const {type, name, htmlName, value} = matcher;
   switch (type) {
     case MATCHER_UNKNOWN:
       return name === '*'; // Universal selector
     case MATCHER_ELEMENT:
       return (
         element.localName ===
-        (element.namespaceURI === HTML_NAMESPACE ? value : name)
+        (element.namespaceURI === HTML_NAMESPACE ? htmlName : name)
       );
     case MATCHER_ID:
       return element.getAttributeNS(null, 'id') === name;
@@ -467,7 +484,7 @@ function matchesSelectorMatcher(
     case MATCHER_ATTRIBUTE:
       const attribute = element.getAttributeNS(
         null,
-        element.namespaceURI === HTML_NAMESPACE ? asciiLowercase(name) : name,
+        element.namespaceURI === HTML_NAMESPACE ? htmlName : name,
       );
       return value == null ? attribute != null : attribute === value;
     case MATCHER_SCOPE:
