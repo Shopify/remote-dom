@@ -381,13 +381,6 @@ function matchesSelectorRecursive(
   }
 }
 
-function getSelectorAttribute(element: Element, name: string) {
-  return element.getAttributeNS(
-    null,
-    element.namespaceURI === HTML_NAMESPACE ? asciiLowercase(name) : name,
-  );
-}
-
 function matchesSelectorMatcher(
   element: Element | null,
   matcher: Matcher | Matcher[],
@@ -418,7 +411,10 @@ function matchesSelectorMatcher(
       if (!classAttr) return false;
       return splitOnASCIIWhitespace(classAttr).includes(name);
     case MATCHER_ATTRIBUTE:
-      const attribute = getSelectorAttribute(element, name);
+      const attribute = element.getAttributeNS(
+        null,
+        element.namespaceURI === HTML_NAMESPACE ? asciiLowercase(name) : name,
+      );
       return value == null ? attribute != null : attribute === value;
     case MATCHER_SCOPE:
       return element === scope;
