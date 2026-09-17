@@ -210,6 +210,20 @@ export function parseSelector(selector: string, insideHas = false) {
       parts.push(part);
     }
 
+    let type: MatcherType = MATCHER_UNKNOWN;
+    if (token[2]) {
+      type = MATCHER_ATTRIBUTE;
+    } else if (token[6]) {
+      type = token[6] === '#' ? MATCHER_ID : MATCHER_CLASS;
+    } else if (token[8]) {
+      type = token[9] == null ? MATCHER_PSEUDO : MATCHER_FUNCTION;
+    } else if (token[7]) {
+      if (token[7] === '*') {
+        type = MATCHER_UNKNOWN; // Universal selector matches all
+      } else if (ELEMENT_SELECTOR_TEST.test(token[7])) {
+        type = MATCHER_ELEMENT;
+      }
+    }
     let value = token[4] ?? token[5] ?? token[7];
     if (token[9]) {
       [value, tokenizer.lastIndex] = readFunctionArgument(
@@ -218,31 +232,17 @@ export function parseSelector(selector: string, insideHas = false) {
       );
     }
     const name = token[8] ? asciiLowercase(token[8]) : (token[2] || token[7])!;
-    let matcher: Matcher;
-    if (token[2]) {
-      matcher = {type: MATCHER_ATTRIBUTE, name, value};
-    } else if (token[8] && token[9] == null) {
-      matcher = {type: MATCHER_PSEUDO, name, value: undefined};
-    } else if (token[8]) {
-      matcher = {type: MATCHER_FUNCTION, name, value};
-      if (name === 'has' || name === 'not') {
-        if (name === 'has' && insideHas) {
-          throw Error(':has() cannot be nested inside :has()');
-        }
-        parseSelector(value!, insideHas || name === 'has');
+    if (type === MATCHER_FUNCTION && (name === 'has' || name === 'not')) {
+      if (name === 'has' && insideHas) {
+        throw Error(':has() cannot be nested inside :has()');
       }
-    } else if (token[6]) {
-      matcher = {
-        type: token[6] === '#' ? MATCHER_ID : MATCHER_CLASS,
-        name,
-        value,
-      };
-    } else if (ELEMENT_SELECTOR_TEST.test(name)) {
-      matcher = {type: MATCHER_ELEMENT, name, value: asciiLowercase(name)};
-    } else {
-      matcher = {type: MATCHER_UNKNOWN, name, value};
+      parseSelector(value!, insideHas || name === 'has');
     }
-    part.matchers.push(matcher);
+    part.matchers.push({
+      type,
+      name,
+      value: type === MATCHER_ELEMENT ? asciiLowercase(name) : value,
+    } as Matcher);
   }
   return parts;
 }
