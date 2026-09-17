@@ -11,6 +11,7 @@ import {
   NAME,
   HTML_NAMESPACE,
   asciiLowercase,
+  splitOnASCIIWhitespace,
 } from './constants.ts';
 import type {Document} from './Document.ts';
 import type {DocumentFragment} from './DocumentFragment.ts';
@@ -106,9 +107,7 @@ export function getElementById(within: ParentNode, elementId: string) {
 }
 
 export function getElementsByClassName(within: ParentNode, classNames: string) {
-  const names = [...new Set(String(classNames).split(/[\t\n\f\r ]+/))].filter(
-    Boolean,
-  );
+  const names = [...new Set(splitOnASCIIWhitespace(String(classNames)))];
 
   return querySelectorAll(
     within,

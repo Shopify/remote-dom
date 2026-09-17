@@ -45,6 +45,10 @@ export const XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/';
 
 export type NamespaceURI = string | null;
 
+export function splitOnASCIIWhitespace(value: string) {
+  return value.split(/[\t\n\f\r ]+/).filter(Boolean);
+}
+
 export function asciiLowercase(value: string) {
   return value.replace(/[A-Z]/g, (character) =>
     String.fromCharCode(character.charCodeAt(0) + 0x20),
