@@ -1,5 +1,6 @@
 import {beforeEach, describe, expect, it} from 'vitest';
 
+import {HTML_NAMESPACE, SVG_NAMESPACE} from '../constants.ts';
 import {Window} from '../index.ts';
 
 describe('innerHTML parsing', () => {
@@ -158,5 +159,276 @@ describe('innerHTML parsing', () => {
 
     expect(element.children).toHaveLength(14);
     expect(element.innerHTML).toBe(html);
+  });
+
+  it('ignores unmatched closing tags without changing the open element', () => {
+    const element = document.createElement('div');
+
+    element.innerHTML =
+      '<section><span>Before</wrong><b>After</b></span></section>';
+
+    const section = element.firstElementChild!;
+    const span = section.firstElementChild!;
+    expect(span.children).toHaveLength(1);
+    expect(span.firstElementChild?.localName).toBe('b');
+    expect(element.innerHTML).toBe(
+      '<section><span>Before<b>After</b></span></section>',
+    );
+  });
+
+  it('closes intervening elements when an ancestor closing tag matches', () => {
+    const element = document.createElement('div');
+
+    element.innerHTML = '<section><span>Before</section><p>After</p>';
+
+    expect(element.children).toHaveLength(2);
+    expect(element.children[0]?.innerHTML).toBe('<span>Before</span>');
+    expect(element.children[1]?.localName).toBe('p');
+  });
+
+  it('creates parsed SVG elements in the SVG namespace', () => {
+    const element = document.createElement('div');
+
+    element.innerHTML =
+      '<svg><g><circle r="1"/><rect></rect></g></svg><p>After</p>';
+
+    const svg = element.children[0]!;
+    const group = svg.firstElementChild!;
+    const circle = group.children[0]!;
+    const rect = group.children[1]!;
+    expect(
+      [svg, group, circle, rect].map(({namespaceURI}) => namespaceURI),
+    ).toEqual([SVG_NAMESPACE, SVG_NAMESPACE, SVG_NAMESPACE, SVG_NAMESPACE]);
+    expect(svg).toBeInstanceOf(SVGElement);
+    expect(circle.getAttribute('r')).toBe('1');
+    expect(element.children[1]?.namespaceURI).toBe(HTML_NAMESPACE);
+    expect(element.innerHTML).toBe(
+      '<svg><g><circle r="1"></circle><rect></rect></g></svg><p>After</p>',
+    );
+  });
+
+  it('preserves parsed SVG names and inherits the SVG context namespace', () => {
+    const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
+
+    svg.innerHTML = '<linearGradient><stop/></linearGradient>';
+
+    const gradient = svg.firstElementChild!;
+    expect(gradient.localName).toBe('linearGradient');
+    expect(gradient.namespaceURI).toBe(SVG_NAMESPACE);
+    expect(gradient.firstElementChild?.namespaceURI).toBe(SVG_NAMESPACE);
+    expect(svg.innerHTML).toBe(
+      '<linearGradient><stop></stop></linearGradient>',
+    );
+  });
+
+  it('switches to HTML inside foreignObject and back to SVG for nested SVG', () => {
+    const element = document.createElement('div');
+
+    element.innerHTML =
+      '<svg><foreignObject><div></div><svg><circle/></svg><p></p></foreignObject><path/></svg>';
+
+    const svg = element.firstElementChild!;
+    const foreignObject = svg.children[0]!;
+    const htmlDiv = foreignObject.children[0]!;
+    const nestedSvg = foreignObject.children[1]!;
+    const htmlParagraph = foreignObject.children[2]!;
+    const path = svg.children[1]!;
+    expect(foreignObject.namespaceURI).toBe(SVG_NAMESPACE);
+    expect(htmlDiv.namespaceURI).toBe(HTML_NAMESPACE);
+    expect(nestedSvg.namespaceURI).toBe(SVG_NAMESPACE);
+    expect(nestedSvg.firstElementChild?.namespaceURI).toBe(SVG_NAMESPACE);
+    expect(htmlParagraph.namespaceURI).toBe(HTML_NAMESPACE);
+    expect(path.namespaceURI).toBe(SVG_NAMESPACE);
+  });
+
+  it.each(['title', 'desc', 'foreignObject', 's:foreignObject'])(
+    'switches to HTML inside the SVG %s integration point',
+    (name) => {
+      let constructions = 0;
+      class IntegrationLabel extends HTMLElement {
+        constructor() {
+          super();
+          constructions += 1;
+        }
+      }
+      customElements.define('x-integration-label', IntegrationLabel);
+      const context = document.createElementNS(SVG_NAMESPACE, name);
+
+      context.innerHTML = '<x-integration-label></x-integration-label>';
+
+      expect(context.firstElementChild?.namespaceURI).toBe(HTML_NAMESPACE);
+      expect(context.firstElementChild).toBeInstanceOf(IntegrationLabel);
+      expect(constructions).toBe(1);
+    },
+  );
+
+  it('switches parsed SVG title and desc descendants to HTML', () => {
+    const element = document.createElement('div');
+    element.innerHTML =
+      '<svg><title><x-title></x-title></title><desc><x-desc></x-desc></desc></svg>';
+
+    const svg = element.firstElementChild!;
+    expect(svg.children[0]?.firstElementChild?.namespaceURI).toBe(
+      HTML_NAMESPACE,
+    );
+    expect(svg.children[1]?.firstElementChild?.namespaceURI).toBe(
+      HTML_NAMESPACE,
+    );
+  });
+
+  it.each(['foreignobject', 'ForeignObject', 'g'])(
+    'keeps children of SVG %s controls in SVG',
+    (name) => {
+      let constructions = 0;
+      class SvgControlLabel extends HTMLElement {
+        constructor() {
+          super();
+          constructions += 1;
+        }
+      }
+      customElements.define('x-svg-control-label', SvgControlLabel);
+      const context = document.createElementNS(SVG_NAMESPACE, name);
+
+      context.innerHTML = '<x-svg-control-label></x-svg-control-label>';
+
+      expect(context.firstElementChild?.namespaceURI).toBe(SVG_NAMESPACE);
+      expect(context.firstElementChild).not.toBeInstanceOf(SvgControlLabel);
+      expect(constructions).toBe(0);
+    },
+  );
+
+  it('places HTML breakout elements after open SVG frames', () => {
+    const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
+
+    svg.innerHTML = '<g><p>one</p><circle/></g><path/>';
+
+    expect([...svg.children].map(({localName}) => localName)).toEqual([
+      'g',
+      'p',
+      'circle',
+      'path',
+    ]);
+    expect([...svg.children].map(({namespaceURI}) => namespaceURI)).toEqual([
+      SVG_NAMESPACE,
+      HTML_NAMESPACE,
+      SVG_NAMESPACE,
+      SVG_NAMESPACE,
+    ]);
+    expect(svg.children[0]?.childNodes).toHaveLength(0);
+  });
+
+  it.each(['div', 'span', 'h1', 'img', 'table'])(
+    'creates SVG breakout tag %s in the HTML namespace',
+    (name) => {
+      const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
+
+      svg.innerHTML = `<${name}></${name}>`;
+
+      expect(svg.firstElementChild?.namespaceURI).toBe(HTML_NAMESPACE);
+    },
+  );
+
+  it.each([
+    ['<font></font>', SVG_NAMESPACE],
+    ['<font title="x"></font>', SVG_NAMESPACE],
+    ['<font title=" color "></font>', SVG_NAMESPACE],
+    ['<font data-color="red"></font>', SVG_NAMESPACE],
+    ['<font color="red"></font>', HTML_NAMESPACE],
+    ['<font FACE="serif"></font>', HTML_NAMESPACE],
+    ['<font size="2"></font>', HTML_NAMESPACE],
+  ])('conditionally breaks SVG parsing for %s', (html, namespace) => {
+    const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
+
+    svg.innerHTML = html;
+
+    expect(svg.firstElementChild?.namespaceURI).toBe(namespace);
+  });
+
+  it('keeps SVG frames when font trigger words are only attribute values', () => {
+    const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
+
+    svg.innerHTML = '<g><font title=" color ">text</font><circle/></g>';
+
+    const group = svg.firstElementChild!;
+    expect([...group.children].map(({localName}) => localName)).toEqual([
+      'font',
+      'circle',
+    ]);
+    expect([...group.children].map(({namespaceURI}) => namespaceURI)).toEqual([
+      SVG_NAMESPACE,
+      SVG_NAMESPACE,
+    ]);
+  });
+
+  it('preserves literal-colon parser names without weakening the public API', () => {
+    const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
+
+    expect(() => {
+      svg.innerHTML = '<xml:item></xml:item><p:shape/>';
+    }).not.toThrow();
+
+    expect(
+      [...svg.children].map(({localName, namespaceURI, prefix}) => ({
+        localName,
+        namespaceURI,
+        prefix,
+      })),
+    ).toEqual([
+      {localName: 'xml:item', namespaceURI: SVG_NAMESPACE, prefix: null},
+      {localName: 'p:shape', namespaceURI: SVG_NAMESPACE, prefix: null},
+    ]);
+    expect(() =>
+      document.createElementNS(SVG_NAMESPACE, 'xml:item'),
+    ).toThrowError(expect.objectContaining({name: 'NamespaceError'}));
+    expect(() => document.createElementNS(null, 'p:shape')).toThrowError(
+      expect.objectContaining({name: 'NamespaceError'}),
+    );
+
+    const publicShape = document.createElementNS(SVG_NAMESPACE, 'p:shape');
+    expect(publicShape.localName).toBe('shape');
+    expect(publicShape.prefix).toBe('p');
+  });
+
+  it('keeps template insertion targets when ignoring unmatched closing tags', () => {
+    const element = document.createElement('div');
+
+    element.innerHTML = '<template><p>a</wrong><b>b</b></template><i>c</i>';
+
+    const template = element.children[0] as HTMLTemplateElement;
+    const paragraph = template.content.children[0]!;
+    expect(element.children).toHaveLength(2);
+    expect(paragraph.localName).toBe('p');
+    expect(paragraph.children).toHaveLength(1);
+    expect(paragraph.firstElementChild?.localName).toBe('b');
+    expect(element.children[1]?.localName).toBe('i');
+    expect(element.innerHTML).toBe(
+      '<template><p>a<b>b</b></p></template><i>c</i>',
+    );
+  });
+
+  it('does not match ancestor closing tags across an HTML template', () => {
+    const element = document.createElement('div');
+
+    element.innerHTML = '<section><template>Before</section>After</template>';
+
+    const section = element.firstElementChild!;
+    const template = section.firstElementChild as HTMLTemplateElement;
+    expect(element.children).toEqual([section]);
+    expect(template.content.textContent).toBe('BeforeAfter');
+    expect(element.innerHTML).toBe(
+      '<section><template>BeforeAfter</template></section>',
+    );
+  });
+
+  it('keeps SVG template descendants in the SVG element', () => {
+    const element = document.createElement('div');
+
+    element.innerHTML = '<svg><template><circle/></template></svg>';
+
+    const template = element.firstElementChild?.firstElementChild!;
+    expect(template.namespaceURI).toBe(SVG_NAMESPACE);
+    expect(template.childNodes).toHaveLength(1);
+    expect(template.firstElementChild?.localName).toBe('circle');
+    expect('content' in template).toBe(false);
   });
 });
