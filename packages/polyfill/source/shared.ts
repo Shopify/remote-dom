@@ -7,6 +7,7 @@ import {
   NODE_TYPE_DOCUMENT_FRAGMENT,
   NODE_TYPE_ELEMENT,
   NODE_TYPE_TEXT,
+  NODE_TYPE_DOCUMENT,
   CHILD,
   NEXT,
   NAME,
@@ -33,6 +34,16 @@ import {
   querySelector,
   querySelectorAll,
 } from './selectors.ts';
+
+export function createNotSupportedError(message: string) {
+  if (typeof DOMException === 'function') {
+    return new DOMException(message, 'NotSupportedError');
+  }
+
+  const error = new Error(message);
+  error.name = 'NotSupportedError';
+  return error;
+}
 
 export function isAttributeNode(node: Node): node is Attr {
   return node.nodeType === NODE_TYPE_ATTRIBUTE;
@@ -126,6 +137,10 @@ export function cloneNode(
   deep?: boolean,
   document: Document = node.ownerDocument,
 ): Node {
+  if (node.nodeType === NODE_TYPE_DOCUMENT) {
+    throw createNotSupportedError('Cannot clone a document node');
+  }
+
   const cloned = cloneNodeShallow(node, document);
 
   if (!deep || (!isElementNode(node) && !isDocumentFragmentNode(node))) {
