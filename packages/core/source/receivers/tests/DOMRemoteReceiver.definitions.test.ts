@@ -306,6 +306,24 @@ describe('DOMRemoteReceiver member definitions', () => {
     ).toThrow(/not allowed/);
   });
 
+  it('keeps compiled definitions separate for each receiver', () => {
+    const strings = create({
+      properties: {value: {type: 'string', attribute: false}},
+    });
+    const booleans = create({properties: {value: {type: 'boolean'}}});
+    insert(strings, {value: 'Hello'});
+    insert(booleans, {value: true}, {value: ''});
+    expect(() => update(strings, 'value', false)).toThrow(/not allowed/);
+    expect(() => update(booleans, 'value', 'Hello')).toThrow(/not allowed/);
+    expect(() =>
+      update(strings, 'value', '', UPDATE_PROPERTY_TYPE_ATTRIBUTE),
+    ).toThrow(/not allowed/);
+    update(booleans, 'value', 'false', UPDATE_PROPERTY_TYPE_ATTRIBUTE);
+    expect((booleans.root.firstChild as Element).getAttribute('value')).toBe(
+      'false',
+    );
+  });
+
   it('does not inherit property or event names from definition prototypes', () => {
     const receiver = create({
       properties: Object.assign(Object.create({inherited: {}}), {label: {}}),

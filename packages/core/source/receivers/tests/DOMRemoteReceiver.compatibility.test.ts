@@ -173,6 +173,29 @@ describe('DOMRemoteReceiver compatibility defaults', () => {
     expect(retain).not.toHaveBeenCalled();
   });
 
+  it('keeps additional exclusions separate for each receiver', () => {
+    const restricted = new DOMRemoteReceiver({
+      elements: ['ui-button'],
+      blockedProperties: ['LABEL'],
+    });
+    const ordinary = new DOMRemoteReceiver({elements: ['ui-button']});
+    expect(() => insert(restricted, {label: 'Restricted'})).toThrow(
+      /not allowed/,
+    );
+    expect(() => insert(restricted, {}, {label: 'Restricted'})).toThrow(
+      /not allowed/,
+    );
+    insert(ordinary, {label: 'Allowed'});
+    expect(
+      (ordinary.root.firstChild as HTMLElement & {label: string}).label,
+    ).toBe('Allowed');
+    expect(() =>
+      ordinary.connection.mutate([
+        [MUTATION_TYPE_UPDATE_PROPERTY, 'button', 'innerHTML', 'value'],
+      ]),
+    ).toThrow(/not allowed/);
+  });
+
   it('preserves custom methods and focus, but rejects inherited DOM methods', () => {
     const receiver = new DOMRemoteReceiver({
       elements: ['compatibility-button'],

@@ -159,51 +159,11 @@ export class DOMRemoteReceiver {
 
     const {attached} = this;
     const destroyTimeouts = new Map<string, number>();
-    const policies = new Map<string, ElementPolicy>();
     const nodePolicies = new WeakMap<Node, ElementPolicy>();
-    const blockedProperties = new Set(
-      options.blockedProperties?.map((name) => name.toLowerCase()),
+    const assertPropertyAllowed = createPropertyValidator(
+      options.blockedProperties,
     );
-    const entries: [string, DOMRemoteElementPolicy][] = Array.isArray(elements)
-      ? elements.map((name) => [name, {}])
-      : Object.entries(elements ?? {});
-
-    for (const [name, policy] of entries) {
-      const properties =
-        policy.properties && new Map<string, DOMRemotePropertyPolicy['type']>();
-      let attributes = policy.attributes && new Set(policy.attributes);
-      if (properties) {
-        attributes ??= new Set();
-        for (const [property, {type, attribute = true}] of Object.entries(
-          policy.properties!,
-        )) {
-          properties.set(property, type);
-          if (attribute !== false) {
-            attributes.add(
-              typeof attribute === 'string'
-                ? attribute
-                : property.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase(),
-            );
-          }
-        }
-      }
-      policies.set(name, {
-        element: name.toLowerCase(),
-        properties,
-        attributes,
-        events: policy.events && new Set(Object.keys(policy.events)),
-        methods: policy.methods && new Set(policy.methods),
-      });
-    }
-
-    function policyFor(name: string) {
-      let policy = policies.get(name);
-      if (!policy && elements === undefined) {
-        policy = {element: name.toLowerCase()};
-        policies.set(name, policy);
-      }
-      return policy;
-    }
+    const policyFor = createElementPolicyResolver(elements);
 
     this.connection = createRemoteConnection({
       call: (id, method, ...args) => {
@@ -288,46 +248,6 @@ export class DOMRemoteReceiver {
         (text as Text | Comment).data = newText;
       },
     });
-
-    function assertPropertyAllowed(
-      policy: ElementPolicy | undefined,
-      property: string,
-      value: unknown,
-      type: number,
-    ) {
-      if (typeof property !== 'string')
-        throw new Error('Member name is not allowed');
-      if (!policy) rejectProperty(property, type);
-      const allowed = allowedMembersFor(policy, type);
-      if (allowed && !allowed.has(property)) rejectProperty(property, type);
-      if (type === UPDATE_PROPERTY_TYPE_EVENT_LISTENER) return;
-
-      const normalized = property.toLowerCase();
-      if (
-        isBlockedProperty(policy, property, normalized, type) ||
-        !isValueAllowed(policy, property, value, type) ||
-        isUnsafeUrlValue(policy, normalized, value, type)
-      ) {
-        rejectProperty(property, type);
-      }
-    }
-
-    function isBlockedProperty(
-      policy: ElementPolicy,
-      property: string,
-      normalized: string,
-      type: number,
-    ) {
-      return (
-        BLOCKED_PROPERTIES.has(normalized) ||
-        normalized.startsWith('on') ||
-        blockedProperties.has(normalized) ||
-        (type === UPDATE_PROPERTY_TYPE_PROPERTY &&
-          ((property === 'protocol' &&
-            (policy.element === 'a' || policy.element === 'area')) ||
-            isNativeMethod(property)))
-      );
-    }
 
     function validate(node: RemoteNodeSerialization) {
       const pending = [node];
@@ -525,6 +445,107 @@ export class DOMRemoteReceiver {
 
     return fragment;
   }
+}
+
+function createElementPolicyResolver(
+  elements: DOMRemoteReceiverOptions['elements'],
+) {
+  const policies = new Map<string, ElementPolicy>();
+  const entries: [string, DOMRemoteElementPolicy][] = Array.isArray(elements)
+    ? elements.map((name) => [name, {}])
+    : Object.entries(elements ?? {});
+
+  for (const [name, definition] of entries) {
+    let properties: Map<string, DOMRemotePropertyPolicy['type']> | undefined;
+    let attributes = definition.attributes && new Set(definition.attributes);
+    if (definition.properties) {
+      properties = new Map();
+      attributes ??= new Set();
+      for (const [property, {type, attribute = true}] of Object.entries(
+        definition.properties,
+      )) {
+        properties.set(property, type);
+        if (attribute !== false) {
+          attributes.add(
+            typeof attribute === 'string'
+              ? attribute
+              : property.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase(),
+          );
+        }
+      }
+    }
+    policies.set(name, {
+      element: name.toLowerCase(),
+      properties,
+      attributes,
+      events: definition.events && new Set(Object.keys(definition.events)),
+      methods: definition.methods && new Set(definition.methods),
+    });
+  }
+
+  return function policyFor(name: string) {
+    let policy = policies.get(name);
+    if (!policy && elements === undefined) {
+      policy = {element: name.toLowerCase()};
+      policies.set(name, policy);
+    }
+    return policy;
+  };
+}
+
+function createPropertyValidator(
+  additionalBlockedProperties: readonly string[] = [],
+) {
+  const blockedProperties = new Set(BLOCKED_PROPERTIES);
+  for (const property of additionalBlockedProperties) {
+    blockedProperties.add(property.toLowerCase());
+  }
+
+  return function assertPropertyAllowed(
+    policy: ElementPolicy | undefined,
+    property: string,
+    value: unknown,
+    type: number,
+  ) {
+    if (typeof property !== 'string')
+      throw new Error('Member name is not allowed');
+    if (!policy) rejectProperty(property, type);
+    const allowed = allowedMembersFor(policy, type);
+    if (allowed && !allowed.has(property)) rejectProperty(property, type);
+    if (type === UPDATE_PROPERTY_TYPE_EVENT_LISTENER) return;
+
+    const normalized = property.toLowerCase();
+    if (
+      isBlockedProperty(
+        policy,
+        property,
+        normalized,
+        type,
+        blockedProperties,
+      ) ||
+      !isValueAllowed(policy, property, value, type) ||
+      isUnsafeUrlValue(policy, normalized, value, type)
+    ) {
+      rejectProperty(property, type);
+    }
+  };
+}
+
+function isBlockedProperty(
+  policy: ElementPolicy,
+  property: string,
+  normalized: string,
+  type: number,
+  blockedProperties: ReadonlySet<string>,
+) {
+  return (
+    blockedProperties.has(normalized) ||
+    normalized.startsWith('on') ||
+    (type === UPDATE_PROPERTY_TYPE_PROPERTY &&
+      ((property === 'protocol' &&
+        (policy.element === 'a' || policy.element === 'area')) ||
+        isNativeMethod(property)))
+  );
 }
 
 function isMethodAllowed(policy: ElementPolicy, method: string) {
