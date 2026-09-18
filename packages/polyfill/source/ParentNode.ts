@@ -12,10 +12,21 @@ import {
 } from './constants.ts';
 import type {Node} from './Node.ts';
 import type {Element} from './Element.ts';
-import {ChildNode, INSERT_NODE, REPLACE_NODE, toNode} from './ChildNode.ts';
+import {
+  ChildNode,
+  INSERT_NODE,
+  PREFLIGHT_INSERTIONS,
+  REPLACE_NODE,
+  toNode,
+} from './ChildNode.ts';
 import {NodeList} from './NodeList.ts';
 import {querySelectorAll, querySelector} from './selectors.ts';
-import {isElementNode, selfAndDescendants} from './shared.ts';
+import {
+  adoptNodes,
+  collectAdoptionSnapshot,
+  isElementNode,
+  selfAndDescendants,
+} from './shared.ts';
 import {
   childListObserversActive,
   mutationNodeList,
@@ -34,6 +45,7 @@ import {
 interface PreparedInsertionRoot {
   node: Node;
   nodes: Node[] | undefined;
+  adoption: Node[] | undefined;
   shouldDisconnect: boolean;
   source?: {
     parent: ParentNode;
@@ -109,7 +121,7 @@ export class ParentNode extends ChildNode {
       : undefined;
     const previousSibling = child[PREV];
     const nextSibling = child[NEXT];
-    const childNodesIndex = this.detachChild(child);
+    const childNodesIndex = detachChild(this, child);
 
     if (disconnectedNodes) {
       for (const node of disconnectedNodes) node[IS_CONNECTED] = false;
@@ -146,7 +158,7 @@ export class ParentNode extends ChildNode {
     let before = next;
     while (before && insertionRoots.has(before)) before = before[NEXT];
 
-    const oldChildIndex = this.detachChild(oldChild);
+    const oldChildIndex = detachChild(this, oldChild);
     if (removedNodes) {
       for (const node of removedNodes) node[IS_CONNECTED] = false;
 
@@ -195,6 +207,13 @@ export class ParentNode extends ChildNode {
     this.validateInsertion(child, before);
     this.insertIntoValidated(child, before, hookEffects);
     return child;
+  }
+
+  [PREFLIGHT_INSERTIONS](children: Node[]) {
+    for (const child of children) {
+      this.validateInsertion(child, null);
+      this.prepareInsertion(child);
+    }
   }
 
   private validateInsertion(child: Node, before: Node | null) {
@@ -253,17 +272,23 @@ export class ParentNode extends ChildNode {
     }
 
     const destinationIsConnected = this[IS_CONNECTED];
+    const ownerDocument = this[OWNER_DOCUMENT];
     const insertion: PreparedInsertionRoot[] = [];
     for (const node of roots) {
       const wasConnected = node[IS_CONNECTED];
-      insertion.push({
-        node,
-        nodes:
-          wasConnected || destinationIsConnected
-            ? selfAndDescendants(node)
-            : undefined,
-        shouldDisconnect: wasConnected,
-      });
+      const shouldTraverse = wasConnected || destinationIsConnected;
+      let nodes: Node[] | undefined;
+      let adoption: Node[] | undefined;
+
+      if (node[OWNER_DOCUMENT] === ownerDocument) {
+        if (shouldTraverse) nodes = selfAndDescendants(node);
+      } else {
+        const snapshot = collectAdoptionSnapshot(node);
+        adoption = snapshot.nodes;
+        if (shouldTraverse) nodes = snapshot.treeNodes;
+      }
+
+      insertion.push({node, nodes, adoption, shouldDisconnect: wasConnected});
     }
 
     return insertion;
@@ -280,7 +305,7 @@ export class ParentNode extends ChildNode {
         const nextSibling = prepared.node[NEXT];
         prepared.source = {
           parent: sourceParent,
-          index: sourceParent.detachChild(prepared.node),
+          index: detachChild(sourceParent, prepared.node),
           previousSibling,
           nextSibling,
         };
@@ -294,33 +319,17 @@ export class ParentNode extends ChildNode {
       prepared.nextSibling = attached.nextSibling;
     }
 
+    const ownerDocument = this[OWNER_DOCUMENT];
+    for (const {adoption} of insertion) {
+      if (adoption) adoptNodes(adoption, ownerDocument);
+    }
+
     const isConnected = this[IS_CONNECTED];
     for (const {nodes} of insertion) {
       if (nodes) {
         for (const node of nodes) node[IS_CONNECTED] = isConnected;
       }
     }
-  }
-
-  private detachChild(child: Node) {
-    const previous = child[PREV];
-    const next = child[NEXT];
-    if (previous) previous[NEXT] = next;
-    else this[CHILD] = next;
-    if (next) next[PREV] = previous;
-
-    const childNodesIndex = this.childNodes.indexOf(child);
-    this.childNodes.splice(childNodesIndex, 1);
-
-    if (isElementNode(child)) {
-      this.children.splice(this.children.indexOf(child), 1);
-    }
-
-    child[PARENT] = null;
-    child[NEXT] = null;
-    child[PREV] = null;
-
-    return childNodesIndex;
   }
 
   private attachChild(child: Node, before: Node | null) {
@@ -347,7 +356,6 @@ export class ParentNode extends ChildNode {
 
     const isElement = isElementNode(child);
     child[PARENT] = this;
-    child[OWNER_DOCUMENT] = this[OWNER_DOCUMENT];
 
     let insertIndex: number;
     if (before) {
@@ -494,11 +502,86 @@ export class ParentNode extends ChildNode {
     nodes: Node[],
     callbackName: 'connectedCallback' | 'disconnectedCallback',
   ) {
-    for (const node of nodes) {
-      const callback = (node as any)[callbackName];
-      if (typeof callback === 'function') {
-        enqueueCustomElementReaction(node, () => callback.call(node));
-      }
+    enqueueTreeReactions(nodes, callbackName);
+  }
+}
+
+export function removeChildForAdoption(
+  parent: ParentNode,
+  child: Node,
+  adoption: ReturnType<typeof collectAdoptionSnapshot>,
+  destination: Node['ownerDocument'],
+) {
+  if (child.parentNode !== parent) throw Error(`not a child of this node`);
+
+  const disconnectedNodes = parent[IS_CONNECTED]
+    ? adoption.treeNodes
+    : undefined;
+  const previousSibling = child[PREV];
+  const nextSibling = child[NEXT];
+  const childNodesIndex = detachChild(parent, child);
+
+  if (disconnectedNodes) {
+    for (const node of disconnectedNodes) node[IS_CONNECTED] = false;
+  }
+  adoptNodes(adoption.nodes, destination);
+
+  if (childListObserversActive) {
+    queueMutationRecord({
+      type: 'childList',
+      target: parent,
+      removedNodes: mutationNodeList(child),
+      previousSibling,
+      nextSibling,
+    });
+  }
+
+  if (disconnectedNodes) {
+    enqueueTreeReactions(disconnectedNodes, 'disconnectedCallback');
+  }
+
+  const effects: HookEffect[] = [];
+  if (
+    parent.nodeType === NODE_TYPE_ELEMENT &&
+    !isCoveredByPendingPublication(parent)
+  ) {
+    effects.push([
+      () =>
+        (parent as any)[HOOKS].removeChild?.(parent, child, childNodesIndex),
+    ]);
+  }
+  performHookEffects(effects);
+}
+
+function detachChild(parent: ParentNode, child: Node) {
+  const previous = child[PREV];
+  const next = child[NEXT];
+  if (previous) previous[NEXT] = next;
+  else parent[CHILD] = next;
+  if (next) next[PREV] = previous;
+
+  const childNodesIndex = parent.childNodes.indexOf(child);
+  parent.childNodes.splice(childNodesIndex, 1);
+
+  if (isElementNode(child)) {
+    parent.children.splice(parent.children.indexOf(child), 1);
+  }
+
+  child[PARENT] = null;
+  child[NEXT] = null;
+  child[PREV] = null;
+
+  return childNodesIndex;
+}
+
+function enqueueTreeReactions(
+  nodes: Node[],
+  callbackName: 'connectedCallback' | 'disconnectedCallback',
+) {
+  for (const node of nodes) {
+    const callback = (node as any)[callbackName];
+    if (typeof callback === 'function') {
+      enqueueCustomElementReaction(node, () => callback.call(node));
     }
   }
 }
