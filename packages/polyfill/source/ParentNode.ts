@@ -12,7 +12,7 @@ import {
 } from './constants.ts';
 import type {Node} from './Node.ts';
 import type {Element} from './Element.ts';
-import {ChildNode, toNode} from './ChildNode.ts';
+import {ChildNode, INSERT_NODE, REPLACE_NODE, toNode} from './ChildNode.ts';
 import {NodeList} from './NodeList.ts';
 import {querySelectorAll, querySelector} from './selectors.ts';
 import {isElementNode, selfAndDescendants} from './shared.ts';
@@ -51,24 +51,22 @@ export class ParentNode extends ChildNode {
   readonly children = new NodeList<Element>();
 
   appendChild<T extends Node>(child: T) {
-    return performWithCustomElementReactions(() => {
-      this.insertInto(child, null);
-      return child;
-    });
+    return performWithCustomElementReactions(() =>
+      this[INSERT_NODE](child, null),
+    );
   }
 
   insertBefore<T extends Node>(child: T, ref?: Node | null) {
-    return performWithCustomElementReactions(() => {
-      this.insertInto(child, ref || null);
-      return child;
-    });
+    return performWithCustomElementReactions(() =>
+      this[INSERT_NODE](child, ref || null),
+    );
   }
 
   append(...nodes: (Node | string)[]) {
     return performWithCustomElementReactions(() => {
       for (const child of nodes) {
         if (child == null) continue;
-        this.insertInto(toNode(this, child), null);
+        this[INSERT_NODE](toNode(this, child), null);
       }
     });
   }
@@ -78,7 +76,7 @@ export class ParentNode extends ChildNode {
       const before = this.firstChild;
       for (const child of nodes) {
         if (child == null) continue;
-        this.insertInto(toNode(this, child), before);
+        this[INSERT_NODE](toNode(this, child), before);
       }
     });
   }
@@ -91,7 +89,7 @@ export class ParentNode extends ChildNode {
       }
       for (const child of nodes) {
         if (child == null) continue;
-        this.insertInto(toNode(this, child), null);
+        this[INSERT_NODE](toNode(this, child), null);
       }
     });
   }
@@ -126,52 +124,59 @@ export class ParentNode extends ChildNode {
   }
 
   replaceChild(newChild: Node, oldChild: Node) {
-    return performWithCustomElementReactions(() => {
-      if (oldChild.parentNode !== this) {
-        throw Error('reference node is not a child of this parent');
-      }
+    return performWithCustomElementReactions(() =>
+      this[REPLACE_NODE](newChild, oldChild),
+    );
+  }
 
-      const previous = oldChild[PREV];
-      const next = oldChild[NEXT];
-      this.validateInsertion(newChild, next);
+  [REPLACE_NODE](newChild: Node, oldChild: Node, hookEffects?: HookEffect[]) {
+    if (oldChild.parentNode !== this) {
+      throw Error('reference node is not a child of this parent');
+    }
 
-      const insertion = this.prepareInsertion(newChild);
-      const removedNodes = this[IS_CONNECTED]
-        ? selfAndDescendants(oldChild)
-        : undefined;
-      const insertionRoots = new Set(insertion.map(({node}) => node));
-      let before = next;
-      while (before && insertionRoots.has(before)) before = before[NEXT];
+    const previous = oldChild[PREV];
+    const next = oldChild[NEXT];
+    this.validateInsertion(newChild, next);
 
-      const oldChildIndex = this.detachChild(oldChild);
-      if (removedNodes) {
-        for (const node of removedNodes) node[IS_CONNECTED] = false;
+    const insertion = this.prepareInsertion(newChild);
+    const removedNodes = this[IS_CONNECTED]
+      ? selfAndDescendants(oldChild)
+      : undefined;
+    const insertionRoots = new Set(insertion.map(({node}) => node));
+    let before = next;
+    while (before && insertionRoots.has(before)) before = before[NEXT];
 
-        const removedNodeSet = new Set(removedNodes);
-        for (const prepared of insertion) {
-          if (removedNodeSet.has(prepared.node)) {
-            prepared.shouldDisconnect = false;
-          }
+    const oldChildIndex = this.detachChild(oldChild);
+    if (removedNodes) {
+      for (const node of removedNodes) node[IS_CONNECTED] = false;
+
+      const removedNodeSet = new Set(removedNodes);
+      for (const prepared of insertion) {
+        if (removedNodeSet.has(prepared.node)) {
+          prepared.shouldDisconnect = false;
         }
       }
+    }
 
-      this.commitInsertion(insertion, before);
-      const destinationIsConnected = this[IS_CONNECTED];
+    this.commitInsertion(insertion, before);
+    const destinationIsConnected = this[IS_CONNECTED];
 
-      this.queueRemovalMutationRecord(this, oldChild, previous, next);
-      this.queueInsertionMutationRecords(insertion);
+    this.queueRemovalMutationRecord(this, oldChild, previous, next);
+    this.queueInsertionMutationRecords(insertion);
 
-      if (removedNodes) {
-        this.enqueueTreeReactions(removedNodes, 'disconnectedCallback');
-      }
-      this.enqueueInsertionReactions(insertion, destinationIsConnected);
-      performHookEffects([
+    if (removedNodes) {
+      this.enqueueTreeReactions(removedNodes, 'disconnectedCallback');
+    }
+    this.enqueueInsertionReactions(insertion, destinationIsConnected);
+    this.performOrCollectHookEffects(
+      [
         ...this.collectRemovalHookEffects(oldChild, oldChildIndex),
         ...this.collectInsertionHookEffects(insertion),
-      ]);
+      ],
+      hookEffects,
+    );
 
-      return oldChild;
-    });
+    return oldChild;
   }
 
   querySelectorAll(selector: string) {
@@ -182,9 +187,14 @@ export class ParentNode extends ChildNode {
     return querySelector(this, selector);
   }
 
-  private insertInto(child: Node, before: Node | null) {
+  [INSERT_NODE]<T extends Node>(
+    child: T,
+    before: Node | null,
+    hookEffects?: HookEffect[],
+  ) {
     this.validateInsertion(child, before);
-    this.insertIntoValidated(child, before);
+    this.insertIntoValidated(child, before, hookEffects);
+    return child;
   }
 
   private validateInsertion(child: Node, before: Node | null) {
@@ -203,7 +213,11 @@ export class ParentNode extends ChildNode {
     }
   }
 
-  private insertIntoValidated(child: Node, before: Node | null) {
+  private insertIntoValidated(
+    child: Node,
+    before: Node | null,
+    hookEffects?: HookEffect[],
+  ) {
     if (child === before) before = child[NEXT];
 
     const insertion = this.prepareInsertion(child);
@@ -211,7 +225,18 @@ export class ParentNode extends ChildNode {
     const destinationIsConnected = this[IS_CONNECTED];
     this.queueInsertionMutationRecords(insertion);
     this.enqueueInsertionReactions(insertion, destinationIsConnected);
-    performHookEffects(this.collectInsertionHookEffects(insertion));
+    this.performOrCollectHookEffects(
+      this.collectInsertionHookEffects(insertion),
+      hookEffects,
+    );
+  }
+
+  private performOrCollectHookEffects(
+    effects: HookEffect[],
+    hookEffects?: HookEffect[],
+  ) {
+    if (hookEffects) hookEffects.push(...effects);
+    else performHookEffects(effects);
   }
 
   private prepareInsertion(child: Node) {
