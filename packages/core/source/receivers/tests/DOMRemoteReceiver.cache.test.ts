@@ -135,7 +135,11 @@ describe('DOMRemoteReceiver cache', () => {
     });
     const parentA = element('parent-a');
     const parentB = element('parent-b');
-    const child = element('child', [], {value: 'before'});
+    // Custom method dispatch is supported on custom elements, not native divs.
+    const child = {
+      ...element('child', [], {value: 'before'}),
+      element: 'ui-cache-child',
+    };
     insert(receiver, ROOT_ID, parentA);
     insert(receiver, ROOT_ID, parentB, 1);
     insert(receiver, 'parent-a', child);
