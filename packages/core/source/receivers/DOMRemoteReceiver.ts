@@ -8,11 +8,10 @@ import {
   UPDATE_PROPERTY_TYPE_ATTRIBUTE,
   UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
 } from '../constants.ts';
-import {setRemoteId} from '../elements/internals.ts';
+import {REMOTE_IDS, setRemoteId} from '../elements/internals.ts';
 import type {RemoteNodeSerialization} from '../types.ts';
 import type {RemoteReceiverOptions} from './shared.ts';
 
-const REMOTE_IDS = new WeakMap<Node, string>();
 const REMOTE_PROPERTIES = new WeakMap<Node, Record<string, any>>();
 const REMOTE_EVENT_LISTENERS = new WeakMap<Node, Record<string, any>>();
 
@@ -109,24 +108,28 @@ export class DOMRemoteReceiver {
       insertChild: (id, child, index) => {
         const parent = id === ROOT_ID ? this.root : attached.get(id)!;
 
-        const existingTimeout = destroyTimeouts.get(id);
-        if (existingTimeout) clearTimeout(existingTimeout);
+        const existingTimeout = destroyTimeouts.get(child.id);
+        if (existingTimeout !== undefined) {
+          clearTimeout(existingTimeout);
+          destroyTimeouts.delete(child.id);
+        }
 
         parent.insertBefore(attach(child), parent.childNodes[index] || null);
       },
       removeChild: (id, index) => {
         const parent = id === ROOT_ID ? this.root : attached.get(id)!;
         const child = parent.childNodes[index]!;
+        const childID = REMOTE_IDS.get(child)!;
         child.remove();
 
         if (cache?.maxAge) {
-          const existingTimeout = destroyTimeouts.get(id);
-          if (existingTimeout) clearTimeout(existingTimeout);
+          const existingTimeout = destroyTimeouts.get(childID);
+          if (existingTimeout !== undefined) clearTimeout(existingTimeout);
 
           const timeout = setTimeout(() => {
             detach(child);
           }, cache.maxAge);
-          destroyTimeouts.set(id, timeout as any);
+          destroyTimeouts.set(childID, timeout as any);
         } else {
           detach(child);
         }
@@ -238,7 +241,12 @@ export class DOMRemoteReceiver {
 
     function detach(child: Node) {
       const id = REMOTE_IDS.get(child);
-      if (id) attached.delete(id);
+      if (id != null) {
+        const timeout = destroyTimeouts.get(id);
+        if (timeout !== undefined) clearTimeout(timeout);
+        destroyTimeouts.delete(id);
+        attached.delete(id);
+      }
 
       const properties = REMOTE_PROPERTIES.get(child);
       if (properties && release) release(properties);
