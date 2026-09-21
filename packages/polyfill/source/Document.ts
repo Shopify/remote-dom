@@ -10,6 +10,7 @@ import {
   OWNER_DOCUMENT,
   HOOKS,
   IS_CONNECTED,
+  CREATE_ELEMENT,
   asciiLowercase,
 } from './constants.ts';
 import {
@@ -30,6 +31,7 @@ import {
   adoptNodes,
   cloneNode,
   collectAdoptionSnapshot,
+  createNotSupportedError,
   getElementById as findElementById,
   getElementsByClassName as findElementsByClassName,
   getElementsByTagName as findElementsByTagName,
@@ -94,6 +96,15 @@ export class Document extends ParentNode {
     );
   }
 
+  [CREATE_ELEMENT](
+    qualifiedName: string,
+    namespace: NamespaceURI,
+    prefix: string | null,
+    localName: string,
+  ) {
+    return createElement(this, qualifiedName, namespace, prefix, localName);
+  }
+
   createTextNode(data: any) {
     const text = createNode(new Text(data), this);
     this[HOOKS].createText?.(text as any, String(data));
@@ -121,6 +132,10 @@ export class Document extends ParentNode {
   }
 
   importNode(node: Node, deep?: boolean) {
+    if (node.nodeType === NODE_TYPE_DOCUMENT) {
+      throw createNotSupportedError('Cannot import a document node');
+    }
+
     return cloneNode(node, deep, this);
   }
 
