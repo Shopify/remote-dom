@@ -1,7 +1,9 @@
 import {
   ATTRIBUTES,
   CHILD,
+  CONTENT,
   DATA,
+  HTML_NAMESPACE,
   NAME,
   NEXT,
   VALUE,
@@ -14,99 +16,185 @@ import type {Text} from './Text.ts';
 import type {Comment} from './Comment.ts';
 import type {ParentNode} from './ParentNode.ts';
 import type {Element} from './Element.ts';
+import type {HTMLTemplateElement} from './HTMLTemplateElement.ts';
 
-// const voidElements = {
-//   img: true,
-//   image: true,
-// };
-// const elementTokenizer =
-//   /(?:<([a-z][a-z0-9-:]*)( [^<>'"\n=\s]+=(['"])[^>'"\n]*\3)*\s*(\/?)\s*>|<\/([a-z][a-z0-9-:]*)>|([^&<>]+))/gi;
-// const attributeTokenizer = / ([^<>'"\n=\s]+)=(['"])([^>'"\n]*)\2/g;
+const CHARACTER_REFERENCES: Readonly<Record<string, string>> = {
+  amp: '&',
+  AMP: '&',
+  apos: "'",
+  gt: '>',
+  GT: '>',
+  lt: '<',
+  LT: '<',
+  quot: '"',
+  QUOT: '"',
+};
 
-const elementTokenizer =
-  /(?:<([a-z][a-z0-9-:]*)((?:[\s]+[^<>'"=\s]+(?:=(['"])[^]*?\3|=[^>'"\s]*|))*)[\s]*(\/?)\s*>|<\/([a-z][a-z0-9-:]*)>|<!--(.*?)-->|([^&<>]+))/gi;
+const VOID_ELEMENTS = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
+]);
 
-const attributeTokenizer =
-  /\s([^<>'"=\n\s]+)(?:=(["'])([\s\S]*?)\2|=([^>'"\n\s]*)|)/g;
+const ELEMENT_TOKENIZER =
+  /(?:<([a-z][a-z0-9-:]*)((?:[\s]+[^<>'"=/\s]+(?:=(['"])[^]*?\3|=[^>'"\s]*|))*)[\s]*(\/?)\s*>|<\/([a-z][a-z0-9-:]*)>|<!--(.*?)-->|([^<>]+))/gi;
+const ATTRIBUTE_TOKENIZER =
+  /\s([^<>'"=/\n\s]+)(?:=(["'])([\s\S]*?)\2|=([^>'"\n\s]*)|)/g;
+
+function decodeCharacterReferences(value: string) {
+  return value.replace(
+    /&(?:(amp|AMP|apos|gt|GT|lt|LT|quot|QUOT)|#(\d+)|#[xX]([\da-fA-F]+));/g,
+    (reference, name: string | undefined, decimal, hexadecimal) => {
+      if (name) return CHARACTER_REFERENCES[name]!;
+
+      const codePoint = Number.parseInt(
+        decimal ?? hexadecimal,
+        decimal ? 10 : 16,
+      );
+
+      try {
+        return String.fromCodePoint(codePoint);
+      } catch {
+        return reference;
+      }
+    },
+  );
+}
+
+function isVoidElement(element: Element) {
+  return (
+    element.namespaceURI === HTML_NAMESPACE &&
+    VOID_ELEMENTS.has(element.localName)
+  );
+}
 
 export function parseHtml(html: string, contextNode: Node) {
   const document = contextNode.ownerDocument;
   const root = document.createDocumentFragment();
-  const stack: Node[] = [root];
+  const stack: {element: Node; target: ParentNode}[] = [];
   let parent: ParentNode = root;
-  let token: RegExpExecArray | null;
-  elementTokenizer.lastIndex = 0;
-  while ((token = elementTokenizer.exec(html))) {
+  for (const token of html.matchAll(ELEMENT_TOKENIZER)) {
     const tag = token[1];
     if (tag) {
       const node = document.createElement(tag);
       const attrs = token[2]!;
-      attributeTokenizer.lastIndex = 0;
-      let t: RegExpExecArray | null;
-      while ((t = attributeTokenizer.exec(attrs))) {
-        node.setAttribute(t[1]!, t[3] || t[4] || '');
+      for (const attribute of attrs.matchAll(ATTRIBUTE_TOKENIZER)) {
+        node.setAttribute(
+          attribute[1]!,
+          decodeCharacterReferences(attribute[3] || attribute[4] || ''),
+        );
       }
       parent.append(node);
-      // if (voidElements[tag] === true) continue;
-      stack.push(parent);
-      parent = node;
+      if (isVoidElement(node)) continue;
+      stack.push({element: node, target: parent});
+      parent =
+        tag.toLowerCase() === 'template'
+          ? (node as HTMLTemplateElement).content
+          : node;
     } else if (token[5]) {
-      parent = (stack.pop() as ParentNode) || root;
+      parent = stack.pop()?.target ?? root;
     } else if (token[6]) {
       parent.append(document.createComment(token[6]!));
     } else {
-      parent.append(token[7]!);
+      parent.append(decodeCharacterReferences(token[7]!));
     }
   }
   return root;
 }
 
+type SerializationWorkItem =
+  | {type: 'opening'; node: Node}
+  | {type: 'content'; child: Node | null}
+  | {type: 'closing'; name: string};
+
 export function serializeChildren(parentNode: ParentNode) {
-  let out = '';
-  let child = parentNode[CHILD];
-  while (child) {
-    out += serializeNode(child);
-    child = child[NEXT];
-  }
-  return out;
+  return serialize([{type: 'content', child: parentNode[CHILD]}]);
 }
 
 export function serializeNode(node: Node) {
-  switch (node.nodeType) {
-    case NODE_TYPE_ELEMENT: {
-      const el = node as Element;
-      let out = `<${el[NAME]}`;
-      let attr = el[ATTRIBUTES]?.[CHILD];
-      while (attr) {
-        out += ` ${attr[NAME]}`;
-        let value = attr[VALUE];
-        if (value !== '') {
-          value = String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-          out += `="${value}"`;
+  return serialize([{type: 'opening', node}]);
+}
+
+function serialize(workItems: SerializationWorkItem[]) {
+  const chunks: string[] = [];
+  let workItem: SerializationWorkItem | undefined;
+
+  while ((workItem = workItems.pop())) {
+    switch (workItem.type) {
+      case 'opening': {
+        const node = workItem.node;
+        switch (node.nodeType) {
+          case NODE_TYPE_ELEMENT: {
+            const el = node as Element;
+            chunks.push(`<${el[NAME]}`);
+            let attr = el[ATTRIBUTES]?.[CHILD];
+            while (attr) {
+              chunks.push(` ${attr[NAME]}`);
+              let value = attr[VALUE];
+              if (value !== '') {
+                value = String(value)
+                  .replace(/&/g, '&amp;')
+                  .replace(/"/g, '&quot;');
+                chunks.push(`="${value}"`);
+              }
+              attr = attr[NEXT];
+            }
+            chunks.push('>');
+            if (isVoidElement(el)) break;
+
+            const content =
+              el.namespaceURI === HTML_NAMESPACE && el.localName === 'template'
+                ? (el as {[CONTENT]?: ParentNode})[CONTENT]
+                : el;
+            workItems.push({type: 'closing', name: el[NAME]});
+            workItems.push({
+              type: 'content',
+              child: content?.[CHILD] ?? null,
+            });
+            break;
+          }
+          case NODE_TYPE_TEXT: {
+            const text = node as Text;
+            chunks.push(
+              text[DATA].replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;'),
+            );
+            break;
+          }
+          case NODE_TYPE_COMMENT: {
+            const text = node as Comment;
+            chunks.push(`<!--${text[DATA]}-->`);
+            break;
+          }
         }
-        attr = attr[NEXT];
+        break;
       }
-      out += '>';
-      out += serializeChildren(el);
-      // let child = el[CHILD];
-      // while (child) {
-      //   out += serialize(child);
-      //   child = child[NEXT];
-      // }
-      out += `</${el[NAME]}>`;
-      return out;
-    }
-    case NODE_TYPE_TEXT: {
-      const text = node as Text;
-      return text[DATA].replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-    }
-    case NODE_TYPE_COMMENT: {
-      const text = node as Comment;
-      return `<!--${text[DATA]}-->`;
+      case 'content': {
+        const child = workItem.child;
+        if (child) {
+          workItems.push({type: 'content', child: child[NEXT]});
+          workItems.push({type: 'opening', node: child});
+        }
+        break;
+      }
+      case 'closing':
+        chunks.push(`</${workItem.name}>`);
+        break;
     }
   }
-  return '';
+
+  return chunks.join('');
 }
