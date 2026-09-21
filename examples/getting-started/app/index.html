@@ -18,11 +18,10 @@
       const root = document.querySelector('#root');
       const iframe = document.querySelector('#remote-iframe');
 
-      // A `DOMRemoteReceiver` will automatically synchronize changes
-      // from the remote environment to the host environment as native
-      // HTML elements. We connect it to the `root` element so that it
-      // will insert any content from the remote environment there.
-      const receiver = new DOMRemoteReceiver();
+      // This example renders only text. An empty elements list keeps the
+      // receiver configured for text and comments.
+      // Connect it to the root where that text should appear.
+      const receiver = new DOMRemoteReceiver({elements: []});
       receiver.connect(root);
 
       window.addEventListener('message', ({source, data}) => {
