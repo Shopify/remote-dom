@@ -740,7 +740,7 @@ This list is copied at construction, applies case-insensitively to every element
 
 By default, calls on the root are denied. An explicit `call(element, method, ...args)` callback overrides method policy, including for the root. It must enforce its own allowlist and validate arguments; do not forward arbitrary method names to the DOM.
 
-For the `<remote-receiver>` custom element, configure a host-side subclass before registering it:
+For the `<remote-receiver>` custom element, configure a host-side subclass before registering it. This API is deprecated; use `RemoteReceiver` or a framework-specific receiver instead for new code.
 
 ```ts
 import {RemoteReceiverElement} from '@remote-dom/core/elements';
