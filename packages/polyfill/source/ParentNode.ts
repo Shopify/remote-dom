@@ -3,7 +3,6 @@ import {
   NEXT,
   PREV,
   PARENT,
-  HOST,
   OWNER_DOCUMENT,
   NODE_TYPE_DOCUMENT_FRAGMENT,
   NODE_TYPE_ELEMENT,
@@ -17,7 +16,9 @@ import {
   INSERT_NODE,
   PREFLIGHT_INSERTIONS,
   REPLACE_NODE,
+  stageNodes,
   toNode,
+  validateInsertionNodes,
 } from './ChildNode.ts';
 import {NodeList} from './NodeList.ts';
 import {querySelectorAll, querySelector} from './selectors.ts';
@@ -41,6 +42,7 @@ import {
   performHookEffects,
   type HookEffect,
 } from './hook-effects.ts';
+import {createDOMException} from './dom-exception.ts';
 
 interface PreparedInsertionRoot {
   node: Node;
@@ -76,8 +78,9 @@ export class ParentNode extends ChildNode {
 
   append(...nodes: (Node | string)[]) {
     return performWithCustomElementReactions(() => {
-      for (const child of nodes) {
-        if (child == null) continue;
+      const staged = stageNodes(nodes.filter((node) => node != null));
+      if (staged.length > 1) validateInsertionNodes(this, staged);
+      for (const child of staged) {
         this[INSERT_NODE](toNode(this, child), null);
       }
     });
@@ -85,9 +88,10 @@ export class ParentNode extends ChildNode {
 
   prepend(...nodes: (Node | string)[]) {
     return performWithCustomElementReactions(() => {
+      const staged = stageNodes(nodes.filter((node) => node != null));
+      if (staged.length > 1) validateInsertionNodes(this, staged);
       const before = this.firstChild;
-      for (const child of nodes) {
-        if (child == null) continue;
+      for (const child of staged) {
         this[INSERT_NODE](toNode(this, child), before);
       }
     });
@@ -95,13 +99,15 @@ export class ParentNode extends ChildNode {
 
   replaceChildren(...nodes: (Node | string)[]) {
     return performWithCustomElementReactions(() => {
+      const staged = stageNodes(nodes.filter((node) => node != null));
+      validateInsertionNodes(this, staged);
+
       let child;
       while ((child = this.firstChild)) {
         this.removeChildImmediately(child);
       }
-      for (const child of nodes) {
-        if (child == null) continue;
-        this[INSERT_NODE](toNode(this, child), null);
+      for (const node of staged) {
+        this[INSERT_NODE](toNode(this, node), null);
       }
     });
   }
@@ -114,8 +120,12 @@ export class ParentNode extends ChildNode {
   }
 
   private removeChildImmediately(child: Node) {
-    if (child.parentNode !== this) throw Error(`not a child of this node`);
-
+    if (child.parentNode !== this) {
+      throw createDOMException(
+        'The node is not a child of this node',
+        'NotFoundError',
+      );
+    }
     const disconnectedNodes = this[IS_CONNECTED]
       ? selfAndDescendants(child)
       : undefined;
@@ -142,14 +152,16 @@ export class ParentNode extends ChildNode {
   }
 
   [REPLACE_NODE](newChild: Node, oldChild: Node, hookEffects?: HookEffect[]) {
+    validateInsertionNodes(this, [newChild]);
     if (oldChild.parentNode !== this) {
-      throw Error('reference node is not a child of this parent');
+      throw createDOMException(
+        'The reference node is not a child of this parent',
+        'NotFoundError',
+      );
     }
 
     const previous = oldChild[PREV];
     const next = oldChild[NEXT];
-    this.validateInsertion(newChild, next);
-
     const insertion = this.prepareInsertion(newChild);
     const removedNodes = this[IS_CONNECTED]
       ? selfAndDescendants(oldChild)
@@ -217,18 +229,13 @@ export class ParentNode extends ChildNode {
   }
 
   private validateInsertion(child: Node, before: Node | null) {
-    if (before && before.parentNode !== this) {
-      throw Error('reference node is not a child of this parent');
-    }
+    validateInsertionNodes(this, [child]);
 
-    let ancestor: Node | null = this;
-    while (ancestor) {
-      if (ancestor === child) {
-        throw Error(
-          'cannot insert a node into itself or one of its descendants',
-        );
-      }
-      ancestor = ancestor[PARENT] ?? ancestor[HOST];
+    if (before && before.parentNode !== this) {
+      throw createDOMException(
+        'The reference node is not a child of this parent',
+        'NotFoundError',
+      );
     }
   }
 

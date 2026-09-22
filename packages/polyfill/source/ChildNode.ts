@@ -1,6 +1,7 @@
 import {HOST, NEXT, PARENT, PREV} from './constants.ts';
 import {performWithCustomElementReactions} from './custom-element-reactions.ts';
 import {performHookEffects, type HookEffect} from './hook-effects.ts';
+import {createDOMException} from './dom-exception.ts';
 import type {ParentNode} from './ParentNode.ts';
 import {Node} from './Node.ts';
 
@@ -21,7 +22,7 @@ export class ChildNode extends Node {
     if (!parent) return;
 
     return performChildNodeMutation((hookEffects) => {
-      validateNodesForInsertion(parent, staged);
+      validateInsertionNodes(parent, staged);
 
       let next = this[NEXT];
       while (next && staged.includes(next)) next = next[NEXT];
@@ -41,7 +42,7 @@ export class ChildNode extends Node {
     if (!parent) return;
 
     return performChildNodeMutation((hookEffects) => {
-      validateNodesForInsertion(parent, staged);
+      validateInsertionNodes(parent, staged);
 
       let previous = this[PREV];
       while (previous && staged.includes(previous)) previous = previous[PREV];
@@ -61,7 +62,7 @@ export class ChildNode extends Node {
     if (!parent) return;
 
     return performChildNodeMutation((hookEffects) => {
-      validateNodesForInsertion(parent, staged);
+      validateInsertionNodes(parent, staged);
 
       let next = this[NEXT];
       while (next && staged.includes(next)) next = next[NEXT];
@@ -89,7 +90,7 @@ function performChildNodeMutation(
   });
 }
 
-function stageNodes(nodes: (Node | string)[]) {
+export function stageNodes(nodes: (Node | string)[]) {
   return nodes.map((node) => (node instanceof Node ? node : String(node)));
 }
 
@@ -99,7 +100,7 @@ export function toNode(parent: ParentNode, node: Node | any) {
   return ownerDocument.createTextNode(String(node));
 }
 
-function validateNodesForInsertion(
+export function validateInsertionNodes(
   parent: ParentNode,
   nodes: (Node | string)[],
 ) {
@@ -109,8 +110,9 @@ function validateNodesForInsertion(
     let ancestor: Node | null = parent;
     while (ancestor) {
       if (ancestor === node) {
-        throw Error(
-          'cannot insert a node into itself or one of its descendants',
+        throw createDOMException(
+          'Cannot insert a node into itself or one of its descendants',
+          'HierarchyRequestError',
         );
       }
       ancestor = ancestor[PARENT] ?? ancestor[HOST];

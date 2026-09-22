@@ -107,6 +107,7 @@ describe('NamedNodeMap invariants', () => {
       thrown = error;
     }
 
+    expect(thrown).toBeInstanceOf(DOMException);
     expect(thrown).toMatchObject({name: 'InUseAttributeError'});
     expect([...firstElement.attributes]).toEqual([attribute]);
     expect([...secondElement.attributes]).toEqual([secondAttribute]);
