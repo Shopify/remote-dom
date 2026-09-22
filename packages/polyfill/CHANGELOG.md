@@ -1,5 +1,93 @@
 # @remote-dom/polyfill
 
+## 1.6.0
+
+### Minor Changes
+
+- [#620](https://github.com/Shopify/remote-dom/pull/620) [`4be18ef`](https://github.com/Shopify/remote-dom/commit/4be18ef20017587835e7275e3901cd5fcdcdc50e) Thanks [@andrewiggins](https://github.com/andrewiggins)! - Add `getElementById()` to `Document` and `DocumentFragment`, with reflected `Element.id` properties. Add `getElementsByTagName()` to `Document` and `Element`, supporting HTML, non-HTML, and wildcard descendant searches. `querySelector` and `querySelectorAll` accept a pre-parsed `Matcher[]` in addition to string selectors, with `MatcherType`, `Combinator`, `Matcher`, and `Part` exported from `selectors.ts`; `getElementById` and `getElementsByTagName` delegate to this shared selector engine instead of independent tree-walk implementations.
+
+  Fixed `insertBefore()` leaving the previous sibling pointing at the reference node when inserting before a middle child, causing `NEXT` traversals (including `getElementById`) to skip the inserted subtree even though `childNodes` contained it, and return the inserted child as required by the DOM specification. Fixed `appendChild()` to return the appended child and `NodeList.item()` to return `null` for out-of-range indexes. Fixed case-insensitive HTML tag-name matching in the selector engine so `querySelector('DIV')` now matches `<div>` per the CSS spec. Fixed CSS-escaping issues so `getElementById` matches ids containing special characters (`.`, `:`, `#`, etc.) literally instead of treating them as selector syntax.
+
+- [#625](https://github.com/Shopify/remote-dom/pull/625) [`ab6c549`](https://github.com/Shopify/remote-dom/commit/ab6c5494908a5efb53fc8e5534b2b2967b9cbe41) Thanks [@airhorns](https://github.com/airhorns)! - Add `getElementsByClassName()` to polyfilled documents and elements.
+
+- [#624](https://github.com/Shopify/remote-dom/pull/624) [`e2a9eef`](https://github.com/Shopify/remote-dom/commit/e2a9eef700edd7f46a0cafb3e3a63d757ccfbc2e) Thanks [@airhorns](https://github.com/airhorns)! - Implement the standard `MutationObserver` methods for child, attribute, and character-data changes in the polyfilled DOM.
+
+- [#652](https://github.com/Shopify/remote-dom/pull/652) [`0789d12`](https://github.com/Shopify/remote-dom/commit/0789d12f61ae3a93bd659543b4607eb496efa090) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Add composable `Window` extensions for installing DOM APIs and subscribing to DOM operations.
+
+### Patch Changes
+
+- [#681](https://github.com/Shopify/remote-dom/pull/681) [`fc245ba`](https://github.com/Shopify/remote-dom/commit/fc245ba6edd7622c4cccbd98e744d6934f04ab46) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Adopt complete subtrees, including initialized template content, during cross-document insertion so descendant and attribute mutations use the destination document.
+
+- [#669](https://github.com/Shopify/remote-dom/pull/669) [`dff700b`](https://github.com/Shopify/remote-dom/commit/dff700bcc9610903ad4f9e6d8b23e6017f113af8) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Dispatch attribute hooks when mutating an attached attribute's value or nodeValue.
+
+- [#679](https://github.com/Shopify/remote-dom/pull/679) [`da43e02`](https://github.com/Shopify/remote-dom/commit/da43e02ef1662763d242ed3b386b5b57130aaef3) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Correct chained combinators, whitespace, exact attribute equality, and scoped relative `:has()` selectors, including leading combinators, nested functional pseudo-classes, and ASCII-case-insensitive pseudo-class names.
+
+- [#642](https://github.com/Shopify/remote-dom/pull/642) [`85cefcd`](https://github.com/Shopify/remote-dom/commit/85cefcd63efe62de20aadb2fa75d08485b4f1d96) Thanks [@andrewiggins](https://github.com/andrewiggins)! - Add the missing `CustomElementRegistry.initialize()` compatibility method so TypeScript 7 type checks cleanly.
+
+- [#653](https://github.com/Shopify/remote-dom/pull/653) [`a9aee3e`](https://github.com/Shopify/remote-dom/commit/a9aee3e3834b621e0c9a4fd432a9eb674447403a) Thanks [@andrewiggins](https://github.com/andrewiggins)! - Make the Polyfill source compatible with type stripping by replacing TypeScript enums and a parameter property with erasable syntax.
+
+- [#668](https://github.com/Shopify/remote-dom/pull/668) [`f4af17f`](https://github.com/Shopify/remote-dom/commit/f4af17fb2739cd6cbbf3adf52c1af1fb695c749b) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Preserve attribute ownership and linked-list integrity when attributes are reinstalled, replaced, removed, or reused.
+
+- [#683](https://github.com/Shopify/remote-dom/pull/683) [`c13d18b`](https://github.com/Shopify/remote-dom/commit/c13d18b5469de4e87900d7c8123ad18b653f6d4e) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Throw a named `NotSupportedError` when cloning a document or importing one with `Document.importNode()`.
+
+- [#681](https://github.com/Shopify/remote-dom/pull/681) [`9904cdd`](https://github.com/Shopify/remote-dom/commit/9904cdd79af5589c3b43e884e27fa2ce10721b58) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Make `ChildNode.replaceWith()`, `before()`, and `after()` validate all arguments before changing existing trees, preserve sibling argument order, and commit each operation before custom-element reactions run.
+
+- [#664](https://github.com/Shopify/remote-dom/pull/664) [`8de0600`](https://github.com/Shopify/remote-dom/commit/8de06005c7e4d843182fbd403699dc2df67bee33) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Correct event dispatch lifecycle state, isolate composed paths, and defer listener registrations added during dispatch.
+
+- [#692](https://github.com/Shopify/remote-dom/pull/692) [`ee48d52`](https://github.com/Shopify/remote-dom/commit/ee48d5290023a22de7632d7e652438514a1c1cfb) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Throw named DOM errors for invalid tree mutations and selector syntax.
+
+- [#669](https://github.com/Shopify/remote-dom/pull/669) [`7eb8a18`](https://github.com/Shopify/remote-dom/commit/7eb8a18aa6753ac34e58d51cfda0533a99e88523) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Return `null` from `Document.textContent` and ignore assignments to preserve the initialized document structure.
+
+- [#669](https://github.com/Shopify/remote-dom/pull/669) [`6ddc71f`](https://github.com/Shopify/remote-dom/commit/6ddc71f50e2c492d71c8b506eebc08cf40559199) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Clear parent children without creating an empty text node when assigning an empty `textContent` value, and finish the complete replacement before running custom-element reactions.
+
+- [#662](https://github.com/Shopify/remote-dom/pull/662) [`e249e3e`](https://github.com/Shopify/remote-dom/commit/e249e3e8055b7878442ad72fdd2b151cdc3c0171) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Correct event listener identity and AbortSignal handling in the EventTarget polyfill.
+
+- [#663](https://github.com/Shopify/remote-dom/pull/663) [`44e3b36`](https://github.com/Shopify/remote-dom/commit/44e3b3677920a43a98a92b8179470d7ede0dac96) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Fix event cancellation semantics for `preventDefault()`, `returnValue`, and `dispatchEvent()`.
+
+- [#666](https://github.com/Shopify/remote-dom/pull/666) [`072b7e8`](https://github.com/Shopify/remote-dom/commit/072b7e8a68855144cc359d11107874007c043f2b) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Install missing event methods and error handlers consistently without replacing native global event delivery.
+
+- [#685](https://github.com/Shopify/remote-dom/pull/685) [`fd4de61`](https://github.com/Shopify/remote-dom/commit/fd4de61b0be8eac8e056941f288f0592404b57dc) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Preserve character references and literal ampersands when parsing `innerHTML`, decode attribute references without double-escaping, handle nested `innerHTML` parsing from synchronous callbacks, and handle HTML void elements without nesting following content or serializing closing tags.
+
+- [#669](https://github.com/Shopify/remote-dom/pull/669) [`fd8e186`](https://github.com/Shopify/remote-dom/commit/fd8e186d49bc1b3fa68ec0a26eb1de1a59c218c5) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Remove `slot` attributes without recreating them as empty attributes, keeping local and host state synchronized.
+
+- [#688](https://github.com/Shopify/remote-dom/pull/688) [`5f0b228`](https://github.com/Shopify/remote-dom/commit/5f0b2281bddfc7ac37c64503f40f38f4f9b98243) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Default omitted CustomEvent detail values to null.
+
+- [#688](https://github.com/Shopify/remote-dom/pull/688) [`08e3223`](https://github.com/Shopify/remote-dom/commit/08e3223a5fb340e80693168e04ed03a01764ef2a) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Include `Comment` nodes in the polyfill hook type contract.
+
+- [#677](https://github.com/Shopify/remote-dom/pull/677) [`a629e25`](https://github.com/Shopify/remote-dom/commit/a629e25eb4eba6aae495257a40f30883b6dce53a) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Normalize and validate DOM element and attribute names across HTML and namespaced APIs, including `toggleAttribute()` and custom-element attribute reactions.
+
+- [#688](https://github.com/Shopify/remote-dom/pull/688) [`e1acf97`](https://github.com/Shopify/remote-dom/commit/e1acf97baa3786d3284b6a0164ccc7206e3ec956) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Normalize `createTextNode()` hook data to match the created text node.
+
+- [#685](https://github.com/Shopify/remote-dom/pull/685) [`0a39389`](https://github.com/Shopify/remote-dom/commit/0a3938987f46fd962ac84ed00808680852263df9) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Parse template descendants into template content and serialize that content with stack-safe HTML output.
+
+- [#623](https://github.com/Shopify/remote-dom/pull/623) [`c3918c6`](https://github.com/Shopify/remote-dom/commit/c3918c61c3ee6b3aa6ec7fbf4d53aa76532ec29d) Thanks [@airhorns](https://github.com/airhorns)! - Fix `ChildNode.replaceWith()` throwing instead of replacing the node
+
+  `replaceWith()` passed its arguments to `replaceChild()` in the wrong order — `replaceChild(newChild, oldChild)` was called as `parent.replaceChild(this, node)`, naming the incoming node as the child to replace. Since that node is usually fresh and has no parent, the reference check rejected it and every call threw `reference node is not a child of this parent`. It also read the following sibling off the incoming node rather than off `this`, so the remaining arguments had no correct insertion point to anchor to.
+
+  The method now removes `this` and inserts the given nodes at its position, in argument order, anchored on the first following sibling that is not itself being moved. Strings become text nodes, calling it with no arguments removes the node (matching `remove()`), and a node with no parent is still left alone.
+
+- [#714](https://github.com/Shopify/remote-dom/pull/714) [`516fcfa`](https://github.com/Shopify/remote-dom/commit/516fcfa4c4a04e8ff5a0e7c6b7da0d38d2dd1f57) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Resolve `Node.isDefaultNamespace()` with DOM locate-a-namespace semantics.
+
+- [#669](https://github.com/Shopify/remote-dom/pull/669) [`23ceb4d`](https://github.com/Shopify/remote-dom/commit/23ceb4d22c62096ffdb00d4d107ab2cacdc54935) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Return removed and replaced nodes from `removeChild` and `replaceChild`.
+
+- [#679](https://github.com/Shopify/remote-dom/pull/679) [`5466415`](https://github.com/Shopify/remote-dom/commit/54664151820316d9f655e9964de232854fdec5c4) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Return a NodeList-compatible collection from `querySelectorAll()`.
+
+- [#669](https://github.com/Shopify/remote-dom/pull/669) [`d916fab`](https://github.com/Shopify/remote-dom/commit/d916fabc327a9352c1f3e8b2d37f939527d2027a) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Queue custom-element reactions so compound tree and attribute mutations commit their local state and Remote DOM hooks before callbacks run. Drain nested reactions in FIFO order, and finish the queue before rethrowing the first callback error.
+
+- [#669](https://github.com/Shopify/remote-dom/pull/669) [`4b8bae9`](https://github.com/Shopify/remote-dom/commit/4b8bae9a507cf80492fb3b03975b90872b76465c) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Traverse wide and deep trees without overflowing the call stack during text collection, selector queries, and subtree connectivity updates. Prepare insertion snapshots transactionally before committing links, connectivity, hooks, and reactions so traversal failures preserve local and remote tree state. Capture lifecycle reactions in mutation order before emitting reentrant tree-mutation hook effects through a FIFO queue.
+
+- [#676](https://github.com/Shopify/remote-dom/pull/676) [`6b42b09`](https://github.com/Shopify/remote-dom/commit/6b42b0980b3d2b01a1029ae1cab52345e0fb021a) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Make `CustomElementRegistry.define()` reject invalid custom element names and duplicate name or constructor registrations, matching browser behavior.
+
+- [#660](https://github.com/Shopify/remote-dom/pull/660) [`685dff1`](https://github.com/Shopify/remote-dom/commit/685dff1a617c97afc5079edb742940bb6ff92022) Thanks [@andrewiggins](https://github.com/andrewiggins)! - Correct class selector whitespace parsing and return polyfilled `NodeList` collections from selector queries.
+
+- [#683](https://github.com/Shopify/remote-dom/pull/683) [`7181475`](https://github.com/Shopify/remote-dom/commit/71814754bcd9a06155e9a284867c93031c133007) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Preserve established element and attribute names, namespaces, and both direct and template-content trees when cloning or importing nodes without recursive traversal.
+
+- [#688](https://github.com/Shopify/remote-dom/pull/688) [`3c57e5b`](https://github.com/Shopify/remote-dom/commit/3c57e5b6202f0779eb7ee99ad3298f6d17032c51) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Fix `Node.contains()` for nested descendants and nodes outside the current subtree.
+
+- [#667](https://github.com/Shopify/remote-dom/pull/667) [`cdfd5dd`](https://github.com/Shopify/remote-dom/commit/cdfd5dd2bc3fecbea7799d3921bb8d93bd6103dd) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Validate tree insertions and replacements before changing node links so invalid ancestor, template-content cycle, and reference-node mutations preserve the existing trees. Treat inserting a node before itself as a no-op and safely replace a child with its next sibling.
+
+- [#687](https://github.com/Shopify/remote-dom/pull/687) [`db32f49`](https://github.com/Shopify/remote-dom/commit/db32f49fbbe0bdfd1e14450008b5b8634d2362d7) Thanks [@olavoasantos](https://github.com/olavoasantos)! - Ignore unmatched closing tags, preserve SVG and HTML namespace boundaries, and retain literal parser names while parsing `innerHTML`.
+
 ## 1.5.1
 
 ### Patch Changes
