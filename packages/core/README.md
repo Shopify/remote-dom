@@ -647,6 +647,8 @@ receiver.get(receiver.root) === receiver.root; // true
 
 #### `DOMRemoteReceiver`
 
+> **Deprecated:** `DOMRemoteReceiver` is no longer recommended for new code. Use `RemoteReceiver` or a framework-specific receiver instead.
+
 `DOMRemoteReceiver` takes care of mapping remote elements to matching HTML elements on the host page. If you implement your UI with [custom elements](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements), `DOMRemoteReceiver` is a simple option that avoids much of the manual work required when using the basic `RemoteReceiver`.
 
 An empty remote receiver can be created using the `DOMRemoteReceiver` constructor. You’ll then call the `connect()` method with the HTML element that will serve as your “root” element, to which all the synchronized remote elements will be attached:
