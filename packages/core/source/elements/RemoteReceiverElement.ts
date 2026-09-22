@@ -9,6 +9,9 @@ import {
  * a `RemoteReceiverElement` and use its `connection` property to connect
  * it to a remote environment
  *
+ * @deprecated `RemoteReceiverElement` is no longer recommended. Use `RemoteReceiver`
+ * or a framework-specific receiver instead.
+ *
  * @example
  * ```ts
  * import {RemoteReceiverElement} from '@remote-dom/core/elements';

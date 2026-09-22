@@ -15,7 +15,11 @@ import type {RemoteReceiverOptions} from './shared.ts';
 const REMOTE_PROPERTIES = new WeakMap<Node, Record<string, any>>();
 const REMOTE_EVENT_LISTENERS = new WeakMap<Node, Record<string, any>>();
 
-/** Host-owned configuration for a property and its corresponding attribute. */
+/**
+ * Host-owned configuration for a property and its corresponding attribute.
+ *
+ * @deprecated `DOMRemoteReceiver` is no longer recommended.
+ */
 export interface DOMRemotePropertyPolicy {
   /** Checks non-nullish property values without coercion. */
   readonly type?:
@@ -29,7 +33,11 @@ export interface DOMRemotePropertyPolicy {
   readonly attribute?: string | boolean;
 }
 
-/** Host-owned capabilities exposed to the remote for one element name. */
+/**
+ * Host-owned capabilities exposed to the remote for one element name.
+ *
+ * @deprecated `DOMRemoteReceiver` is no longer recommended.
+ */
 export interface DOMRemoteElementPolicy {
   readonly properties?: Readonly<Record<string, DOMRemotePropertyPolicy>>;
   /** Additional attribute-only names, independent of property definitions. */
@@ -39,6 +47,10 @@ export interface DOMRemoteElementPolicy {
   readonly methods?: readonly string[];
 }
 
+/**
+ * @deprecated `DOMRemoteReceiver` is no longer recommended. Use `RemoteReceiver`
+ * or a framework-specific receiver instead.
+ */
 export interface DOMRemoteReceiverOptions extends RemoteReceiverOptions {
   /**
    * The root element for this receiver. This acts as a shortcut for calling
@@ -132,6 +144,9 @@ const SCRIPT_URL =
  * on the host page. If you implement your UI with [custom elements](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements),
  * `DOMRemoteReceiver` is a simple option that avoids much of the
  * manual work required when using the basic `RemoteReceiver`.
+ *
+ * @deprecated `DOMRemoteReceiver` is no longer recommended. Use `RemoteReceiver`
+ * or a framework-specific receiver instead.
  */
 export class DOMRemoteReceiver {
   /**
