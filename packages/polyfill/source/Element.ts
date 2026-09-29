@@ -3,6 +3,7 @@ import {
   NAME,
   PREFIX,
   ATTRIBUTES,
+  HOOKS,
   HTML_NAMESPACE,
   NODE_TYPE_ELEMENT,
   type NamespaceURI,
@@ -118,6 +119,14 @@ export class Element extends ParentNode {
     let sib = this.previousSibling;
     while (sib && sib.nodeType !== 1) sib = sib.previousSibling;
     return sib;
+  }
+
+  focus(...args: [options?: FocusOptions]) {
+    this[HOOKS].callMethod?.(this as any, 'focus', ...args);
+  }
+
+  scrollIntoView(...args: [arg?: boolean | ScrollIntoViewOptions]) {
+    this[HOOKS].callMethod?.(this as any, 'scrollIntoView', ...args);
   }
 
   setAttribute(name: string, value: string) {

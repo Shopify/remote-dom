@@ -72,4 +72,11 @@ hooks.removeAttribute = (element, name) => {
   updateRemoteElementAttribute(element, name);
 };
 
+hooks.callMethod = (element, method, ...args) => {
+  const connection = remoteConnection(element);
+  if (connection == null) return;
+
+  connection.call(remoteId(element), method, ...args);
+};
+
 export {hooks, type Hooks};
