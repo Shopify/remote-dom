@@ -8,9 +8,17 @@ export interface Hooks {
   ): void;
   removeAttribute(element: Element, name: string, ns?: string | null): void;
   createText(text: Text, data: string): void;
-  setText(text: Text, data: string): void;
-  insertChild(parent: Element, node: Element | Text, index: number): void;
-  removeChild(parent: Element, node: Element | Text, index: number): void;
+  setText(text: Text | Comment, data: string): void;
+  insertChild(
+    parent: Element,
+    node: Element | Text | Comment,
+    index: number,
+  ): void;
+  removeChild(
+    parent: Element,
+    node: Element | Text | Comment,
+    index: number,
+  ): void;
   addEventListener(
     element: EventTarget,
     type: string,

@@ -1,8 +1,7 @@
-import {DOMRemoteReceiver} from '../receivers/DOMRemoteReceiver.ts';
-
-type DOMRemoteReceiverOptions = NonNullable<
-  ConstructorParameters<typeof DOMRemoteReceiver>[0]
->;
+import {
+  DOMRemoteReceiver,
+  type DOMRemoteReceiverOptions,
+} from '../receivers/DOMRemoteReceiver.ts';
 
 /**
  * A custom element that can be used to simplify receiving updates to a
@@ -21,6 +20,15 @@ type DOMRemoteReceiverOptions = NonNullable<
  * ```
  */
 export class RemoteReceiverElement extends HTMLElement {
+  /**
+   * Optional host-owned element and capability allowlist, copied when an instance
+   * is constructed. Override this in a host-side subclass before registering it.
+   */
+  static elements: DOMRemoteReceiverOptions['elements'];
+
+  /** Additional property and attribute names excluded by the host. */
+  static blockedProperties: DOMRemoteReceiverOptions['blockedProperties'];
+
   /**
    * The `RemoteConnection` object that connects this element to a remote
    * tree of elements.
@@ -47,10 +55,9 @@ export class RemoteReceiverElement extends HTMLElement {
 
   /**
    * Customizes how [remote methods](https://github.com/Shopify/remote-dom/blob/main/packages/core#remotemethods)
-   * are called. By default, the receiver will call a matching method found on
-   * the HTML element that represents the remote element. However, you may want to
-   * customize this behavior in order to avoid exposing methods on your HTML
-   * elements that should not be callable by the remote environment.
+   * are called. By default, custom-element methods and native focus/blur
+   * can be called. This callback overrides that policy, including for the root,
+   * and must enforce its own host-owned allowlist.
    *
    * @param element The HTML element representing the remote element the method is being called on.
    * @param method The name of the method being called.
@@ -61,12 +68,12 @@ export class RemoteReceiverElement extends HTMLElement {
    *
    * const receiver = document.createElement('remote-receiver');
    * receiver.call = (element, method, ...args) => {
-   *   // Prevent calling any methods that start with an underscore
-   *   if (method.startsWith('_')) {
+   *   // Only expose the button's focus method.
+   *   if (element.localName !== 'ui-button' || method !== 'focus') {
    *     throw new Error(`Cannot call method ${method}`);
    *   }
    *
-   *   return element[method](...args);
+   *   return (element as HTMLElement).focus();
    * };
    */
   call?: DOMRemoteReceiverOptions['call'];
@@ -74,12 +81,17 @@ export class RemoteReceiverElement extends HTMLElement {
   constructor() {
     super();
 
+    const receiverElement = this;
     const receiver = new DOMRemoteReceiver({
       root: this,
-      call: (element, method, ...args) =>
-        this.call
-          ? this.call(element, method, ...args)
-          : (element as any)[method](...args),
+      elements: (this.constructor as typeof RemoteReceiverElement).elements,
+      blockedProperties: (this.constructor as typeof RemoteReceiverElement)
+        .blockedProperties,
+      // Resolve the optional callback at call time so hosts can set it after
+      // construction. With no override, retain the receiver's default policy.
+      get call() {
+        return receiverElement.call?.bind(receiverElement);
+      },
       retain: (value) => this.retain?.(value),
       release: (value) => this.release?.(value),
     });

@@ -20,7 +20,7 @@ describe('Element convenience APIs', () => {
     hooks.removeAttribute.mockClear();
   });
 
-  describe('closest', () => {
+  describe('matches and closest', () => {
     it('finds itself and the nearest matching ancestor', () => {
       const outer = window.document.createElement('section');
       const middle = window.document.createElement('div');
@@ -34,18 +34,53 @@ describe('Element convenience APIs', () => {
       expect(element.closest('.target')).toBe(element);
       expect(element.closest('.container')).toBe(middle);
       expect(element.closest('section > .middle')).toBe(middle);
+      expect(element.closest('div.middle:has(> .target)')).toBe(middle);
+      expect(element.closest('section:has(> .middle .target)')).toBe(outer);
       expect(element.closest('body')).toBe(window.document.body);
+    });
+
+    it('matches current complex and relative selectors', () => {
+      const article = window.document.createElement('article');
+      const section = window.document.createElement('section');
+      article.className = 'post';
+      section.className = 'content';
+      element.className = 'target';
+      article.append(section);
+      section.append(element);
+
+      expect(element.matches('article.post > .content > .target')).toBe(true);
+      expect(element.matches('article:has(> .content .target) .target')).toBe(
+        true,
+      );
+      expect(article.matches('article.post:has(> .content .target)')).toBe(
+        true,
+      );
+      expect(article.matches('article:has(+ aside)')).toBe(false);
     });
 
     it('returns null when neither the element nor its ancestors match', () => {
       expect(element.closest('.missing')).toBeNull();
     });
+
+    it.each([':hover', 'div >', ':has(:has(.target))'])(
+      'throws SyntaxError for invalid selector %s',
+      (selector) => {
+        expect(() => element.matches(selector)).toThrowError(
+          expect.objectContaining({name: 'SyntaxError'}),
+        );
+        expect(() => element.closest(selector)).toThrowError(
+          expect.objectContaining({name: 'SyntaxError'}),
+        );
+      },
+    );
   });
 
   describe('classList', () => {
-    it('stays in sync with className and the class attribute', () => {
+    it('stays in sync with className and the normalized class attribute', () => {
       const classes = element.classList;
-      element.setAttribute('class', 'one two');
+      element.setAttribute('CLASS', 'one two');
+
+      expect(element.getAttributeNames()).toEqual(['class']);
 
       expect(element.classList).toBe(classes);
       expect(Array.isArray(classes)).toBe(false);
@@ -115,10 +150,14 @@ describe('Element convenience APIs', () => {
       expect(dataset.state).toBe('ready');
     });
 
-    it('reads data attributes', () => {
-      element.setAttribute('data-user-id', '123');
+    it('reads normalized data attributes', () => {
+      element.setAttribute('DATA-USER-ID', '123');
       element.setAttribute('data-state', 'ready');
 
+      expect(element.getAttributeNames()).toEqual([
+        'data-user-id',
+        'data-state',
+      ]);
       expect(element.dataset.userId).toBe('123');
       expect(element.dataset.state).toBe('ready');
     });
@@ -224,9 +263,17 @@ describe('Element convenience APIs', () => {
     });
 
     it('hides data attributes whose names do not round-trip to a property', () => {
+      const element = window.document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'g',
+      );
       element.setAttribute('data-fooBar', 'shadowed');
       element.setAttribute('data-foo-bar', 'visible');
 
+      expect(element.getAttributeNames()).toEqual([
+        'data-fooBar',
+        'data-foo-bar',
+      ]);
       expect(Object.keys(element.dataset)).toStrictEqual(['fooBar']);
       expect({...element.dataset}).toStrictEqual({fooBar: 'visible'});
       expect(element.dataset.fooBar).toBe('visible');
@@ -234,6 +281,26 @@ describe('Element convenience APIs', () => {
       element.removeAttribute('data-foo-bar');
       expect(Object.keys(element.dataset)).toStrictEqual([]);
       expect(element.dataset.fooBar).toBeUndefined();
+    });
+
+    it('reflects normalized HTML data attribute names', () => {
+      element.setAttribute('data-fooBar', 'normalized');
+      element.setAttribute('data-foo-bar', 'visible');
+
+      expect(element.getAttributeNames()).toEqual([
+        'data-foobar',
+        'data-foo-bar',
+      ]);
+      expect(Object.keys(element.dataset)).toStrictEqual(['foobar', 'fooBar']);
+      expect({...element.dataset}).toStrictEqual({
+        foobar: 'normalized',
+        fooBar: 'visible',
+      });
+
+      element.removeAttribute('DATA-FOO-BAR');
+      expect(Object.keys(element.dataset)).toStrictEqual(['foobar']);
+      expect(element.dataset.fooBar).toBeUndefined();
+      expect(element.dataset.foobar).toBe('normalized');
     });
   });
 });

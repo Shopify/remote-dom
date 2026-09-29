@@ -34,12 +34,60 @@ This process will install polyfilled versions of the following globals:
 - [`location`](https://developer.mozilla.org/en-US/docs/Web/API/Window/location) and [`navigator`](https://developer.mozilla.org/en-US/docs/Web/API/Window/navigator), though these are just set to `globalThis.location` and `globalThis.navigator`.
 - The [`Event`](https://developer.mozilla.org/en-US/docs/Web/API/Event), [`EventTarget`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget), [`CustomEvent`](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent), [`Node`](https://developer.mozilla.org/en-US/docs/Web/API/Node), [`ParentNode`](https://developer.mozilla.org/en-US/docs/Web/API/ParentNode), [`ChildNode`](https://developer.mozilla.org/en-US/docs/Web/API/ChildNode), [`Document`](https://developer.mozilla.org/en-US/docs/Web/API/Document), [`DocumentFragment`](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment), [`CharacterData`](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData), [`Comment`](https://developer.mozilla.org/en-US/docs/Web/API/Comment), [`Text`](https://developer.mozilla.org/en-US/docs/Web/API/Text), [`Element`](https://developer.mozilla.org/en-US/docs/Web/API/Element), [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement), [`SVGElement`](https://developer.mozilla.org/en-US/docs/Web/API/SVGElement), [`HTMLTemplateElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTemplateElement), and [`MutationObserver`](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) constructors.
 
-This polyfill lets you hook into many of the operations that happen in the DOM, like creating elements, updating attributes, and adding event listeners. You define these hooks by overwriting any of the properties on the `hooks` export of this library.
+## Extensions
+
+Use `Window.with()` to create a reusable `Window` subclass with additional DOM
+APIs or behavior. An extension is a function with two distinct parts:
+
+- **The function body runs once per window, during construction.** It receives
+  the new `Window` instance and can install or replace APIs on it, like
+  `window.MutationObserver`. Use it for setup, not for reacting to DOM changes.
+- **The returned hooks run for the lifetime of the window.** They subscribe to
+  DOM operations on that window, such as creating elements, setting attributes,
+  and adding event listeners, and are called each time one of those operations
+  happens. Returning hooks is optional.
 
 ```ts
-import {hooks} from '@remote-dom/polyfill';
+import {Window, type WindowExtension} from '@remote-dom/polyfill';
 
-hooks.createElement = (element) => {
+class CustomMutationObserver {}
+
+const mutationObserverExtension: WindowExtension = (window) => {
+  // Construction time: extend this window instance.
+  window.MutationObserver = CustomMutationObserver;
+
+  // Runtime: subscribe to DOM operations on this window.
+  return {
+    setAttribute(element, name, value) {
+      // Notify observers associated with this window.
+    },
+  };
+};
+
+const ExtendedWindow = Window.with(mutationObserverExtension);
+const window = new ExtendedWindow();
+```
+
+Extensions are installed in the order passed to `Window.with()` and across
+chained `.with()` calls. The two parts compose differently:
+
+- **Window APIs override.** Assignments like `window.MutationObserver = …` are
+  plain property writes, so when multiple extensions set the same API, the last
+  extension installed wins.
+- **Hooks are additive.** Every installed extension’s hooks are called in
+  installation order for each DOM operation.
+
+Extensions are installed after the base window and its initial document have
+been constructed, so their hooks do not observe the document’s bootstrap.
+
+Assigning hooks directly through the exported `HOOKS` symbol is the legacy
+integration API. New integrations should use extensions instead. Extension
+hooks run first, followed by the legacy hook assigned through `window[HOOKS]`:
+
+```ts
+import {HOOKS} from '@remote-dom/polyfill';
+
+window[HOOKS].createElement = (element) => {
   console.log('Creating element:', element);
 };
 ```

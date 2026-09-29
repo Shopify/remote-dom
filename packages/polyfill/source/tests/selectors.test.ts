@@ -1,5 +1,8 @@
 import {Window} from '../index.ts';
+import {NodeList} from '../NodeList.ts';
+import type {Element as PolyfillElement} from '../Element.ts';
 import {
+  MATCHER_ATTRIBUTE,
   MATCHER_CLASS,
   MATCHER_ELEMENT,
   MATCHER_ID,
@@ -15,9 +18,18 @@ const MatcherType = {
   Element: MATCHER_ELEMENT,
   Id: MATCHER_ID,
   Class: MATCHER_CLASS,
+  Attribute: MATCHER_ATTRIBUTE,
 } as const;
 
-import {describe, it, expect, beforeEach} from 'vitest';
+const ASCII_WHITESPACE = [
+  ['SPACE', ' '],
+  ['TAB', '\t'],
+  ['LINE FEED', '\n'],
+  ['FORM FEED', '\f'],
+  ['CARRIAGE RETURN', '\r'],
+] as const;
+
+import {describe, it, expect, expectTypeOf, beforeEach} from 'vitest';
 
 describe('selector parsing and matching', () => {
   beforeEach(() => {
@@ -26,15 +38,58 @@ describe('selector parsing and matching', () => {
   });
 
   describe('parseSelector', () => {
-    it('parses element selectors', () => {
-      const parts = parseSelector('div');
+    it('parses element selectors with a precomputed HTML name', () => {
+      const parts = parseSelector('DiV');
       expect(parts).toHaveLength(1);
       expect(parts[0]!.matchers).toHaveLength(1);
-      expect(parts[0]!.matchers[0]!).toMatchObject({
+      expect(parts[0]!.matchers[0]!).toEqual({
         type: 1, // MatcherType.Element
-        name: 'div',
-        value: 'div',
+        name: 'DiV',
+        htmlName: 'div',
+        value: 'DiV',
       });
+    });
+
+    it('ASCII-lowercases only HTML element and attribute names', () => {
+      expect(parseSelector('ÄDiV')[0]!.matchers[0]).toEqual({
+        type: MatcherType.Element,
+        name: 'ÄDiV',
+        htmlName: 'Ädiv',
+        value: 'ÄDiV',
+      });
+      expect(parseSelector('[ÄDATA-Key]')[0]!.matchers[0]).toMatchObject({
+        type: MatcherType.Attribute,
+        name: 'ÄDATA-Key',
+        htmlName: 'Ädata-key',
+      });
+      expect(
+        parseSelector('DiV#MyID.Mixed[DATA-Key="VaLue"]')[0]!.matchers,
+      ).toEqual([
+        {
+          type: MatcherType.Element,
+          name: 'DiV',
+          htmlName: 'div',
+          value: 'DiV',
+        },
+        {
+          type: MatcherType.Id,
+          name: 'MyID',
+          htmlName: undefined,
+          value: 'MyID',
+        },
+        {
+          type: MatcherType.Class,
+          name: 'Mixed',
+          htmlName: undefined,
+          value: 'Mixed',
+        },
+        {
+          type: MatcherType.Attribute,
+          name: 'DATA-Key',
+          htmlName: 'data-key',
+          value: 'VaLue',
+        },
+      ]);
     });
 
     it('parses ID selectors', () => {
@@ -57,12 +112,27 @@ describe('selector parsing and matching', () => {
       });
     });
 
+    it('keeps non-ASCII whitespace in class selector names', () => {
+      const parts = parseSelector('.left\u00a0right');
+
+      expect(parts).toHaveLength(1);
+      expect(parts[0]!.matchers).toEqual([
+        {
+          type: MatcherType.Class,
+          name: 'left\u00a0right',
+          htmlName: undefined,
+          value: 'left\u00a0right',
+        },
+      ]);
+    });
+
     it('parses attribute selectors without values', () => {
       const parts = parseSelector('[disabled]');
       expect(parts).toHaveLength(1);
       expect(parts[0]!.matchers[0]!).toMatchObject({
         type: 4, // MatcherType.Attribute
         name: 'disabled',
+        htmlName: 'disabled',
         value: undefined,
       });
     });
@@ -73,18 +143,15 @@ describe('selector parsing and matching', () => {
       expect(parts[0]!.matchers[0]!).toMatchObject({
         type: 4, // MatcherType.Attribute
         name: 'type',
+        htmlName: 'type',
         value: 'button',
       });
     });
 
-    it('parses pseudo-class selectors', () => {
-      const parts = parseSelector(':hover');
-      expect(parts).toHaveLength(1);
-      expect(parts[0]!.matchers[0]!).toMatchObject({
-        type: 5, // MatcherType.Pseudo
-        name: 'hover',
-        value: undefined,
-      });
+    it('rejects unsupported pseudo-class selectors', () => {
+      expect(() => parseSelector(':hover')).toThrowError(
+        expect.objectContaining({name: 'SyntaxError'}),
+      );
     });
 
     it('parses function selectors', () => {
@@ -107,6 +174,36 @@ describe('selector parsing and matching', () => {
       });
     });
 
+    it.each([
+      [':not(:has(.missing))', ':has(.missing)'],
+      [':has(span:not(.missing))', 'span:not(.missing)'],
+      [':has(> .hit)', '> .hit'],
+      [':has([data-label=")value("])', '[data-label=")value("]'],
+    ])('parses the balanced argument in %s', (selector, value) => {
+      expect(parseSelector(selector)[0]!.matchers[0]!.value).toBe(value);
+    });
+
+    it.each([':has(:has(.active))', ':has(:not(:has(.active)))'])(
+      'rejects nested :has() in %s',
+      (selector) => {
+        expect(() => parseSelector(selector)).toThrow();
+      },
+    );
+
+    it.each([
+      [':HAS(div)', 6, 'has', 'div'],
+      [':Not(.Hidden)', 6, 'not', '.Hidden'],
+    ])(
+      'ASCII-lowercases only the pseudo-class name in %s',
+      (selector, type, name, value) => {
+        expect(parseSelector(selector)[0]!.matchers[0]!).toMatchObject({
+          type,
+          name,
+          value,
+        });
+      },
+    );
+
     it('parses compound selectors', () => {
       const parts = parseSelector('div.myclass#myid[type="button"]');
       expect(parts).toHaveLength(1);
@@ -125,13 +222,16 @@ describe('selector parsing and matching', () => {
       expect(parts[1]!.matchers[0]!.name).toBe('span');
     });
 
-    it('parses descendant combinator', () => {
-      const parts = parseSelector('div span');
-      expect(parts).toHaveLength(2);
-      expect(parts[0]!.combinator).toBe(0); // Combinator.Descendant
-      expect(parts[0]!.matchers[0]!.name).toBe('div');
-      expect(parts[1]!.matchers[0]!.name).toBe('span');
-    });
+    it.each(ASCII_WHITESPACE)(
+      'parses %s as a descendant combinator',
+      (_name, whitespace) => {
+        const parts = parseSelector(`div${whitespace}span`);
+        expect(parts).toHaveLength(2);
+        expect(parts[0]!.combinator).toBe(0); // Combinator.Descendant
+        expect(parts[0]!.matchers[0]!.name).toBe('div');
+        expect(parts[1]!.matchers[0]!.name).toBe('span');
+      },
+    );
 
     it('parses adjacent sibling combinator', () => {
       const parts = parseSelector('h1 + p');
@@ -191,6 +291,25 @@ describe('selector parsing and matching', () => {
           </div>
         </footer>
       `;
+      container.querySelector('article')!.setAttribute('DATA-STATE', 'Ready');
+      container.querySelector('.highlight')!.setAttribute('data-label', 'a)b');
+    });
+
+    it('types instance query results as elements', () => {
+      const matches = new Window().document
+        .createElement('div')
+        .querySelectorAll('p');
+
+      expectTypeOf(matches).toEqualTypeOf<NodeList<PolyfillElement>>();
+      expectTypeOf(matches[0]!).toEqualTypeOf<PolyfillElement>();
+      expectTypeOf(matches.item(0)).toEqualTypeOf<PolyfillElement | null>();
+    });
+
+    it('returns the polyfill collection with item() access', () => {
+      const matches = container.querySelectorAll('.text');
+
+      expect(matches).toBeInstanceOf(NodeList);
+      expect(matches.item(0)).toBe(matches[0]);
     });
 
     it('selects HTML element names case-insensitively', () => {
@@ -201,6 +320,91 @@ describe('selector parsing and matching', () => {
       const paragraphs = container.querySelectorAll('p');
       expect(paragraphs).toHaveLength(3);
     });
+
+    it('only ASCII-lowercases HTML element selector names', () => {
+      const element = document.createElement('ÄDiV');
+      container.appendChild(element);
+
+      expect(container.querySelector('ÄDIV')).toBe(element);
+      expect(container.querySelectorAll('Ädiv')).toEqual([element]);
+      expect(container.querySelector('äDIV')).toBeNull();
+    });
+
+    it('preserves the original local name for foreign elements', () => {
+      const html = document.createElement('linearGradient');
+      const svg = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'linearGradient',
+      );
+      container.append(html, svg);
+
+      expect(container.querySelector('linearGradient')).toBe(html);
+      expect(container.querySelectorAll('linearGradient')).toEqual([html, svg]);
+      expect(container.querySelectorAll('LINEARGRADIENT')).toEqual([html]);
+    });
+
+    it('returns a static NodeList-compatible collection', () => {
+      const matches = container.querySelectorAll('.text');
+      const text = [...matches].map((element) => element.textContent?.trim());
+      const visited: string[] = [];
+
+      matches.forEach((element) => visited.push(element.textContent?.trim()!));
+      container
+        .appendChild(document.createElement('p'))
+        .setAttribute('class', 'text');
+
+      expect(container.querySelectorAll('.text')).toHaveLength(4);
+      expect(matches).toBeInstanceOf(NodeList);
+      expect(matches).toHaveLength(3);
+      expect(matches.item(0)).toBe(matches[0]);
+      expect(matches.item(-1)).toBeNull();
+      expect(matches.item(matches.length)).toBeNull();
+      expect(
+        [...matches].map((element) => element.textContent?.trim()),
+      ).toEqual(text);
+      expect(visited).toEqual(text);
+    });
+
+    it('does not fold stored createElementNS HTML names', () => {
+      const uppercase = document.createElementNS(
+        'http://www.w3.org/1999/xhtml',
+        'I',
+      );
+      container.appendChild(uppercase);
+
+      expect(container.querySelectorAll('i')).toHaveLength(0);
+      expect(container.querySelectorAll('I')).toHaveLength(0);
+
+      const normalized = document.createElement('I');
+      container.appendChild(normalized);
+
+      expect(container.querySelectorAll('i')).toEqual([normalized]);
+      expect(container.querySelectorAll('I')).toEqual([normalized]);
+    });
+
+    it.each(['\u1680', '\ufeff'])(
+      'does not treat %j as CSS whitespace',
+      (separator) => {
+        const ordinary = document.createElement('article');
+        container.appendChild(ordinary);
+        const selector = `${separator}article`;
+
+        expect(container.querySelector(selector)).toBeNull();
+
+        const literal = document.createElement(selector);
+        container.appendChild(literal);
+        expect(container.querySelector(selector)).toBe(literal);
+        expect(container.querySelectorAll(selector)).toEqual([literal]);
+
+        const classed = document.createElement('div');
+        classed.setAttribute('class', `first${separator}second`);
+        container.appendChild(classed);
+        expect(container.querySelector('.first')).toBeNull();
+        expect(container.querySelector(`.first${separator}second`)).toBe(
+          classed,
+        );
+      },
+    );
 
     it('selects by ID', () => {
       const main = container.querySelector('#main-post');
@@ -215,12 +419,67 @@ describe('selector parsing and matching', () => {
       expect(hidden?.textContent?.trim()).toBe('Hidden paragraph');
     });
 
+    it('keeps non-ASCII whitespace in class names', () => {
+      const literal = document.createElement('div');
+      literal.setAttribute('class', 'left\u00a0right');
+
+      const separated = document.createElement('div');
+      separated.setAttribute('class', 'left right');
+
+      container.append(literal, separated);
+
+      const literalMatches = container.querySelectorAll('.left\u00a0right');
+      expect(literalMatches).toHaveLength(1);
+      expect(literalMatches[0]).toBe(literal);
+      expect(container.querySelector('.left')).toBe(separated);
+    });
+
+    it('selects Unicode and double-hyphen identifiers', () => {
+      const article = container.querySelector('article')!;
+      const unicode = document.createElement('span');
+      unicode.setAttribute('class', 'é');
+      unicode.id = '--foo';
+      article.appendChild(unicode);
+
+      expect(container.querySelector('.é')).toBe(unicode);
+      expect(container.querySelector('#--foo')).toBe(unicode);
+      expect(container.querySelector('article:has(> .é)')).toBe(article);
+    });
+
     it('selects by attribute', () => {
       const links = container.querySelectorAll('[href]');
       expect(links).toHaveLength(2);
 
       const activeLinks = container.querySelectorAll('[href="#"]');
       expect(activeLinks).toHaveLength(2);
+    });
+    it('selects by an unquoted exact attribute value', () => {
+      expect(container.querySelectorAll('[class=content]')).toHaveLength(2);
+    });
+
+    it('rejects a different unquoted exact attribute value', () => {
+      expect(container.querySelector('[class=contents]')).toBeNull();
+    });
+
+    it.each([
+      ['quoted', 'article[data-state="Ready"]', true],
+      ['unquoted', 'article[data-state=Ready]', true],
+      ['normalized HTML name', 'article[DATA-STATE=Ready]', true],
+      ['quoted case-sensitive value', 'article[data-state="ready"]', false],
+      ['unquoted case-sensitive value', 'article[data-state=ready]', false],
+    ])('matches %s exact attribute equality', (_name, selector, matches) => {
+      expect(container.querySelector(selector) != null).toBe(matches);
+    });
+
+    it('preserves foreign attribute name case', () => {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttributeNS(null, 'viewBox', '0 0 10 10');
+      container.appendChild(svg);
+
+      expect(container.querySelector('[viewBox]')).toBe(svg);
+      expect(container.querySelector('[viewBox="0 0 10 10"]')).toBe(svg);
+      expect(container.querySelector('[VIEWBOX]')).toBeNull();
+      expect(container.querySelector('[viewbox]')).toBeNull();
     });
 
     it('selects by compound selectors', () => {
@@ -246,6 +505,33 @@ describe('selector parsing and matching', () => {
       const directArticleChildren = container.querySelectorAll('article > h1');
       expect(directArticleChildren).toHaveLength(1);
     });
+    it('preserves the matched ancestor through chained combinators', () => {
+      const activeLink = container.querySelector('article > .sidebar a.active');
+
+      expect(activeLink?.textContent?.trim()).toBe('Active Link');
+    });
+
+    it('does not restart chained combinators from the leaf', () => {
+      expect(container.querySelector('li > .sidebar a.active')).toBeNull();
+    });
+
+    it.each([
+      ['child', 'article > .sidebar > .nav > li > a.active'],
+      ['descendant', 'article .sidebar .nav li a.active'],
+      ['adjacent sibling', 'h1 + .content + .sidebar'],
+      ['general sibling', 'h1 ~ .content ~ .sidebar'],
+    ])('preserves state across a 3+ part %s chain', (_name, selector) => {
+      expect(container.querySelector(selector)).not.toBeNull();
+    });
+
+    it.each([
+      ['child', 'article > .sidebar > li > a.active'],
+      ['descendant', 'footer .sidebar .nav a.active'],
+      ['adjacent sibling', 'h1 + .sidebar + .content'],
+      ['general sibling', '.sidebar ~ .content ~ footer'],
+    ])('rejects an invalid 3+ part %s chain', (_name, selector) => {
+      expect(container.querySelector(selector)).toBeNull();
+    });
 
     it('selects with adjacent sibling combinator', () => {
       const titleSibling = container.querySelector('h1 + div');
@@ -267,6 +553,103 @@ describe('selector parsing and matching', () => {
       const hasActiveLink = container.querySelector(':has(.active)');
       expect(hasActiveLink).toBeTruthy();
     });
+    it('matches :has() against descendants', () => {
+      expect(container.querySelector('article:has(.active)')?.id).toBe(
+        'main-post',
+      );
+    });
+
+    it('does not match :has() without a matching descendant', () => {
+      expect(container.querySelector('footer:has(.active)')).toBeNull();
+    });
+
+    it.each([
+      ['direct child', 'article:has(> h1)'],
+      ['child with descendant', 'article:has(> .content .highlight)'],
+      ['adjacent sibling', 'article:has(+ footer)'],
+      ['general sibling', 'article:has(~ footer)'],
+    ])(
+      'matches scoped :has() with a leading %s relation',
+      (_name, selector) => {
+        document.body.appendChild(container);
+        expect(document.body.querySelector(selector)?.id).toBe('main-post');
+      },
+    );
+
+    it.each([
+      ['outside ancestor', 'article:has(body .active)'],
+      ['scope as explicit ancestor', 'article:has(article .active)'],
+      ['scope id as explicit ancestor', 'article:has(#main-post .active)'],
+      ['non-child descendant', 'article:has(> .active)'],
+      ['wrong adjacent direction', 'footer:has(+ article)'],
+    ])('rejects :has() with %s', (_name, selector) => {
+      document.body.appendChild(container);
+      expect(document.body.querySelector(selector)).toBeNull();
+    });
+
+    it.each(['article:has(:has(.active))', 'article:has(:not(:has(.active)))'])(
+      'rejects nested :has() before walking candidates in %s',
+      (selector) => {
+        const empty = document.createElement('div');
+        for (const root of [empty, container]) {
+          expect(() => root.querySelector(selector)).toThrowError(
+            expect.objectContaining({name: 'SyntaxError'}),
+          );
+          expect(() => root.querySelectorAll(selector)).toThrowError(
+            expect.objectContaining({name: 'SyntaxError'}),
+          );
+        }
+      },
+    );
+
+    it('preserves valid :has() nesting controls', () => {
+      expect(() => parseSelector(':not(:has(.missing))')).not.toThrow();
+      expect(() => parseSelector(':has(span:not(.missing))')).not.toThrow();
+      expect(() => parseSelector(':has(.active):has(h1)')).not.toThrow();
+      expect(() =>
+        parseSelector(':has([data-label=":has(.active)"])'),
+      ).not.toThrow();
+    });
+
+    it('matches nested functional pseudo-classes', () => {
+      expect(container.querySelector('article:not(:has(.missing))')?.id).toBe(
+        'main-post',
+      );
+      expect(container.querySelector('article:not(:has(.active))')).toBeNull();
+      expect(
+        container.querySelector('article:has(span:not(.missing))')?.id,
+      ).toBe('main-post');
+      expect(
+        container.querySelector('footer:has(span:not(.missing))'),
+      ).toBeNull();
+    });
+
+    it.each([
+      ['uppercase simple function', 'article:HAS(.active)'],
+      ['mixed-case simple function', 'article:Has(.active)'],
+      ['mixed-case negation', 'article:NOT(.footer)'],
+      ['nested functions', 'article:NOT(:HAS(.missing))'],
+      ['nested descendant function', 'article:HAS(span:NoT(.missing))'],
+      ['relative child function', 'article:HAS(> h1)'],
+      ['relative sibling function', 'article:hAs(+ footer)'],
+    ])('matches %s names ASCII-case-insensitively', (_name, selector) => {
+      expect(container.querySelector(selector)?.id).toBe('main-post');
+    });
+
+    it.each([
+      ['mixed-case negation result', 'article:NoT(.post)'],
+      ['class name', 'article:HAS(.ACTIVE)'],
+      ['ID', '#MAIN-POST'],
+      ['attribute value', 'article:HAS([data-label="A)B"])'],
+    ])('does not fold the %s', (_name, selector) => {
+      expect(container.querySelector(selector)).toBeNull();
+    });
+
+    it('keeps quoted attribute values balanced inside :has()', () => {
+      expect(
+        container.querySelector('article:has([data-label="a)b"])')?.id,
+      ).toBe('main-post');
+    });
 
     it('handles complex selectors', () => {
       const complexSelector = container.querySelectorAll(
@@ -285,10 +668,24 @@ describe('selector parsing and matching', () => {
       expect(container.querySelector('table')).toBeNull();
       expect(container.querySelector('#nonexistent-id')).toBeNull();
     });
+    it('ignores leading selector whitespace', () => {
+      expect(container.querySelector(' \n\tarticle')?.id).toBe('main-post');
+    });
 
-    it('handles edge cases', () => {
-      expect(container.querySelectorAll('')).toHaveLength(0);
+    it('does not turn leading whitespace into a match', () => {
+      expect(container.querySelector(' \n\tsection')).toBeNull();
+    });
 
+    it.each([
+      ['leading and trailing', ' \n\tarticle  ', true],
+      ['internal child', 'article \n >\t .sidebar ', true],
+      ['internal descendant', 'article   .nav\t a.active ', true],
+      ['non-match with whitespace', ' \n footer > .sidebar\t ', false],
+    ])('handles %s whitespace', (_name, selector, matches) => {
+      expect(container.querySelector(selector) != null).toBe(matches);
+    });
+
+    it('selects all elements with the universal selector', () => {
       const allElements = container.querySelectorAll('*');
       expect(allElements.length).toBeGreaterThan(0);
     });
@@ -318,14 +715,28 @@ describe('selector parsing and matching', () => {
 
     it('selects by ID matcher without parsing', () => {
       const main = querySelector(asPolyfill(container), [
-        {type: MatcherType.Id, name: 'main-post'},
+        {
+          type: MatcherType.Id,
+          name: 'main-post',
+          htmlName: 'ignored-for-id',
+        },
       ]);
       expect(main?.tagName.toLowerCase()).toBe('article');
     });
 
+    it('types standalone query results as elements', () => {
+      const matches = querySelectorAll(asPolyfill(container), [
+        {type: MatcherType.Element, name: 'p', htmlName: 'p', value: 'p'},
+      ]);
+
+      expectTypeOf(matches).toEqualTypeOf<NodeList<PolyfillElement>>();
+      expectTypeOf(matches[0]!).toEqualTypeOf<PolyfillElement>();
+      expectTypeOf(matches.item(0)).toEqualTypeOf<PolyfillElement | null>();
+    });
+
     it('selects by element matcher without parsing', () => {
       const paragraphs = querySelectorAll(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'p'},
+        {type: MatcherType.Element, name: 'p', htmlName: 'p', value: 'p'},
       ]);
       expect(paragraphs).toHaveLength(2);
     });
@@ -341,23 +752,178 @@ describe('selector parsing and matching', () => {
       expect(result).toBe(element);
     });
 
-    it('matches HTML tag names case-insensitively via element matcher', () => {
+    it('matches classes with selector punctuation literally', () => {
+      const element = document.createElement('div');
+      element.setAttribute('class', 'has.dot has:colon has#hash');
+      container.appendChild(element);
+
+      for (const name of ['has.dot', 'has:colon', 'has#hash']) {
+        expect(
+          querySelector(asPolyfill(container), [
+            {type: MatcherType.Class, name},
+          ]),
+        ).toBe(element);
+      }
+    });
+
+    it.each(ASCII_WHITESPACE)(
+      'splits class attributes on %s',
+      (_name, whitespace) => {
+        const element = document.createElement('div');
+        element.setAttribute('class', `left${whitespace}right`);
+        container.appendChild(element);
+
+        expect(
+          querySelector(asPolyfill(container), [
+            {type: MatcherType.Class, name: 'right'},
+          ]),
+        ).toBe(element);
+      },
+    );
+
+    it('does not split class attributes on non-ASCII whitespace', () => {
+      const literal = document.createElement('div');
+      literal.setAttribute('class', 'left\u00a0right');
+
+      const separated = document.createElement('div');
+      separated.setAttribute('class', 'left right');
+
+      container.append(literal, separated);
+
+      expect(
+        querySelector(asPolyfill(container), [
+          {type: MatcherType.Class, name: 'left\u00a0right'},
+        ]),
+      ).toBe(literal);
+      expect(
+        querySelector(asPolyfill(container), [
+          {type: MatcherType.Class, name: 'left'},
+        ]),
+      ).toBe(separated);
+    });
+
+    it('requires every class matcher to match', () => {
+      const complete = document.createElement('div');
+      complete.setAttribute('class', 'one two three');
+
+      const partial = document.createElement('div');
+      partial.setAttribute('class', 'one two');
+
+      container.append(complete, partial);
+
+      const matches = querySelectorAll(asPolyfill(container), [
+        {type: MatcherType.Class, name: 'one'},
+        {type: MatcherType.Class, name: 'three'},
+      ]);
+      expect(matches).toHaveLength(1);
+      expect(matches[0]).toBe(complete);
+
+      expect(
+        querySelector(asPolyfill(container), [
+          {type: MatcherType.Class, name: 'one'},
+          {type: MatcherType.Class, name: 'missing'},
+        ]),
+      ).toBeNull();
+    });
+
+    it('matches HTML tag names via the precomputed htmlName', () => {
       const upper = querySelectorAll(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'ARTICLE'},
+        {
+          type: MatcherType.Element,
+          name: 'ARTICLE',
+          htmlName: 'article',
+          value: 'ARTICLE',
+        },
       ]);
       expect(upper).toHaveLength(1);
 
-      const mixed = querySelectorAll(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'SpAn'},
+      const mixed = querySelector(asPolyfill(container), [
+        {
+          type: MatcherType.Element,
+          name: 'SpAn',
+          htmlName: 'span',
+          value: 'SpAn',
+        },
       ]);
-      expect(mixed).toHaveLength(1);
-      expect(mixed[0]!.getAttribute('class')).toBe('highlight');
+      expect(mixed?.getAttribute('class')).toBe('highlight');
+
+      const mismatched = querySelector(asPolyfill(container), [
+        {
+          type: MatcherType.Element,
+          name: 'ARTICLE',
+          htmlName: 'not-article',
+          value: 'ARTICLE',
+        },
+      ]);
+      expect(mismatched).toBeNull();
+    });
+
+    it('uses supplied HTML names for structured attribute comparisons', () => {
+      const article = container.querySelector('article')!;
+      article.setAttribute('data-state', 'Ready');
+
+      const presence = {
+        type: MatcherType.Attribute,
+        name: 'DATA-STATE',
+        htmlName: 'data-state',
+      } as const;
+      const exact = {...presence, value: 'Ready'};
+
+      expect(querySelector(asPolyfill(container), [presence])).toBe(article);
+      expect(querySelector(asPolyfill(container), [exact])).toBe(article);
+      expect(
+        querySelector(asPolyfill(container), [{...exact, value: 'ready'}]),
+      ).toBeNull();
+      expect(
+        querySelector(asPolyfill(container), [
+          {...presence, htmlName: 'not-data-state'},
+        ]),
+      ).toBeNull();
+    });
+
+    it('uses original attribute names for foreign structured matchers', () => {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttributeNS(null, 'viewBox', '0 0 10 10');
+      container.appendChild(svg);
+
+      const matcher = {
+        type: MatcherType.Attribute,
+        name: 'viewBox',
+        htmlName: 'viewbox',
+        value: '0 0 10 10',
+      } as const;
+
+      expect(querySelector(asPolyfill(container), [matcher])).toBe(svg);
+      expect(
+        querySelector(asPolyfill(container), [{...matcher, name: 'viewbox'}]),
+      ).toBeNull();
+    });
+
+    it('uses original names for foreign structured matcher comparisons', () => {
+      const html = document.createElement('linearGradient');
+      const svg = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'linearGradient',
+      );
+      container.append(html, svg);
+      const matcher = {
+        type: MatcherType.Element,
+        name: 'linearGradient',
+        htmlName: 'lineargradient',
+        value: 'linearGradient',
+      } as const;
+
+      expect(querySelector(asPolyfill(container), [matcher])).toBe(html);
+      expect(querySelectorAll(asPolyfill(container), [matcher])).toEqual([
+        html,
+        svg,
+      ]);
     });
 
     it('returns same results as string selectors for compound queries', () => {
       const byString = container.querySelectorAll('p.text.hidden');
       const byObject = querySelectorAll(asPolyfill(container), [
-        {type: MatcherType.Element, name: 'p'},
+        {type: MatcherType.Element, name: 'p', htmlName: 'p', value: 'p'},
         {type: MatcherType.Class, name: 'text'},
         {type: MatcherType.Class, name: 'hidden'},
       ]);
@@ -383,7 +949,12 @@ describe('selector parsing and matching', () => {
       ).toBeNull();
       expect(
         querySelectorAll(asPolyfill(container), [
-          {type: MatcherType.Element, name: 'table'},
+          {
+            type: MatcherType.Element,
+            name: 'table',
+            htmlName: 'table',
+            value: 'table',
+          },
         ]),
       ).toHaveLength(0);
     });

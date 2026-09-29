@@ -3,8 +3,15 @@ import type {ServerResponse} from 'node:http';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {defineConfig, type Plugin, type UserConfig} from 'vite';
+import {parseCapabilities, rowsByPath} from './scripts/capabilities.ts';
 
 const packageRoot = path.dirname(fileURLToPath(import.meta.url));
+const capabilitiesPath = path.join(packageRoot, 'capabilities.tsv');
+const capabilityPaths = [
+  ...rowsByPath(
+    parseCapabilities(fs.readFileSync(capabilitiesPath, 'utf8')),
+  ).keys(),
+];
 const fixtureRoot = path.join(packageRoot, 'fixtures');
 const wptRoot = process.env.WPT_ROOT
   ? path.resolve(process.env.WPT_ROOT)
@@ -146,6 +153,7 @@ const config: UserConfig = defineConfig({
     },
   },
   define: {
+    __WPT_CAPABILITY_PATHS__: JSON.stringify(capabilityPaths),
     __WPT_ROOT__: JSON.stringify(wptRoot ?? 'not prepared'),
   },
 });

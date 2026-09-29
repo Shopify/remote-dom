@@ -1,19 +1,28 @@
 import {
   NS,
   NAME,
+  PREFIX,
   NODE_TYPE_DOCUMENT,
+  NODE_TYPE_ATTRIBUTE,
+  HTML_NAMESPACE,
   SVG_NAMESPACE,
   type NamespaceURI,
   type NodeType,
   OWNER_DOCUMENT,
   HOOKS,
   IS_CONNECTED,
+  CREATE_ELEMENT,
+  asciiLowercase,
 } from './constants.ts';
+import {
+  validateAndExtractQualifiedName,
+  validateElementLocalName,
+} from './names.ts';
 import type {Window} from './Window.ts';
 import type {Node} from './Node.ts';
-import {getElementsByClassName as findElementsByClassName} from './getElementsByClassName.ts';
+import type {Attr} from './Attr.ts';
 import {Event} from './Event.ts';
-import {ParentNode} from './ParentNode.ts';
+import {ParentNode, removeChildForAdoption} from './ParentNode.ts';
 import {Element} from './Element.ts';
 import {SVGElement} from './SVGElement.ts';
 import {Text} from './Text.ts';
@@ -21,14 +30,19 @@ import {Comment} from './Comment.ts';
 import {DocumentFragment} from './DocumentFragment.ts';
 import {HTMLTemplateElement} from './HTMLTemplateElement.ts';
 import {
-  isParentNode,
+  adoptNodes,
   cloneNode,
+  collectAdoptionSnapshot,
   getElementById as findElementById,
+  getElementsByClassName as findElementsByClassName,
   getElementsByTagName as findElementsByTagName,
 } from './shared.ts';
 import {HTMLBodyElement} from './HTMLBodyElement.ts';
 import {HTMLHeadElement} from './HTMLHeadElement.ts';
 import {HTMLHtmlElement} from './HTMLHtmlElement.ts';
+import {performWithCustomElementReactions} from './custom-element-reactions.ts';
+import {createDOMException} from './dom-exception.ts';
+import {removeAttributeForAdoption} from './NamedNodeMap.ts';
 
 export class Document extends ParentNode {
   nodeType: NodeType = NODE_TYPE_DOCUMENT;
@@ -52,21 +66,51 @@ export class Document extends ParentNode {
     this.documentElement.appendChild(this.body);
   }
 
+  get textContent(): string | null {
+    return null;
+  }
+
+  set textContent(data: any) {
+    if (data != null) void `${data}`;
+  }
+
   getElementsByClassName(classNames: string) {
     return findElementsByClassName(this, classNames);
   }
 
   createElement(localName: string) {
-    return createElement(this, localName);
+    const name = String(localName);
+    validateElementLocalName(name);
+    return createElement(this, asciiLowercase(name));
   }
 
-  createElementNS(namespaceURI: NamespaceURI, localName: string) {
-    return createElement(this, localName, namespaceURI);
+  createElementNS(namespaceURI: NamespaceURI, qualifiedName: string) {
+    const name = validateAndExtractQualifiedName(
+      namespaceURI,
+      qualifiedName,
+      'element',
+    );
+    return createElement(
+      this,
+      name.qualifiedName,
+      name.namespace,
+      name.prefix,
+      name.localName,
+    );
+  }
+
+  [CREATE_ELEMENT](
+    qualifiedName: string,
+    namespace: NamespaceURI,
+    prefix: string | null,
+    localName: string,
+  ) {
+    return createElement(this, qualifiedName, namespace, prefix, localName);
   }
 
   createTextNode(data: any) {
     const text = createNode(new Text(data), this);
-    this[HOOKS].createText?.(text as any, String(data));
+    this[HOOKS].createText?.(text as any, text.data);
     return text;
   }
 
@@ -91,16 +135,42 @@ export class Document extends ParentNode {
   }
 
   importNode(node: Node, deep?: boolean) {
+    if (node.nodeType === NODE_TYPE_DOCUMENT) {
+      throw createDOMException(
+        'Cannot import a document node',
+        'NotSupportedError',
+      );
+    }
+
     return cloneNode(node, deep, this);
   }
 
   adoptNode(node: Node) {
+    if (node.nodeType === NODE_TYPE_ATTRIBUTE) {
+      const attribute = node as Attr;
+      const ownerElement = attribute.ownerElement;
+
+      if (ownerElement) {
+        return performWithCustomElementReactions(() => {
+          removeAttributeForAdoption(ownerElement.attributes, attribute, this);
+          return attribute;
+        });
+      }
+
+      if (attribute[OWNER_DOCUMENT] === this) return attribute;
+      adoptNodes([attribute], this);
+      return attribute;
+    }
+
     if (node[OWNER_DOCUMENT] === this) return node;
 
-    node.parentNode?.removeChild(node);
-    adoptNode(node, this);
-
-    return node;
+    const adoption = collectAdoptionSnapshot(node);
+    return performWithCustomElementReactions(() => {
+      const parent = node.parentNode;
+      if (parent) removeChildForAdoption(parent, node, adoption, this);
+      else adoptNodes(adoption.nodes, this);
+      return node;
+    });
   }
 }
 
@@ -116,49 +186,44 @@ export function createNode<T extends Node>(node: T, ownerDocument: Document) {
 
 export function createElement<T extends Element>(
   ownerDocument: Document,
-  name: string,
-  namespace?: NamespaceURI,
+  qualifiedName: string,
+  namespace: NamespaceURI = HTML_NAMESPACE,
+  prefix: string | null = null,
+  localName = qualifiedName,
 ) {
   let element: T;
-  const lowerName = String(name).toLowerCase();
 
   if (namespace === SVG_NAMESPACE) {
     element = new SVGElement() as any;
-  } else if (lowerName === 'template') {
+  } else if (namespace === HTML_NAMESPACE && localName === 'template') {
     element = new HTMLTemplateElement() as any;
-  } else {
-    const CustomElement = ownerDocument.defaultView.customElements.get(name);
+  } else if (namespace === HTML_NAMESPACE) {
+    const CustomElement =
+      ownerDocument.defaultView.customElements.get(localName);
     element = CustomElement ? (new CustomElement() as any) : new Element();
+  } else {
+    element = new Element() as any;
   }
 
-  return setupElement(element, ownerDocument, name, namespace);
+  return setupElement(element, ownerDocument, qualifiedName, namespace, prefix);
 }
 
 export function setupElement<T extends Element>(
   element: T,
   ownerDocument: Document,
-  name: string,
-  namespace?: NamespaceURI,
+  qualifiedName: string,
+  namespace: NamespaceURI = HTML_NAMESPACE,
+  prefix: string | null = null,
 ) {
   createNode(element, ownerDocument);
 
-  Object.defineProperty(element, NAME, {value: name});
-
-  if (namespace) {
-    Object.defineProperty(element, NS, {value: namespace});
-  }
+  Object.defineProperties(element, {
+    [NAME]: {value: qualifiedName},
+    [NS]: {value: namespace},
+    [PREFIX]: {value: prefix},
+  });
 
   ownerDocument[HOOKS].createElement?.(element as any, namespace);
 
   return element;
-}
-
-export function adoptNode(node: Node, document: Document) {
-  node[OWNER_DOCUMENT] = document;
-
-  if (isParentNode(node)) {
-    for (const child of node.childNodes) {
-      adoptNode(child, document);
-    }
-  }
 }

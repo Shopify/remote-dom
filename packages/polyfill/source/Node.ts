@@ -2,18 +2,28 @@ import {
   OWNER_DOCUMENT,
   NAME,
   PARENT,
+  HOST,
   CHILD,
   PREV,
   NEXT,
-  HTML_NAMESPACE,
+  NODE_TYPE_ATTRIBUTE,
+  NODE_TYPE_DOCUMENT,
+  NODE_TYPE_DOCUMENT_FRAGMENT,
+  NODE_TYPE_DOCUMENT_TYPE,
+  NODE_TYPE_ELEMENT,
   NODE_TYPE_NODE,
+  XMLNS_NAMESPACE,
   type NodeType,
   HOOKS,
+  HOOKS_DISPATCH,
   IS_CONNECTED,
 } from './constants.ts';
+import type {Attr} from './Attr.ts';
 import type {Document} from './Document.ts';
+import type {Element} from './Element.ts';
 import type {ParentNode} from './ParentNode.ts';
 import {EventTarget} from './EventTarget.ts';
+import {normalizeNamespace} from './names.ts';
 import {
   isCharacterData,
   isParentNode,
@@ -28,13 +38,14 @@ export class Node extends EventTarget {
   [OWNER_DOCUMENT]!: Document;
   [NAME] = '';
   [PARENT]: ParentNode | null = null;
+  [HOST]: Node | null = null;
   [CHILD]: Node | null = null;
   [PREV]: Node | null = null;
   [NEXT]: Node | null = null;
   [IS_CONNECTED] = false;
 
   protected get [HOOKS]() {
-    return this[OWNER_DOCUMENT].defaultView[HOOKS];
+    return this[OWNER_DOCUMENT].defaultView[HOOKS_DISPATCH];
   }
 
   get localName() {
@@ -42,7 +53,7 @@ export class Node extends EventTarget {
   }
 
   get nodeName() {
-    return this[NAME].toUpperCase();
+    return this[NAME];
   }
 
   get ownerDocument() {
@@ -53,8 +64,9 @@ export class Node extends EventTarget {
     return this[IS_CONNECTED];
   }
 
-  isDefaultNamespace(namespace: string): namespace is typeof HTML_NAMESPACE {
-    return namespace === HTML_NAMESPACE;
+  isDefaultNamespace(namespace: string | null): boolean {
+    const normalizedNamespace = normalizeNamespace(namespace);
+    return locateNamespace(this) === normalizedNamespace;
   }
 
   get parentNode() {
@@ -143,11 +155,12 @@ export class Node extends EventTarget {
     if (isCharacterData(this)) {
       this.data = data;
     } else if (isParentNode(this)) {
-      let child;
-      while ((child = this[CHILD])) {
-        this.removeChild(child);
+      const text = data == null ? '' : String(data);
+      if (text === '') {
+        this.replaceChildren();
+      } else {
+        this.replaceChildren(text);
       }
-      this.append(data);
     }
   }
 
@@ -158,10 +171,52 @@ export class Node extends EventTarget {
   contains(node: Node | null) {
     let currentNode: Node | null = node;
 
-    while (true) {
-      if (currentNode == null) return false;
+    while (currentNode != null) {
       if (currentNode === this) return true;
-      currentNode = node!.parentNode;
+      currentNode = currentNode.parentNode;
+    }
+
+    return false;
+  }
+}
+
+function locateNamespace(node: Node | null): string | null {
+  let current = node;
+
+  while (current) {
+    switch (current.nodeType) {
+      case NODE_TYPE_ELEMENT: {
+        const element = current as Element;
+
+        if (element.prefix == null && element.namespaceURI != null) {
+          return element.namespaceURI;
+        }
+
+        const namespace = element.attributes.getNamedItemNS(
+          XMLNS_NAMESPACE,
+          'xmlns',
+        );
+
+        if (namespace != null && namespace.prefix == null) {
+          return normalizeNamespace(namespace.value);
+        }
+
+        current = element.parentElement;
+        break;
+      }
+      case NODE_TYPE_DOCUMENT:
+        current = (current as Document).documentElement;
+        break;
+      case NODE_TYPE_DOCUMENT_TYPE:
+      case NODE_TYPE_DOCUMENT_FRAGMENT:
+        return null;
+      case NODE_TYPE_ATTRIBUTE:
+        current = (current as Attr).ownerElement;
+        break;
+      default:
+        current = current.parentElement;
     }
   }
+
+  return null;
 }

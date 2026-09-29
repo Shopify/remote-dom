@@ -80,6 +80,8 @@ This repository uses [Changesets](https://github.com/changesets/changesets) to m
 
 For a user-facing public-package change, run `pnpm changeset`. This command prompts you to select the affected packages, choose a patch, minor, or major release, and write a description. Repository configuration, documentation, examples, and tests generally do not need a changeset.
 
+The `Changeset Check` verifies pull requests that modify public package source or metadata. If such a change intentionally does not need a release, add the `🤖 Skip Changeset` label. Contributors who cannot apply labels should ask a maintainer to add it.
+
 This command creates a file in the `.changeset` directory at the root of the repo. The contents of these files will be included in the changelog entries of each affected package. If you have additional detail or migration instructions related to the change, you can add it as markdown to the generated file.
 
 Once you are satisfied with the content of the file, commit it alongside the rest of your changes, and merge it as part of your normal PR flow. Don’t worry, the new version will not be published immediately! A Shopify developer will take care of actually publishing the new versions.

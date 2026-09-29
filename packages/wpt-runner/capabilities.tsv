@@ -12,7 +12,7 @@ dom/nodes/Document-getElementById.html	supported	Inserting an id by inserting it
 dom/nodes/Document-getElementById.html	supported	Modern browsers optimize this method with using internal id cache. This test checks that their optimization should effect only append to `Document`, not append to `Node`.
 dom/nodes/Document-getElementById.html	deferred	add id attribute via innerHTML	Requires concrete `HTMLDivElement` constructor support.
 dom/nodes/Document-getElementById.html	deferred	add id attribute via outerHTML	Requires an `outerHTML` setter.
-dom/nodes/Document-getElementById.html	deferred	changing attribute's value via `Attr` gotten from `Element.attribute`.	Requires indexed `NamedNodeMap` access.
+dom/nodes/Document-getElementById.html	supported	changing attribute's value via `Attr` gotten from `Element.attribute`.
 dom/nodes/Document-getElementById.html	supported	in tree order, within the context object's tree
 dom/nodes/Document-getElementById.html	deferred	on static page	Requires concrete `HTMLDivElement` constructor support.
 dom/nodes/Document-getElementById.html	supported	remove id attribute via innerHTML
@@ -21,15 +21,15 @@ dom/nodes/Document-getElementById.html	supported	update `id` attribute via eleme
 dom/nodes/Document-getElementById.html	supported	update `id` attribute via setAttribute/removeAttribute
 dom/nodes/Document-getElementById.html	supported	where insertion order and tree order don't match
 dom/nodes/Document-getElementsByTagName.html	supported	Caching is allowed
-dom/nodes/Document-getElementsByTagName.html	deferred	Element in HTML namespace, no prefix, non-ascii characters in name	Requires ASCII-only case folding for HTML qualified names.
-dom/nodes/Document-getElementsByTagName.html	deferred	Element in HTML namespace, prefix, non-ascii characters in name	Requires ASCII-only case folding for HTML qualified names.
+dom/nodes/Document-getElementsByTagName.html	supported	Element in HTML namespace, no prefix, non-ascii characters in name
+dom/nodes/Document-getElementsByTagName.html	supported	Element in HTML namespace, prefix, non-ascii characters in name
 dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, no prefix, lowercase name
 dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, no prefix, uppercase name
 dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, non-ascii characters in name
 dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, lowercase name
 dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, non-ascii characters in name
 dom/nodes/Document-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, uppercase name
-dom/nodes/Document-getElementsByTagName.html	deferred	HTML element with uppercase tagName never matches in HTML Documents	Requires HTML-document qualified-name matching for uppercase-created XHTML elements.
+dom/nodes/Document-getElementsByTagName.html	supported	HTML element with uppercase tagName never matches in HTML Documents
 dom/nodes/Document-getElementsByTagName.html	deferred	Interfaces	Requires `HTMLCollection` and exposed collection constructors.
 dom/nodes/Document-getElementsByTagName.html	deferred	Should be able to set expando shadowing a proto prop (item)	Requires `HTMLCollection.prototype.item`.
 dom/nodes/Document-getElementsByTagName.html	deferred	Should be able to set expando shadowing a proto prop (namedItem)	Requires `HTMLCollection.prototype.namedItem`.
@@ -39,15 +39,15 @@ dom/nodes/Document-getElementsByTagName.html	deferred	getElementsByTagName('*')	
 dom/nodes/Document-getElementsByTagName.html	deferred	getElementsByTagName() should be a live collection	Requires a live `HTMLCollection`.
 dom/nodes/Document-getElementsByTagName.html	deferred	hasOwnProperty, getOwnPropertyDescriptor, getOwnPropertyNames	Requires `HTMLCollection` named property semantics.
 dom/nodes/Element-getElementsByTagName.html	supported	Caching is allowed
-dom/nodes/Element-getElementsByTagName.html	deferred	Element in HTML namespace, no prefix, non-ascii characters in name	Requires ASCII-only case folding for HTML qualified names.
-dom/nodes/Element-getElementsByTagName.html	deferred	Element in HTML namespace, prefix, non-ascii characters in name	Requires ASCII-only case folding for HTML qualified names.
+dom/nodes/Element-getElementsByTagName.html	supported	Element in HTML namespace, no prefix, non-ascii characters in name
+dom/nodes/Element-getElementsByTagName.html	supported	Element in HTML namespace, prefix, non-ascii characters in name
 dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, no prefix, lowercase name
 dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, no prefix, uppercase name
 dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, non-ascii characters in name
 dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, lowercase name
 dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, non-ascii characters in name
 dom/nodes/Element-getElementsByTagName.html	supported	Element in non-HTML namespace, prefix, uppercase name
-dom/nodes/Element-getElementsByTagName.html	deferred	HTML element with uppercase tagName never matches in HTML Documents	Requires HTML-document qualified-name matching for uppercase-created XHTML elements.
+dom/nodes/Element-getElementsByTagName.html	supported	HTML element with uppercase tagName never matches in HTML Documents
 dom/nodes/Element-getElementsByTagName.html	deferred	Interfaces	Requires `HTMLCollection` and exposed collection constructors.
 dom/nodes/Element-getElementsByTagName.html	supported	Matching the context object
 dom/nodes/Element-getElementsByTagName.html	deferred	Should be able to set expando shadowing a proto prop (item)	Requires `HTMLCollection.prototype.item`.
@@ -57,3 +57,46 @@ dom/nodes/Element-getElementsByTagName.html	deferred	Shouldn't be able to set un
 dom/nodes/Element-getElementsByTagName.html	deferred	getElementsByTagName('*')	Requires `Node.ELEMENT_NODE` constant support.
 dom/nodes/Element-getElementsByTagName.html	deferred	getElementsByTagName() should be a live collection	Requires a live `HTMLCollection`.
 dom/nodes/Element-getElementsByTagName.html	deferred	hasOwnProperty, getOwnPropertyDescriptor, getOwnPropertyNames	Requires `HTMLCollection` named property semantics.
+dom/nodes/attributes-namednodemap.html	supported	an attribute set by setAttribute should be accessible as a field on the `attributes` field of an Element
+dom/nodes/attributes-namednodemap.html	supported	an attribute with a null namespace should be accessible as a field on the `attributes` field of an Element
+dom/nodes/attributes-namednodemap.html	supported	an attribute with a set namespace should be accessible as a field on the `attributes` field of an Element
+dom/nodes/attributes-namednodemap.html	deferred	setNamedItem and removeNamedItem on `attributes` should add and remove fields from `attributes`	Requires `Document.createAttribute()`.
+dom/nodes/attributes-namednodemap.html	deferred	setNamedItem and removeNamedItem on `attributes` should not interfere with existing method names	Requires `Document.createAttribute()` and an exposed `NamedNodeMap` constructor.
+dom/nodes/attributes-namednodemap.html	supported	setting an attribute should not overwrite the length property of an `NamedNodeMap` object
+dom/nodes/attributes-namednodemap.html	supported	setting an attribute should not overwrite the methods defined by prototype ancestors of an `NamedNodeMap` object
+dom/nodes/attributes-namednodemap.html	supported	setting an attribute should not overwrite the methods of an `NamedNodeMap` object
+dom/nodes/getElementsByClassName-19.htm	supported	get elements in document
+dom/nodes/getElementsByClassName-23.htm	supported	multiple defined classes
+dom/nodes/getElementsByClassName-24.htm	supported	handle unicode chars
+dom/nodes/getElementsByClassName-29.htm	supported	get class from children of element
+dom/nodes/getElementsByClassName-empty-set.html	supported	Passing a space to getElementsByClassName should return an empty HTMLCollection
+dom/nodes/getElementsByClassName-empty-set.html	supported	Passing an empty string to getElementsByClassName should return an empty HTMLCollection
+dom/nodes/getElementsByClassName-empty-set.html	supported	Passing three spaces to getElementsByClassName should return an empty HTMLCollection
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a EM QUAD to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a EM SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a EN QUAD to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a EN SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a FIGURE SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a FOUR-PER-EM SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a HAIR SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a IDEOGRAPHIC SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a LINE SEPARATOR to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a LINE TABULATION to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a MEDIUM MATHEMATICAL SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a MONGOLIAN VOWEL SEPARATOR to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a NARROW NO-BREAK SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a NEXT LINE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a NO-BREAK SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a OGHAM SPACE MARK to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a PARAGRAPH SEPARATOR to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a PUNCTUATION SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a SIX-PER-EM SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a THIN SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a THREE-PER-EM SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a WORD JOINER to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a ZERO WIDTH JOINER to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a ZERO WIDTH NON-BREAKING SPACE to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a ZERO WIDTH NON-JOINER to getElementsByClassName still finds the span
+dom/nodes/getElementsByClassName-whitespace-class-names.html	supported	Passing a ZERO WIDTH SPACE to getElementsByClassName still finds the span
+html/dom/documents/dom-tree-accessors/Document.getElementsByClassName-null-undef.html	supported	getElementsByClassName and null/undefined
+html/dom/documents/dom-tree-accessors/Element.getElementsByClassName-null-undef.html	supported	getElementsByClassName and null/undefined

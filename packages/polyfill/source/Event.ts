@@ -1,4 +1,5 @@
 import {
+  DISPATCHING,
   PATH,
   IS_TRUSTED,
   LISTENERS,
@@ -12,8 +13,6 @@ export const EVENT_PHASE_AT_TARGET = 2;
 export const EVENT_PHASE_BUBBLING = 3;
 
 export type EventPhase = number;
-
-export const CAPTURE_MARKER = '@';
 
 export interface EventInit {
   bubbles?: boolean;
@@ -53,6 +52,7 @@ export class Event {
   [PATH]: EventTarget[] = [];
   [IS_TRUSTED]!: boolean;
   [STOP_IMMEDIATE_PROPAGATION] = false;
+  [DISPATCHING] = false;
 
   constructor(type: string, options?: EventInit) {
     this.type = type;
@@ -69,7 +69,7 @@ export class Event {
   }
 
   composedPath() {
-    return this[PATH];
+    return [...this[PATH]];
   }
 
   stopPropagation() {
@@ -82,15 +82,15 @@ export class Event {
   }
 
   preventDefault() {
-    this.defaultPrevented = true;
+    if (this.cancelable) this.defaultPrevented = true;
   }
 
   set returnValue(value) {
-    this.defaultPrevented = value;
+    if (!value) this.preventDefault();
   }
 
   get returnValue() {
-    return this.defaultPrevented;
+    return !this.defaultPrevented;
   }
 
   /** @deprecated */
@@ -106,18 +106,23 @@ export function fireEvent(
   currentTarget: EventTarget,
   phase: typeof EVENT_PHASE_BUBBLING | typeof EVENT_PHASE_CAPTURING,
 ): void {
+  if (event.cancelBubble) return;
+
   const listeners = currentTarget[LISTENERS];
-  const list = listeners?.get(
-    `${event.type}${phase === EVENT_PHASE_CAPTURING ? CAPTURE_MARKER : ''}`,
-  );
+  const list = listeners?.get(event.type)?.[
+    phase === EVENT_PHASE_CAPTURING ? 'capture' : 'bubble'
+  ];
 
   if (!list) return;
 
-  for (const listener of list) {
+  for (const registration of [...list]) {
+    if (!list.has(registration) || registration.signal?.aborted) continue;
+
     event.eventPhase =
       event.target === currentTarget ? EVENT_PHASE_AT_TARGET : phase;
     event.currentTarget = currentTarget;
 
+    const listener = registration.normalizedListener;
     try {
       if (typeof listener === 'object') {
         listener.handleEvent(event as any);

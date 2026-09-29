@@ -1,5 +1,37 @@
 # @remote-dom/core
 
+## 1.12.0
+
+### Minor Changes
+
+- [#713](https://github.com/Shopify/remote-dom/pull/713) [`b8bed3d`](https://github.com/Shopify/remote-dom/commit/b8bed3df4242b26facdfb3c6c543ca493bde1ab3) Thanks [@MitchLillie](https://github.com/MitchLillie)! - Add optional per-element member configuration and `blockedProperties` to `DOMRemoteReceiver`.
+
+  This release also fixes security vulnerabilities.
+
+  Use `elements` with an array of element names, or a map specifying each element's `properties`, `attributes`, `events`, and `methods`. Property keys map to objects with optional `type` and `attribute` fields. The `type` field validates non-nullish property-channel values (no coercion); `attribute` authorizes corresponding attributes (defaults `true` for kebab-case, string for named alias, `false` for none). Attribute values must be strings (or nullish for removal); they are not parsed according to property types. Events use raw DOM names (e.g., `click`, not `onClick`).
+
+  ### Default behavior
+
+  - A supplied `elements` array or map restricts element names, including nested children. Omitting `elements` leaves names unrestricted; an empty array or map accepts only text and comments.
+  - Property and attribute names `innerHTML`, `outerHTML`, `srcdoc`, `__proto__`, `constructor`, `prototype`, `is`, and names beginning with `on` are excluded case-insensitively. Use the event-listener channel for event callbacks.
+  - Assignments to base DOM methods are excluded. Native `<a>` and `<area>` elements also exclude writes to the `protocol` property; update their complete `href` instead.
+  - URL checks apply to `href`, `xlink:href`, `src`, `action`, `formAction`, `codebase`, `background`, `poster`, and native `<object>.data`. They reject `javascript:`, `vbscript:`, and `data:` URLs other than AVIF, BMP, GIF, JPEG, PNG, and WebP image media types. Native URL properties require strings or nullish values rather than object coercion.
+  - Default method dispatch supports custom-element methods and native `focus`/`blur`, but excludes other native or inherited DOM methods. Root calls require a host `call` callback. A `methods` list can narrow default dispatch, not override its exclusions.
+  - Text updates apply only to text and comment nodes.
+
+  Explicit member definitions do not override these default checks. `blockedProperties` adds exclusions rather than replacing the defaults.
+
+  Existing element-name arrays retain ordinary member handling; omitted member definitions use the defaults. Empty `properties` or `events` maps and empty `methods` lists deny those channels. The `attributes` list adds attribute-only names to those authorized by property definitions; without property definitions, an empty `attributes` list denies attributes.
+
+  `RemoteReceiverElement` supports the same configuration through static properties on a host-side subclass. The existing `call` callback remains available for custom method dispatch. Data-only receivers are unchanged.
+
+### Patch Changes
+
+- [#725](https://github.com/Shopify/remote-dom/pull/725) [`8d02d40`](https://github.com/Shopify/remote-dom/commit/8d02d40ac64e73c8c08be4dfb8e00812f3829b83) Thanks [@vividviolet](https://github.com/vividviolet)! - Fix `DOMRemoteReceiver` cleanup for removed elements and per-element cache expiry.
+
+- Updated dependencies [[`fc245ba`](https://github.com/Shopify/remote-dom/commit/fc245ba6edd7622c4cccbd98e744d6934f04ab46), [`dff700b`](https://github.com/Shopify/remote-dom/commit/dff700bcc9610903ad4f9e6d8b23e6017f113af8), [`da43e02`](https://github.com/Shopify/remote-dom/commit/da43e02ef1662763d242ed3b386b5b57130aaef3), [`85cefcd`](https://github.com/Shopify/remote-dom/commit/85cefcd63efe62de20aadb2fa75d08485b4f1d96), [`a9aee3e`](https://github.com/Shopify/remote-dom/commit/a9aee3e3834b621e0c9a4fd432a9eb674447403a), [`f4af17f`](https://github.com/Shopify/remote-dom/commit/f4af17fb2739cd6cbbf3adf52c1af1fb695c749b), [`c13d18b`](https://github.com/Shopify/remote-dom/commit/c13d18b5469de4e87900d7c8123ad18b653f6d4e), [`9904cdd`](https://github.com/Shopify/remote-dom/commit/9904cdd79af5589c3b43e884e27fa2ce10721b58), [`8de0600`](https://github.com/Shopify/remote-dom/commit/8de06005c7e4d843182fbd403699dc2df67bee33), [`ee48d52`](https://github.com/Shopify/remote-dom/commit/ee48d5290023a22de7632d7e652438514a1c1cfb), [`7eb8a18`](https://github.com/Shopify/remote-dom/commit/7eb8a18aa6753ac34e58d51cfda0533a99e88523), [`4be18ef`](https://github.com/Shopify/remote-dom/commit/4be18ef20017587835e7275e3901cd5fcdcdc50e), [`6ddc71f`](https://github.com/Shopify/remote-dom/commit/6ddc71f50e2c492d71c8b506eebc08cf40559199), [`e249e3e`](https://github.com/Shopify/remote-dom/commit/e249e3e8055b7878442ad72fdd2b151cdc3c0171), [`44e3b36`](https://github.com/Shopify/remote-dom/commit/44e3b3677920a43a98a92b8179470d7ede0dac96), [`072b7e8`](https://github.com/Shopify/remote-dom/commit/072b7e8a68855144cc359d11107874007c043f2b), [`fd4de61`](https://github.com/Shopify/remote-dom/commit/fd4de61b0be8eac8e056941f288f0592404b57dc), [`fd8e186`](https://github.com/Shopify/remote-dom/commit/fd8e186d49bc1b3fa68ec0a26eb1de1a59c218c5), [`ab6c549`](https://github.com/Shopify/remote-dom/commit/ab6c5494908a5efb53fc8e5534b2b2967b9cbe41), [`5f0b228`](https://github.com/Shopify/remote-dom/commit/5f0b2281bddfc7ac37c64503f40f38f4f9b98243), [`08e3223`](https://github.com/Shopify/remote-dom/commit/08e3223a5fb340e80693168e04ed03a01764ef2a), [`a629e25`](https://github.com/Shopify/remote-dom/commit/a629e25eb4eba6aae495257a40f30883b6dce53a), [`e1acf97`](https://github.com/Shopify/remote-dom/commit/e1acf97baa3786d3284b6a0164ccc7206e3ec956), [`0a39389`](https://github.com/Shopify/remote-dom/commit/0a3938987f46fd962ac84ed00808680852263df9), [`c3918c6`](https://github.com/Shopify/remote-dom/commit/c3918c61c3ee6b3aa6ec7fbf4d53aa76532ec29d), [`e2a9eef`](https://github.com/Shopify/remote-dom/commit/e2a9eef700edd7f46a0cafb3e3a63d757ccfbc2e), [`516fcfa`](https://github.com/Shopify/remote-dom/commit/516fcfa4c4a04e8ff5a0e7c6b7da0d38d2dd1f57), [`23ceb4d`](https://github.com/Shopify/remote-dom/commit/23ceb4d22c62096ffdb00d4d107ab2cacdc54935), [`5466415`](https://github.com/Shopify/remote-dom/commit/54664151820316d9f655e9964de232854fdec5c4), [`d916fab`](https://github.com/Shopify/remote-dom/commit/d916fabc327a9352c1f3e8b2d37f939527d2027a), [`0789d12`](https://github.com/Shopify/remote-dom/commit/0789d12f61ae3a93bd659543b4607eb496efa090), [`4b8bae9`](https://github.com/Shopify/remote-dom/commit/4b8bae9a507cf80492fb3b03975b90872b76465c), [`6b42b09`](https://github.com/Shopify/remote-dom/commit/6b42b0980b3d2b01a1029ae1cab52345e0fb021a), [`685dff1`](https://github.com/Shopify/remote-dom/commit/685dff1a617c97afc5079edb742940bb6ff92022), [`7181475`](https://github.com/Shopify/remote-dom/commit/71814754bcd9a06155e9a284867c93031c133007), [`3c57e5b`](https://github.com/Shopify/remote-dom/commit/3c57e5b6202f0779eb7ee99ad3298f6d17032c51), [`cdfd5dd`](https://github.com/Shopify/remote-dom/commit/cdfd5dd2bc3fecbea7799d3921bb8d93bd6103dd), [`db32f49`](https://github.com/Shopify/remote-dom/commit/db32f49fbbe0bdfd1e14450008b5b8634d2362d7)]:
+  - @remote-dom/polyfill@1.6.0
+
 ## 1.11.1
 
 ### Patch Changes

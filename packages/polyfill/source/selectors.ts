@@ -1,5 +1,16 @@
-import {CHILD, NEXT, PARENT, PREV, HTML_NAMESPACE} from './constants.ts';
+import {
+  CHILD,
+  NEXT,
+  PARENT,
+  PREV,
+  NAME,
+  HTML_NAMESPACE,
+  asciiLowercase,
+  splitOnASCIIWhitespace,
+} from './constants.ts';
 import {isElementNode} from './shared.ts';
+import {NodeList} from './NodeList.ts';
+import {createDOMException} from './dom-exception.ts';
 
 import type {Node} from './Node.ts';
 import type {Element} from './Element.ts';
@@ -25,28 +36,140 @@ export const MATCHER_CLASS = 3;
 export const MATCHER_ATTRIBUTE = 4;
 export const MATCHER_PSEUDO = 5;
 export const MATCHER_FUNCTION = 6;
+export const MATCHER_SCOPE = 7;
+// Internal matcher for qualified-name queries. CSS type selectors use localName
+// instead, while both kinds precompute their HTML comparison name.
+export const MATCHER_QUALIFIED_NAME = 8;
 
-export type MatcherType =
-  | typeof MATCHER_UNKNOWN
-  | typeof MATCHER_ELEMENT
-  | typeof MATCHER_ID
-  | typeof MATCHER_CLASS
-  | typeof MATCHER_ATTRIBUTE
-  | typeof MATCHER_PSEUDO
-  | typeof MATCHER_FUNCTION;
+/** Common fields available on every selector matcher. */
+export interface MatcherBase {
+  /**
+   * A precomputed name for matching HTML elements and attributes. Matcher
+   * kinds that do not perform namespace-sensitive name matching ignore it.
+   */
+  htmlName?: string;
+}
+
+/** Matchers whose comparison value is carried entirely by `name`. */
+export interface NameMatcher extends MatcherBase {
+  type: typeof MATCHER_UNKNOWN | typeof MATCHER_ID | typeof MATCHER_CLASS;
+  /**
+   * The literal ID (without `#`) or class token (without `.`). Spelling is
+   * preserved. For unknown tokens, only `*` matches.
+   */
+  name: string;
+  /** Unused by matching; the parser may echo `name` here. */
+  value?: string;
+}
+
+/** An attribute selector, optionally requiring an exact value. */
+export interface AttributeMatcher extends MatcherBase {
+  type: typeof MATCHER_ATTRIBUTE;
+  /** The attribute name as supplied in the selector. */
+  name: string;
+  /** The precomputed ASCII-lowercased name used for HTML attributes. */
+  htmlName: string;
+  /** Exact comparison text; `undefined` requests a presence check. */
+  value?: string;
+}
+
+/** A pseudo-class selector without an argument. */
+export interface PseudoMatcher extends MatcherBase {
+  type: typeof MATCHER_PSEUDO;
+  /** The ASCII-lowercased pseudo name, without its leading `:`. */
+  name: string;
+  /** Absent: arguments belong to a FunctionMatcher. */
+  value?: undefined;
+}
+
+/** A functional pseudo-class selector. */
+export interface FunctionMatcher extends MatcherBase {
+  type: typeof MATCHER_FUNCTION;
+  /** The ASCII-lowercased function name, without punctuation. */
+  name: string;
+  /** Raw argument text; an omitted value is matched as an empty argument. */
+  value?: string;
+}
+
+/** The internal scope marker used while matching relative selectors. */
+export interface ScopeMatcher extends MatcherBase {
+  type: typeof MATCHER_SCOPE;
+  /** A marker label; the scope element is supplied separately. */
+  name: ':scope';
+  /** Unused by scope matching. */
+  value?: undefined;
+}
+
+/** A local- or qualified-name matcher with a precomputed HTML comparison name. */
+export interface NormalizedNameMatcher extends MatcherBase {
+  /** Selects local-name matching for CSS or qualified-name matching for DOM APIs. */
+  type: typeof MATCHER_ELEMENT | typeof MATCHER_QUALIFIED_NAME;
+  /**
+   * The original local-name query for MATCHER_ELEMENT or qualified-name query
+   * for MATCHER_QUALIFIED_NAME, preserving case for non-HTML elements.
+   */
+  name: string;
+  /** The precomputed ASCII-lowercased name used for HTML elements. */
+  htmlName: string;
+  /** Unused by matching; the parser may echo `name` here. */
+  value?: string;
+}
+
+export type Matcher =
+  | NameMatcher
+  | AttributeMatcher
+  | PseudoMatcher
+  | FunctionMatcher
+  | ScopeMatcher
+  | NormalizedNameMatcher;
+
+export type MatcherType = Matcher['type'];
 
 export interface Part {
   combinator: Combinator;
   matchers: Matcher[];
 }
 
-export interface Matcher {
-  type: MatcherType;
-  name: string;
-  value?: string;
+const SUPPORTED_IDENTIFIER_TEST =
+  /^(?:--|-?[A-Za-z_\u0080-\u{10FFFF}])[A-Za-z0-9_\u0080-\u{10FFFF}-]*$/u;
+
+function readFunctionArgument(
+  selector: string,
+  start: number,
+): [string, number] {
+  let depth = 1;
+  let quote: string | null = null;
+
+  for (let index = start; index < selector.length; index++) {
+    const character = selector[index]!;
+
+    if (quote) {
+      if (character === '\\') {
+        index++;
+      } else if (character === quote) {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (character === '"' || character === "'") {
+      quote = character;
+    } else if (character === '(') {
+      depth++;
+    } else if (character === ')' && --depth === 0) {
+      return [selector.slice(start, index), index + 1];
+    }
+  }
+
+  return [selector.slice(start), selector.length];
 }
 
-const ELEMENT_SELECTOR_TEST = /[a-zA-Z]/;
+function throwSelectorSyntaxError(selector: string): never {
+  throw createDOMException(
+    `Invalid or unsupported selector: "${selector}"`,
+    'SyntaxError',
+  );
+}
 
 export function querySelector(
   within: ParentNode,
@@ -71,12 +194,12 @@ export function querySelector(
 export function querySelectorAll(
   within: ParentNode,
   selector: string | Matcher[],
-): Element[] {
+): NodeList<Element> {
   const parts: Part[] =
     typeof selector === 'string'
       ? parseSelector(selector)
       : [{combinator: COMBINATOR_INNER, matchers: selector}];
-  const results: Element[] = [];
+  const results = new NodeList<Element>();
 
   const child = within[CHILD];
   if (child && parts[0]!.matchers.length) {
@@ -87,85 +210,209 @@ export function querySelectorAll(
   return results;
 }
 
-export function parseSelector(selector: string) {
+export function parseSelector(
+  selector: string,
+  insideHas = false,
+  allowLeadingCombinator = false,
+) {
   let part: Part = {combinator: COMBINATOR_INNER, matchers: []};
   const parts = [part];
   const tokenizer =
-    /\s*?([>\s+~]?)\s*?(?:(?:\[\s*([^\]=]+)(?:=(['"])(.*?)\3)?\s*\])|([#.]?)([^\s#.[>:+~]+)|:(\w+)(?:\((.*?)\))?)/gi;
+    /[\t\n\f\r ]*?([>\t\n\f\r +~]?)[\t\n\f\r ]*?(?:(?:\[[\t\n\f\r ]*([^\]=\t\n\f\r ]+)[\t\n\f\r ]*(?:=[\t\n\f\r ]*(?:(['"])(.*?)\3|([^\]\t\n\f\r ]+)))?[\t\n\f\r ]*(?:\]|$))|([#.]?)([^\t\n\f\r #.[>:+~()]+)|:(\w+)(\()?)/gi;
+  const normalizedSelector = selector.replace(
+    /^[\t\n\f\r ]+|[\t\n\f\r ]+$/g,
+    '',
+  );
+  if (normalizedSelector === '') throwSelectorSyntaxError(selector);
+
+  let consumed = 0;
   let token;
-  while ((token = tokenizer.exec(selector))) {
-    // [1]: ancestor/parent/sibling/adjacent
+  while ((token = tokenizer.exec(normalizedSelector))) {
+    if (token.index !== consumed) throwSelectorSyntaxError(selector);
+
+    // [1]: ancestor/ parent/ sibling/ adjacent
     // [2]: attribute name
-    // [4]: attribute value
-    // [5]: id/class sigil
-    // [6]: id/class name
-    // [7]: :pseudo/:function() name
-    // [8]: :function(argument) value
+    // [3]/[4]: quoted attribute value
+    // [5]: unquoted attribute value
+    // [6]: id/class sigil
+    // [7]: id/class/type name
+    // [8]: :pseudo/:function() name
+    // [9]: :function opening parenthesis
     if (token[1]) {
-      // Update the combinator on the (now parent) Part:
+      if (
+        part.matchers.length === 0 &&
+        !(allowLeadingCombinator && parts.length === 1)
+      ) {
+        throwSelectorSyntaxError(selector);
+      }
+
       if (token[1] === '>') part.combinator = COMBINATOR_CHILD;
       else if (token[1] === '+') part.combinator = COMBINATOR_ADJACENT;
       else if (token[1] === '~') part.combinator = COMBINATOR_SIBLING;
       else part.combinator = COMBINATOR_DESCENDANT;
-      // Add a new Part for the next selector parts:
       part = {combinator: COMBINATOR_INNER, matchers: []};
       parts.push(part);
     }
 
-    let type: MatcherType = MATCHER_UNKNOWN;
-    if (token[2]) {
-      type = MATCHER_ATTRIBUTE;
-    } else if (token[5]) {
-      type = token[5] === '#' ? MATCHER_ID : MATCHER_CLASS;
-    } else if (token[7]) {
-      type = token[8] == null ? MATCHER_PSEUDO : MATCHER_FUNCTION;
-    } else if (token[6]) {
-      if (token[6] === '*') {
-        type = MATCHER_UNKNOWN; // Universal selector matches all
-      } else if (ELEMENT_SELECTOR_TEST.test(token[6])) {
-        type = MATCHER_ELEMENT;
-      }
+    const name = token[8] ? asciiLowercase(token[8]) : (token[2] || token[7])!;
+    const isTypeSelector = token[7] != null && !token[6];
+    if (isTypeSelector && part.matchers.length > 0) {
+      throwSelectorSyntaxError(selector);
     }
+
+    let type: MatcherType = MATCHER_UNKNOWN;
+    let value = token[4] ?? token[5] ?? token[7];
+    if (token[2]) {
+      if (!SUPPORTED_IDENTIFIER_TEST.test(name)) {
+        throwSelectorSyntaxError(selector);
+      }
+
+      const unquotedValue = token[5];
+      const openingQuote = unquotedValue?.[0];
+      if (token[3] == null && (openingQuote === '"' || openingQuote === "'")) {
+        const valueOffset = token[0].lastIndexOf(unquotedValue!);
+        value = normalizedSelector.slice(token.index + valueOffset + 1);
+        tokenizer.lastIndex = normalizedSelector.length;
+      } else if (
+        unquotedValue != null &&
+        !SUPPORTED_IDENTIFIER_TEST.test(unquotedValue)
+      ) {
+        throwSelectorSyntaxError(selector);
+      }
+      type = MATCHER_ATTRIBUTE;
+    } else if (token[6]) {
+      if (!SUPPORTED_IDENTIFIER_TEST.test(name)) {
+        throwSelectorSyntaxError(selector);
+      }
+      type = token[6] === '#' ? MATCHER_ID : MATCHER_CLASS;
+    } else if (token[8]) {
+      if (!token[9]) throwSelectorSyntaxError(selector);
+
+      [value, tokenizer.lastIndex] = readFunctionArgument(
+        normalizedSelector,
+        tokenizer.lastIndex,
+      );
+      if (name !== 'has' && name !== 'not') {
+        throwSelectorSyntaxError(selector);
+      }
+      if (name === 'has' && insideHas) throwSelectorSyntaxError(selector);
+      parseSelector(value, insideHas || name === 'has', name === 'has');
+      type = MATCHER_FUNCTION;
+    } else if (token[7] === '*') {
+      type = MATCHER_UNKNOWN;
+    } else if (token[7] && SUPPORTED_IDENTIFIER_TEST.test(token[7])) {
+      type = MATCHER_ELEMENT;
+    } else {
+      throwSelectorSyntaxError(selector);
+    }
+
     part.matchers.push({
       type,
-      name: (token[2] || token[6] || token[7])!,
-      value: token[4] ?? token[6] ?? token[8],
-    });
+      name,
+      htmlName:
+        type === MATCHER_ELEMENT || type === MATCHER_ATTRIBUTE
+          ? asciiLowercase(name)
+          : undefined,
+      value,
+    } as Matcher);
+    consumed = tokenizer.lastIndex;
   }
+
+  if (consumed !== normalizedSelector.length || part.matchers.length === 0) {
+    throwSelectorSyntaxError(selector);
+  }
+
   return parts;
 }
 
 export function matchesSelector(element: Element, selector: string) {
-  return matchesSelectorRecursive(element, parseSelector(selector));
+  const parsed = parseSelector(selector);
+  return parsed[0]?.matchers.length
+    ? matchesSelectorRecursive(element, parsed)
+    : false;
+}
+
+function matchesRelativeSelector(scope: Element, selector: string) {
+  const parts = parseSelector(selector, true, true);
+  const first = parts[0]!;
+  if (parts.length === 1 && first.matchers.length === 0) return false;
+
+  let leadingCombinator = COMBINATOR_DESCENDANT;
+  const scopeMatcher: Matcher = {type: MATCHER_SCOPE, name: ':scope'};
+  if (first.matchers.length === 0) {
+    leadingCombinator = first.combinator;
+    first.matchers.push(scopeMatcher);
+  } else {
+    parts.unshift({
+      combinator: COMBINATOR_DESCENDANT,
+      matchers: [scopeMatcher],
+    });
+  }
+
+  if (parts.some(({matchers}) => matchers.length === 0)) return false;
+
+  const root =
+    leadingCombinator === COMBINATOR_ADJACENT ||
+    leadingCombinator === COMBINATOR_SIBLING
+      ? scope[NEXT]
+      : scope[CHILD];
+  if (!root) return false;
+
+  let matched = false;
+  walkNodesForSelector(
+    root,
+    parts,
+    () => {
+      matched = true;
+      return false;
+    },
+    scope,
+  );
+  return matched;
 }
 
 function walkNodesForSelector(
   node: Node,
   parts: Part[],
   callback: (node: Element) => boolean | void,
+  scope?: Element,
 ) {
-  if (isElementNode(node)) {
-    if (matchesSelectorRecursive(node, parts)) {
-      if (callback(node) === false) return false;
+  const pendingSiblings: Node[] = [];
+  let current: Node | null = node;
+
+  while (current) {
+    if (isElementNode(current)) {
+      if (matchesSelectorRecursive(current, parts, scope)) {
+        if (callback(current) === false) return false;
+      }
+
+      const child: Node | null = current[CHILD];
+      if (child) {
+        const sibling = current[NEXT];
+        if (sibling) pendingSiblings.push(sibling);
+        current = child;
+        continue;
+      }
     }
-    const child = node[CHILD];
-    if (child && walkNodesForSelector(child, parts, callback) === false) {
-      return false;
-    }
+
+    current = current[NEXT] ?? pendingSiblings.pop() ?? null;
   }
-  const next = node[NEXT];
-  if (next && walkNodesForSelector(next, parts, callback) === false) {
-    return false;
-  }
+
   return true;
 }
 
-function matchesSelectorRecursive(element: Element, parts: Part[]): boolean {
+function matchesSelectorRecursive(
+  element: Element,
+  parts: Part[],
+  scope?: Element,
+): boolean {
   const {combinator, matchers} = parts[parts.length - 1]!;
   if (combinator === COMBINATOR_INNER) {
-    if (!matchesSelectorMatcher(element, matchers)) return false;
-    const pp = parts.slice(0, -1);
-    return pp.length === 0 || matchesSelectorRecursive(element, pp);
+    if (!matchesSelectorMatcher(element, matchers, scope)) return false;
+    return (
+      parts.length === 1 ||
+      matchesSelectorRecursive(element, parts.slice(0, -1), scope)
+    );
   }
   const link =
     combinator === COMBINATOR_CHILD || combinator === COMBINATOR_DESCENDANT
@@ -180,10 +427,13 @@ function matchesSelectorRecursive(element: Element, parts: Part[]): boolean {
   ) {
     // For descendant/sibling combinators, search through all ancestors/siblings
     while (ref) {
-      if (isElementNode(ref) && matchesSelectorMatcher(ref, matchers)) {
-        const pp = parts.slice(0, -1);
-        if (pp.length === 0) return true;
-        if (matchesSelectorRecursive(element, pp)) return true;
+      if (isElementNode(ref) && matchesSelectorMatcher(ref, matchers, scope)) {
+        if (
+          parts.length === 1 ||
+          matchesSelectorRecursive(ref, parts.slice(0, -1), scope)
+        ) {
+          return true;
+        }
       }
       ref = ref[link];
     }
@@ -199,56 +449,68 @@ function matchesSelectorRecursive(element: Element, parts: Part[]): boolean {
       if (!ref) return false;
     }
 
-    if (!isElementNode(ref) || !matchesSelectorMatcher(ref, matchers)) {
+    if (!isElementNode(ref) || !matchesSelectorMatcher(ref, matchers, scope)) {
       return false;
     }
-    const pp = parts.slice(0, -1);
-    return pp.length === 0 || matchesSelectorRecursive(element, pp);
+    return (
+      parts.length === 1 ||
+      matchesSelectorRecursive(ref, parts.slice(0, -1), scope)
+    );
   }
 }
 
 function matchesSelectorMatcher(
   element: Element | null,
   matcher: Matcher | Matcher[],
+  scope?: Element,
 ) {
   if (!element) return false;
   if (Array.isArray(matcher)) {
     for (const single of matcher) {
-      if (matchesSelectorMatcher(element, single) === false) return false;
+      if (matchesSelectorMatcher(element, single, scope) === false) {
+        return false;
+      }
     }
     return true;
   }
-  const {type, name, value} = matcher;
+  const {type, name, htmlName, value} = matcher;
   switch (type) {
     case MATCHER_UNKNOWN:
       return name === '*'; // Universal selector
     case MATCHER_ELEMENT:
-      return element.namespaceURI === HTML_NAMESPACE
-        ? element.localName.toLowerCase() === name.toLowerCase()
-        : element.localName === name;
+      return (
+        element.localName ===
+        (element.namespaceURI === HTML_NAMESPACE ? htmlName : name)
+      );
+    case MATCHER_QUALIFIED_NAME:
+      return (
+        element[NAME] ===
+        (element.namespaceURI === HTML_NAMESPACE ? htmlName : name)
+      );
     case MATCHER_ID:
-      return element.getAttribute('id') === name;
+      return element.getAttributeNS(null, 'id') === name;
     case MATCHER_CLASS:
-      const classAttr = element.getAttribute('class');
+      const classAttr = element.getAttributeNS(null, 'class');
       if (!classAttr) return false;
-      return classAttr.split(/\s+/).includes(name);
+      return splitOnASCIIWhitespace(classAttr).includes(name);
     case MATCHER_ATTRIBUTE:
-      return value == null
-        ? element.hasAttribute(name)
-        : element.getAttribute(name) === value;
+      const attribute = element.getAttributeNS(
+        null,
+        element.namespaceURI === HTML_NAMESPACE ? htmlName : name,
+      );
+      return value == null ? attribute != null : attribute === value;
+    case MATCHER_SCOPE:
+      return element === scope;
     case MATCHER_PSEUDO:
-      switch (name) {
-        default:
-          throw Error(`Pseudo :${name} not implemented`);
-      }
+      throwSelectorSyntaxError(`:${name}`);
     case MATCHER_FUNCTION:
       switch (name) {
         case 'has':
-          return matchesSelector(element, value || '');
+          return matchesRelativeSelector(element, value || '');
         case 'not':
           return !matchesSelector(element, value || '');
         default:
-          throw Error(`Function :${name}(${value}) not implemented`);
+          throwSelectorSyntaxError(`:${name}(${value})`);
       }
   }
   return false;

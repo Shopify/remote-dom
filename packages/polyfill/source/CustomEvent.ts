@@ -10,7 +10,7 @@ export class CustomEvent<T = any> extends Event {
 
   constructor(type: string, eventInitDict?: CustomEventInit<T>) {
     super(type, eventInitDict);
-    this.detail = eventInitDict?.detail as any;
+    this.detail = (eventInitDict?.detail ?? null) as any;
   }
 
   /**
@@ -25,6 +25,6 @@ export class CustomEvent<T = any> extends Event {
     detail?: T,
   ) {
     super.initEvent(type, bubbles, cancelable);
-    (this as any).detail = detail;
+    (this as any).detail = detail ?? null;
   }
 }
