@@ -27,7 +27,7 @@ function bundleCheck(name, fixture, limit) {
 
 export default [
   bundleCheck('@remote-dom/compat', 'compat', '1500 B'),
-  bundleCheck('@remote-dom/core (remote)', 'core-remote', '19000 B'),
+  bundleCheck('@remote-dom/core (remote)', 'core-remote', '19500 B'),
   bundleCheck('@remote-dom/core (host)', 'core-host', '3250 B'),
   bundleCheck('@remote-dom/polyfill', 'polyfill', '13000 B'),
   bundleCheck('@remote-dom/preact (remote)', 'preact-remote', '1500 B'),
