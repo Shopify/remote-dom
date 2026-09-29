@@ -20,9 +20,11 @@ import {
 import {performWithCustomElementReactions} from './custom-element-reactions.ts';
 import {enqueueAttributeReaction} from './attribute-reactions.ts';
 import {createDOMException} from './dom-exception.ts';
-import {adoptNodes} from './shared.ts';
+import {adoptNodes, toPropertyIndex} from './shared.ts';
 
 export class NamedNodeMap {
+  readonly [index: number]: Attr;
+
   [CHILD]: Attr | null = null;
   [OWNER_ELEMENT]: Element;
 
@@ -279,3 +281,32 @@ export function removeAttributeForAdoption(
 
   return removed;
 }
+
+// This provides ordinary indexed and named reads without proxying every map.
+// Properties placed directly on a map or earlier in its prototype chain retain
+// normal JavaScript precedence. Alternate Reflect receivers and full Web IDL
+// reflection cannot be modeled by a shared prototype fallback.
+const namedNodeMapPropertyFallback = new Proxy(
+  {},
+  {
+    get(target, property, receiver) {
+      const namedNodeMap = receiver as NamedNodeMap;
+      const index = toPropertyIndex(property);
+
+      if (index !== undefined) {
+        const indexedAttribute = namedNodeMap.item(index);
+        if (indexedAttribute) return indexedAttribute;
+      }
+
+      if (property in target) {
+        return Reflect.get(target, property, receiver);
+      }
+
+      return typeof property === 'string'
+        ? (namedNodeMap.getNamedItem(property) ?? undefined)
+        : undefined;
+    },
+  },
+);
+
+Object.setPrototypeOf(NamedNodeMap.prototype, namedNodeMapPropertyFallback);
