@@ -460,6 +460,112 @@ describe('Element convenience APIs', () => {
       expect(Object.keys(element.dataset)).toStrictEqual(['state', 'after']);
     });
 
+    it('does not alias invalid dashed property names to data attributes', () => {
+      const dataset = element.dataset;
+      element.setAttribute('data-foo-bar', 'original');
+      hooks.setAttribute.mockClear();
+      hooks.removeAttribute.mockClear();
+
+      expect(dataset.fooBar).toBe('original');
+      expect(dataset['foo-bar']).toBeUndefined();
+      expect('foo-bar' in dataset).toBe(false);
+      expect(
+        Object.getOwnPropertyDescriptor(dataset, 'foo-bar'),
+      ).toBeUndefined();
+      expect(Object.hasOwn(dataset, 'foo-bar')).toBe(false);
+
+      expect(delete dataset['foo-bar']).toBe(true);
+      expect(element.getAttribute('data-foo-bar')).toBe('original');
+      expect(hooks.removeAttribute).not.toHaveBeenCalled();
+
+      expect(() => {
+        dataset['foo-bar'] = 'changed';
+      }).toThrowError(expect.objectContaining({name: 'SyntaxError'}));
+      expect(() =>
+        Object.defineProperty(dataset, 'foo-bar', {value: 'changed'}),
+      ).toThrowError(expect.objectContaining({name: 'SyntaxError'}));
+      expect(() =>
+        Object.defineProperty(dataset, 'foo-bar', {get: () => 'changed'}),
+      ).toThrow(TypeError);
+
+      expect(element.getAttribute('data-foo-bar')).toBe('original');
+      expect(hooks.setAttribute).not.toHaveBeenCalled();
+      expect(hooks.removeAttribute).not.toHaveBeenCalled();
+    });
+
+    it('supports valid dashed property names that are not followed by lowercase ASCII', () => {
+      const dataset = element.dataset;
+      dataset['foo-9'] = 'number';
+      dataset['foo-Bar'] = 'uppercase';
+      dataset['trailing-'] = 'trailing';
+
+      expect(element.getAttribute('data-foo-9')).toBe('number');
+      expect(element.getAttribute('data-foo--bar')).toBe('uppercase');
+      expect(element.getAttribute('data-trailing-')).toBe('trailing');
+      expect(Object.keys(dataset)).toStrictEqual([
+        'foo-9',
+        'foo-Bar',
+        'trailing-',
+      ]);
+      expect(hooks.setAttribute).toHaveBeenNthCalledWith(
+        1,
+        element,
+        'data-foo-9',
+        'number',
+        null,
+      );
+      expect(hooks.setAttribute).toHaveBeenNthCalledWith(
+        2,
+        element,
+        'data-foo--bar',
+        'uppercase',
+        null,
+      );
+      expect(hooks.setAttribute).toHaveBeenNthCalledWith(
+        3,
+        element,
+        'data-trailing-',
+        'trailing',
+        null,
+      );
+    });
+
+    it('only lowercases ASCII uppercase letters in dataset conversions', () => {
+      element.setAttribute('data-Ä', 'uppercase');
+      element.setAttribute('data-ä', 'lowercase');
+
+      expect(element.dataset['Ä']).toBe('uppercase');
+      expect(element.dataset['ä']).toBe('lowercase');
+      expect(Object.keys(element.dataset)).toStrictEqual(['Ä', 'ä']);
+      expect({...element.dataset}).toStrictEqual({
+        Ä: 'uppercase',
+        ä: 'lowercase',
+      });
+
+      element.dataset['Ä'] = 'updated';
+      expect(element.getAttribute('data-Ä')).toBe('updated');
+      expect(element.getAttribute('data-ä')).toBe('lowercase');
+    });
+
+    it('leaves symbol properties on the dataset proxy unchanged', () => {
+      const symbol = Symbol('custom');
+      const dataset = element.dataset as any;
+
+      dataset[symbol] = 'value';
+      expect(dataset[symbol]).toBe('value');
+      expect(symbol in dataset).toBe(true);
+      expect(Object.getOwnPropertyDescriptor(dataset, symbol)).toEqual({
+        value: 'value',
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
+      expect(Reflect.ownKeys(dataset)).toContain(symbol);
+
+      expect(delete dataset[symbol]).toBe(true);
+      expect(symbol in dataset).toBe(false);
+    });
+
     it('hides data attributes whose names do not round-trip to a property', () => {
       const element = window.document.createElementNS(
         'http://www.w3.org/2000/svg',
