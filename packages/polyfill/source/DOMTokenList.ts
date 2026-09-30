@@ -69,6 +69,15 @@ export class DOMTokenList {
     this[OWNER_ELEMENT].className = String(value);
   }
 
+  #setTokens(tokens: readonly string[]) {
+    const rawValue = tokens.join(' ');
+    // Seed before writing so synchronous hooks can reuse the parsed result.
+    // Reads still check the actual raw value after failed or reentrant writes.
+    this.#cachedRawValue = rawValue;
+    this.#cachedTokens = tokens;
+    this.value = rawValue;
+  }
+
   item(index: number) {
     return this[VALUE][index] ?? null;
   }
@@ -79,14 +88,14 @@ export class DOMTokenList {
 
   add(...tokens: string[]) {
     const normalizedTokens = normalizeTokens(tokens);
-    this.value = [...new Set([...this[VALUE], ...normalizedTokens])].join(' ');
+    this.#setTokens([...new Set([...this[VALUE], ...normalizedTokens])]);
   }
 
   remove(...tokens: string[]) {
     const removed = new Set(normalizeTokens(tokens));
     if (!this[OWNER_ELEMENT].hasAttribute('class')) return;
 
-    this.value = this[VALUE].filter((token) => !removed.has(token)).join(' ');
+    this.#setTokens(this[VALUE].filter((token) => !removed.has(token)));
   }
 
   toggle(token: string, force?: boolean) {
@@ -97,9 +106,11 @@ export class DOMTokenList {
     const next = force === undefined ? !present : Boolean(force);
 
     if (next !== present) {
-      this.value = next
-        ? [...tokens, normalizedToken].join(' ')
-        : tokens.filter((token) => token !== normalizedToken).join(' ');
+      this.#setTokens(
+        next
+          ? [...tokens, normalizedToken]
+          : tokens.filter((token) => token !== normalizedToken),
+      );
     }
 
     return next;
@@ -115,7 +126,7 @@ export class DOMTokenList {
 
     const nextTokens = [...tokens];
     nextTokens[index] = normalizedNewToken;
-    this.value = [...new Set(nextTokens)].join(' ');
+    this.#setTokens([...new Set(nextTokens)]);
     return true;
   }
 

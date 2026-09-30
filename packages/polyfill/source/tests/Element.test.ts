@@ -144,6 +144,55 @@ describe('Element convenience APIs', () => {
       expect(classes.value).toBe(' one\t two ');
     });
 
+    it.each([
+      ['add', 'one', 'one two'],
+      ['remove', 'one two', 'two'],
+      ['toggle', 'one', 'one two'],
+      ['replace', 'one', 'two'],
+    ] as const)(
+      '%s retains its known tokens through the attribute write',
+      (method, initial, expected) => {
+        element.className = initial;
+        const classes = element.classList;
+        expect(classes[VALUE]).toEqual(initial.split(' '));
+
+        let tokensDuringWrite: readonly string[] | undefined;
+        hooks.setAttribute.mockImplementation(() => {
+          tokensDuringWrite = classes[VALUE];
+        });
+        const split = vi.spyOn(String.prototype, 'split');
+        let tokensAfterWrite: readonly string[] | undefined;
+        let splitCalls: number | undefined;
+
+        try {
+          switch (method) {
+            case 'add':
+              classes.add('two');
+              break;
+            case 'remove':
+              classes.remove('one');
+              break;
+            case 'toggle':
+              classes.toggle('two');
+              break;
+            case 'replace':
+              classes.replace('one', 'two');
+              break;
+          }
+          tokensAfterWrite = classes[VALUE];
+          splitCalls = split.mock.calls.length;
+        } finally {
+          split.mockRestore();
+          hooks.setAttribute.mockReset();
+        }
+
+        expect(element.className).toBe(expected);
+        expect(tokensDuringWrite).toEqual(expected.split(' '));
+        expect(tokensDuringWrite).toBe(tokensAfterWrite);
+        expect(splitCalls).toBe(0);
+      },
+    );
+
     it('refreshes parsed tokens after every supported direct attribute mutation', () => {
       element.className = 'initial';
       const classes = element.classList;
@@ -199,6 +248,61 @@ describe('Element convenience APIs', () => {
       expect(reads).toEqual([['outer'], ['hooked']]);
       expect(element.className).toBe('hooked');
       expect(classes[VALUE]).toBe(reads[1]);
+    });
+
+    it('invalidates seeded tokens after a reentrant attribute write', () => {
+      element.className = 'initial';
+      const classes = element.classList;
+      expect(classes[VALUE]).toEqual(['initial']);
+
+      hooks.setAttribute.mockImplementation((_element, _name, value) => {
+        if (value === 'initial added') {
+          element.setAttribute('class', 'hooked');
+        }
+      });
+      classes.add('added');
+      hooks.setAttribute.mockReset();
+
+      expect(element.className).toBe('hooked');
+      expect(classes[VALUE]).toEqual(['hooked']);
+    });
+
+    it('discards seeded tokens when the className setter throws before writing', () => {
+      element.className = 'one';
+      const classes = element.classList;
+      const tokens = classes[VALUE];
+      const error = new Error('setter failed');
+      const setter = vi
+        .spyOn(element, 'className', 'set')
+        .mockImplementation(() => {
+          throw error;
+        });
+
+      try {
+        expect(() => classes.add('two')).toThrow(error);
+      } finally {
+        setter.mockRestore();
+      }
+
+      expect(element.className).toBe('one');
+      expect(classes[VALUE]).toEqual(['one']);
+      expect(tokens).toEqual(['one']);
+    });
+
+    it('keeps seeded tokens coherent when an attribute hook throws after writing', () => {
+      element.className = 'one';
+      const classes = element.classList;
+      expect(classes[VALUE]).toEqual(['one']);
+      const error = new Error('hook failed');
+      hooks.setAttribute.mockImplementation(() => {
+        throw error;
+      });
+
+      expect(() => classes.add('two')).toThrow(error);
+      hooks.setAttribute.mockReset();
+
+      expect(element.className).toBe('one two');
+      expect(classes[VALUE]).toEqual(['one', 'two']);
     });
 
     it.each([
