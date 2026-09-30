@@ -1490,7 +1490,7 @@ dom/nodes/Element-closest.html	supported	Element.closest with context node 'test
 dom/nodes/Element-closest.html	supported	Element.closest with context node 'test13' and selector 'div:not(.div1)'
 dom/nodes/Element-closest.html	supported	Element.closest with context node 'test13' and selector 'fieldset'
 dom/nodes/Element-closest.html	supported	Element.closest with context node 'test13' and selector 'form[name="form-a"]'
-dom/nodes/Element-closest.html	deferred	Element.closest with context node 'test3' and selector 'body'	Runner adapter limitation: replayed static markup drops attributes on the outer <body>, so the matched body has an empty id.
+dom/nodes/Element-closest.html	supported	Element.closest with context node 'test3' and selector 'body'
 dom/nodes/Element-closest.html	supported	Element.closest with context node 'test3' and selector 'form + form'
 dom/nodes/Element-closest.html	deferred	Element.closest with context node 'test4' and selector ':has(> :scope)'	Polyfill selector limitation: custom selector subset rejects ':has(> :scope)'.
 dom/nodes/Element-closest.html	deferred	Element.closest with context node 'test4' and selector ':scope'	Polyfill selector limitation: custom selector subset rejects ':scope'.

@@ -24,6 +24,12 @@ interface AppendOperation {
   node: NodeSpec;
 }
 
+interface SetAttributesOperation {
+  type: 'set-attributes';
+  target: 'body';
+  attributes: Array<[string, string]>;
+}
+
 interface ScriptOperation {
   type: 'script';
   label: string;
@@ -31,7 +37,7 @@ interface ScriptOperation {
   harness: boolean;
 }
 
-type Operation = AppendOperation | ScriptOperation;
+type Operation = AppendOperation | SetAttributesOperation | ScriptOperation;
 
 export interface WptBundle {
   generatedSource: string;
@@ -120,6 +126,17 @@ async function collectOperations(
     operations,
     warnings,
   );
+  const bodyAttributes = Array.from(
+    parsed.body.attributes,
+    (attribute) => [attribute.name, attribute.value] as [string, string],
+  );
+  if (bodyAttributes.length > 0) {
+    operations.push({
+      type: 'set-attributes',
+      target: 'body',
+      attributes: bodyAttributes,
+    });
+  }
   await collectNodes(
     parsed.body.childNodes,
     'body',
@@ -301,6 +318,10 @@ async function fetchRunnerSource(sourcePath: string) {
 function emitOperation(operation: Operation) {
   if (operation.type === 'append') {
     return `__appendWptNode(document.${operation.target}, ${JSON.stringify(operation.node)});`;
+  }
+
+  if (operation.type === 'set-attributes') {
+    return `for (const [name, value] of ${JSON.stringify(operation.attributes)}) document.${operation.target}.setAttribute(name, value);`;
   }
 
   if (operation.harness) {
