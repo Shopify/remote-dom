@@ -196,6 +196,126 @@ describe('Element convenience APIs', () => {
       expect(element.classList.toggle('active', true)).toBe(true);
       expect(element.className).toBe('active');
     });
+
+    it.each(['add', 'remove', 'toggle', 'replace'] as const)(
+      '%s rejects empty tokens and tokens containing ASCII whitespace',
+      (method) => {
+        element.className = 'existing';
+        hooks.setAttribute.mockClear();
+        hooks.removeAttribute.mockClear();
+
+        const mutate = (token: string) => {
+          switch (method) {
+            case 'add':
+              return element.classList.add(token);
+            case 'remove':
+              return element.classList.remove(token);
+            case 'toggle':
+              return element.classList.toggle(token);
+            case 'replace':
+              return element.classList.replace(token, 'replacement');
+          }
+        };
+
+        expect(() => mutate('')).toThrowError(
+          expect.objectContaining({name: 'SyntaxError'}),
+        );
+        expect(() => mutate('invalid\ttoken')).toThrowError(
+          expect.objectContaining({name: 'InvalidCharacterError'}),
+        );
+        expect(element.className).toBe('existing');
+        expect(element.classList.contains('')).toBe(false);
+        expect(hooks.setAttribute).not.toHaveBeenCalled();
+        expect(hooks.removeAttribute).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(['\t', '\n', '\f', '\r', ' '])(
+      'rejects the ASCII whitespace character %j in tokens',
+      (whitespace) => {
+        expect(() => element.classList.add(`one${whitespace}two`)).toThrowError(
+          expect.objectContaining({name: 'InvalidCharacterError'}),
+        );
+      },
+    );
+
+    it.each(['add', 'remove'] as const)(
+      '%s validates all arguments before changing the class attribute',
+      (method) => {
+        element.className = 'one two';
+        hooks.setAttribute.mockClear();
+
+        expect(() => element.classList[method]('one', 'invalid token')).toThrow(
+          expect.objectContaining({name: 'InvalidCharacterError'}),
+        );
+        expect(element.className).toBe('one two');
+        expect(hooks.setAttribute).not.toHaveBeenCalled();
+      },
+    );
+
+    it('prioritizes empty-token errors across replace arguments only', () => {
+      expect(() => element.classList.replace('invalid token', '')).toThrowError(
+        expect.objectContaining({name: 'SyntaxError'}),
+      );
+
+      for (const method of ['add', 'remove'] as const) {
+        expect(() =>
+          element.classList[method]('invalid token', ''),
+        ).toThrowError(
+          expect.objectContaining({name: 'InvalidCharacterError'}),
+        );
+      }
+    });
+
+    it('validates the replacement even when the old token is absent', () => {
+      element.className = 'existing';
+      hooks.setAttribute.mockClear();
+
+      expect(() =>
+        element.classList.replace('missing', 'invalid token'),
+      ).toThrowError(expect.objectContaining({name: 'InvalidCharacterError'}));
+      expect(element.className).toBe('existing');
+      expect(hooks.setAttribute).not.toHaveBeenCalled();
+    });
+
+    it('validates toggle tokens when force would prevent a mutation', () => {
+      element.className = 'existing';
+      hooks.setAttribute.mockClear();
+
+      expect(() =>
+        element.classList.toggle('invalid token', false),
+      ).toThrowError(expect.objectContaining({name: 'InvalidCharacterError'}));
+      expect(element.className).toBe('existing');
+      expect(hooks.setAttribute).not.toHaveBeenCalled();
+    });
+
+    it('allows non-ASCII whitespace tokens in every mutation method', () => {
+      const first = 'one\u00a0two';
+      const second = 'three\u2003four';
+      const replacement = 'five\u202fsix';
+
+      element.classList.add(first);
+      expect(element.classList.toggle(second)).toBe(true);
+      expect(element.classList.replace(first, replacement)).toBe(true);
+      element.classList.remove(second);
+
+      expect([...element.classList]).toEqual([replacement]);
+    });
+
+    it('coerces each token argument to a string exactly once', () => {
+      const conversions = [0, 0];
+      const tokens = conversions.map((_, index) => ({
+        toString() {
+          conversions[index]! += 1;
+          return index === 0 ? 'missing' : 'replacement';
+        },
+      }));
+
+      expect(
+        element.classList.replace(tokens[0] as any, tokens[1] as any),
+      ).toBe(false);
+      expect(conversions).toEqual([1, 1]);
+    });
   });
 
   describe('dataset', () => {

@@ -29,6 +29,7 @@ import {
   getElementsByTagName as findElementsByTagName,
 } from './shared.ts';
 import {matchesSelector} from './selectors.ts';
+import {createDOMException} from './dom-exception.ts';
 
 function toDataAttributeName(name: string) {
   return 'data-' + name.replace(/[A-Z]/g, '-$&').toLowerCase();
@@ -42,6 +43,36 @@ function toDataPropertyName(name: string) {
 
 function isTokenIndex(name: PropertyKey) {
   return typeof name === 'string' && name === String(+name);
+}
+
+function validateToken(token: string) {
+  if (token === '') {
+    throw createDOMException(
+      'The token provided must not be empty.',
+      'SyntaxError',
+    );
+  }
+
+  if (/[\t\n\f\r ]/.test(token)) {
+    throw createDOMException(
+      'The token provided contains ASCII whitespace, which is not valid in tokens.',
+      'InvalidCharacterError',
+    );
+  }
+}
+
+function normalizeTokens(
+  tokens: readonly unknown[],
+  {validateEmptyFirst = false} = {},
+) {
+  const normalizedTokens = tokens.map(String);
+
+  if (validateEmptyFirst && normalizedTokens.includes('')) {
+    validateToken('');
+  }
+
+  normalizedTokens.forEach(validateToken);
+  return normalizedTokens;
 }
 
 class DOMTokenList {
@@ -77,34 +108,41 @@ class DOMTokenList {
   }
 
   add(...tokens: string[]) {
-    this.value = [...new Set([...this[VALUE], ...tokens.map(String)])].join(
-      ' ',
-    );
+    const normalizedTokens = normalizeTokens(tokens);
+    this.value = [...new Set([...this[VALUE], ...normalizedTokens])].join(' ');
   }
 
   remove(...tokens: string[]) {
-    const removed = new Set(tokens.map(String));
+    const removed = new Set(normalizeTokens(tokens));
     this.value = this[VALUE].filter((token) => !removed.has(token)).join(' ');
   }
 
   toggle(token: string, force?: boolean) {
-    const present = this.contains(token);
+    const normalizedToken = normalizeTokens([token])[0]!;
+    const tokens = this[VALUE];
+    const present = tokens.includes(normalizedToken);
     const next = force === undefined ? !present : Boolean(force);
 
     if (next !== present) {
-      if (next) this.add(token);
-      else this.remove(token);
+      this.value = next
+        ? [...tokens, normalizedToken].join(' ')
+        : tokens.filter((token) => token !== normalizedToken).join(' ');
     }
 
     return next;
   }
 
   replace(token: string, newToken: string) {
+    const normalizedTokens = normalizeTokens([token, newToken], {
+      validateEmptyFirst: true,
+    });
+    const normalizedToken = normalizedTokens[0]!;
+    const normalizedNewToken = normalizedTokens[1]!;
     const tokens = this[VALUE];
-    const index = tokens.indexOf(String(token));
+    const index = tokens.indexOf(normalizedToken);
     if (index < 0) return false;
 
-    tokens[index] = String(newToken);
+    tokens[index] = normalizedNewToken;
     this.value = [...new Set(tokens)].join(' ');
     return true;
   }
