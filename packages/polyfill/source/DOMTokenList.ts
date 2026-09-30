@@ -1,10 +1,7 @@
 import {OWNER_ELEMENT, VALUE, splitOnASCIIWhitespace} from './constants.ts';
 import {createDOMException} from './dom-exception.ts';
+import {toPropertyIndex} from './shared.ts';
 import type {Element} from './Element.ts';
-
-function isTokenIndex(name: PropertyKey) {
-  return typeof name === 'string' && name === String(+name);
-}
 
 function validateTokens(token: string, otherToken?: string) {
   if (token === '' || otherToken === '') {
@@ -125,12 +122,16 @@ Object.setPrototypeOf(
     {},
     {
       get(target, name, receiver) {
-        return isTokenIndex(name)
-          ? (receiver as DOMTokenList)[VALUE][+(name as string)]
+        const index = toPropertyIndex(name);
+        return index !== undefined
+          ? (receiver as DOMTokenList)[VALUE][index]
           : Reflect.get(target, name, receiver);
       },
       set(target, name, value, receiver) {
-        return isTokenIndex(name) || Reflect.set(target, name, value, receiver);
+        return (
+          toPropertyIndex(name) !== undefined ||
+          Reflect.set(target, name, value, receiver)
+        );
       },
     },
   ),

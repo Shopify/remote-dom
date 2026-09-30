@@ -159,14 +159,37 @@ describe('Element convenience APIs', () => {
       );
     });
 
-    it('ignores indexed assignment', () => {
-      element.className = 'one two';
+    it.each(['0', '1', '4294967294'])(
+      'ignores assignment to canonical index %s',
+      (property) => {
+        element.className = 'one two';
+        const classes = element.classList;
 
-      (element.classList as any)[1] = 'three';
+        (classes as any)[property] = 'changed';
 
-      expect(element.classList[1]).toBe('two');
-      expect(element.className).toBe('one two');
-    });
+        expect(Object.hasOwn(classes, property)).toBe(false);
+        expect((classes as any)[property]).toBe(
+          property === '0' ? 'one' : property === '1' ? 'two' : undefined,
+        );
+        expect(element.className).toBe('one two');
+      },
+    );
+
+    it.each(['-1', '1.5', 'NaN', 'Infinity', '-0', '01', '1e0', '4294967295'])(
+      'treats non-index name %s as an ordinary property',
+      (property) => {
+        element.className = 'one two';
+        const classes = element.classList;
+
+        expect((classes as any)[property]).toBeUndefined();
+        (classes as any)[property] = 'custom';
+
+        expect(Object.hasOwn(classes, property)).toBe(true);
+        expect((classes as any)[property]).toBe('custom');
+        expect([...classes]).toEqual(['one', 'two']);
+        expect(element.className).toBe('one two');
+      },
+    );
 
     it('adds, removes, and replaces classes through attribute hooks', () => {
       element.className = 'one one two';
