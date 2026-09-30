@@ -218,19 +218,44 @@ describe('Element convenience APIs', () => {
       expect(classes[VALUE]).toEqual([]);
     });
 
-    it('does not mutate cached tokens or existing iterators during replace', () => {
-      element.className = 'one two';
-      const classes = element.classList;
-      const tokens = classes[VALUE];
-      const iterator = classes[Symbol.iterator]();
+    it.each([
+      ['add', 'one two', 'one two three'],
+      ['remove', 'one two', 'two'],
+      ['toggle on', 'one two', 'one two three'],
+      ['toggle off', 'one two', 'two'],
+      ['replace', 'one two', 'three two'],
+    ] as const)(
+      '%s does not mutate cached tokens or existing iterators',
+      (method, initial, expected) => {
+        element.className = initial;
+        const classes = element.classList;
+        const tokens = classes[VALUE];
+        const iterator = classes[Symbol.iterator]();
 
-      expect(classes.replace('one', 'three')).toBe(true);
+        switch (method) {
+          case 'add':
+            classes.add('three');
+            break;
+          case 'remove':
+            classes.remove('one');
+            break;
+          case 'toggle on':
+            classes.toggle('three');
+            break;
+          case 'toggle off':
+            classes.toggle('one');
+            break;
+          case 'replace':
+            classes.replace('one', 'three');
+            break;
+        }
 
-      expect(tokens).toEqual(['one', 'two']);
-      expect([...iterator]).toEqual(['one', 'two']);
-      expect(classes[VALUE]).not.toBe(tokens);
-      expect(classes[VALUE]).toEqual(['three', 'two']);
-    });
+        expect(tokens).toEqual(initial.split(' '));
+        expect([...iterator]).toEqual(initial.split(' '));
+        expect(classes[VALUE]).not.toBe(tokens);
+        expect(classes[VALUE]).toEqual(expected.split(' '));
+      },
+    );
 
     it('keeps the cache aligned with reentrant writes from attribute hooks', () => {
       element.className = 'initial';
@@ -350,6 +375,48 @@ describe('Element convenience APIs', () => {
         expect(element.classList.value).toBe(expected);
         expect(element.getAttribute('class')).toBe(expected);
         expect(hooks.setAttribute).toHaveBeenCalledTimes(writeCount);
+      },
+    );
+
+    it.each([
+      ['add no tokens', (classes: Element['classList']) => classes.add()],
+      [
+        'add one existing token',
+        (classes: Element['classList']) => classes.add('one'),
+      ],
+      [
+        'add multiple existing tokens',
+        (classes: Element['classList']) => classes.add('two', 'one', 'two'),
+      ],
+      ['remove no tokens', (classes: Element['classList']) => classes.remove()],
+      [
+        'remove one missing token',
+        (classes: Element['classList']) => classes.remove('missing'),
+      ],
+      [
+        'remove multiple missing tokens',
+        (classes: Element['classList']) =>
+          classes.remove('missing', 'also-missing', 'missing'),
+      ],
+      [
+        'replace a token with itself',
+        (classes: Element['classList']) => classes.replace('one', 'one'),
+      ],
+    ] as const)(
+      '%s reuses cached tokens while normalizing the raw value',
+      (_description, mutate) => {
+        element.className = ' one\t one  two ';
+        const classes = element.classList;
+        const tokens = classes[VALUE];
+        const iterator = classes[Symbol.iterator]();
+        hooks.setAttribute.mockClear();
+
+        mutate(classes);
+
+        expect(element.className).toBe('one two');
+        expect(classes[VALUE]).toBe(tokens);
+        expect([...iterator]).toEqual(['one', 'two']);
+        expect(hooks.setAttribute).toHaveBeenCalledTimes(1);
       },
     );
 
@@ -514,25 +581,44 @@ describe('Element convenience APIs', () => {
       },
     );
 
-    it('adds, removes, and replaces classes through attribute hooks', () => {
+    it('deduplicates multi-token additions and removals in list order', () => {
       element.className = 'one one two';
       hooks.setAttribute.mockClear();
 
-      element.classList.add('two', 'three');
-      expect(element.className).toBe('one two three');
+      element.classList.add('two', 'three', 'three', 'four', 'one');
+      expect(element.className).toBe('one two three four');
       expect(hooks.setAttribute).toHaveBeenLastCalledWith(
         element,
         'class',
-        'one two three',
+        'one two three four',
         null,
       );
 
-      element.classList.remove('one', 'missing');
-      expect(element.className).toBe('two three');
-      expect(element.classList.replace('three', 'four')).toBe(true);
-      expect(element.classList.replace('missing', 'five')).toBe(false);
-      expect(element.className).toBe('two four');
+      element.classList.remove('missing', 'two', 'four', 'two');
+      expect(element.className).toBe('one three');
     });
+
+    it.each([
+      [
+        'replacement before old token',
+        'new middle old last',
+        'new middle last',
+      ],
+      [
+        'replacement after old token',
+        'first old middle new',
+        'first new middle',
+      ],
+      ['new replacement token', 'first old last', 'first new last'],
+    ] as const)(
+      'replace preserves order with a %s',
+      (_description, initial, expected) => {
+        element.className = initial;
+
+        expect(element.classList.replace('old', 'new')).toBe(true);
+        expect(element.className).toBe(expected);
+      },
+    );
 
     it('toggles classes, including with an explicit force', () => {
       expect(element.classList.toggle('active')).toBe(true);

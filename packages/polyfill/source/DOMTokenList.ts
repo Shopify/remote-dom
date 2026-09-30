@@ -88,28 +88,76 @@ export class DOMTokenList {
 
   add(...tokens: string[]) {
     const normalizedTokens = normalizeTokens(tokens);
-    this.#setTokens([...new Set([...this[VALUE], ...normalizedTokens])]);
+    const currentTokens = this[VALUE];
+
+    if (normalizedTokens.length === 0) {
+      this.#setTokens(currentTokens);
+      return;
+    }
+
+    if (normalizedTokens.length === 1) {
+      const token = normalizedTokens[0]!;
+      this.#setTokens(
+        currentTokens.includes(token)
+          ? currentTokens
+          : [...currentTokens, token],
+      );
+      return;
+    }
+
+    const nextTokens = new Set(currentTokens);
+    for (const token of normalizedTokens) nextTokens.add(token);
+
+    this.#setTokens(
+      nextTokens.size === currentTokens.length
+        ? currentTokens
+        : [...nextTokens],
+    );
   }
 
   remove(...tokens: string[]) {
-    const removed = new Set(normalizeTokens(tokens));
+    const normalizedTokens = normalizeTokens(tokens);
     if (!this[OWNER_ELEMENT].hasAttribute('class')) return;
 
-    this.#setTokens(this[VALUE].filter((token) => !removed.has(token)));
+    const currentTokens = this[VALUE];
+    if (normalizedTokens.length === 0 || currentTokens.length === 0) {
+      this.#setTokens(currentTokens);
+      return;
+    }
+
+    if (normalizedTokens.length === 1) {
+      const index = currentTokens.indexOf(normalizedTokens[0]!);
+      this.#setTokens(
+        index < 0
+          ? currentTokens
+          : currentTokens.filter((_, tokenIndex) => tokenIndex !== index),
+      );
+      return;
+    }
+
+    const removedTokens = new Set(normalizedTokens);
+    const nextTokens: string[] = [];
+    for (const token of currentTokens) {
+      if (!removedTokens.has(token)) nextTokens.push(token);
+    }
+    this.#setTokens(
+      nextTokens.length === currentTokens.length ? currentTokens : nextTokens,
+    );
   }
 
   toggle(token: string, force?: boolean) {
     const normalizedToken = String(token);
     validateTokens(normalizedToken);
     const tokens = this[VALUE];
-    const present = tokens.includes(normalizedToken);
+    const index = tokens.indexOf(normalizedToken);
+    const present = index >= 0;
     const next = force === undefined ? !present : Boolean(force);
 
     if (next !== present) {
       this.#setTokens(
         next
           ? [...tokens, normalizedToken]
-          : tokens.filter((token) => token !== normalizedToken),
+          : tokens.filter((_, tokenIndex) => tokenIndex !== index),
       );
     }
 
@@ -124,9 +172,24 @@ export class DOMTokenList {
     const index = tokens.indexOf(normalizedToken);
     if (index < 0) return false;
 
-    const nextTokens = [...tokens];
-    nextTokens[index] = normalizedNewToken;
-    this.#setTokens([...new Set(nextTokens)]);
+    if (normalizedToken === normalizedNewToken) {
+      this.#setTokens(tokens);
+      return true;
+    }
+
+    const nextTokens: string[] = [];
+    let seenReplacement = false;
+    for (let tokenIndex = 0; tokenIndex < tokens.length; tokenIndex++) {
+      const candidate =
+        tokenIndex === index ? normalizedNewToken : tokens[tokenIndex]!;
+      if (candidate === normalizedNewToken) {
+        if (seenReplacement) continue;
+        seenReplacement = true;
+      }
+      nextTokens.push(candidate);
+    }
+
+    this.#setTokens(nextTokens);
     return true;
   }
 
