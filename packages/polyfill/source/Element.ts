@@ -13,6 +13,7 @@ import {
   type NodeType,
   asciiLowercase,
   asciiUppercase,
+  splitOnASCIIWhitespace,
 } from './constants.ts';
 import {
   normalizeNamespace,
@@ -52,7 +53,7 @@ class DOMTokenList {
   }
 
   get [VALUE]() {
-    return this[OWNER_ELEMENT].className.trim().split(/\s+/).filter(Boolean);
+    return [...new Set(splitOnASCIIWhitespace(this[OWNER_ELEMENT].className))];
   }
 
   get length() {

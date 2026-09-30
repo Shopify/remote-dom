@@ -102,6 +102,63 @@ describe('Element convenience APIs', () => {
       expect([...classes]).toEqual(['three']);
     });
 
+    it('returns ordered unique tokens split on ASCII whitespace without rewriting the attribute', () => {
+      const value = ' one\tone\ntwo\ftwo\rthree three  four four ';
+      element.className = value;
+      hooks.setAttribute.mockClear();
+
+      const classes = element.classList;
+
+      expect([...classes]).toEqual(['one', 'two', 'three', 'four']);
+      expect(classes.length).toBe(4);
+      expect(classes[0]).toBe('one');
+      expect(classes[3]).toBe('four');
+      expect(classes[4]).toBeUndefined();
+      expect(classes.item(0)).toBe('one');
+      expect(classes.item(3)).toBe('four');
+      expect(classes.item(4)).toBeNull();
+      expect(classes.value).toBe(value);
+      expect(element.getAttribute('class')).toBe(value);
+      expect(hooks.setAttribute).not.toHaveBeenCalled();
+    });
+
+    it('preserves non-ASCII whitespace in tokens during reads and mutations', () => {
+      const tokens = [
+        'a\u00a0b',
+        '\u00a0leading',
+        'trailing\u2003',
+        'inside\u2003token',
+      ];
+      const value = tokens.join(' ');
+      element.className = value;
+      hooks.setAttribute.mockClear();
+
+      expect([...element.classList]).toEqual(tokens);
+      for (const token of tokens) {
+        expect(element.classList.contains(token)).toBe(true);
+      }
+      expect(hooks.setAttribute).not.toHaveBeenCalled();
+
+      element.classList.add('added');
+      expect(element.className).toBe(`${value} added`);
+      expect(hooks.setAttribute).toHaveBeenLastCalledWith(
+        element,
+        'class',
+        `${value} added`,
+        null,
+      );
+
+      element.classList.remove('added');
+      expect(element.className).toBe(value);
+      expect([...element.classList]).toEqual(tokens);
+      expect(hooks.setAttribute).toHaveBeenLastCalledWith(
+        element,
+        'class',
+        value,
+        null,
+      );
+    });
+
     it('ignores indexed assignment', () => {
       element.className = 'one two';
 
