@@ -58,15 +58,18 @@ function isTokenIndex(name: PropertyKey) {
   return typeof name === 'string' && name === String(+name);
 }
 
-function validateToken(token: string) {
-  if (token === '') {
+function validateTokens(token: string, otherToken?: string) {
+  if (token === '' || otherToken === '') {
     throw createDOMException(
       'The token provided must not be empty.',
       'SyntaxError',
     );
   }
 
-  if (/[\t\n\f\r ]/.test(token)) {
+  if (
+    /[\t\n\f\r ]/.test(token) ||
+    (otherToken !== undefined && /[\t\n\f\r ]/.test(otherToken))
+  ) {
     throw createDOMException(
       'The token provided contains ASCII whitespace, which is not valid in tokens.',
       'InvalidCharacterError',
@@ -74,18 +77,18 @@ function validateToken(token: string) {
   }
 }
 
-function normalizeTokens(
-  tokens: readonly unknown[],
-  {validateEmptyFirst = false} = {},
-) {
-  const normalizedTokens = tokens.map(String);
-
-  if (validateEmptyFirst && normalizedTokens.includes('')) {
-    validateToken('');
+function normalizeTokens(tokens: string[]) {
+  // Convert every argument before validation so conversion side effects and
+  // errors still occur when an earlier token is invalid.
+  for (let index = 0; index < tokens.length; index++) {
+    tokens[index] = String(tokens[index]);
   }
 
-  normalizedTokens.forEach(validateToken);
-  return normalizedTokens;
+  for (const token of tokens) {
+    validateTokens(token);
+  }
+
+  return tokens;
 }
 
 class DOMTokenList {
@@ -131,7 +134,8 @@ class DOMTokenList {
   }
 
   toggle(token: string, force?: boolean) {
-    const normalizedToken = normalizeTokens([token])[0]!;
+    const normalizedToken = String(token);
+    validateTokens(normalizedToken);
     const tokens = this[VALUE];
     const present = tokens.includes(normalizedToken);
     const next = force === undefined ? !present : Boolean(force);
@@ -146,11 +150,9 @@ class DOMTokenList {
   }
 
   replace(token: string, newToken: string) {
-    const normalizedTokens = normalizeTokens([token, newToken], {
-      validateEmptyFirst: true,
-    });
-    const normalizedToken = normalizedTokens[0]!;
-    const normalizedNewToken = normalizedTokens[1]!;
+    const normalizedToken = String(token);
+    const normalizedNewToken = String(newToken);
+    validateTokens(normalizedToken, normalizedNewToken);
     const tokens = this[VALUE];
     const index = tokens.indexOf(normalizedToken);
     if (index < 0) return false;

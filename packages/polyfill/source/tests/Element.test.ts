@@ -253,6 +253,39 @@ describe('Element convenience APIs', () => {
       },
     );
 
+    it.each(['add', 'remove', 'replace'] as const)(
+      '%s converts later arguments before validating an earlier token',
+      (method) => {
+        element.className = 'existing';
+        hooks.setAttribute.mockClear();
+        const conversions = [0, 0];
+        const conversionError = new Error('later conversion failed');
+        const invalidToken = {
+          toString() {
+            conversions[0]! += 1;
+            return '';
+          },
+        };
+        const laterToken = {
+          toString() {
+            conversions[1]! += 1;
+            throw conversionError;
+          },
+        };
+
+        expect(() => {
+          if (method === 'replace') {
+            element.classList.replace(invalidToken as any, laterToken as any);
+          } else {
+            element.classList[method](invalidToken as any, laterToken as any);
+          }
+        }).toThrowError(conversionError);
+        expect(conversions).toEqual([1, 1]);
+        expect(element.className).toBe('existing');
+        expect(hooks.setAttribute).not.toHaveBeenCalled();
+      },
+    );
+
     it('prioritizes empty-token errors across replace arguments only', () => {
       expect(() => element.classList.replace('invalid token', '')).toThrowError(
         expect.objectContaining({name: 'SyntaxError'}),
