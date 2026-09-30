@@ -122,6 +122,142 @@ describe('Element convenience APIs', () => {
       expect(hooks.setAttribute).not.toHaveBeenCalled();
     });
 
+    it.each([
+      [
+        'add an existing token',
+        () => element.classList.add('one'),
+        'one two',
+        1,
+      ],
+      ['add no tokens', () => element.classList.add(), 'one two', 1],
+      [
+        'remove a missing token',
+        () => element.classList.remove('missing'),
+        'one two',
+        1,
+      ],
+      ['remove no tokens', () => element.classList.remove(), 'one two', 1],
+      [
+        'replace a token with itself',
+        () => element.classList.replace('one', 'one'),
+        'one two',
+        1,
+      ],
+      [
+        'force-toggle a present token on',
+        () => element.classList.toggle('one', true),
+        ' one\t one  two ',
+        0,
+      ],
+      [
+        'replace a missing token',
+        () => element.classList.replace('missing', 'three'),
+        ' one\t one  two ',
+        0,
+      ],
+    ] as const)(
+      '%s follows browser normalization behavior',
+      (_description, mutate, expected, writeCount) => {
+        element.className = ' one\t one  two ';
+        hooks.setAttribute.mockClear();
+
+        mutate();
+
+        expect(element.className).toBe(expected);
+        expect(element.classList.value).toBe(expected);
+        expect(element.getAttribute('class')).toBe(expected);
+        expect(hooks.setAttribute).toHaveBeenCalledTimes(writeCount);
+      },
+    );
+
+    it.each([
+      ['add no tokens', () => element.classList.add(), '', 1],
+      ['remove no tokens', () => element.classList.remove(), null, 0],
+      [
+        'remove a missing token',
+        () => element.classList.remove('missing'),
+        null,
+        0,
+      ],
+      [
+        'force-toggle a missing token off',
+        () => element.classList.toggle('missing', false),
+        null,
+        0,
+      ],
+      [
+        'replace a missing token',
+        () => element.classList.replace('missing', 'next'),
+        null,
+        0,
+      ],
+    ] as const)(
+      '%s handles an absent class attribute',
+      (_description, mutate, expectedAttribute, writeCount) => {
+        mutate();
+
+        expect(element.className).toBe('');
+        expect(element.classList.value).toBe('');
+        expect(element.getAttribute('class')).toBe(expectedAttribute);
+        expect(hooks.setAttribute).toHaveBeenCalledTimes(writeCount);
+        expect(hooks.removeAttribute).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each([
+      ['', []],
+      ['', ['missing']],
+      [' \t ', []],
+      [' \t ', ['missing']],
+    ] as const)(
+      'remove preserves and normalizes an existing class attribute %j with arguments %j',
+      (initial, tokens) => {
+        element.setAttribute('class', initial);
+        hooks.setAttribute.mockClear();
+
+        element.classList.remove(...tokens);
+
+        expect(element.hasAttribute('class')).toBe(true);
+        expect(element.getAttribute('class')).toBe('');
+        expect(element.className).toBe('');
+        expect(element.classList.value).toBe('');
+        expect(hooks.setAttribute).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    it.each([
+      ['', 'SyntaxError'],
+      ['invalid token', 'InvalidCharacterError'],
+    ])(
+      'remove rejects %j on a missing class attribute without mutation',
+      (token, name) => {
+        expect(() => element.classList.remove(token)).toThrowError(
+          expect.objectContaining({name}),
+        );
+        expect(element.getAttribute('class')).toBeNull();
+        expect(element.className).toBe('');
+        expect(element.classList.value).toBe('');
+        expect(hooks.setAttribute).not.toHaveBeenCalled();
+        expect(hooks.removeAttribute).not.toHaveBeenCalled();
+      },
+    );
+
+    it('checks for a class attribute after stringifying remove arguments', () => {
+      const token = {
+        toString() {
+          element.setAttribute('class', ' one\t one ');
+          return 'missing';
+        },
+      };
+
+      element.classList.remove(token as any);
+
+      expect(element.getAttribute('class')).toBe('one');
+      expect(element.className).toBe('one');
+      expect(element.classList.value).toBe('one');
+      expect(hooks.setAttribute).toHaveBeenCalledTimes(2);
+    });
+
     it('preserves characters outside DOM ASCII whitespace during reads and mutations', () => {
       const tokens = [
         '\u000bleading',

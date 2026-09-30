@@ -75,6 +75,8 @@ export class DOMTokenList {
 
   remove(...tokens: string[]) {
     const removed = new Set(normalizeTokens(tokens));
+    if (!this[OWNER_ELEMENT].hasAttribute('class')) return;
+
     this.value = this[VALUE].filter((token) => !removed.has(token)).join(' ');
   }
 
