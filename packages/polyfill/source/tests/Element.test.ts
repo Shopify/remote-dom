@@ -122,12 +122,16 @@ describe('Element convenience APIs', () => {
       expect(hooks.setAttribute).not.toHaveBeenCalled();
     });
 
-    it('preserves non-ASCII whitespace in tokens during reads and mutations', () => {
+    it('preserves characters outside DOM ASCII whitespace during reads and mutations', () => {
       const tokens = [
+        '\u000bleading',
         'a\u00a0b',
         '\u00a0leading',
         'trailing\u2003',
         'inside\u2003token',
+        'inside\u2028token',
+        '\u2029',
+        'trailing\ufeff',
       ];
       const value = tokens.join(' ');
       element.className = value;
@@ -345,17 +349,29 @@ describe('Element convenience APIs', () => {
       expect(hooks.setAttribute).not.toHaveBeenCalled();
     });
 
-    it('allows non-ASCII whitespace tokens in every mutation method', () => {
-      const first = 'one\u00a0two';
-      const second = 'three\u2003four';
-      const replacement = 'five\u202fsix';
+    it.each([
+      '\u000b',
+      '\u00a0',
+      '\u2003',
+      '\u2028',
+      '\u2029',
+      '\u202f',
+      '\ufeff',
+    ])('allows %j within tokens in every mutation method', (whitespace) => {
+      const first = `${whitespace}one`;
+      const second = `two${whitespace}`;
+      const replacement = `three${whitespace}four`;
 
       element.classList.add(first);
+      expect([...element.classList]).toEqual([first]);
       expect(element.classList.toggle(second)).toBe(true);
+      expect([...element.classList]).toEqual([first, second]);
       expect(element.classList.replace(first, replacement)).toBe(true);
+      expect([...element.classList]).toEqual([replacement, second]);
       element.classList.remove(second);
 
       expect([...element.classList]).toEqual([replacement]);
+      expect(element.className).toBe(replacement);
     });
 
     it('coerces each token argument to a string exactly once', () => {
@@ -584,6 +600,25 @@ describe('Element convenience APIs', () => {
         'trailing',
         null,
       );
+    });
+
+    it('preserves a dash followed by a non-ASCII lowercase letter', () => {
+      const dataset = element.dataset;
+      dataset['foo-é'] = 'value';
+
+      expect(element.getAttribute('data-foo-é')).toBe('value');
+      expect(dataset['foo-é']).toBe('value');
+      expect('foo-é' in dataset).toBe(true);
+      expect(Object.keys(dataset)).toStrictEqual(['foo-é']);
+      expect({...dataset}).toStrictEqual({'foo-é': 'value'});
+      expect(() => {
+        dataset['foo-e'] = 'invalid';
+      }).toThrowError(expect.objectContaining({name: 'SyntaxError'}));
+
+      delete dataset['foo-é'];
+      expect(element.hasAttribute('data-foo-é')).toBe(false);
+      expect(dataset['foo-é']).toBeUndefined();
+      expect(Object.keys(dataset)).toStrictEqual([]);
     });
 
     it('only lowercases ASCII uppercase letters in dataset conversions', () => {
