@@ -39,13 +39,22 @@ function normalizeTokens(tokens: string[]) {
 export class DOMTokenList {
   readonly [index: number]: string;
   [OWNER_ELEMENT]: Element;
+  #cachedRawValue?: string;
+  #cachedTokens: readonly string[] = [];
 
   constructor(element: Element) {
     this[OWNER_ELEMENT] = element;
   }
 
-  get [VALUE]() {
-    return [...new Set(splitOnASCIIWhitespace(this[OWNER_ELEMENT].className))];
+  get [VALUE](): readonly string[] {
+    const rawValue = this[OWNER_ELEMENT].className;
+
+    if (rawValue !== this.#cachedRawValue) {
+      this.#cachedTokens = [...new Set(splitOnASCIIWhitespace(rawValue))];
+      this.#cachedRawValue = rawValue;
+    }
+
+    return this.#cachedTokens;
   }
 
   get length() {
@@ -104,8 +113,9 @@ export class DOMTokenList {
     const index = tokens.indexOf(normalizedToken);
     if (index < 0) return false;
 
-    tokens[index] = normalizedNewToken;
-    this.value = [...new Set(tokens)].join(' ');
+    const nextTokens = [...tokens];
+    nextTokens[index] = normalizedNewToken;
+    this.value = [...new Set(nextTokens)].join(' ');
     return true;
   }
 

@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-import {HOOKS} from '../constants.ts';
+import {HOOKS, VALUE} from '../constants.ts';
 import {Element} from '../Element.ts';
 import {Window} from '../Window.ts';
 
@@ -120,6 +120,85 @@ describe('Element convenience APIs', () => {
       expect(classes.value).toBe(value);
       expect(element.getAttribute('class')).toBe(value);
       expect(hooks.setAttribute).not.toHaveBeenCalled();
+    });
+
+    it('reuses parsed tokens until the raw class value changes', () => {
+      element.className = 'one one two';
+      const classes = element.classList;
+      const tokens = classes[VALUE];
+
+      expect(classes[VALUE]).toBe(tokens);
+      expect(classes.length).toBe(2);
+      expect(classes[VALUE]).toBe(tokens);
+
+      const other = window.document.createElement('div');
+      other.className = element.className;
+      expect(other.classList[VALUE]).not.toBe(tokens);
+
+      element.className = 'one one two';
+      expect(classes[VALUE]).toBe(tokens);
+
+      element.className = ' one\t two ';
+      expect(classes[VALUE]).not.toBe(tokens);
+      expect(classes[VALUE]).toEqual(tokens);
+      expect(classes.value).toBe(' one\t two ');
+    });
+
+    it('refreshes parsed tokens after every supported direct attribute mutation', () => {
+      element.className = 'initial';
+      const classes = element.classList;
+      let tokens = classes[VALUE];
+
+      element.className = 'from-class-name';
+      expect(classes[VALUE]).not.toBe(tokens);
+      expect(classes[VALUE]).toEqual(['from-class-name']);
+      tokens = classes[VALUE];
+
+      element.setAttribute('class', 'from-set-attribute');
+      expect(classes[VALUE]).not.toBe(tokens);
+      expect(classes[VALUE]).toEqual(['from-set-attribute']);
+      tokens = classes[VALUE];
+
+      element.attributes.getNamedItem('class')!.value = 'from-attr-value';
+      expect(classes[VALUE]).not.toBe(tokens);
+      expect(classes[VALUE]).toEqual(['from-attr-value']);
+      tokens = classes[VALUE];
+
+      element.removeAttribute('class');
+      expect(classes[VALUE]).not.toBe(tokens);
+      expect(classes[VALUE]).toEqual([]);
+    });
+
+    it('does not mutate cached tokens or existing iterators during replace', () => {
+      element.className = 'one two';
+      const classes = element.classList;
+      const tokens = classes[VALUE];
+      const iterator = classes[Symbol.iterator]();
+
+      expect(classes.replace('one', 'three')).toBe(true);
+
+      expect(tokens).toEqual(['one', 'two']);
+      expect([...iterator]).toEqual(['one', 'two']);
+      expect(classes[VALUE]).not.toBe(tokens);
+      expect(classes[VALUE]).toEqual(['three', 'two']);
+    });
+
+    it('keeps the cache aligned with reentrant writes from attribute hooks', () => {
+      element.className = 'initial';
+      const classes = element.classList;
+      expect(classes[VALUE]).toEqual(['initial']);
+      const reads: (readonly string[])[] = [];
+
+      hooks.setAttribute.mockImplementation((_element, _name, value) => {
+        reads.push(classes[VALUE]);
+        if (value === 'outer') element.setAttribute('class', 'hooked');
+      });
+      classes.value = 'outer';
+      hooks.setAttribute.mockReset();
+
+      expect(reads).toEqual([['outer'], ['hooked']]);
+      expect(element.className).toBe('hooked');
+      expect(classes[VALUE]).toBe(reads[1]);
     });
 
     it.each([
