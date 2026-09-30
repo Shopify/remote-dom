@@ -18,10 +18,7 @@ function isValidDataPropertyName(name: string) {
 
 function validateDataPropertyName(name: string) {
   if (!isValidDataPropertyName(name)) {
-    throw createDOMException(
-      'The dataset property name must not contain a dash followed by an ASCII lowercase letter.',
-      'SyntaxError',
-    );
+    throw createDOMException('Invalid dataset property name', 'SyntaxError');
   }
 }
 
