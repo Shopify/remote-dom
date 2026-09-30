@@ -325,7 +325,7 @@ export function parseSelector(
   return parts;
 }
 
-function matchesSelector(element: Element, selector: string) {
+export function matchesSelector(element: Element, selector: string) {
   const parsed = parseSelector(selector);
   return parsed[0]?.matchers.length
     ? matchesSelectorRecursive(element, parsed)
