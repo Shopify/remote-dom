@@ -184,9 +184,10 @@ export class Element extends ParentNode {
   get dataset(): DOMStringMap {
     return (this[DATASET] ??= new Proxy({} as DOMStringMap, {
       get: (target, name) =>
-        typeof name !== 'string' || Reflect.has(target, name)
-          ? Reflect.get(target, name)
-          : (this.getAttribute(toDataAttributeName(name)) ?? undefined),
+        typeof name === 'string'
+          ? (this.getAttribute(toDataAttributeName(name)) ??
+            Reflect.get(target, name))
+          : Reflect.get(target, name),
       set: (target, name, value) => {
         if (typeof name !== 'string') return Reflect.set(target, name, value);
         this.setAttribute(toDataAttributeName(name), String(value));
@@ -223,12 +224,13 @@ export class Element extends ParentNode {
         ...Reflect.ownKeys(target).filter((key) => typeof key !== 'string'),
       ],
       getOwnPropertyDescriptor: (target, name) => {
-        if (typeof name !== 'string' || Reflect.has(target, name)) {
+        if (typeof name !== 'string') {
           return Reflect.getOwnPropertyDescriptor(target, name);
         }
         const value = this.getAttribute(toDataAttributeName(name));
-        if (value == null) return undefined;
-        return {value, writable: true, enumerable: true, configurable: true};
+        return value == null
+          ? Reflect.getOwnPropertyDescriptor(target, name)
+          : {value, writable: true, enumerable: true, configurable: true};
       },
     }));
   }

@@ -220,19 +220,40 @@ describe('Element convenience APIs', () => {
       expect(Object.keys(element.dataset)).toStrictEqual(['state']);
     });
 
-    it('keeps inherited object members visible', () => {
-      element.setAttribute('data-user-id', '123');
+    it('lets data attributes shadow inherited object members', () => {
+      const dataset = element.dataset;
+      element.setAttribute('data-constructor', 'widget');
+      element.setAttribute('data-to-string', 'custom');
 
-      expect(typeof element.dataset.toString).toBe('function');
-      expect(`${element.dataset}`).toBe('[object Object]');
-      expect('toString' in element.dataset).toBe(true);
-      expect(
-        Object.prototype.hasOwnProperty.call(element.dataset, 'userId'),
-      ).toBe(true);
-      expect(
-        Object.prototype.hasOwnProperty.call(element.dataset, 'toString'),
-      ).toBe(false);
-      expect(Object.keys(element.dataset)).toStrictEqual(['userId']);
+      expect(dataset.constructor).toBe('widget');
+      expect(dataset.toString).toBe('custom');
+      expect(Object.keys(dataset)).toStrictEqual(['constructor', 'toString']);
+      expect({...dataset}).toStrictEqual({
+        constructor: 'widget',
+        toString: 'custom',
+      });
+      expect(Object.prototype.hasOwnProperty.call(dataset, 'constructor')).toBe(
+        true,
+      );
+      expect(Object.prototype.hasOwnProperty.call(dataset, 'toString')).toBe(
+        true,
+      );
+
+      delete (dataset as any).constructor;
+      delete (dataset as any).toString;
+
+      expect(typeof dataset.constructor).toBe('function');
+      expect(typeof dataset.toString).toBe('function');
+      expect(`${dataset}`).toBe('[object Object]');
+      expect('constructor' in dataset).toBe(true);
+      expect('toString' in dataset).toBe(true);
+      expect(Object.prototype.hasOwnProperty.call(dataset, 'constructor')).toBe(
+        false,
+      );
+      expect(Object.prototype.hasOwnProperty.call(dataset, 'toString')).toBe(
+        false,
+      );
+      expect(Object.keys(dataset)).toStrictEqual([]);
     });
 
     it('routes defineProperty through the data attributes', () => {
