@@ -50,6 +50,29 @@ export function Button({
   );
 }
 
+export function Banner({
+  content,
+  primaryAction,
+}: {
+  content: ComponentChildren;
+  primaryAction: ComponentChildren;
+}) {
+  return (
+    <div
+      style={{
+        background: 'white',
+        color: 'black',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+      }}
+    >
+      {content}
+      {primaryAction}
+    </div>
+  );
+}
+
 export function Stack({
   spacing,
   children,
