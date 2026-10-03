@@ -1179,6 +1179,43 @@ describe('RemoteElement', () => {
       expect(secondListener).not.toHaveBeenCalled();
     });
 
+    it('removes an event listener that is shared between multiple events', () => {
+      const ButtonElement = createRemoteElement({
+        events: ['press', 'hover'],
+      });
+
+      const {element, receiver} = createAndConnectRemoteElement(ButtonElement);
+
+      const listener = vi.fn();
+
+      element.addEventListener('press', listener);
+      element.addEventListener('hover', listener);
+
+      element.removeEventListener('press', listener);
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'press',
+          undefined,
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+        ],
+      ]);
+
+      element.removeEventListener('hover', listener);
+
+      expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          remoteId(element),
+          'hover',
+          undefined,
+          UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+        ],
+      ]);
+    });
+
     it('removes an event listener declared with once', () => {
       const ButtonElement = createRemoteElement({
         events: ['press'],

@@ -722,7 +722,6 @@ export abstract class RemoteElement<
       return super.addEventListener(type, listener, options);
     }
 
-    const remoteEvents = getRemoteEvents(this);
     const remoteEvent = getRemoteEventRecord.call(this, type, {
       property,
       definition: listenerDefinition,
@@ -745,8 +744,7 @@ export abstract class RemoteElement<
       remoteEvent,
     ];
 
-    remoteEvent.listeners.add(listener);
-    remoteEvents.listeners.set(listener, listenerRecord);
+    remoteEvent.listeners.set(listener, listenerRecord);
 
     super.addEventListener(type, normalizedListener, options);
 
@@ -772,7 +770,9 @@ export abstract class RemoteElement<
     listener: EventListenerOrEventListenerObject,
     options?: boolean | EventListenerOptions,
   ) {
-    const listenerRecord = REMOTE_EVENTS.get(this)?.listeners.get(listener);
+    const listenerRecord = REMOTE_EVENTS.get(this)
+      ?.events.get(type)
+      ?.listeners.get(listener);
     const normalizedListener = listenerRecord ? listenerRecord[0] : listener;
 
     super.removeEventListener(type, normalizedListener, options);
@@ -828,17 +828,16 @@ const REMOTE_EVENTS = new WeakMap<
 interface RemoteElementEventCache {
   readonly events: Map<string, RemoteEventRecord>;
   readonly properties: Map<string, ((event: any) => void) | null>;
-  readonly listeners: WeakMap<
-    EventListenerOrEventListenerObject,
-    RemoteEventListenerRecord
-  >;
 }
 
 interface RemoteEventRecord {
   readonly name: string;
   readonly property?: string;
   readonly definition?: RemoteElementEventListenerDefinition;
-  readonly listeners: Set<EventListenerOrEventListenerObject>;
+  readonly listeners: Map<
+    EventListenerOrEventListenerObject,
+    RemoteEventListenerRecord
+  >;
   dispatch(...args: any[]): unknown;
 }
 
@@ -850,10 +849,6 @@ type RemoteEventListenerRecord = [
 function getRemoteEvents(element: RemoteElement<any, any, any, any>): {
   events: Map<string, RemoteEventRecord>;
   properties: Map<string, ((event: any) => void) | null>;
-  listeners: WeakMap<
-    EventListenerOrEventListenerObject,
-    RemoteEventListenerRecord
-  >;
 } {
   let events = REMOTE_EVENTS.get(element);
 
@@ -862,7 +857,6 @@ function getRemoteEvents(element: RemoteElement<any, any, any, any>): {
   events = {
     events: new Map(),
     properties: new Map(),
-    listeners: new WeakMap(),
   };
 
   REMOTE_EVENTS.set(element, events);
@@ -883,7 +877,7 @@ function getRemoteEventRecord(
       name: type,
       property,
       definition,
-      listeners: new Set(),
+      listeners: new Map(),
       dispatch: (...args: any[]) => {
         const event =
           definition?.dispatchEvent?.apply(this, args) ??
@@ -914,7 +908,6 @@ function removeRemoteListener(
 
   const remoteEvent = listenerRecord[1];
   remoteEvent.listeners.delete(listener);
-  remoteEvents.listeners.delete(listener);
 
   if (remoteEvent.listeners.size > 0) return;
 
