@@ -7,7 +7,14 @@ import {
 import {ThreadIframe, ThreadWebWorker} from '@quilted/threads';
 
 import type {SandboxAPI} from './types.ts';
-import {Button, Modal, Stack, Text, ControlPanel} from './host/components.tsx';
+import {
+  Button,
+  Modal,
+  Stack,
+  Text,
+  ControlPanel,
+  Banner,
+} from './host/components.tsx';
 import {createState} from './host/state.ts';
 import {adaptToLegacyRemoteChannel} from '@remote-dom/compat';
 
@@ -43,6 +50,7 @@ const components = new Map([
   ['ui-button', createRemoteComponentRenderer(Button)],
   ['ui-stack', createRemoteComponentRenderer(Stack)],
   ['ui-modal', createRemoteComponentRenderer(Modal)],
+  ['ui-banner', createRemoteComponentRenderer(Banner)],
   // The `remote-fragment` element is a special element created by Remote DOM when
   // it needs an unstyled container for a list of elements. This is primarily used
   // to convert elements passed as a prop to React or Preact components into a slotted
