@@ -1,5 +1,14 @@
 # @remote-dom/core
 
+## 1.12.1
+
+### Patch Changes
+
+- [#726](https://github.com/Shopify/remote-dom/pull/726) [`064847c`](https://github.com/Shopify/remote-dom/commit/064847cd32e4f1ff712661e4acd2cbb92904c2b5) Thanks [@MitchLillie](https://github.com/MitchLillie)! - Deprecate `DOMRemoteReceiver` and `RemoteReceiverElement`. Use `RemoteReceiver` or a framework-specific receiver instead.
+
+- Updated dependencies [[`d4b35f6`](https://github.com/Shopify/remote-dom/commit/d4b35f66a49eaca27be2530a0d6b6f6f8a25f4d3), [`69b76a2`](https://github.com/Shopify/remote-dom/commit/69b76a28c79177f9b1654618a5979345b86fbf9a), [`dd02515`](https://github.com/Shopify/remote-dom/commit/dd02515a4324fc279e4d7c0b1fce827bd3a2ffad), [`3e4b3e7`](https://github.com/Shopify/remote-dom/commit/3e4b3e7e72aa69eaec8cce73149ba708aaf05fef), [`1f2468e`](https://github.com/Shopify/remote-dom/commit/1f2468ef2b0147e8edbeabc79d982f4e62ddcf67), [`1f7e35d`](https://github.com/Shopify/remote-dom/commit/1f7e35d9aa22a14afc01feab341ffa88686a1715)]:
+  - @remote-dom/polyfill@1.7.0
+
 ## 1.12.0
 
 ### Minor Changes
