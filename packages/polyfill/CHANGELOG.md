@@ -1,5 +1,23 @@
 # @remote-dom/polyfill
 
+## 1.7.0
+
+### Minor Changes
+
+- [#658](https://github.com/Shopify/remote-dom/pull/658) [`69b76a2`](https://github.com/Shopify/remote-dom/commit/69b76a28c79177f9b1654618a5979345b86fbf9a) Thanks [@airhorns](https://github.com/airhorns)! - Add `Element.closest()`, `Element.classList`, and `Element.dataset` convenience APIs.
+
+- [#723](https://github.com/Shopify/remote-dom/pull/723) [`3e4b3e7`](https://github.com/Shopify/remote-dom/commit/3e4b3e7e72aa69eaec8cce73149ba708aaf05fef) Thanks [@andrewiggins](https://github.com/andrewiggins)! - Add live indexed and named property access to `Element.attributes`.
+
+### Patch Changes
+
+- [#724](https://github.com/Shopify/remote-dom/pull/724) [`d4b35f6`](https://github.com/Shopify/remote-dom/commit/d4b35f66a49eaca27be2530a0d6b6f6f8a25f4d3) Thanks [@andrewiggins](https://github.com/andrewiggins)! - Detach attributes from their owner element when passed to `Document.adoptNode()`, including same-document adoption.
+
+- [#731](https://github.com/Shopify/remote-dom/pull/731) [`dd02515`](https://github.com/Shopify/remote-dom/commit/dd02515a4324fc279e4d7c0b1fce827bd3a2ffad) Thanks [@andrewiggins](https://github.com/andrewiggins)! - Improve `classList` token parsing, validation, and attribute normalization, and reduce repeated parsing and temporary allocations. Correct dataset property precedence and name conversion while preserving non-ASCII casing.
+
+- [#719](https://github.com/Shopify/remote-dom/pull/719) [`1f2468e`](https://github.com/Shopify/remote-dom/commit/1f2468ef2b0147e8edbeabc79d982f4e62ddcf67) Thanks [@andrewiggins](https://github.com/andrewiggins)! - Optimize selector matching by precomputing HTML element and attribute comparison names and avoiding redundant normalization and temporary selector-part arrays.
+
+- [#720](https://github.com/Shopify/remote-dom/pull/720) [`1f7e35d`](https://github.com/Shopify/remote-dom/commit/1f7e35d9aa22a14afc01feab341ffa88686a1715) Thanks [@andrewiggins](https://github.com/andrewiggins)! - Return a static `NodeList` with `item()` support from `getElementsByTagName()`, using shared selector traversal while preserving qualified-name and namespace-sensitive matching.
+
 ## 1.6.0
 
 ### Minor Changes
