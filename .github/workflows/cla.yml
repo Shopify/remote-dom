@@ -21,7 +21,7 @@ jobs:
       ) 
       || (github.event.pull_request && !github.event.pull_request.merged)
     steps:
-      - uses: Shopify/shopify-cla-action@9938f4b43524d1cfa7471ce9a803edf226697284 # v1.8.0
+      - uses: Shopify/shopify-cla-action@1af529ae29b29b6083963ff22425ea64749261bc # v1.9.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cla-token: ${{ secrets.CLA_TOKEN }}
