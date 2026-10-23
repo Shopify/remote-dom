@@ -12,6 +12,22 @@ type AnyFunction = (...args: any[]) => any;
 
 const FUNCTION = '_@f';
 
+// Builds plain objects key by key instead of spreading the accumulator on every
+// key, which made encoding and decoding quadratic in the number of keys.
+// `Object.defineProperty` keeps spread semantics (own data property), so keys
+// such as `__proto__` don't mutate the prototype. The descriptor has a null
+// prototype so inherited `get` / `set` on a polluted `Object.prototype` can't
+// turn it into an invalid accessor descriptor.
+function setOwnProperty(object: object, key: string, value: unknown) {
+  Object.defineProperty(object, key, {
+    __proto__: null,
+    value,
+    enumerable: true,
+    writable: true,
+    configurable: true,
+  } as PropertyDescriptor);
+}
+
 export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
   const functionsToId = new Map<AnyFunction, string>();
   const idsToFunction = new Map<string, AnyFunction>();
@@ -95,14 +111,16 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
         seen.set(value, [undefined]);
 
         const transferables: Transferable[] = [];
-        const result = Object.keys(value).reduce((object, key) => {
-          const [result, nestedTransferables = []] = encode(
+        const result = {};
+
+        for (const key of Object.keys(value)) {
+          const [nestedResult, nestedTransferables = []] = encode(
             (value as any)[key],
             seen,
           );
           transferables.push(...nestedTransferables);
-          return {...object, [key]: result};
-        }, {});
+          setOwnProperty(result, key, nestedResult);
+        }
 
         const fullResult: EncodeResult = [result, transferables];
 
@@ -206,13 +224,13 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
       }
 
       if (isBasicObject(value)) {
-        return Object.keys(value).reduce(
-          (object, key) => ({
-            ...object,
-            [key]: decode((value as any)[key], retainedBy),
-          }),
-          {},
-        ) as any;
+        const result = {};
+
+        for (const key of Object.keys(value)) {
+          setOwnProperty(result, key, decode((value as any)[key], retainedBy));
+        }
+
+        return result;
       }
     }
 
