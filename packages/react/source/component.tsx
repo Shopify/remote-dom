@@ -159,10 +159,19 @@ export function createRemoteComponent<
         const element = internalRef.current;
         if (element == null) return;
 
-        for (const prop in remoteProperties) {
+        const lastRemoteProperties = lastRemotePropertiesRef.current;
+
+        // Include props from the last render that are now omitted, so that
+        // they are cleared from the element.
+        const propsToUpdate = new Set(Object.keys(remoteProperties));
+        if (lastRemoteProperties) {
+          for (const prop in lastRemoteProperties) propsToUpdate.add(prop);
+        }
+
+        for (const prop of propsToUpdate) {
           if (prop === 'children') continue;
 
-          const oldValue = lastRemotePropertiesRef.current?.[prop];
+          const oldValue = lastRemoteProperties?.[prop];
           const newValue = remoteProperties[prop];
 
           if (oldValue === newValue) continue;
@@ -176,7 +185,7 @@ export function createRemoteComponent<
           }
 
           if (prop in element) {
-            element[prop] = remoteProperties[prop];
+            element[prop] = newValue;
             continue;
           }
 
