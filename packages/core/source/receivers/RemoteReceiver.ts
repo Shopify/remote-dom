@@ -15,7 +15,15 @@ import type {
   RemoteElementSerialization,
   RemoteNodeSerialization,
 } from '../types.ts';
-import type {RemoteReceiverOptions} from './shared.ts';
+import {
+  assertRemoteElementName,
+  assertRemoteEventListeners,
+  assertSafeRemoteProperties,
+  normalizeRemoteAttributes,
+  normalizeRemotePropertyUpdate,
+  normalizeRemoteText,
+  type RemoteReceiverOptions,
+} from './shared.ts';
 
 /**
  * Represents a text node of a remote tree in a plain JavaScript format, with
@@ -234,6 +242,10 @@ export class RemoteReceiver {
         // late mutation; the node is no longer rendered.
         if (!element) return;
 
+        // The remote is untrusted: attributes must be strings, properties must
+        // not masquerade as framework nodes, and listeners must be functions.
+        value = normalizeRemotePropertyUpdate(property, value, type);
+
         retain?.(value);
 
         let updateObject: Record<string, any>;
@@ -252,7 +264,12 @@ export class RemoteReceiver {
 
         const oldValue = updateObject[property];
 
-        updateObject[property] = value;
+        if (type === UPDATE_PROPERTY_TYPE_ATTRIBUTE && value === undefined) {
+          delete updateObject[property];
+        } else {
+          updateObject[property] = value;
+        }
+
         element.version += 1;
 
         let parentForUpdate: Writable<RemoteReceiverParent> | undefined;
@@ -285,7 +302,7 @@ export class RemoteReceiver {
         // The text node may already have been detached. Drop the late mutation.
         if (!text) return;
 
-        text.data = newText;
+        text.data = normalizeRemoteText(newText);
         text.version += 1;
 
         runSubscribers(text);
@@ -318,7 +335,7 @@ export class RemoteReceiver {
           normalizedChild = {
             id,
             type,
-            data,
+            data: normalizeRemoteText(data),
             version: 0,
           } satisfies RemoteReceiverText | RemoteReceiverComment;
 
@@ -334,6 +351,13 @@ export class RemoteReceiver {
             attributes,
             eventListeners,
           } = child;
+
+          // Validate everything before retaining or storing any of it.
+          assertRemoteElementName(element);
+          assertSafeRemoteProperties(properties);
+          assertRemoteEventListeners(eventListeners);
+          const normalizedAttributes = normalizeRemoteAttributes(attributes);
+
           retain?.(properties);
           retain?.(eventListeners);
 
@@ -346,7 +370,7 @@ export class RemoteReceiver {
             version: 0,
             children: resolvedChildren as readonly RemoteReceiverNode[],
             properties: {...properties},
-            attributes: {...attributes},
+            attributes: normalizedAttributes,
             eventListeners: {...eventListeners},
           } satisfies RemoteReceiverElement;
 

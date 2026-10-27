@@ -15,7 +15,11 @@ import {
   type RemoteTextSerialization,
 } from '@remote-dom/core';
 
-import {SignalRemoteReceiver} from '../SignalRemoteReceiver.ts';
+import {
+  SignalRemoteReceiver,
+  type SignalRemoteReceiverElement,
+  type SignalRemoteReceiverText,
+} from '../SignalRemoteReceiver.ts';
 
 describe('SignalRemoteReceiver', () => {
   describe('late mutations on detached nodes', () => {
@@ -250,6 +254,175 @@ describe('SignalRemoteReceiver', () => {
       expect(() => receiver.connection.call('1', 'doSomething')).toThrow(
         'Node 1 does not implement the doSomething() method',
       );
+    });
+  });
+
+  describe('untrusted values', () => {
+    /**
+     * The remote is untrusted, and this receiver feeds Preact directly.
+     * Preact treats any object whose `constructor` resolves to `undefined` as
+     * a virtual node, so such objects must never be stored where a renderer
+     * expects a string, and must be rejected as property values.
+     */
+
+    function vnodeShaped() {
+      return {constructor: undefined, type: 'div', props: {}, __b: 1};
+    }
+
+    it('stores strings for text content', () => {
+      const receiver = new SignalRemoteReceiver();
+
+      receiver.connection.mutate([
+        [
+          MUTATION_TYPE_INSERT_CHILD,
+          ROOT_ID,
+          {id: '1', type: NODE_TYPE_TEXT, data: vnodeShaped()} as any,
+          0,
+        ],
+      ]);
+
+      const text = receiver.get<SignalRemoteReceiverText>({id: '1'})!;
+      expect(text.data.value).toBe('[object Object]');
+
+      receiver.connection.mutate([
+        [MUTATION_TYPE_UPDATE_TEXT, '1', Object.create(null)],
+      ]);
+      expect(text.data.value).toBe('[object Object]');
+
+      receiver.connection.mutate([[MUTATION_TYPE_UPDATE_TEXT, '1', 7 as any]]);
+      expect(text.data.value).toBe('7');
+
+      receiver.connection.mutate([
+        [MUTATION_TYPE_UPDATE_TEXT, '1', undefined as any],
+      ]);
+      expect(text.data.value).toBe('');
+    });
+
+    it('stores strings for attributes and removes them on nullish updates', () => {
+      const receiver = new SignalRemoteReceiver();
+
+      receiver.connection.mutate([
+        [
+          MUTATION_TYPE_INSERT_CHILD,
+          ROOT_ID,
+          {
+            ...elementSerialization('host', '1'),
+            attributes: {heading: vnodeShaped(), count: 1, gone: null} as any,
+          },
+          0,
+        ],
+      ]);
+
+      const element = receiver.get<SignalRemoteReceiverElement>({id: '1'})!;
+      expect(element.attributes.value).toStrictEqual({
+        heading: '[object Object]',
+        count: '1',
+      });
+
+      receiver.connection.mutate([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          '1',
+          'heading',
+          Object.create(null),
+          UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+        ],
+      ]);
+      expect(element.attributes.value.heading).toBe('[object Object]');
+
+      receiver.connection.mutate([
+        [
+          MUTATION_TYPE_UPDATE_PROPERTY,
+          '1',
+          'heading',
+          null,
+          UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+        ],
+      ]);
+      expect(element.attributes.value).toStrictEqual({count: '1'});
+    });
+
+    it('rejects vnode-shaped property values', () => {
+      const receiver = new SignalRemoteReceiver();
+
+      expect(() =>
+        receiver.connection.mutate([
+          [
+            MUTATION_TYPE_INSERT_CHILD,
+            ROOT_ID,
+            {
+              ...elementSerialization('host', '1'),
+              properties: {heading: vnodeShaped()},
+            },
+            0,
+          ],
+        ]),
+      ).toThrow(/masquerades/);
+      expect(receiver.root.children.value).toHaveLength(0);
+
+      receiver.connection.mutate([
+        [
+          MUTATION_TYPE_INSERT_CHILD,
+          ROOT_ID,
+          {...elementSerialization('host', '1'), properties: {heading: 'Hi'}},
+          0,
+        ],
+      ]);
+
+      expect(() =>
+        receiver.connection.mutate([
+          [
+            MUTATION_TYPE_UPDATE_PROPERTY,
+            '1',
+            'heading',
+            {nested: [vnodeShaped()]},
+            UPDATE_PROPERTY_TYPE_PROPERTY,
+          ],
+        ]),
+      ).toThrow(/masquerades/);
+
+      const element = receiver.get<SignalRemoteReceiverElement>({id: '1'})!;
+      expect(element.properties.value).toStrictEqual({heading: 'Hi'});
+    });
+
+    it('rejects non-function event listeners and __proto__ names', () => {
+      const receiver = new SignalRemoteReceiver();
+
+      receiver.connection.mutate([
+        [
+          MUTATION_TYPE_INSERT_CHILD,
+          ROOT_ID,
+          elementSerialization('host', '1'),
+          0,
+        ],
+      ]);
+
+      expect(() =>
+        receiver.connection.mutate([
+          [
+            MUTATION_TYPE_UPDATE_PROPERTY,
+            '1',
+            'press',
+            {},
+            UPDATE_PROPERTY_TYPE_EVENT_LISTENER,
+          ],
+        ]),
+      ).toThrow(/not a function/);
+
+      expect(() =>
+        receiver.connection.mutate([
+          [
+            MUTATION_TYPE_UPDATE_PROPERTY,
+            '1',
+            '__proto__',
+            {polluted: true},
+            UPDATE_PROPERTY_TYPE_PROPERTY,
+          ],
+        ]),
+      ).toThrow(/name is not allowed/);
+
+      const element = receiver.get<SignalRemoteReceiverElement>({id: '1'})!;
+      expect((element.properties.value as any).polluted).toBeUndefined();
     });
   });
 });

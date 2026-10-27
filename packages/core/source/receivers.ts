@@ -13,4 +13,16 @@ export {
   type DOMRemoteElementPolicy,
   type DOMRemotePropertyPolicy,
 } from './receivers/DOMRemoteReceiver.ts';
-export type {RemoteReceiverOptions} from './receivers/shared.ts';
+export {
+  type RemoteReceiverOptions,
+  normalizeRemoteText,
+  normalizeRemoteAttribute,
+  normalizeRemoteAttributes,
+  normalizeRemotePropertyUpdate,
+  assertRemotePropertyName,
+  assertRemoteElementName,
+  assertRemoteEventListener,
+  assertRemoteEventListeners,
+  assertSafeRemoteProperty,
+  assertSafeRemoteProperties,
+} from './receivers/shared.ts';
