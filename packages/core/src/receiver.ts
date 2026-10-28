@@ -234,9 +234,10 @@ export function createRemoteReceiver(): RemoteReceiver {
       for (const key of Object.keys(newProps)) {
         assertRemotePropName(key);
         const newProp = (newProps as any)[key];
-        if (!isRemoteFragmentSerialization(newProp)) {
-          assertSafeRemoteProp(newProp);
+        if (isRemoteFragmentSerialization(newProp)) {
+          normalizeNode(newProp, addVersion);
         }
+        assertSafeRemoteProp(newProp);
       }
 
       retain(newProps);
@@ -247,9 +248,8 @@ export function createRemoteReceiver(): RemoteReceiver {
         if (isRemoteReceiverAttachableFragment(oldProp)) {
           detach(oldProp);
         }
-        if (isRemoteFragmentSerialization(newProp)) {
-          const attachableNewProp = normalizeNode(newProp, addVersion);
-          attach(attachableNewProp);
+        if (isRemoteReceiverAttachableFragment(newProp)) {
+          attach(newProp);
         }
       });
 
@@ -458,9 +458,10 @@ function normalizeNode<
       const prop = props[key];
       if (isRemoteFragmentSerialization(prop)) {
         props[key] = normalizeNode(prop as any, normalizer);
-      } else {
-        assertSafeRemoteProp(prop);
       }
+      // Fragment props are still objects passed to host components. Check
+      // their full shape after normalizing text, including extra wire fields.
+      assertSafeRemoteProp(props[key]);
     }
   }
   return normalizer(node);

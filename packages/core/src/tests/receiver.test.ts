@@ -1,3 +1,5 @@
+import {RETAIN_METHOD, RELEASE_METHOD} from '@remote-ui/rpc';
+
 import {createRemoteReceiver} from '../receiver';
 import {
   ACTION_MOUNT,
@@ -234,6 +236,89 @@ describe('createRemoteReceiver()', () => {
       expect(() =>
         receiver.receive(ACTION_MOUNT, [component('1', {type: {}})]),
       ).toThrow(/component type/);
+    });
+
+    it.each(['mount', 'insert', 'update'])(
+      'rejects framework nodes disguised as fragment props on %s',
+      (action) => {
+        const receiver = createRemoteReceiver();
+        receiver.receive(ACTION_MOUNT, [component('1')]);
+
+        const props = {
+          heading: {
+            id: 'f',
+            kind: KIND_FRAGMENT,
+            children: [],
+            __v_isVNode: true,
+            type: 'div',
+            props: {innerHTML: '<b>injected</b>'},
+          },
+        };
+
+        expect(() => {
+          if (action === 'mount') {
+            receiver.receive(ACTION_MOUNT, [component('2', {props})]);
+          } else if (action === 'insert') {
+            receiver.receive(
+              ACTION_INSERT_CHILD,
+              undefined,
+              1,
+              component('2', {props}),
+              false,
+            );
+          } else {
+            receiver.receive(ACTION_UPDATE_PROPS, '1', props);
+          }
+        }).toThrow(/masquerades/);
+
+        expect(receiver.attached.get({id: 'f'})).toBeNull();
+      },
+    );
+
+    it('rejects invalid fragment updates before detaching or retaining anything', () => {
+      const receiver = createRemoteReceiver();
+      receiver.receive(ACTION_MOUNT, [
+        component('1', {
+          props: {
+            heading: {
+              id: 'old',
+              kind: KIND_FRAGMENT,
+              children: [text('old-text', 'Hi')],
+            },
+          },
+        }),
+      ]);
+      const attached = receiver.attached.get<any>({id: '1'})!;
+      const oldFragment = attached.props.heading;
+      const oldText = receiver.attached.get({id: 'old-text'});
+      const onPress = Object.assign(jest.fn(), {
+        [RETAIN_METHOD]: jest.fn(),
+        [RELEASE_METHOD]: jest.fn(),
+      });
+
+      expect(() =>
+        receiver.receive(ACTION_UPDATE_PROPS, '1', {
+          onPress,
+          heading: {
+            id: 'new',
+            kind: KIND_FRAGMENT,
+            children: [text('new-text', 'New')],
+          },
+          footer: {
+            id: 'invalid',
+            kind: KIND_FRAGMENT,
+            children: [component('bad', {props: {value: vnodeShaped()}})],
+          },
+        }),
+      ).toThrow(/masquerades/);
+
+      expect(onPress[RETAIN_METHOD]).not.toHaveBeenCalled();
+      expect(attached.props).toStrictEqual({heading: oldFragment});
+      expect(attached.version).toBe(0);
+      expect(receiver.attached.get({id: 'old'})).toBe(oldFragment);
+      expect(receiver.attached.get({id: 'old-text'})).toBe(oldText);
+      expect(receiver.attached.get({id: 'new'})).toBeNull();
+      expect(receiver.attached.get({id: 'new-text'})).toBeNull();
     });
 
     it('still accepts ordinary object, function, and fragment props', () => {
