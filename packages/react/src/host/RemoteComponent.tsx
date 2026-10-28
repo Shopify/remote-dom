@@ -23,14 +23,16 @@ const emptyObject = {};
  * Prop names that are controlled by the host renderer or by the UI framework
  * itself. The remote environment can name props freely, so these names are
  * never taken from remote data: `children`, `ref`, and `key` would override the
- * renderer’s own wiring, and `dangerouslySetInnerHTML` would let a remote inject
- * markup into any host component that spreads its props onto a DOM element.
+ * renderer’s own wiring, and the HTML props would let a remote inject markup
+ * into any host component that spreads its props onto a DOM element.
  */
 const RESERVED_PROPS = new Set([
   'children',
   'ref',
   'key',
   'dangerouslySetInnerHTML',
+  'innerHTML',
+  'outerHTML',
   '__proto__',
 ]);
 
