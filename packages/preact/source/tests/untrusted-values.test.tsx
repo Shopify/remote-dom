@@ -84,6 +84,9 @@ function simulateWire<T>(value: T): T {
     }
     if (typeof value !== 'object' || value === null) return value;
     if (Array.isArray(value)) return value.map(encode);
+    if (value instanceof Error) {
+      return new Error(value.message, {cause: encode(value.cause)});
+    }
     const result: Record<string, any> = {};
     for (const key of Object.keys(value)) {
       const encoded = encode(value[key]);
@@ -99,6 +102,9 @@ function simulateWire<T>(value: T): T {
   function rebuild(value: any): any {
     if (typeof value !== 'object' || value === null) return value;
     if (Array.isArray(value)) return value.map(rebuild);
+    if (value instanceof Error) {
+      return new Error(value.message, {cause: rebuild(value.cause)});
+    }
     if (FUNCTION_MARKER in value) {
       const original = functions[value[FUNCTION_MARKER]]!;
       return (...args: any[]) => original(...args);
@@ -133,6 +139,14 @@ function HostList({items}: {items?: string[]}) {
   return <ul>{items?.map((item, index) => <li key={index}>{item}</li>)}</ul>;
 }
 
+function HostNested({options}: {options: {label?: string}}) {
+  return <p>{options.label}</p>;
+}
+
+function HostError({error}: {error: Error}) {
+  return <p>{error.cause as string}</p>;
+}
+
 function HostSpread(props: Record<string, any>) {
   return <div {...props} />;
 }
@@ -143,6 +157,8 @@ function mount() {
     ['ui-banner', createRemoteComponentRenderer(HostBanner)],
     ['ui-text', createRemoteComponentRenderer(HostText)],
     ['ui-list', createRemoteComponentRenderer(HostList)],
+    ['ui-nested', createRemoteComponentRenderer(HostNested)],
+    ['ui-error', createRemoteComponentRenderer(HostError)],
     ['ui-spread', createRemoteComponentRenderer(HostSpread)],
   ]);
 
@@ -362,6 +378,73 @@ describe('untrusted values from the remote environment', () => {
     },
   );
 
+  describe.each(['inherited property', 'Error cause'] as const)(
+    'vnode hidden in %s',
+    (variant) => {
+      it('rejects insertion and updates without rendering injected markup', () => {
+        const {container, mutate} = mount();
+        const inherited = variant === 'inherited property';
+        const property = inherited ? 'options' : 'error';
+        const element = inherited ? 'ui-nested' : 'ui-error';
+        const safe = inherited
+          ? {label: 'safe'}
+          : new Error('remote', {cause: 'safe'});
+        const unsafe = inherited
+          ? JSON.parse('{"__proto__": {}}')
+          : new Error('remote', {cause: smuggledVNode()});
+        if (inherited) unsafe.__proto__.label = smuggledVNode();
+
+        expect(() =>
+          mutate([
+            [
+              MUTATION_TYPE_INSERT_CHILD,
+              ROOT_ID,
+              {
+                id: '1',
+                type: NODE_TYPE_ELEMENT,
+                element,
+                properties: {[property]: unsafe},
+                children: [],
+              },
+              0,
+            ],
+          ]),
+        ).toThrow(/masquerades/);
+        expectNoInjection(container);
+
+        mutate([
+          [
+            MUTATION_TYPE_INSERT_CHILD,
+            ROOT_ID,
+            {
+              id: '1',
+              type: NODE_TYPE_ELEMENT,
+              element,
+              properties: {[property]: safe},
+              children: [],
+            },
+            0,
+          ],
+        ]);
+        expect(container.querySelector('p')!.textContent).toBe('safe');
+
+        expect(() =>
+          mutate([
+            [
+              MUTATION_TYPE_UPDATE_PROPERTY,
+              '1',
+              property,
+              unsafe,
+              UPDATE_PROPERTY_TYPE_PROPERTY,
+            ],
+          ]),
+        ).toThrow(/masquerades/);
+        expectNoInjection(container);
+        expect(container.querySelector('p')!.textContent).toBe('safe');
+      });
+    },
+  );
+
   describe('type coercion', () => {
     it('renders non-string text content as a string', () => {
       const {container, mutate} = mount();
@@ -454,6 +537,51 @@ describe('untrusted values from the remote environment', () => {
   });
 
   describe('reserved framework props', () => {
+    describe.each(['innerHTML', 'outerHTML'])('%s', (name) => {
+      it.each([
+        ['properties', UPDATE_PROPERTY_TYPE_PROPERTY],
+        ['attributes', UPDATE_PROPERTY_TYPE_ATTRIBUTE],
+      ] as const)(
+        'ignores initial and updated %s on a host that spreads props',
+        (channel, type) => {
+          const {container, mutate} = mount();
+          mutate([
+            [
+              MUTATION_TYPE_INSERT_CHILD,
+              ROOT_ID,
+              {
+                id: '1',
+                type: NODE_TYPE_ELEMENT,
+                element: 'ui-spread',
+                properties:
+                  channel === 'properties' ? {[name]: INJECTED_HTML} : {},
+                attributes: {
+                  title: 'kept',
+                  ...(channel === 'attributes' ? {[name]: INJECTED_HTML} : {}),
+                },
+                children: [],
+              },
+              0,
+            ],
+          ]);
+          expect(document.getElementById(INJECTED_ID)).toBeNull();
+          expect(container.querySelector('div[title="kept"]')).not.toBeNull();
+
+          mutate([
+            [
+              MUTATION_TYPE_UPDATE_PROPERTY,
+              '1',
+              name,
+              INJECTED_HTML + 'updated',
+              type,
+            ],
+          ]);
+          expect(document.getElementById(INJECTED_ID)).toBeNull();
+          expect(container.querySelector('div[title="kept"]')).not.toBeNull();
+        },
+      );
+    });
+
     it('does not let remote properties set dangerouslySetInnerHTML on a host component that spreads props', () => {
       const {container, mutate} = mount();
 

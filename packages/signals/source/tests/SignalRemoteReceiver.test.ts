@@ -385,6 +385,71 @@ describe('SignalRemoteReceiver', () => {
       expect(element.properties.value).toStrictEqual({heading: 'Hi'});
     });
 
+    describe.each(['inherited property', 'Error cause'] as const)(
+      'vnode hidden in %s',
+      (variant) => {
+        function unsafeValue() {
+          const vnode = vnodeShaped();
+          return variant === 'inherited property'
+            ? Object.create({label: vnode})
+            : structuredClone(new Error('remote error', {cause: vnode}));
+        }
+
+        it('rejects an initial property before retaining or attaching the node', () => {
+          const retain = vi.fn();
+          const receiver = new SignalRemoteReceiver({retain});
+
+          expect(() =>
+            receiver.connection.mutate([
+              [
+                MUTATION_TYPE_INSERT_CHILD,
+                ROOT_ID,
+                {
+                  ...elementSerialization('host', '1'),
+                  properties: {heading: unsafeValue()},
+                },
+                0,
+              ],
+            ]),
+          ).toThrow(/masquerades/);
+
+          expect(receiver.get({id: '1'})).toBeUndefined();
+          expect(retain).not.toHaveBeenCalled();
+        });
+
+        it('rejects a property update and keeps the previous value', () => {
+          const receiver = new SignalRemoteReceiver();
+          receiver.connection.mutate([
+            [
+              MUTATION_TYPE_INSERT_CHILD,
+              ROOT_ID,
+              {
+                ...elementSerialization('host', '1'),
+                properties: {heading: 'safe'},
+              },
+              0,
+            ],
+          ]);
+
+          expect(() =>
+            receiver.connection.mutate([
+              [
+                MUTATION_TYPE_UPDATE_PROPERTY,
+                '1',
+                'heading',
+                unsafeValue(),
+                UPDATE_PROPERTY_TYPE_PROPERTY,
+              ],
+            ]),
+          ).toThrow(/masquerades/);
+          expect(
+            receiver.get<SignalRemoteReceiverElement>({id: '1'})!.properties
+              .value,
+          ).toStrictEqual({heading: 'safe'});
+        });
+      },
+    );
+
     it('rejects non-function event listeners and __proto__ names', () => {
       const receiver = new SignalRemoteReceiver();
 

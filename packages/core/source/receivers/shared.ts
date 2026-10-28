@@ -128,9 +128,15 @@ export function assertSafeRemoteProperty(value: unknown): void {
       for (const item of current) pending.push(item);
     }
 
-    // Walk own enumerable keys of every object (including arrays), regardless
-    // of prototype: a remote can redirect an object’s prototype on the wire,
-    // so prototype-based “plain object” checks can’t be used to skip values.
+    // Error causes survive structured cloning but are not enumerable.
+    if (current instanceof Error) pending.push(current.cause);
+
+    // A wire deserializer can assign a `__proto__` key, making remote data
+    // inherited instead of own. Check the prototype too, even if the object
+    // shadows its constructor or another inherited property.
+    pending.push(Object.getPrototypeOf(current));
+
+    // Walk own enumerable keys of every object (including arrays).
     for (const key of Object.keys(current)) {
       pending.push((current as any)[key]);
     }

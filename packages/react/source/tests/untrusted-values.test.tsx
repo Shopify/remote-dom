@@ -100,7 +100,14 @@ function HostBanner({
 }
 
 function HostSpread(props: Record<string, any>) {
-  return <div {...props} />;
+  // Expose these props so React's own HTML guards can't mask a renderer regression.
+  return (
+    <div
+      {...props}
+      data-inner-html={props.innerHTML}
+      data-outer-html={props.outerHTML}
+    />
+  );
 }
 
 const roots: Root[] = [];
@@ -325,6 +332,57 @@ describe('untrusted values from the remote environment', () => {
 
     expect(document.getElementById(INJECTED_ID)).toBeNull();
     expect(container.querySelector('div[title="kept"]')).not.toBeNull();
+  });
+
+  describe.each(['innerHTML', 'outerHTML'])('%s', (name) => {
+    it.each([
+      ['properties', UPDATE_PROPERTY_TYPE_PROPERTY],
+      ['attributes', UPDATE_PROPERTY_TYPE_ATTRIBUTE],
+    ] as const)(
+      'ignores initial and updated %s on a host that spreads props',
+      (channel, type) => {
+        const {container, mutate} = mount();
+        mutate([
+          [
+            MUTATION_TYPE_INSERT_CHILD,
+            ROOT_ID,
+            {
+              id: '1',
+              type: NODE_TYPE_ELEMENT,
+              element: 'ui-spread',
+              properties:
+                channel === 'properties' ? {[name]: INJECTED_HTML} : {},
+              attributes: {
+                title: 'kept',
+                ...(channel === 'attributes' ? {[name]: INJECTED_HTML} : {}),
+              },
+              children: [],
+            },
+            0,
+          ],
+        ]);
+        expect(document.getElementById(INJECTED_ID)).toBeNull();
+        expect(container.querySelector('div[title="kept"]')).not.toBeNull();
+        expect(
+          container.querySelector('[data-inner-html], [data-outer-html]'),
+        ).toBeNull();
+
+        mutate([
+          [
+            MUTATION_TYPE_UPDATE_PROPERTY,
+            '1',
+            name,
+            INJECTED_HTML + 'updated',
+            type,
+          ],
+        ]);
+        expect(document.getElementById(INJECTED_ID)).toBeNull();
+        expect(container.querySelector('div[title="kept"]')).not.toBeNull();
+        expect(
+          container.querySelector('[data-inner-html], [data-outer-html]'),
+        ).toBeNull();
+      },
+    );
   });
 
   it('does not let remote properties override the ref used to implement remote methods', () => {

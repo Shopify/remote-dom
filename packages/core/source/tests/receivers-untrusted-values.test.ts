@@ -170,6 +170,34 @@ describe('receiver helpers', () => {
       expect(() => assertSafeRemoteProperty(container)).toThrow();
     });
 
+    it('rejects vnode-shaped values inherited from a redirected prototype', () => {
+      const value = Object.create({label: vnodeWithOwnConstructor()});
+      expect(Object.keys(value)).toEqual([]);
+      expect(() => assertSafeRemoteProperty(value)).toThrow(/masquerades/);
+    });
+
+    it('rejects a vnode-shaped prototype even if an own constructor masks it', () => {
+      const value = Object.create(vnodeWithOwnConstructor());
+      value.constructor = Object;
+      expect(() => assertSafeRemoteProperty(value)).toThrow(/masquerades/);
+    });
+
+    it('rejects vnode-shaped values in a structured-cloned Error cause', () => {
+      const error = structuredClone(
+        new Error('remote error', {cause: {label: vnodeWithOwnConstructor()}}),
+      );
+      expect(Object.keys(error)).not.toContain('cause');
+      expect(() => assertSafeRemoteProperty(error)).toThrow(/masquerades/);
+    });
+
+    it('accepts safe inherited data and cyclic Error causes', () => {
+      const error = new Error('remote error', {cause: {label: 'safe'}});
+      error.cause = {error};
+      expect(() =>
+        assertSafeRemoteProperty({error, data: Object.create({label: 'safe'})}),
+      ).not.toThrow();
+    });
+
     it('rejects an object whose prototype chain hides the constructor', () => {
       const proto = {constructor: undefined};
       const value = Object.create(proto);
@@ -344,6 +372,64 @@ describe('RemoteReceiver with untrusted values', () => {
         receiver.get<RemoteReceiverElement>({id: '1'})!.properties,
       ).toStrictEqual({heading: 'Hi'});
     });
+
+    describe.each(['inherited property', 'Error cause'] as const)(
+      'vnode hidden in %s',
+      (variant) => {
+        function unsafeValue() {
+          const vnode = vnodeWithOwnConstructor();
+          return variant === 'inherited property'
+            ? Object.create({label: vnode})
+            : structuredClone(new Error('remote error', {cause: vnode}));
+        }
+
+        it('rejects an initial property before retaining or attaching the node', () => {
+          const retain = vi.fn();
+          const receiver = new RemoteReceiver({retain});
+
+          expect(() =>
+            receiver.connection.mutate([
+              [
+                MUTATION_TYPE_INSERT_CHILD,
+                ROOT_ID,
+                element('1', {properties: {heading: unsafeValue()}}),
+                0,
+              ],
+            ]),
+          ).toThrow(/masquerades/);
+
+          expect(receiver.get({id: '1'})).toBeUndefined();
+          expect(retain).not.toHaveBeenCalled();
+        });
+
+        it('rejects a property update and keeps the previous value', () => {
+          const receiver = new RemoteReceiver();
+          receiver.connection.mutate([
+            [
+              MUTATION_TYPE_INSERT_CHILD,
+              ROOT_ID,
+              element('1', {properties: {heading: 'safe'}}),
+              0,
+            ],
+          ]);
+
+          expect(() =>
+            receiver.connection.mutate([
+              [
+                MUTATION_TYPE_UPDATE_PROPERTY,
+                '1',
+                'heading',
+                unsafeValue(),
+                UPDATE_PROPERTY_TYPE_PROPERTY,
+              ],
+            ]),
+          ).toThrow(/masquerades/);
+          expect(
+            receiver.get<RemoteReceiverElement>({id: '1'})!.properties,
+          ).toStrictEqual({heading: 'safe'});
+        });
+      },
+    );
 
     it('still accepts ordinary object and function properties', () => {
       const receiver = new RemoteReceiver();

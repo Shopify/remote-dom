@@ -327,7 +327,7 @@ export class SignalRemoteReceiver {
             eventListeners,
           } = child;
 
-          // Validate everything before retaining or storing any of it.
+          // Validate this node before retaining or storing it.
           assertRemoteElementName(element);
           assertSafeRemoteProperties(properties);
           assertRemoteEventListeners(eventListeners);
