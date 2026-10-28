@@ -1,5 +1,6 @@
 /* eslint @shopify/jsx-no-hardcoded-content: off */
 
+import {forwardRef, useEffect} from 'react';
 import type {ReactNode} from 'react';
 import {createRoot as createDOMRoot} from 'react-dom/client';
 import type {Root} from 'react-dom/client';
@@ -68,15 +69,26 @@ function HostBanner({
   );
 }
 
-function HostSpread(props: Record<string, any>) {
-  return <div {...props} />;
+const HostSpread = forwardRef<HTMLDivElement, Record<string, any>>(
+  function HostSpread(props, ref) {
+    return <div {...props} ref={ref} />;
+  },
+);
+
+function HostStateful({onMount}: {onMount(): void}) {
+  useEffect(onMount, [onMount]);
+  return <div />;
 }
 
 const roots: Root[] = [];
 
 function mount() {
   const receiver = createRemoteReceiver();
-  const controller = createController({Banner: HostBanner, Spread: HostSpread});
+  const controller = createController({
+    Banner: HostBanner,
+    Spread: HostSpread,
+    Stateful: HostStateful,
+  });
   const container = document.createElement('div');
   document.body.append(container);
 
@@ -162,7 +174,7 @@ describe('untrusted values from the remote environment', () => {
     expect(container.querySelector('h2')!.textContent).toBe('Hi');
   });
 
-  it('never spreads dangerouslySetInnerHTML, children, ref, or key from remote props', async () => {
+  it('never spreads dangerouslySetInnerHTML or children from remote props', async () => {
     const {container, receive} = mount();
 
     await receive(ACTION_MOUNT, [
@@ -173,8 +185,6 @@ describe('untrusted values from the remote environment', () => {
         props: {
           dangerouslySetInnerHTML: {__html: INJECTED_HTML},
           children: 'override',
-          ref: {current: null},
-          key: 'other',
           title: 'kept',
         },
         children: [],
@@ -184,5 +194,51 @@ describe('untrusted values from the remote environment', () => {
     expect(document.getElementById(INJECTED_ID)).toBeNull();
     expect(container.querySelector('div[title="kept"]')).not.toBeNull();
     expect(container.textContent).not.toContain('override');
+  });
+
+  it.each(['mount', 'update'])(
+    'never passes a remote ref to the host on %s',
+    async (action) => {
+      const {container, receive} = mount();
+      const ref = jest.fn();
+      const props = {ref, title: 'kept'};
+      await receive(ACTION_MOUNT, [
+        {
+          id: '1',
+          kind: KIND_COMPONENT,
+          type: 'Spread',
+          props: action === 'mount' ? props : {},
+          children: [],
+        },
+      ]);
+      if (action === 'update') {
+        await receive(ACTION_UPDATE_PROPS, '1', props);
+      }
+
+      expect(container.querySelector('div[title="kept"]')).not.toBeNull();
+      expect(ref).not.toHaveBeenCalled();
+    },
+  );
+
+  it('does not remount a host component when a remote key changes', async () => {
+    const {container, receive} = mount();
+    const onMount = jest.fn();
+    await receive(ACTION_MOUNT, [
+      {
+        id: '1',
+        kind: KIND_COMPONENT,
+        type: 'Stateful',
+        props: {key: 'first', onMount},
+        children: [],
+      },
+    ]);
+    const element = container.firstElementChild;
+    expect(element).not.toBeNull();
+    expect(onMount).toHaveBeenCalledTimes(1);
+
+    await receive(ACTION_UPDATE_PROPS, '1', {key: 'second'});
+
+    expect(container.firstElementChild).toBe(element);
+    expect(onMount).toHaveBeenCalledTimes(1);
   });
 });

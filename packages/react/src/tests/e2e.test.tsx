@@ -892,6 +892,10 @@ describe('@remote-ui/react', () => {
       jest.runAllTimers();
     });
 
+    expect(appElement.querySelector('img')?.getAttribute('src')).toBe(
+      'image.png',
+    );
+
     domAct(() => {
       Simulate.click(appElement.querySelector('button')!);
     });
@@ -900,6 +904,6 @@ describe('@remote-ui/react', () => {
       jest.runAllTimers();
     });
 
-    expect(appElement.innerHTML).not.toContain('data-test-id="image"');
+    expect(appElement.querySelector('img')).toBeNull();
   });
 });

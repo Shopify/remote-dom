@@ -71,14 +71,14 @@ describe('assertSafeRemoteProp()', () => {
         callback: () => {},
         date: new Date(),
       }),
-    ).not.toThrow(/not allowed/);
+    ).not.toThrow();
   });
 
   it('accepts cyclic data', () => {
     const cyclic: any = {items: []};
     cyclic.items.push(cyclic);
     cyclic.self = cyclic;
-    expect(() => assertSafeRemoteProp(cyclic)).not.toThrow(/not allowed/);
+    expect(() => assertSafeRemoteProp(cyclic)).not.toThrow();
   });
 
   it('rejects an object with an own undefined constructor', () => {
@@ -124,12 +124,12 @@ describe('assertSafeRemoteProp()', () => {
 });
 
 describe('assertSafeRemoteProps()', () => {
-  it('accepts nullish and ordinary records', () => {
-    expect(() => assertSafeRemoteProps(undefined)).not.toThrow(/not allowed/);
-    expect(() => assertSafeRemoteProps({count: 1, onPress() {}})).not.toThrow(
-      /not allowed/,
-    );
-  });
+  it.each([undefined, null, {count: 1, onPress() {}}])(
+    'accepts the props record %p',
+    (props) => {
+      expect(() => assertSafeRemoteProps(props)).not.toThrow();
+    },
+  );
 
   it('rejects non-object records and bad names or values', () => {
     expect(() => assertSafeRemoteProps('nope')).toThrow(/must be an object/);
@@ -146,15 +146,13 @@ describe('assertRemotePropName()', () => {
   it('rejects __proto__ and non-strings', () => {
     expect(() => assertRemotePropName('__proto__')).toThrow(/not allowed/);
     expect(() => assertRemotePropName(1)).toThrow(/not allowed/);
-    expect(() => assertRemotePropName('fine')).not.toThrow(/not allowed/);
+    expect(() => assertRemotePropName('fine')).not.toThrow();
   });
 });
 
 describe('assertRemoteComponentType()', () => {
   it('requires a string', () => {
-    expect(() => assertRemoteComponentType('Banner')).not.toThrow(
-      /not allowed/,
-    );
+    expect(() => assertRemoteComponentType('Banner')).not.toThrow();
     expect(() => assertRemoteComponentType({})).toThrow(/component type/);
   });
 });

@@ -63,12 +63,11 @@ describe('createRemoteSubscribable()', () => {
 
   it('returns the current value when the subscription is made', async () => {
     const subscription = createSyncSubscribable('abc');
+    const remoteSubscription = createRemoteSubscribable(subscription);
     const newValue = 'xyz';
     subscription.update(newValue);
 
-    const [, value] = await createRemoteSubscribable(subscription).subscribe(
-      jest.fn(),
-    );
+    const [, value] = await remoteSubscription.subscribe(jest.fn());
 
     expect(value).toBe(newValue);
   });

@@ -8,7 +8,7 @@ describe('root', () => {
       const root = createRemoteRoot(() => {});
 
       expect(() => {
-        root.createComponent('Card');
+        expect(root.createComponent('Card')).toHaveProperty('type', 'Card');
       }).not.toThrow();
     });
 
@@ -17,7 +17,7 @@ describe('root', () => {
       const root = createRemoteRoot(() => {}, {components});
 
       expect(() => {
-        root.createComponent('Card');
+        expect(root.createComponent('Card')).toHaveProperty('type', 'Card');
       }).not.toThrow();
     });
 
@@ -46,7 +46,7 @@ describe('root', () => {
       const root = createRemoteRoot(() => {}, {components});
 
       expect(() => {
-        root.createText();
+        expect(root.createText()).toHaveProperty('text', '');
       }).not.toThrow();
     });
   });
@@ -58,6 +58,7 @@ describe('root', () => {
       expect(() => {
         const card = root.createComponent('Card');
         root.append(card);
+        expect(root.children).toStrictEqual([card]);
       }).not.toThrow();
     });
 
@@ -82,6 +83,7 @@ describe('root', () => {
         const image = root.createComponent('Image');
         root.append(image);
         root.insertBefore(card, image);
+        expect(root.children).toStrictEqual([card, image]);
       }).not.toThrow();
     });
 
@@ -108,6 +110,7 @@ describe('root', () => {
         const image = root.createComponent('Image');
         root.append(image);
         root.replaceChildren(card);
+        expect(root.children).toStrictEqual([card]);
       }).not.toThrow();
     });
 
@@ -395,7 +398,7 @@ describe('root', () => {
 
       const {arrays} = (receiver.children[0] as any).props;
 
-      expect(arrays[0].array2).toStrictEqual(expect.arrayContaining([1, 3, 4]));
+      expect(arrays[0].array2).toStrictEqual([1, 3, 4]);
     });
   });
 });
