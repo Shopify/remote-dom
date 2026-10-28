@@ -15,9 +15,9 @@ Object.assign(globalThis, {IS_REACT_ACT_ENVIRONMENT: true});
  * text and attribute values to strings so this can’t happen.
  */
 
-import {describe, it, expect, afterEach} from 'vitest';
+import {describe, it, expect, afterEach, vi} from 'vitest';
 
-import {act} from 'react';
+import {act, forwardRef, useImperativeHandle, useRef} from 'react';
 import {createRoot, type Root} from 'react-dom/client';
 import type {PropsWithChildren} from 'react';
 
@@ -32,7 +32,10 @@ import {
   UPDATE_PROPERTY_TYPE_PROPERTY,
   type RemoteMutationRecord,
 } from '@remote-dom/core';
-import {RemoteReceiver} from '@remote-dom/core/receivers';
+import {
+  RemoteReceiver,
+  type RemoteReceiverElement,
+} from '@remote-dom/core/receivers';
 
 import {RemoteRootRenderer, createRemoteComponentRenderer} from '../host.ts';
 
@@ -100,15 +103,24 @@ function HostBanner({
 }
 
 function HostSpread(props: Record<string, any>) {
-  // Expose these props so React's own HTML guards can't mask a renderer regression.
+  // Expose HTML props even when the framework does not interpret their values.
   return (
     <div
       {...props}
       data-inner-html={props.innerHTML}
       data-outer-html={props.outerHTML}
+      data-dangerous-html={props.dangerouslySetInnerHTML}
     />
   );
 }
+
+const HostMethods = forwardRef<{getInstance(): object}, PropsWithChildren>(
+  function HostMethods({children}, ref) {
+    const instance = useRef({});
+    useImperativeHandle(ref, () => ({getInstance: () => instance.current}), []);
+    return <div>{children}</div>;
+  },
+);
 
 const roots: Root[] = [];
 
@@ -117,6 +129,7 @@ function mount() {
   const components = new Map([
     ['ui-banner', createRemoteComponentRenderer(HostBanner)],
     ['ui-spread', createRemoteComponentRenderer(HostSpread)],
+    ['ui-methods', createRemoteComponentRenderer(HostMethods)],
   ]);
 
   const container = document.createElement('div');
@@ -230,7 +243,7 @@ describe('untrusted values from the remote environment', () => {
           0,
         ],
       ]),
-    ).toThrow();
+    ).toThrow(/masquerades/);
 
     mutate([
       [
@@ -257,7 +270,7 @@ describe('untrusted values from the remote environment', () => {
           UPDATE_PROPERTY_TYPE_PROPERTY,
         ],
       ]),
-    ).toThrow();
+    ).toThrow(/masquerades/);
 
     expect(document.getElementById(INJECTED_ID)).toBeNull();
     expect(container.querySelector('h2')!.textContent).toBe('Hi');
@@ -332,6 +345,7 @@ describe('untrusted values from the remote environment', () => {
 
     expect(document.getElementById(INJECTED_ID)).toBeNull();
     expect(container.querySelector('div[title="kept"]')).not.toBeNull();
+    expect(container.querySelector('[data-dangerous-html]')).toBeNull();
   });
 
   describe.each(['innerHTML', 'outerHTML'])('%s', (name) => {
@@ -385,9 +399,9 @@ describe('untrusted values from the remote environment', () => {
     );
   });
 
-  it('does not let remote properties override the ref used to implement remote methods', () => {
-    const {receiver, mutate} = mount();
-
+  it('keeps the host ref, instance, and children when remote ref and key change', () => {
+    const {receiver, container, mutate} = mount();
+    const remoteRef = vi.fn();
     mutate([
       [
         MUTATION_TYPE_INSERT_CHILD,
@@ -395,15 +409,122 @@ describe('untrusted values from the remote environment', () => {
         {
           id: '1',
           type: NODE_TYPE_ELEMENT,
-          element: 'ui-spread',
-          properties: {ref: () => {}, key: 'other', children: 'override'},
-          children: [],
+          element: 'ui-methods',
+          properties: {ref: remoteRef, key: 'first', children: 'override'},
+          children: [{id: '2', type: NODE_TYPE_TEXT, data: 'host children'}],
         },
         0,
       ],
     ]);
+    const instance = receiver.connection.call('1', 'getInstance');
+    expect(instance).toEqual({});
+    expect(remoteRef).not.toHaveBeenCalled();
+    expect(container.textContent).toBe('host children');
+    mutate([
+      [
+        MUTATION_TYPE_UPDATE_PROPERTY,
+        '1',
+        'key',
+        'second',
+        UPDATE_PROPERTY_TYPE_PROPERTY,
+      ],
+    ]);
+    expect(receiver.connection.call('1', 'getInstance')).toBe(instance);
+    expect(remoteRef).not.toHaveBeenCalled();
+    expect(container.textContent).toBe('host children');
+  });
 
-    expect(receiver.get({id: '1'})).toBeDefined();
-    expect(document.body.textContent).not.toContain('override');
+  it('ignores non-string attributes from a custom receiver', () => {
+    const {receiver, container, mutate} = mount();
+    mutate([
+      [
+        MUTATION_TYPE_INSERT_CHILD,
+        ROOT_ID,
+        {id: '1', type: NODE_TYPE_ELEMENT, element: 'ui-banner', children: []},
+        0,
+      ],
+    ]);
+    const element = receiver.get<RemoteReceiverElement>({id: '1'})!;
+    // Custom receivers can violate the built-in receiver's string guarantee.
+    element.attributes.heading = smuggledElement() as any;
+    mutate([
+      [
+        MUTATION_TYPE_UPDATE_PROPERTY,
+        '1',
+        'title',
+        'rerender',
+        UPDATE_PROPERTY_TYPE_PROPERTY,
+      ],
+    ]);
+    expect(container.querySelector('h2')!.textContent).toBe('');
+    expect(document.getElementById(INJECTED_ID)).toBeNull();
+  });
+
+  it.each(['properties', 'attributes'] as const)(
+    'does not forward a dangerouslySetInnerHTML string from %s',
+    (channel) => {
+      const {container, mutate} = mount();
+      mutate([
+        [
+          MUTATION_TYPE_INSERT_CHILD,
+          ROOT_ID,
+          {
+            id: '1',
+            type: NODE_TYPE_ELEMENT,
+            element: 'ui-spread',
+            [channel]: {dangerouslySetInnerHTML: INJECTED_HTML},
+            children: [],
+          },
+          0,
+        ],
+      ]);
+      expect(container.querySelector('[data-dangerous-html]')).toBeNull();
+      expect(document.getElementById(INJECTED_ID)).toBeNull();
+    },
+  );
+
+  it.each([
+    'children',
+    'ref',
+    'key',
+    'dangerouslySetInnerHTML',
+    'innerHTML',
+    'outerHTML',
+    '__proto__',
+  ])('renders the reserved %s slot as an ordinary child', (slot) => {
+    const {container, mutate} = mount();
+    mutate([
+      [
+        MUTATION_TYPE_INSERT_CHILD,
+        ROOT_ID,
+        {
+          id: '1',
+          type: NODE_TYPE_ELEMENT,
+          element: 'ui-banner',
+          children: [
+            {
+              id: '2',
+              type: NODE_TYPE_ELEMENT,
+              element: 'ui-spread',
+              attributes: {slot, title: 'slotted'},
+              children: [],
+            },
+            {
+              id: '3',
+              type: NODE_TYPE_ELEMENT,
+              element: 'ui-spread',
+              attributes: {title: 'ordinary'},
+              children: [],
+            },
+          ],
+        },
+        0,
+      ],
+    ]);
+    expect(
+      Array.from(container.querySelectorAll('section > div > div')).map(
+        (node) => node.getAttribute('title'),
+      ),
+    ).toEqual(['slotted', 'ordinary']);
   });
 });

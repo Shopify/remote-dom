@@ -450,6 +450,26 @@ describe('SignalRemoteReceiver', () => {
       },
     );
 
+    it('rejects non-function initial event listeners before retaining the node', () => {
+      const retain = vi.fn();
+      const receiver = new SignalRemoteReceiver({retain});
+      expect(() =>
+        receiver.connection.mutate([
+          [
+            MUTATION_TYPE_INSERT_CHILD,
+            ROOT_ID,
+            {
+              ...elementSerialization('host', '1'),
+              eventListeners: {press: {} as any},
+            },
+            0,
+          ],
+        ]),
+      ).toThrow('Remote event listener is not a function');
+      expect(receiver.get({id: '1'})).toBeUndefined();
+      expect(retain).not.toHaveBeenCalled();
+    });
+
     it('rejects non-function event listeners and __proto__ names', () => {
       const receiver = new SignalRemoteReceiver();
 
