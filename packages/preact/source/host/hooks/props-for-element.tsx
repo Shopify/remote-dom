@@ -1,6 +1,7 @@
 import type {SignalRemoteReceiverElement} from '@remote-dom/signals';
 
 import {renderRemoteNode} from '../node.tsx';
+import {RESERVED_PROPS} from '../constants.ts';
 import type {RemoteNodeRenderOptions} from '../types.ts';
 
 export interface RemoteElementPropsOptions<Props = {}> {
@@ -58,10 +59,23 @@ export function usePropsForRemoteElement<
 
   const reactChildren: ReturnType<typeof renderRemoteNode>[] = [];
 
-  const resolvedProperties: Record<string, any> = {
-    ...properties.value,
-    ...attributes.value,
-  };
+  const resolvedProperties: Record<string, any> = {};
+
+  // Remote data never gets to set props the renderer or the framework owns.
+  // Attributes are additionally required to be strings, which is what the
+  // receiver guarantees; anything else is dropped rather than rendered.
+  const resolvedRemoteProperties = properties.value;
+  for (const name of Object.keys(resolvedRemoteProperties)) {
+    if (RESERVED_PROPS.has(name)) continue;
+    resolvedProperties[name] = resolvedRemoteProperties[name];
+  }
+
+  const resolvedAttributes = attributes.value;
+  for (const name of Object.keys(resolvedAttributes)) {
+    const value = resolvedAttributes[name];
+    if (RESERVED_PROPS.has(name) || typeof value !== 'string') continue;
+    resolvedProperties[name] = value;
+  }
 
   if (options.eventProps) {
     for (const [prop, eventDescription] of Object.entries(options.eventProps)) {
@@ -89,7 +103,7 @@ export function usePropsForRemoteElement<
     let slot: string | undefined =
       child.type === 1 ? (child.attributes.peek().slot as any) : undefined;
 
-    if (typeof slot !== 'string') slot = undefined;
+    if (typeof slot !== 'string' || RESERVED_PROPS.has(slot)) slot = undefined;
 
     if (slot) {
       const rendered = renderRemoteNode(child, options);

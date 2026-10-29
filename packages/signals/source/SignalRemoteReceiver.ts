@@ -21,7 +21,15 @@ import {
   type RemoteCommentSerialization,
   type RemoteElementSerialization,
 } from '@remote-dom/core';
-import type {RemoteReceiverOptions} from '@remote-dom/core/receivers';
+import {
+  assertRemoteElementName,
+  assertRemoteEventListeners,
+  assertSafeRemoteProperties,
+  normalizeRemoteAttributes,
+  normalizeRemotePropertyUpdate,
+  normalizeRemoteText,
+  type RemoteReceiverOptions,
+} from '@remote-dom/core/receivers';
 
 /**
  * Represents a text node of a remote tree in a plain JavaScript format, with
@@ -218,6 +226,10 @@ export class SignalRemoteReceiver {
         // late mutation; the node is no longer rendered.
         if (!element) return;
 
+        // The remote is untrusted: attributes must be strings, properties must
+        // not masquerade as framework nodes, and listeners must be functions.
+        value = normalizeRemotePropertyUpdate(property, value, type);
+
         let updateSignal: Signal<Record<string, any>>;
 
         switch (type) {
@@ -240,7 +252,13 @@ export class SignalRemoteReceiver {
         retain?.(value);
 
         const newUpdateObject = {...oldUpdateObject};
-        newUpdateObject[property] = value;
+
+        if (type === UPDATE_PROPERTY_TYPE_ATTRIBUTE && value === undefined) {
+          delete newUpdateObject[property];
+        } else {
+          newUpdateObject[property] = value;
+        }
+
         updateSignal.value = newUpdateObject;
 
         // If the slot changes, inform parent nodes so they can
@@ -266,7 +284,7 @@ export class SignalRemoteReceiver {
         // The text node may already have been detached. Drop the late mutation.
         if (!text) return;
 
-        (text.data as any).value = newText;
+        (text.data as any).value = normalizeRemoteText(newText);
       },
     });
 
@@ -293,7 +311,7 @@ export class SignalRemoteReceiver {
           normalizedChild = {
             id,
             type,
-            data: signal(data),
+            data: signal(normalizeRemoteText(data)),
           } satisfies SignalRemoteReceiverText | SignalRemoteReceiverComment;
 
           break;
@@ -308,6 +326,13 @@ export class SignalRemoteReceiver {
             attributes,
             eventListeners,
           } = child;
+
+          // Validate this node before retaining or storing it.
+          assertRemoteElementName(element);
+          assertSafeRemoteProperties(properties);
+          assertRemoteEventListeners(eventListeners);
+          const normalizedAttributes = normalizeRemoteAttributes(attributes);
+
           retain?.(properties);
           retain?.(eventListeners);
 
@@ -320,9 +345,9 @@ export class SignalRemoteReceiver {
             children: signal(
               resolvedChildren as readonly SignalRemoteReceiverNode[],
             ),
-            properties: signal(properties ?? {}),
-            attributes: signal(attributes ?? {}),
-            eventListeners: signal(eventListeners ?? {}),
+            properties: signal({...properties}),
+            attributes: signal(normalizedAttributes),
+            eventListeners: signal({...eventListeners}),
           } satisfies SignalRemoteReceiverElement;
 
           for (const grandChild of children) {

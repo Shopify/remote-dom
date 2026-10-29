@@ -10,7 +10,7 @@ import {
   RemoteRootElement,
   type RemoteElementConstructor,
 } from '../elements.ts';
-import {remoteId} from '../elements/internals.ts';
+import {remoteId, remoteAttributes} from '../elements/internals.ts';
 import {
   RemoteReceiver,
   type RemoteReceiverElement,
@@ -955,6 +955,62 @@ describe('RemoteElement', () => {
         expect(remoteElement.attributes).toEqual({});
       },
     );
+
+    describe('updateRemoteAttribute()', () => {
+      // Attribute values are strings in the protocol. The local copy was
+      // always coerced; the wire must carry that same coerced value, never
+      // the raw argument.
+      it('sends the string form of a non-string value', () => {
+        const ProductElement = createRemoteElement({attributes: ['count']});
+        const {element, receiver} =
+          createAndConnectRemoteElement(ProductElement);
+
+        element.updateRemoteAttribute('count', 5 as any);
+
+        expect(remoteAttributes(element)).toEqual({count: '5'});
+        expect(receiver.connection.mutate).toHaveBeenLastCalledWith([
+          [
+            MUTATION_TYPE_UPDATE_PROPERTY,
+            remoteId(element),
+            'count',
+            '5',
+            UPDATE_PROPERTY_TYPE_ATTRIBUTE,
+          ],
+        ]);
+      });
+
+      it('never sends an object value on the wire', () => {
+        const ProductElement = createRemoteElement({attributes: ['heading']});
+        const {element, receiver} =
+          createAndConnectRemoteElement(ProductElement);
+
+        const smuggled = {constructor: undefined, type: 'div', props: {}};
+        element.updateRemoteAttribute('heading', smuggled as any);
+
+        const [records] = (receiver.connection.mutate as any).mock.lastCall;
+        const [, , name, value, type] = records[0];
+
+        expect(name).toBe('heading');
+        expect(type).toBe(UPDATE_PROPERTY_TYPE_ATTRIBUTE);
+        expect(typeof value).toBe('string');
+        expect(value).toBe(String(smuggled));
+      });
+
+      it('does not send a mutation when the coerced value is unchanged', () => {
+        const ProductElement = createRemoteElement({attributes: ['count']});
+        const {element, receiver} =
+          createAndConnectRemoteElement(ProductElement);
+
+        element.updateRemoteAttribute('count', '5');
+        const calls = (receiver.connection.mutate as any).mock.calls.length;
+
+        element.updateRemoteAttribute('count', 5 as any);
+
+        expect((receiver.connection.mutate as any).mock.calls.length).toBe(
+          calls,
+        );
+      });
+    });
   });
 
   describe('event listeners', () => {

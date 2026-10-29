@@ -143,12 +143,16 @@ export function updateRemoteElementAttribute(
     REMOTE_ATTRIBUTES.set(node, attributes);
   }
 
-  if (attributes[attribute] === value) return;
+  // Attributes are always strings. Normalize once, and send the host exactly
+  // what is stored locally, so the wire never carries a non-string value.
+  const normalizedValue = value == null ? value : String(value);
 
-  if (value == null) {
+  if (attributes[attribute] === normalizedValue) return;
+
+  if (normalizedValue == null) {
     delete attributes[attribute];
   } else {
-    attributes[attribute] = String(value);
+    attributes[attribute] = normalizedValue;
   }
 
   const connection = REMOTE_CONNECTIONS.get(node);
@@ -160,7 +164,7 @@ export function updateRemoteElementAttribute(
       MUTATION_TYPE_UPDATE_PROPERTY,
       remoteId(node),
       attribute,
-      value,
+      normalizedValue,
       UPDATE_PROPERTY_TYPE_ATTRIBUTE,
     ],
   ]);
