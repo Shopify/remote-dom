@@ -1,5 +1,20 @@
 # @remote-dom/core
 
+## 1.12.1
+
+### Patch Changes
+
+- [#726](https://github.com/Shopify/remote-dom/pull/726) [`064847c`](https://github.com/Shopify/remote-dom/commit/064847cd32e4f1ff712661e4acd2cbb92904c2b5) Thanks [@MitchLillie](https://github.com/MitchLillie)! - Deprecate `DOMRemoteReceiver` and `RemoteReceiverElement`. Use `RemoteReceiver` or a framework-specific receiver instead.
+
+- [#738](https://github.com/Shopify/remote-dom/pull/738) [`0354436`](https://github.com/Shopify/remote-dom/commit/035443609f46fb69989f64019531c8be72496669) Thanks [@greatscotty](https://github.com/greatscotty)! - Validate values received from the remote environment before storing or rendering them.
+
+  `RemoteReceiver` and `SignalRemoteReceiver` now normalize text node content and attribute values to strings (nullish attribute updates remove the attribute), reject property values containing objects that would be mistaken by a UI framework for one of its own virtual nodes (including inherited values and non-enumerable `Error.cause` values), require event listeners to be functions, and reject `__proto__` as a property name. The `@remote-dom/preact` and `@remote-dom/react` host renderers additionally ignore non-string attributes and never pass remote-controlled `children`, `ref`, `key`, `dangerouslySetInnerHTML`, `innerHTML`, or `outerHTML` props to host components. `RemoteElement.updateRemoteAttribute()` now sends the same string it stores locally.
+
+  The new validation helpers are exported from `@remote-dom/core/receivers` for use by custom receivers.
+
+- Updated dependencies [[`d4b35f6`](https://github.com/Shopify/remote-dom/commit/d4b35f66a49eaca27be2530a0d6b6f6f8a25f4d3), [`69b76a2`](https://github.com/Shopify/remote-dom/commit/69b76a28c79177f9b1654618a5979345b86fbf9a), [`dd02515`](https://github.com/Shopify/remote-dom/commit/dd02515a4324fc279e4d7c0b1fce827bd3a2ffad), [`3e4b3e7`](https://github.com/Shopify/remote-dom/commit/3e4b3e7e72aa69eaec8cce73149ba708aaf05fef), [`1f2468e`](https://github.com/Shopify/remote-dom/commit/1f2468ef2b0147e8edbeabc79d982f4e62ddcf67), [`1f7e35d`](https://github.com/Shopify/remote-dom/commit/1f7e35d9aa22a14afc01feab341ffa88686a1715)]:
+  - @remote-dom/polyfill@1.7.0
+
 ## 1.12.0
 
 ### Minor Changes
