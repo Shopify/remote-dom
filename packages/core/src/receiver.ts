@@ -9,6 +9,7 @@ import {
   KIND_COMPONENT,
   KIND_FRAGMENT,
   KIND_ROOT,
+  KIND_TEXT,
 } from './types';
 import type {
   ActionArgumentMap,
@@ -18,6 +19,12 @@ import type {
   RemoteFragmentSerialization,
 } from './types';
 import {isRemoteFragment} from './utilities';
+import {
+  assertRemoteComponentType,
+  assertRemotePropName,
+  assertSafeRemoteProp,
+  normalizeRemoteText,
+} from './validation';
 
 export const ROOT_ID = Symbol('RootId');
 
@@ -222,6 +229,17 @@ export function createRemoteReceiver(): RemoteReceiver {
 
       const oldProps = {...(component.props as any)};
 
+      // The remote is untrusted: validate every prop before retaining or
+      // storing any of it. Fragment props are validated like any other node.
+      for (const key of Object.keys(newProps)) {
+        assertRemotePropName(key);
+        const newProp = (newProps as any)[key];
+        if (isRemoteFragmentSerialization(newProp)) {
+          normalizeNode(newProp, addVersion);
+        }
+        assertSafeRemoteProp(newProp);
+      }
+
       retain(newProps);
 
       Object.keys(newProps).forEach((key) => {
@@ -230,9 +248,8 @@ export function createRemoteReceiver(): RemoteReceiver {
         if (isRemoteReceiverAttachableFragment(oldProp)) {
           detach(oldProp);
         }
-        if (isRemoteFragmentSerialization(newProp)) {
-          const attachableNewProp = normalizeNode(newProp, addVersion);
-          attach(attachableNewProp);
+        if (isRemoteReceiverAttachableFragment(newProp)) {
+          attach(newProp);
         }
       });
 
@@ -249,7 +266,7 @@ export function createRemoteReceiver(): RemoteReceiver {
     updateText: (id, newText) => {
       const text = attachedNodes.get(id) as RemoteReceiverAttachableText;
 
-      text.text = newText;
+      text.text = normalizeRemoteText(newText);
       text.version += 1;
       enqueueUpdate(text);
     },
@@ -419,17 +436,32 @@ function normalizeNode<
     | RemoteFragmentSerialization,
   R,
 >(node: T, normalizer: (node: T) => R) {
+  // The remote is untrusted. Text must be a string, component types must be
+  // strings, and props must not contain objects that a UI framework would
+  // mistake for its own virtual nodes. Validate before the normalizer stores
+  // anything.
+  if (node.kind === KIND_TEXT) {
+    (node as any).text = normalizeRemoteText((node as any).text);
+  }
   if (node.kind === KIND_FRAGMENT || node.kind === KIND_COMPONENT) {
     (node as any).children.forEach((child: T) =>
       normalizeNode(child, normalizer),
     );
   }
+  if (node.kind === KIND_COMPONENT) {
+    assertRemoteComponentType((node as any).type);
+  }
   if (node.kind === KIND_COMPONENT && 'props' in node) {
     const {props} = node as any;
     for (const key of Object.keys(props)) {
+      assertRemotePropName(key);
       const prop = props[key];
-      if (!isRemoteFragmentSerialization(prop)) continue;
-      props[key] = normalizeNode(prop as any, normalizer);
+      if (isRemoteFragmentSerialization(prop)) {
+        props[key] = normalizeNode(prop as any, normalizer);
+      }
+      // Fragment props are still objects passed to host components. Check
+      // their full shape after normalizing text, including extra wire fields.
+      assertSafeRemoteProp(props[key]);
     }
   }
   return normalizer(node);

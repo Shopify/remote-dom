@@ -1,5 +1,10 @@
 import {MessageEndpoint} from '../types';
-import {createEndpoint, TERMINATE, MissingResolverError} from '../endpoint';
+import {
+  createEndpoint,
+  CALL,
+  TERMINATE,
+  MissingResolverError,
+} from '../endpoint';
 import {fromMessagePort} from '../adaptors';
 import {release, retain} from '../memory';
 
@@ -34,10 +39,14 @@ describe('createEndpoint()', () => {
       const {port1: newPort1, port2: newPort2} = new MessageChannel();
       newPort1.start();
       newPort2.start();
+      const oldMessageSpy = jest.spyOn(port1, 'postMessage');
+      const newMessageSpy = jest.spyOn(newPort1, 'postMessage');
       endpoint1.replace(fromMessagePort(newPort1));
       endpoint2.replace(fromMessagePort(newPort2));
 
       expect(await endpoint1.call.hello()).toBe('world');
+      expect(newMessageSpy).toHaveBeenCalled();
+      expect(oldMessageSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -62,7 +71,6 @@ describe('createEndpoint()', () => {
     });
 
     it('re-throws errors thrown in exposed methods', async () => {
-      expect.assertions(2);
       const {port1, port2} = new MessageChannel();
       port1.start();
       port2.start();
@@ -72,13 +80,14 @@ describe('createEndpoint()', () => {
       );
 
       const messageEndpoint2 = fromMessagePort(port2);
+      let listenerResult!: Promise<unknown>;
       const endpoint2 = createEndpoint({
         ...messageEndpoint2,
         addEventListener(event, listener) {
-          messageEndpoint2.addEventListener(event, async (...args) => {
-            await expect(listener(...args)).rejects.toMatchObject({
-              message: expect.stringContaining('this is broken'),
-            });
+          messageEndpoint2.addEventListener(event, (...args) => {
+            listenerResult = Promise.resolve(listener(...args));
+            // Observe the rejection until the test checks it below.
+            listenerResult.catch(() => undefined);
           });
         },
       });
@@ -90,6 +99,9 @@ describe('createEndpoint()', () => {
       });
 
       await expect(endpoint1.call.hello()).rejects.toMatchObject({
+        message: expect.stringContaining('this is broken'),
+      });
+      await expect(listenerResult).rejects.toMatchObject({
         message: expect.stringContaining('this is broken'),
       });
     });
@@ -222,7 +234,15 @@ describe('createEndpoint()', () => {
       const spy = jest.fn(() => 'world');
       endpoint2.expose({hello: spy});
 
+      // Capture the registered listener to simulate a message queued before
+      // termination, even though termination removes the event listener.
+      // @ts-expect-error Accessing private property for testing
+      const listener = (port2.listeners as Set<EventListener>).values().next()
+        .value!;
       endpoint2.terminate();
+      await listener({
+        data: [CALL, ['late-call', 'hello', []]],
+      } as MessageEvent);
 
       // Try to call a method after termination
       await expect(endpoint1.call.hello()).rejects.toMatchObject({

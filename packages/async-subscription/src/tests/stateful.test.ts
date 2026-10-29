@@ -95,6 +95,7 @@ describe('makeStatefulSubscribable()', () => {
 
   it('unsubscribes from the subscription on stop, and does not apply any updates', async () => {
     const subscription = createRemoteSubscribable('abc');
+    const subscribe = jest.spyOn(subscription, 'subscribe');
     const statefulSubscription = makeStatefulSubscribable(subscription);
     const subscriber = jest.fn();
     statefulSubscription.subscribe(subscriber);
@@ -109,6 +110,8 @@ describe('makeStatefulSubscribable()', () => {
     expect(release).toHaveBeenCalledWith(subscription);
     expect(subscriber).not.toHaveBeenCalled();
     expect(statefulSubscription.current).not.toBe(newValue);
+    const [unsubscribe] = await subscribe.mock.results[0].value;
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
   });
 });
 

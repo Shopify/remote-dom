@@ -50,3 +50,10 @@ export type {
   RemoteReceiverAttachableFragment,
 } from './receiver';
 export {isRemoteComponent, isRemoteText, isRemoteFragment} from './utilities';
+export {
+  normalizeRemoteText,
+  assertRemotePropName,
+  assertSafeRemoteProp,
+  assertSafeRemoteProps,
+  assertRemoteComponentType,
+} from './validation';
