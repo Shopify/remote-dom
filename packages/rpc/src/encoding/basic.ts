@@ -12,6 +12,28 @@ type AnyFunction = (...args: any[]) => any;
 
 const FUNCTION = '_@f';
 
+/**
+ * Thrown when a remote function proxy is called after its target has been
+ * released.
+ */
+export class RemoteFunctionReleasedError extends Error {
+  constructor() {
+    super('You attempted to call a function that was already released.');
+    this.name = 'RemoteFunctionReleasedError';
+  }
+}
+
+/**
+ * Thrown when a remote function proxy is called after the RPC endpoint that
+ * vended it was terminated.
+ */
+export class RemoteFunctionRevokedError extends Error {
+  constructor() {
+    super('You attempted to call a function that was already revoked.');
+    this.name = 'RemoteFunctionRevokedError';
+  }
+}
+
 export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
   const functionsToId = new Map<AnyFunction, string>();
   const idsToFunction = new Map<string, AnyFunction>();
@@ -25,9 +47,7 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
       const func = idsToFunction.get(id);
 
       if (func == null) {
-        throw new Error(
-          'You attempted to call a function that was already released.',
-        );
+        throw new RemoteFunctionReleasedError();
       }
 
       try {
@@ -176,15 +196,11 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
 
         const proxy = (...args: any[]) => {
           if (released) {
-            throw new Error(
-              'You attempted to call a function that was already released.',
-            );
+            throw new RemoteFunctionReleasedError();
           }
 
           if (!idsToProxy.has(id)) {
-            throw new Error(
-              'You attempted to call a function that was already revoked.',
-            );
+            throw new RemoteFunctionRevokedError();
           }
 
           return api.call(id, args);
