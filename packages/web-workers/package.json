@@ -1,5 +1,10 @@
 {
   "name": "@remote-ui/web-workers",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/remote-dom.git",
+    "directory": "packages/web-workers"
+  },
   "version": "2.0.0",
   "description": "",
   "publishConfig": {

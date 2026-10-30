@@ -2,7 +2,7 @@
   "name": "remote-ui",
   "version": "0.0.0",
   "private": true,
-  "repository": "https://github.com/Shopify/remote-ui.git",
+  "repository": "https://github.com/Shopify/remote-dom.git",
   "workspaces": [
     "./packages/*",
     "./examples/*"
@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.7",
-    "@changesets/cli": "^2.25.2",
+    "@changesets/cli": "2.29.7",
     "@shopify/babel-preset": "^24.1.0",
     "@shopify/browserslist-config": "^3.0.0",
     "@shopify/eslint-plugin": "^42.0.0",

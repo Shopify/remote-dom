@@ -1,5 +1,10 @@
 {
   "name": "@remote-ui/htm",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/remote-dom.git",
+    "directory": "packages/htm"
+  },
   "version": "2.3.5",
   "publishConfig": {
     "access": "public",

@@ -1,5 +1,10 @@
 {
   "name": "@remote-ui/async-subscription",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/remote-dom.git",
+    "directory": "packages/async-subscription"
+  },
   "version": "2.1.18",
   "publishConfig": {
     "access": "public",
