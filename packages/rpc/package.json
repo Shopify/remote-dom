@@ -6,6 +6,11 @@
     "access": "public"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/remote-dom",
+    "directory": "packages/rpc"
+  },
   "main": "index.js",
   "module": "index.mjs",
   "esnext": "index.esnext",

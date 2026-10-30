@@ -32,6 +32,11 @@
   },
   "sideEffects": false,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/remote-dom",
+    "directory": "packages/dom"
+  },
   "dependencies": {
     "@remote-ui/core": "^2.2.7"
   }
