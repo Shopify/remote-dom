@@ -2,7 +2,7 @@ name: Prepare repo
 runs:
   using: 'composite'
   steps:
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       name: Setup node.js and yarn
       with:
         cache: yarn
