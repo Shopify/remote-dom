@@ -424,6 +424,60 @@ describe('react', () => {
     expect(closeSpy).toHaveBeenCalled();
   });
 
+  it('clears props that are omitted when a remote React component re-renders', async () => {
+    const receiver = new RemoteReceiver();
+    const mutationObserver = new RemoteMutationObserver(receiver.connection);
+
+    const remoteRoot = document.createElement('div');
+    const pressSpy = vi.fn();
+
+    function Remote({withProps}: {withProps: boolean}) {
+      return (
+        <RemoteButton
+          {...(withProps
+            ? {tooltip: 'I do cool things.', disabled: true, onPress: pressSpy}
+            : {})}
+        >
+          Click me!
+        </RemoteButton>
+      );
+    }
+
+    const rendered = render(
+      <RemoteRootRenderer receiver={receiver} components={components} />,
+    );
+
+    const remoteReactRoot = createRoot(remoteRoot);
+
+    rendered.act(() => {
+      remoteReactRoot.render(<Remote withProps />);
+    });
+
+    rendered.act(() => {
+      mutationObserver.observe(remoteRoot);
+    });
+
+    expect(rendered).toContainReactComponent(HostButton, {
+      tooltip: 'I do cool things.',
+      disabled: true,
+    });
+
+    rendered.act(() => {
+      remoteReactRoot.render(<Remote withProps={false} />);
+    });
+
+    const remoteButton = remoteRoot.querySelector('remote-button')!;
+    expect(remoteButton.hasAttribute('tooltip')).toBe(false);
+    expect(remoteButton.disabled).toBeFalsy();
+
+    const hostButtonProps = rendered.find(HostButton)!.props;
+    expect(hostButtonProps.tooltip).toBeNull();
+    expect(hostButtonProps.disabled).toBeUndefined();
+
+    remoteButton.dispatchEvent(new Event('press'));
+    expect(pressSpy).not.toHaveBeenCalled();
+  });
+
   it('can remove the wrapper element on elements passed as properties to remote React components', async () => {
     const RemoteModalWithoutWrappers = createRemoteComponent(
       'remote-modal',
