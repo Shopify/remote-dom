@@ -46,6 +46,14 @@ export const Modal = createRemoteElement<
   methods: ['open', 'close'],
 });
 
+export const Banner = createRemoteElement<
+  {},
+  {},
+  {content: true; primaryAction: true}
+>({
+  slots: ['content', 'primaryAction'],
+});
+
 export const Stack = createRemoteElement<StackProperties>({
   properties: {
     spacing: {type: Boolean},
@@ -56,6 +64,7 @@ customElements.define('ui-text', Text);
 customElements.define('ui-button', Button);
 customElements.define('ui-modal', Modal);
 customElements.define('ui-stack', Stack);
+customElements.define('ui-banner', Banner);
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -63,6 +72,7 @@ declare global {
     'ui-button': InstanceType<typeof Button>;
     'ui-stack': InstanceType<typeof Stack>;
     'ui-modal': InstanceType<typeof Modal>;
+    'ui-banner': InstanceType<typeof Banner>;
   }
 }
 
