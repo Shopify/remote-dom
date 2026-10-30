@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.7",
-    "@changesets/cli": "2.29.7",
+    "@changesets/cli": "^2.25.2",
     "@shopify/babel-preset": "^24.1.0",
     "@shopify/browserslist-config": "^3.0.0",
     "@shopify/eslint-plugin": "^42.0.0",
