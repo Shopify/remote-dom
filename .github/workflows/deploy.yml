@@ -6,6 +6,13 @@ on:
       - main
       - changeset-release/main
   workflow_dispatch:
+    inputs:
+      snapit_comment_id:
+        description: 'PR comment requesting a snapshot (set automatically by /snapit)'
+        type: string
+      snapit_sha:
+        description: 'PR commit to publish (set automatically by /snapit)'
+        type: string
   # Snapit trigger - runs when /snapit comment is made on a PR
   issue_comment:
     types:
@@ -13,7 +20,8 @@ on:
 
 permissions: {}
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+# Keep comment requests, dispatched snapshots, and branch deploys independent.
+concurrency: ${{ github.workflow }}-${{ github.event_name }}-${{ inputs.snapit_comment_id || github.event.issue.number || github.ref }}
 
 jobs:
   checks:
@@ -46,7 +54,7 @@ jobs:
 
   preview:
     name: Preview 🔮
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref_name == 'changeset-release/main') }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.snapit_comment_id == '' && inputs.snapit_sha == '') || (github.event_name == 'push' && github.ref_name == 'changeset-release/main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -80,31 +88,220 @@ jobs:
           NPM_TOKEN: '' # Empty string forces OIDC
           NPM_CONFIG_PROVENANCE: true
 
-  # Snapit job - runs when /snapit comment is made on a PR
+  # npm rejects issue_comment OIDC tokens, so comments only request a separate run.
   snapit:
-    name: Snapit
+    name: Request snapshot
     if: ${{ github.event_name == 'issue_comment' && github.event.issue.pull_request && github.event.comment.body == '/snapit' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
+      actions: write
       contents: read
-      id-token: write # Required for OIDC authentication
-      issues: write
       pull-requests: write
     steps:
-      # WARNING: DO NOT RUN ANY CUSTOM LOCAL SCRIPT BEFORE RUNNING THE SNAPIT ACTION
-      # This action can be executed by 3rd party users and it should not be able to run arbitrary code from a PR.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Request a snapshot release
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
-          persist-credentials: false
+          script: |
+            const {comment, issue, repository} = context.payload;
+            try {
+              const {data: collaborator} = await github.rest.repos.getCollaboratorPermissionLevel({
+                ...context.repo,
+                username: comment.user.login,
+              });
+              if (!['write', 'admin'].includes(collaborator.permission)) {
+                throw new Error('Only users with write permission to the repository can run /snapit.');
+              }
 
+              const {data: pullRequest} = await github.rest.pulls.get({
+                ...context.repo,
+                pull_number: issue.number,
+              });
+              if (pullRequest.state !== 'open') {
+                throw new Error('Snapshots can only be requested for open pull requests.');
+              }
+              if (pullRequest.head.repo?.full_name !== repository.full_name) {
+                throw new Error('/snapit is not supported on pull requests from forked repositories.');
+              }
+
+              await github.rest.actions.createWorkflowDispatch({
+                ...context.repo,
+                workflow_id: 'deploy.yml',
+                ref: repository.default_branch,
+                inputs: {
+                  snapit_comment_id: String(comment.id),
+                  snapit_sha: pullRequest.head.sha,
+                },
+              });
+              await github.rest.reactions.createForIssueComment({
+                ...context.repo,
+                comment_id: comment.id,
+                content: 'eyes',
+              }).catch((error) => core.warning(`Snapshot requested, but the reaction failed: ${error.message}`));
+              core.info(`Requested a snapshot for PR #${issue.number} at ${pullRequest.head.sha}.`);
+            } catch (error) {
+              core.setFailed(error.message);
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: issue.number,
+                body: `Unable to request a snapshot: ${error.message}`,
+              });
+            }
+
+  snapshot-release:
+    name: Publish PR snapshot
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.snapit_comment_id != '' || inputs.snapit_sha != '') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Validate snapshot request
+        id: request
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const {snapit_comment_id: commentId, snapit_sha: sha} = context.payload.inputs;
+            if (
+              !/^[1-9]\d*$/.test(commentId) ||
+              !Number.isSafeInteger(Number(commentId)) ||
+              !/^[a-f0-9]{40}$/.test(sha)
+            ) {
+              throw new Error('A snapshot request requires a comment ID and a full PR commit SHA.');
+            }
+
+            // Recheck the original request before checking out or executing any PR code.
+            const {data: comment} = await github.rest.issues.getComment({
+              ...context.repo,
+              comment_id: Number(commentId),
+            });
+            if (comment.body !== '/snapit') {
+              throw new Error('The requesting comment must contain /snapit.');
+            }
+            const {data: collaborator} = await github.rest.repos.getCollaboratorPermissionLevel({
+              ...context.repo,
+              username: comment.user.login,
+            });
+            if (!['write', 'admin'].includes(collaborator.permission)) {
+              throw new Error('Only users with write permission to the repository can run /snapit.');
+            }
+
+            const issueUrlPrefix = `https://api.github.com/repos/${context.repo.owner}/${context.repo.repo}/issues/`;
+            const pullRequestNumber = Number(comment.issue_url.slice(issueUrlPrefix.length));
+            if (
+              !comment.issue_url.startsWith(issueUrlPrefix) ||
+              !Number.isSafeInteger(pullRequestNumber) ||
+              pullRequestNumber < 1
+            ) {
+              throw new Error('The requesting comment must belong to a PR in this repository.');
+            }
+            const {data: pullRequest} = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: pullRequestNumber,
+            });
+            // Keep enough context to report failures for an authorized request.
+            core.setOutput('pull_request', pullRequestNumber);
+            core.setOutput('comment_id', comment.id);
+            core.setOutput('requester', comment.user.login);
+            core.setOutput('sha', sha);
+            core.setOutput('branch', pullRequest.head.ref);
+            if (
+              pullRequest.state !== 'open' ||
+              pullRequest.head.repo?.full_name !== `${context.repo.owner}/${context.repo.repo}`
+            ) {
+              throw new Error('Snapshots require an open PR from this repository.');
+            }
+            if (pullRequest.head.sha !== sha) {
+              throw new Error('The PR changed after the request. Post /snapit again to publish the current commit.');
+            }
+
+      - name: Checkout PR commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.request.outputs.sha }}
+          fetch-depth: 0
+          persist-credentials: false
       - uses: ./.github/workflows/actions/prepare
 
-      - name: Create snapshot
-        uses: Shopify/snapit@efd7ad2bbc01ba82ac9a8495eb49b3a8eed0d9b9 # v0.1.0
+      # Release PRs already consumed their changeset entries.
+      - name: Reset release PR changeset entries
+        if: ${{ steps.request.outputs.branch == 'changeset-release/main' }}
+        run: |
+          git fetch origin main
+          git checkout origin/main -- .changeset
+
+      - name: Version snapshot packages
+        run: pnpm changeset version --snapshot snapshot
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read snapshot versions
+        id: versions
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const {readdir, readFile} = require('node:fs/promises');
+            const packages = {};
+            for (const entry of await readdir('packages', {withFileTypes: true})) {
+              if (!entry.isDirectory()) continue;
+              const {name, version, private: isPrivate} = JSON.parse(
+                await readFile(`packages/${entry.name}/package.json`, 'utf8'),
+              );
+              if (!isPrivate && version.includes('-snapshot-')) {
+                packages[name] = version;
+              }
+            }
+            if (Object.keys(packages).length === 0) {
+              throw new Error('No snapshot packages found. Add a changeset before requesting /snapit.');
+            }
+            core.setOutput('packages', JSON.stringify(packages));
+
+      - run: pnpm build:snapit
+      - name: Publish snapshot
+        id: publish
+        run: pnpm changeset publish --tag snapshot --no-git-tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: '' # Empty string forces OIDC
           NPM_CONFIG_PROVENANCE: true
+
+      - name: Report snapshot result
+        if: ${{ always() && steps.request.outputs.pull_request != '' }}
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          SNAPSHOT_OUTCOME: ${{ steps.publish.outcome }}
+          SNAPSHOT_PACKAGES: ${{ steps.versions.outputs.packages }}
+          SNAPSHOT_PR: ${{ steps.request.outputs.pull_request }}
+          SNAPSHOT_COMMENT: ${{ steps.request.outputs.comment_id }}
+          SNAPSHOT_REQUESTER: ${{ steps.request.outputs.requester }}
+          SNAPSHOT_SHA: ${{ steps.request.outputs.sha }}
         with:
-          build_script: pnpm build:snapit
-          comment_command: /snapit
+          script: |
+            const {
+              SNAPSHOT_OUTCOME: outcome,
+              SNAPSHOT_PACKAGES: packages,
+              SNAPSHOT_REQUESTER: requester,
+              SNAPSHOT_SHA: sha,
+            } = process.env;
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const published = outcome === 'success';
+            const body = published
+              ? [
+                  `🫰✨ **Thanks @${requester}! Your snapshots have been published to npm.**`,
+                  `Built from \`${sha}\`. [Workflow run](${runUrl}).`,
+                  'Test the snapshots by updating your `package.json` with these versions:',
+                  ['```json', JSON.stringify(JSON.parse(packages), null, 2), '```'].join('\n'),
+                ].join('\n\n')
+              : `The snapshot requested by @${requester} for \`${sha}\` could not be published. [View the workflow run](${runUrl}).`;
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: Number(process.env.SNAPSHOT_PR),
+              body,
+            });
+            await github.rest.reactions.createForIssueComment({
+              ...context.repo,
+              comment_id: Number(process.env.SNAPSHOT_COMMENT),
+              content: published ? 'rocket' : 'confused',
+            });
