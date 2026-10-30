@@ -13,7 +13,7 @@ catalog:
   react: ^18.3.0
   react-dom: ^18.3.0
   # The kitchen-sink example intentionally stays on Vite 5. See its README.
-  vite: ^8.0.0
+  vite: ^8.3.0
 
 # Allow only reviewed dependency lifecycle scripts.
 allowBuilds:
