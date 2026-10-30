@@ -5,7 +5,7 @@
     "url": "https://github.com/Shopify/remote-dom.git",
     "directory": "packages/core"
   },
-  "version": "2.2.7",
+  "version": "2.2.8",
   "publishConfig": {
     "access": "public",
     "@remote-ui:registry": "https://registry.npmjs.org"

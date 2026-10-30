@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.6
+
+### Patch Changes
+
+- Updated dependencies [[`afb0c85`](https://github.com/Shopify/remote-dom/commit/afb0c8579fabc845bcaced5aefeb2fea78484d50)]:
+  - @remote-ui/core@2.2.8
+
 ## 1.4.5
 
 ### Patch Changes
