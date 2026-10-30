@@ -88,6 +88,7 @@ jobs:
           NPM_TOKEN: '' # Empty string forces OIDC
           NPM_CONFIG_PROVENANCE: true
 
+  # Snapit job - runs when /snapit comment is made on a PR
   # npm rejects issue_comment OIDC tokens, so comments only request a separate run.
   snapit:
     name: Snapit
