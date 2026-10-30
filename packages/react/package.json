@@ -6,7 +6,7 @@
     "access": "public",
     "@remote-dom/registry": "https://registry.npmjs.org"
   },
-  "version": "1.2.2",
+  "version": "1.2.3",
   "engines": {
     "node": ">=18.0.0"
   },
@@ -68,7 +68,7 @@
     "build": "rollup --config rollup.config.js"
   },
   "dependencies": {
-    "@remote-dom/core": "workspace:^1.7.0",
+    "@remote-dom/core": "workspace:^1.12.1",
     "@types/react": "^18.0.0",
     "htm": "catalog:"
   },
