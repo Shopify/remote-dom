@@ -1,5 +1,10 @@
 {
   "name": "@remote-ui/vue",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/remote-dom.git",
+    "directory": "packages/vue"
+  },
   "version": "0.4.5",
   "publishConfig": {
     "access": "public",

@@ -6,6 +6,7 @@ runs:
       name: Setup node.js and yarn
       with:
         cache: yarn
+        # Node 24.19.0 includes npm 11.17.0 (OIDC requires npm >=11.5.1).
         node-version-file: '.nvmrc'
 
     - name: Yarn install

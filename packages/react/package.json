@@ -1,5 +1,10 @@
 {
   "name": "@remote-ui/react",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/remote-dom.git",
+    "directory": "packages/react"
+  },
   "version": "5.0.8",
   "publishConfig": {
     "access": "public",

@@ -1,5 +1,10 @@
 {
   "name": "@remote-ui/core",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/remote-dom.git",
+    "directory": "packages/core"
+  },
   "version": "2.2.7",
   "publishConfig": {
     "access": "public",

@@ -5,24 +5,31 @@ on:
     branches:
       - remote-ui
 
+permissions: {}
+
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   changesets:
     name: Changesets
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write # Required for OIDC authentication
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+          fetch-depth: 0
+          persist-credentials: false
 
       - uses: ./.github/workflows/actions/prepare
 
       - id: changesets
         name: Create release Pull Request or publish to NPM
-        uses: changesets/action@v1
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
           publish: yarn release
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: '' # Empty string forces OIDC
+          NPM_CONFIG_PROVENANCE: true
           GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}

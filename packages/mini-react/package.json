@@ -1,5 +1,10 @@
 {
   "name": "@remote-ui/mini-react",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/remote-dom.git",
+    "directory": "packages/mini-react"
+  },
   "version": "2.0.0",
   "publishConfig": {
     "access": "public",
