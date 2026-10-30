@@ -89,7 +89,6 @@ jobs:
           NPM_CONFIG_PROVENANCE: true
 
   # Snapit job - runs when /snapit comment is made on a PR
-  # npm rejects issue_comment OIDC tokens, so comments only request a separate run.
   snapit:
     name: Snapit
     if: ${{ github.event_name == 'issue_comment' && github.event.issue.pull_request && github.event.comment.body == '/snapit' }}
