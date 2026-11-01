@@ -23,8 +23,8 @@ export class BatchingRemoteConnection {
     this.#batch = batch;
   }
 
-  call(id: string, method: string, ...args: readonly unknown[]) {
-    this.#connection.call(id, method, ...args);
+  call(id: string, method: string, ...args: readonly unknown[]): unknown {
+    return this.#connection.call(id, method, ...args);
   }
 
   mutate(records: any[]) {
