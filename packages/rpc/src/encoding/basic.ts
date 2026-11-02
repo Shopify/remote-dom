@@ -95,14 +95,20 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
         seen.set(value, [undefined]);
 
         const transferables: Transferable[] = [];
-        const result = Object.keys(value).reduce((object, key) => {
-          const [result, nestedTransferables = []] = encode(
-            (value as any)[key],
-            seen,
-          );
-          transferables.push(...nestedTransferables);
-          return {...object, [key]: result};
-        }, {});
+        // Object.fromEntries instead of spreading the accumulator on every key,
+        // which is quadratic in the number of keys. It also defines own data
+        // properties, so keys such as `__proto__` and setters inherited from
+        // Object.prototype can't change the result.
+        const result = Object.fromEntries(
+          Object.keys(value).map((key) => {
+            const [result, nestedTransferables = []] = encode(
+              (value as any)[key],
+              seen,
+            );
+            transferables.push(...nestedTransferables);
+            return [key, result];
+          }),
+        );
 
         const fullResult: EncodeResult = [result, transferables];
 
@@ -206,13 +212,12 @@ export function createBasicEncoder(api: EncodingStrategyApi): EncodingStrategy {
       }
 
       if (isBasicObject(value)) {
-        return Object.keys(value).reduce(
-          (object, key) => ({
-            ...object,
-            [key]: decode((value as any)[key], retainedBy),
-          }),
-          {},
-        ) as any;
+        return Object.fromEntries(
+          Object.keys(value).map((key) => [
+            key,
+            decode((value as any)[key], retainedBy),
+          ]),
+        );
       }
     }
 
