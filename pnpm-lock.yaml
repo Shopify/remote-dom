@@ -125,8 +125,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/signals
       '@remote-ui/core':
-        specifier: ^2.2.4
-        version: 2.2.4
+        specifier: ^2.2.7
+        version: 2.2.7
       '@remote-ui/react':
         specifier: ^5.0.4
         version: 5.0.4(react-reconciler@0.28.0(react@18.3.1))(react@18.3.1)
@@ -174,8 +174,8 @@ importers:
         specifier: workspace:^1.7.0
         version: link:../core
       '@remote-ui/core':
-        specifier: ^2.0.0
-        version: 2.2.4
+        specifier: ^2.2.7
+        version: 2.2.7
 
   packages/core:
     dependencies:
@@ -1860,8 +1860,8 @@ packages:
   '@remote-ui/async-subscription@2.1.15':
     resolution: {integrity: sha512-SdPfO4ExDOVyOPAoCqT9+Tk0UeU97EMplkxlr5qiv3W7c1yRsxgtbETicoBh9l/P49bLzVjiJG6CQIu1au3Vhw==}
 
-  '@remote-ui/core@2.2.4':
-    resolution: {integrity: sha512-7ahrsI5GqYvAGcWTcysbKFKbzbhB/mDgIJr9VurF34gor2IqRCrmrPYemLQuOCQhWqPb3AOEUxWFYNLiB5i6kA==}
+  '@remote-ui/core@2.2.7':
+    resolution: {integrity: sha512-9eiTKy2eNKcT76xS0Dpz06ae2oClGAUUjx+HTDsz6fh7n/SS8Avid5N7GOaRiny/6T/cMJxaCeycMQJsEviGjA==}
 
   '@remote-ui/react@5.0.4':
     resolution: {integrity: sha512-zrewan3KqKHW8HOCgnpHduG4Ldqyh9ysouGIv8VeE0PlC03eCqi2MFzA+nKIJ1p58LIAbPQ1asp+RwT6ImVImg==}
@@ -1874,6 +1874,9 @@ packages:
 
   '@remote-ui/rpc@1.4.5':
     resolution: {integrity: sha512-Cr+06niG/vmE4A9YsmaKngRuuVSWKMY42NMwtZfy+gctRWGu6Wj9BWuMJg5CEp+JTkRBPToqT5rqnrg1G/Wvow==}
+
+  '@remote-ui/rpc@1.4.7':
+    resolution: {integrity: sha512-ORiaKsbVBSEi3Z4YWOj5Ucrp70NrkNktI1hdqqfBW7Z3o0YoxTX9MIqtLmsc6721IbjmExvLrLip5I5Y7uAbng==}
 
   '@remote-ui/types@1.1.3':
     resolution: {integrity: sha512-P1kN1F3p0oMgnLN8Of1Ie9am3sLvJ7nhqHH1pvzkrxqjVwhhyPVZNcwOHyUNZPKp62izhDavdrcnqrdXzVJqGA==}
@@ -5855,17 +5858,17 @@ snapshots:
 
   '@remote-ui/async-subscription@2.1.15':
     dependencies:
-      '@remote-ui/rpc': 1.4.5
+      '@remote-ui/rpc': 1.4.7
 
-  '@remote-ui/core@2.2.4':
+  '@remote-ui/core@2.2.7':
     dependencies:
-      '@remote-ui/rpc': 1.4.5
+      '@remote-ui/rpc': 1.4.7
       '@remote-ui/types': 1.1.3
 
   '@remote-ui/react@5.0.4(react-reconciler@0.28.0(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@remote-ui/async-subscription': 2.1.15
-      '@remote-ui/core': 2.2.4
+      '@remote-ui/core': 2.2.7
       '@remote-ui/rpc': 1.4.5
       '@types/react': 18.3.5
       '@types/react-reconciler': 0.28.8
@@ -5874,6 +5877,8 @@ snapshots:
       react-reconciler: 0.28.0(react@18.3.1)
 
   '@remote-ui/rpc@1.4.5': {}
+
+  '@remote-ui/rpc@1.4.7': {}
 
   '@remote-ui/types@1.1.3': {}
 

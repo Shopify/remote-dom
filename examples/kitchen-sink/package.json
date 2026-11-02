@@ -14,7 +14,7 @@
     "@remote-dom/preact": "workspace:*",
     "@remote-dom/react": "workspace:*",
     "@remote-dom/signals": "workspace:*",
-    "@remote-ui/core": "^2.2.4",
+    "@remote-ui/core": "^2.2.7",
     "@remote-ui/react": "^5.0.4",
     "preact": "catalog:",
     "react": "catalog:",

@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@remote-dom/core": "workspace:^1.7.0",
-    "@remote-ui/core": "^2.0.0"
+    "@remote-ui/core": "^2.2.7"
   },
   "browserslist": [
     "defaults and not dead"
