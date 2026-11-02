@@ -129,6 +129,30 @@ describe('ParentNode.insertBefore', () => {
       childNodeNames(document.body),
     );
   });
+
+  it('relinks a non-last child moved to the end with a null reference', () => {
+    const first = document.createElement('first-child');
+    const middle = document.createElement('middle-child');
+    const last = document.createElement('last-child');
+    document.body.append(first, middle, last);
+
+    document.body.insertBefore(first, null);
+
+    expect(siblingChain(document.body)).toStrictEqual([
+      'middle-child',
+      'last-child',
+      'first-child',
+    ]);
+    expect(Array.from(document.body.childNodes)).toStrictEqual([
+      middle,
+      last,
+      first,
+    ]);
+    expect(middle.previousSibling).toBeNull();
+    expect(last.previousSibling).toBe(middle);
+    expect(first.previousSibling).toBe(last);
+    expect(first.nextSibling).toBeNull();
+  });
 });
 
 describe('ParentNode.prepend', () => {
