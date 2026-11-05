@@ -100,7 +100,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Request a snapshot release
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const {comment, issue, repository} = context.payload;
@@ -162,7 +162,7 @@ jobs:
       # Third-party users can trigger /snapit. Check authorization before executing any PR code.
       - name: Validate snapshot request
         id: request
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const {snapit_comment_id: commentId, snapit_sha: sha} = context.payload.inputs;
@@ -241,7 +241,7 @@ jobs:
 
       - name: Read snapshot versions
         id: versions
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const {readdir, readFile} = require('node:fs/promises');
@@ -271,7 +271,7 @@ jobs:
 
       - name: Report snapshot result
         if: ${{ always() && steps.request.outputs.pull_request != '' }}
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           SNAPSHOT_OUTCOME: ${{ steps.publish.outcome }}
           SNAPSHOT_PACKAGES: ${{ steps.versions.outputs.packages }}
